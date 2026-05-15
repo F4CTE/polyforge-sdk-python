@@ -47,15 +47,18 @@ export class ReportsController {
     @CurrentAdmin() admin: AdminJwtPayload,
     @AdminIp() ip: string,
   ) {
-    const result = await this.reports.review(id, admin.sub, dto);
-    await this.audit.log({
+    const auditMeta = {
       adminId: admin.sub,
       action: "REVIEW_REPORT",
       targetType: "report",
       targetId: id,
       payload: { status: dto.status, adminNote: dto.adminNote },
       ip,
-    });
+    } as const;
+
+    await this.audit.log({ ...auditMeta, status: "attempt" });
+    const result = await this.reports.review(id, admin.sub, dto);
+    await this.audit.logSafe({ ...auditMeta, status: "success" });
     return result;
   }
 }

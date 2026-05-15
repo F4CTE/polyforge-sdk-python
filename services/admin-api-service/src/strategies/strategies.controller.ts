@@ -49,52 +49,59 @@ export class StrategiesController {
     @CurrentAdmin() admin: AdminJwtPayload,
     @AdminIp() ip: string,
   ) {
-    const result = await this.strategies.createTemplate(strategyId);
-    await this.audit.log({
+    const auditMeta = {
       adminId: admin.sub,
       action: "CREATE_STRATEGY_TEMPLATE",
       targetType: "strategy",
       targetId: strategyId,
       ip,
-    });
+    } as const;
+
+    await this.audit.log({ ...auditMeta, status: "attempt" });
+    const result = await this.strategies.createTemplate(strategyId);
+    await this.audit.logSafe({ ...auditMeta, status: "success" });
     return result;
   }
 
   @Post(":id/force-stop")
-  @UseGuards(RolesGuard)
   @Roles(AdminRole.SUPER_ADMIN, AdminRole.ADMIN)
   async forceStop(
     @Param("id", ParseUUIDPipe) id: string,
     @CurrentAdmin() admin: AdminJwtPayload,
     @AdminIp() ip: string,
   ) {
-    const result = await this.strategies.forceStop(id);
-    await this.audit.log({
+    const auditMeta = {
       adminId: admin.sub,
       action: "FORCE_STOP_STRATEGY",
       targetType: "strategy",
       targetId: id,
       ip,
-    });
+    } as const;
+
+    await this.audit.log({ ...auditMeta, status: "attempt" });
+    const result = await this.strategies.forceStop(id);
+    await this.audit.logSafe({ ...auditMeta, status: "success" });
     return result;
   }
 
   @Patch(":id/unpublish")
-  @UseGuards(RolesGuard)
   @Roles(AdminRole.SUPER_ADMIN, AdminRole.ADMIN)
   async unpublish(
     @Param("id", ParseUUIDPipe) id: string,
     @CurrentAdmin() admin: AdminJwtPayload,
     @AdminIp() ip: string,
   ) {
-    const result = await this.strategies.unpublish(id);
-    await this.audit.log({
+    const auditMeta = {
       adminId: admin.sub,
       action: "UNPUBLISH_STRATEGY",
       targetType: "strategy",
       targetId: id,
       ip,
-    });
+    } as const;
+
+    await this.audit.log({ ...auditMeta, status: "attempt" });
+    const result = await this.strategies.unpublish(id);
+    await this.audit.logSafe({ ...auditMeta, status: "success" });
     return result;
   }
 }

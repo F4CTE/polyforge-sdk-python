@@ -104,15 +104,18 @@ export class UsersController {
     @CurrentAdmin() admin: AdminJwtPayload,
     @AdminIp() ip: string,
   ) {
-    const result = await this.users.suspend(id, dto);
-    await this.audit.log({
+    const auditMeta = {
       adminId: admin.sub,
       action: "SUSPEND_USER",
       targetType: "user",
       targetId: id,
       payload: { reason: dto.reason },
       ip,
-    });
+    } as const;
+
+    await this.audit.log({ ...auditMeta, status: "attempt" });
+    const result = await this.users.suspend(id, dto);
+    await this.audit.logSafe({ ...auditMeta, status: "success" });
     return result;
   }
 
@@ -122,14 +125,17 @@ export class UsersController {
     @CurrentAdmin() admin: AdminJwtPayload,
     @AdminIp() ip: string,
   ) {
-    const result = await this.users.unsuspend(id);
-    await this.audit.log({
+    const auditMeta = {
       adminId: admin.sub,
       action: "UNSUSPEND_USER",
       targetType: "user",
       targetId: id,
       ip,
-    });
+    } as const;
+
+    await this.audit.log({ ...auditMeta, status: "attempt" });
+    const result = await this.users.unsuspend(id);
+    await this.audit.logSafe({ ...auditMeta, status: "success" });
     return result;
   }
 
@@ -139,14 +145,17 @@ export class UsersController {
     @CurrentAdmin() admin: AdminJwtPayload,
     @AdminIp() ip: string,
   ) {
-    const result = await this.users.approve(id, admin.sub);
-    await this.audit.log({
+    const auditMeta = {
       adminId: admin.sub,
       action: "APPROVE_USER",
       targetType: "user",
       targetId: id,
       ip,
-    });
+    } as const;
+
+    await this.audit.log({ ...auditMeta, status: "attempt" });
+    const result = await this.users.approve(id, admin.sub);
+    await this.audit.logSafe({ ...auditMeta, status: "success" });
     return result;
   }
 
@@ -157,15 +166,18 @@ export class UsersController {
     @CurrentAdmin() admin: AdminJwtPayload,
     @AdminIp() ip: string,
   ) {
-    const result = await this.users.reject(id, dto.reason);
-    await this.audit.log({
+    const auditMeta = {
       adminId: admin.sub,
       action: "REJECT_USER",
       targetType: "user",
       targetId: id,
       ip,
       payload: dto.reason ? { reason: dto.reason } : undefined,
-    });
+    } as const;
+
+    await this.audit.log({ ...auditMeta, status: "attempt" });
+    const result = await this.users.reject(id, dto.reason);
+    await this.audit.logSafe({ ...auditMeta, status: "success" });
     return result;
   }
 
@@ -176,15 +188,18 @@ export class UsersController {
     @CurrentAdmin() admin: AdminJwtPayload,
     @AdminIp() ip: string,
   ) {
-    const result = await this.users.updateLimits(id, dto);
-    await this.audit.log({
+    const auditMeta = {
       adminId: admin.sub,
       action: "UPDATE_USER_LIMITS",
       targetType: "user",
       targetId: id,
       payload: dto as any,
       ip,
-    });
+    } as const;
+
+    await this.audit.log({ ...auditMeta, status: "attempt" });
+    const result = await this.users.updateLimits(id, dto);
+    await this.audit.logSafe({ ...auditMeta, status: "success" });
     return result;
   }
 
@@ -218,15 +233,18 @@ export class UsersController {
     @CurrentAdmin() admin: AdminJwtPayload,
     @AdminIp() ip: string,
   ) {
-    const result = await this.users.revokeApiKey(id, keyId);
-    await this.audit.log({
+    const auditMeta = {
       adminId: admin.sub,
       action: "REVOKE_USER_API_KEY",
       targetType: "api_key",
       targetId: keyId,
       payload: { userId: id },
       ip,
-    });
+    } as const;
+
+    await this.audit.log({ ...auditMeta, status: "attempt" });
+    const result = await this.users.revokeApiKey(id, keyId);
+    await this.audit.logSafe({ ...auditMeta, status: "success" });
     return result;
   }
 }
