@@ -50,7 +50,7 @@ fi
 # Indentation: services (0), service-name (2), ports: (4), entries (6).
 
 violations=$(awk -v file="$TARGET_FILE" '
-BEGIN { exit_code = 0 }
+BEGIN { exit_code = 0; prev_nosemgrep = 0 }
 
 # ── ports: section tracking ────────────────────────────────────────────
 
@@ -153,13 +153,32 @@ in_block {
   }
 }
 
+# ── Preceding-line nosemgrep tracking ────────────────────────────
+# Semgrep allows # nosemgrep: docker-compose-port-no-loopback on the
+# immediately preceding line (not just on the same line).  Track that
+# here for the short-syntax path.  Long-syntax entries are already
+# consumed by the state machine above.
+in_ports && !in_block {
+  if ($0 ~ /^[[:space:]]*#[[:space:]]*nosemgrep:[[:space:]]*docker-compose-port-no-loopback/) {
+    prev_nosemgrep = 1
+    next
+  }
+  # Any other non-empty, non-port-entry line inside ports clears the flag.
+  # Blank lines are left alone — Semgrep tolerates blank lines between the
+  # suppression comment and the suppressed code.
+  if ($0 !~ /^[[:space:]]*$/ && $0 !~ /^[[:space:]]+- /) {
+    prev_nosemgrep = 0
+  }
+}
+
 # ── Short-syntax detection (inside ports: only, after long-syntax) ─────
 # Runs after long-syntax entry rules, so long-syntax port mapping keys
 # (name, target, published, host_ip, protocol, mode, app_protocol) are
 # already claimed by the long-syntax state machine.
 in_ports && /^[[:space:]]+-[[:space:]]+/ && !in_block {
-  # Skip suppressed lines
-  if ($0 ~ /# nosemgrep: docker-compose-port-no-loopback/) { next }
+  # Skip suppressed lines (same-line or preceding-line nosemgrep)
+  if ($0 ~ /# nosemgrep: docker-compose-port-no-loopback/) { prev_nosemgrep = 0; next }
+  if (prev_nosemgrep) { prev_nosemgrep = 0; next }
 
   # Capture the raw value after the leading "- "
   # Strip optional quotes (double or single) and trailing whitespace / comment
