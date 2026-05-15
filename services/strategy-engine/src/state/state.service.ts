@@ -148,6 +148,74 @@ export class StateService {
     await this.redis.del(this.key(strategyId));
   }
 
+  /**
+   * Fetch strategy state + price caches for the given tokenIds in a single
+   * Redis pipeline, eliminating the N+1 round-trips of calling get() then
+   * getPrice() individually.
+   */
+  async getStateAndPrices(
+    strategyId: string,
+    tokenIds: string[],
+  ): Promise<{
+    state: StrategyState;
+    prices: Map<string, { price: number; timestamp: number } | null>;
+  }> {
+    if (tokenIds.length === 0) {
+      return { state: await this.get(strategyId), prices: new Map() };
+    }
+
+    const client = this.redis.getClient();
+    const pipeline = client.pipeline();
+    pipeline.get(this.key(strategyId));
+    for (const tokenId of tokenIds) {
+      pipeline.get(`cache:price:${tokenId}`);
+    }
+
+    const results = await pipeline.exec();
+    const prices = new Map<
+      string,
+      { price: number; timestamp: number } | null
+    >();
+
+    if (!results) {
+      throw new Error(
+        `Redis pipeline execution failed for strategy ${strategyId}`,
+      );
+    }
+
+    const [stateErr, stateRaw] = results[0];
+    if (stateErr) {
+      throw stateErr instanceof Error
+        ? stateErr
+        : new Error(`Redis command failed: ${String(stateErr)}`);
+    }
+    let state: StrategyState;
+    if (!stateRaw) {
+      state = { ...DEFAULT_STATE };
+    } else {
+      try {
+        state = this.parseState(stateRaw as string);
+      } catch {
+        state = { ...DEFAULT_STATE };
+      }
+    }
+
+    for (let i = 0; i < tokenIds.length; i++) {
+      const [, priceRaw] = results[i + 1] ?? [];
+      if (!priceRaw) {
+        prices.set(tokenIds[i], null);
+        continue;
+      }
+      try {
+        prices.set(tokenIds[i], JSON.parse(priceRaw as string));
+      } catch {
+        prices.set(tokenIds[i], null);
+      }
+    }
+
+    return { state, prices };
+  }
+
   async getPriceAge(tokenId: string): Promise<number> {
     const raw = await this.redis.get(`cache:price:${tokenId}`);
     if (!raw) return Infinity;
