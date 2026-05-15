@@ -53,17 +53,17 @@ describe("shared zod 4 schema compatibility", () => {
   it("keeps stream event discriminator parsing and timestamp coercion stable", () => {
     expect(
       StreamEventSchema.parse({
-        event_type: "ORDER_FILLED",
-        timestamp: "1700000000",
+        type: "ORDER_FILLED",
+        ts: "1700000000",
         userId: "11111111-1111-4111-8111-111111111111",
         orderId: "22222222-2222-4222-8222-222222222222",
-        filledSize: "10.50",
-        avgFillPrice: "0.72",
+        fillPrice: "0.72",
+        fillSize: "10.50",
         pnl: "1.25",
       }),
     ).toMatchObject({
-      event_type: "ORDER_FILLED",
-      timestamp: 1700000000,
+      type: "ORDER_FILLED",
+      ts: 1700000000,
     });
   });
 

@@ -1,15 +1,12 @@
 import { z } from "zod";
-import {
-  UuidSchema,
-  DecimalStringSchema,
-  PriceStringSchema,
-} from "./common.schema";
+import { UuidSchema, DecimalStringSchema, PriceStringSchema } from "./common.schema";
 
 // ─── Enums ────────────────────────────────────────────────────────────────────
 
+export const OrderTypeSchema = z.enum(["GTC", "GTD", "FOK", "FAK", "POST_ONLY"]);
+
 export const OrderSideSchema = z.enum(["BUY", "SELL"]);
 export const OrderOutcomeSchema = z.enum(["YES", "NO"]);
-export const OrderTypeSchema = z.enum(["GTC", "GTD", "FOK", "FAK"]);
 export const OrderStatusSchema = z.enum([
   "PENDING",
   "SUBMITTED",
@@ -31,8 +28,10 @@ export const VenueIdSchema = z.enum(["polymarket", "polymarket_us", "kalshi"]);
 
 export const OrderIntentSchema = z.object({
   intentId: UuidSchema,
+  orderId: UuidSchema.optional(),
   userId: UuidSchema,
-  strategyId: UuidSchema.nullable(),
+  strategyId: UuidSchema.nullish().default(null),
+  copyTradeId: UuidSchema.optional(),
   marketId: z.string().min(1),
   tokenId: z.string().min(1),
   side: OrderSideSchema,
@@ -40,10 +39,43 @@ export const OrderIntentSchema = z.object({
   size: DecimalStringSchema,
   price: PriceStringSchema,
   orderType: OrderTypeSchema,
+  expiration: z.number().positive().optional(),
+  tickSize: DecimalStringSchema.optional(),
+  negRisk: z.boolean().optional(),
   venue: VenueIdSchema.optional(),
+  kalshiSubaccount: z.number().int().min(0).optional(),
 });
 
-export type OrderIntentSchema = z.infer<typeof OrderIntentSchema>;
+export type OrderIntentType = z.infer<typeof OrderIntentSchema>;
+
+// ─── Redis stream raw message (all fields are strings) ──────────────────────
+// Used when consuming from Redis Streams where XREAD returns string[] fields.
+
+const NonEmptyString = z.string().min(1);
+
+export const StreamOrderIntentSchema = z
+  .object({
+    intentId: NonEmptyString,
+    orderId: NonEmptyString.optional(),
+    userId: NonEmptyString,
+    strategyId: z.string().optional(),
+    copyTradeId: NonEmptyString.optional(),
+    marketId: NonEmptyString,
+    tokenId: NonEmptyString,
+    side: NonEmptyString,
+    outcome: NonEmptyString,
+    size: NonEmptyString,
+    price: NonEmptyString,
+    orderType: NonEmptyString,
+    expiration: NonEmptyString.optional(),
+    tickSize: NonEmptyString.optional(),
+    negRisk: NonEmptyString.optional(),
+    venue: NonEmptyString.optional(),
+    kalshiSubaccount: NonEmptyString.optional(),
+  })
+  .passthrough();
+
+export type StreamOrderIntent = z.infer<typeof StreamOrderIntentSchema>;
 
 // ─── Close position request ───────────────────────────────────────────────────
 

@@ -1437,6 +1437,9 @@ importers:
       '@polyforge/shared-redis':
         specifier: workspace:*
         version: link:../../packages/shared-redis
+      '@polyforge/shared-schemas':
+        specifier: workspace:*
+        version: link:../../packages/shared-schemas
       '@polyforge/shared-types':
         specifier: workspace:*
         version: link:../../packages/shared-types
@@ -1540,6 +1543,9 @@ importers:
       '@polyforge/shared-redis':
         specifier: workspace:*
         version: link:../../packages/shared-redis
+      '@polyforge/shared-schemas':
+        specifier: workspace:*
+        version: link:../../packages/shared-schemas
       '@polyforge/shared-types':
         specifier: workspace:*
         version: link:../../packages/shared-types

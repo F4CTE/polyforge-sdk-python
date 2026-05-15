@@ -153,12 +153,12 @@ export class TicketsAdminService {
 
     // Emit event for user notification
     await this.redis.xadd("stream:events", {
-      event_type: "TICKET_REPLY",
+      type: "TICKET_REPLY",
       userId: ticket.userId,
       ticketId: ticket.id,
       subject: ticket.subject,
       adminName,
-      timestamp: String(Date.now()),
+      ts: String(Date.now()),
     });
 
     return message;
@@ -188,11 +188,11 @@ export class TicketsAdminService {
       data.closedAt = new Date();
 
       await this.redis.xadd("stream:events", {
-        event_type: "TICKET_CLOSED",
+        type: "TICKET_CLOSED",
         userId: ticket.userId,
         ticketId: ticket.id,
         subject: ticket.subject,
-        timestamp: String(Date.now()),
+        ts: String(Date.now()),
       });
     }
 

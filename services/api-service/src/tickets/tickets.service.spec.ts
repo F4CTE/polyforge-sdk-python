@@ -110,7 +110,7 @@ describe("TicketsService", () => {
       expect(redis.xadd).toHaveBeenCalledWith(
         "stream:events",
         expect.objectContaining({
-          event_type: "TICKET_CREATED",
+          type: "TICKET_CREATED",
           userId: "user-1",
           ticketId: "ticket-1",
           subject: "Login issue",
