@@ -113,7 +113,9 @@ describe("StateService", () => {
       const redisClient = {
         eval: vi
           .fn()
-          .mockResolvedValue(JSON.stringify({ ...DEFAULT_STATE, totalOrders: 10 })),
+          .mockResolvedValue(
+            JSON.stringify({ ...DEFAULT_STATE, totalOrders: 10 }),
+          ),
       };
       redis = makeRedisMock({
         getClient: vi.fn().mockReturnValue(redisClient),
@@ -138,7 +140,9 @@ describe("StateService", () => {
       const redisClient = {
         eval: vi
           .fn()
-          .mockResolvedValue(JSON.stringify({ ...DEFAULT_STATE, betsToday: 1 })),
+          .mockResolvedValue(
+            JSON.stringify({ ...DEFAULT_STATE, betsToday: 1 }),
+          ),
       };
       redis = makeRedisMock({
         getClient: vi.fn().mockReturnValue(redisClient),

@@ -267,8 +267,7 @@ export const ScaleOutAction: ActionEvaluator = {
       return { intents: [] };
 
     const reduceByParsed = parseFiniteDecimal(reduceBySizeRaw);
-    if (reduceByParsed === null || reduceByParsed <= 0)
-      return { intents: [] };
+    if (reduceByParsed === null || reduceByParsed <= 0) return { intents: [] };
 
     const reduceBySize = String(Math.min(reduceByParsed, positionSize));
 

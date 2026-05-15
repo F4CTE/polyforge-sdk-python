@@ -14,11 +14,7 @@ import type {
   PriceCandle,
   CandleResolution,
 } from "@polyforge/shared-types";
-import {
-  ClobClientService,
-  PriceHistoryInterval,
-} from "../clob-client/clob-client.service";
-import type { PriceHistoryIntervalType } from "../clob-client/clob-client.service";
+import { ClobClientService, type ClobInterval } from "../clob-client/clob-client.service";
 
 interface PolymarketAuthContext {
   order: Record<string, unknown>;
@@ -31,13 +27,13 @@ interface PolymarketCancelContext {
 
 const RESOLUTION_TO_PARAMS: Record<
   CandleResolution,
-  { interval: PriceHistoryIntervalType; fidelity?: number }
+  { interval: ClobInterval; fidelity?: number }
 > = {
-  "1m": { interval: PriceHistoryInterval.MAX, fidelity: 1 },
-  "5m": { interval: PriceHistoryInterval.MAX, fidelity: 5 },
-  "15m": { interval: PriceHistoryInterval.MAX, fidelity: 15 },
-  "1h": { interval: PriceHistoryInterval.ONE_HOUR },
-  "1d": { interval: PriceHistoryInterval.ONE_DAY },
+  "1m": { interval: "max", fidelity: 1 },
+  "5m": { interval: "max", fidelity: 5 },
+  "15m": { interval: "max", fidelity: 15 },
+  "1h": { interval: "1h" },
+  "1d": { interval: "1d" },
 };
 
 @Injectable()
@@ -46,10 +42,10 @@ export class PolymarketAdapter implements VenueAdapter {
 
   constructor(private readonly clob: ClobClientService) {}
 
-  async getMarkets(_params: MarketQueryParams): Promise<UnifiedMarket[]> {
+  getMarkets(_params: MarketQueryParams): Promise<UnifiedMarket[]> {
     // Market data ingestion for Polymarket uses the Gamma API pipeline, not
     // the CLOB client — this will be wired in Phase 3 via VenueDataRouter.
-    return [];
+    return Promise.resolve([]);
   }
 
   async getOrderBook(outcomeId: string): Promise<OrderBook> {
@@ -139,9 +135,9 @@ export class PolymarketAdapter implements VenueAdapter {
     await this.clob.cancelAll(apiKey);
   }
 
-  async getPositions(_userId: string): Promise<VenuePosition[]> {
+  getPositions(_userId: string): Promise<VenuePosition[]> {
     // Positions are tracked in the PolyForge DB, not fetched from the CLOB API.
-    return [];
+    return Promise.resolve([]);
   }
 
   async getOrderHistory(

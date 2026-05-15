@@ -207,7 +207,8 @@ describe("StrategyRunner — lifecycle", () => {
     state.getStateAndPrices.mockImplementation(
       () =>
         new Promise((resolve) => {
-          release = () => resolve({ state: { ...DEFAULT_STATE }, prices: new Map() });
+          release = () =>
+            resolve({ state: { ...DEFAULT_STATE }, prices: new Map() });
         }),
     );
     const runner = makeRunner({ execMode: "EVENT", state });
@@ -555,14 +556,16 @@ describe("StrategyRunner — TRIGGER evaluation", () => {
     // pass stale data detection and reach trigger evaluation.
     state.getStateAndPrices.mockResolvedValue({
       state: { ...DEFAULT_STATE },
-      prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]),
+      prices: new Map([["tok1", { price: 0.55, timestamp: Date.now() }]]),
     });
 
     await runner.onPriceEvent("tok1", 0.5);
 
-    // Trigger should fire because price 0.5 > 0.4 threshold via config fallback.
-    // The runner uses getStateAndPrices (not state.get) for the batched pipeline.
-    expect(state.getStateAndPrices).toHaveBeenCalled();
+    // Trigger should fire because price 0.55 > 0.4 threshold via config fallback.
+    // The batched getStateAndPrices call confirms stale check passed and evaluation proceeded.
+    expect(state.getStateAndPrices).toHaveBeenCalledWith("strat-test", [
+      "tok1",
+    ]);
   });
 });
 
@@ -793,7 +796,9 @@ describe("StrategyRunner — error handling", () => {
     const onIntents = vi
       .fn<(intents: OrderIntent[]) => Promise<void>>()
       .mockRejectedValue(
-        new Error("Counter increment failed after 1 intents published for strategy strat-test"),
+        new Error(
+          "Counter increment failed after 1 intents published for strategy strat-test",
+        ),
       );
     const onStatusChange = vi.fn().mockResolvedValue(undefined);
 
@@ -1216,7 +1221,7 @@ describe("StrategyRunner — config fallback for token discovery and prefetch", 
     const state = makeState();
     state.getStateAndPrices.mockResolvedValue({
       state: { ...DEFAULT_STATE },
-      prices: new Map([["tok-config", { price: 0.5, timestamp: Date.now() }]]),
+      prices: new Map([["tok-config", { price: 0.6, timestamp: Date.now() }]]),
     });
 
     const runner = makeRunner({
@@ -1620,7 +1625,8 @@ describe("StrategyRunner — concurrent tick serialization", () => {
     state.getStateAndPrices.mockImplementation(
       () =>
         new Promise((resolve) => {
-          release = () => resolve({ state: { ...DEFAULT_STATE }, prices: new Map() });
+          release = () =>
+            resolve({ state: { ...DEFAULT_STATE }, prices: new Map() });
         }),
     );
     const runner = makeRunner({ execMode: "EVENT", state });
