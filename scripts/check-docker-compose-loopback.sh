@@ -40,8 +40,8 @@ TARGET_FILE="docker-compose.infra.yml"
 EXIT_CODE=0
 
 if [ ! -f "$TARGET_FILE" ]; then
-  echo "::warning file=$TARGET_FILE::$TARGET_FILE not found — skipping loopback port check"
-  exit 0
+  echo "::error file=$TARGET_FILE::$TARGET_FILE not found — loopback port check cannot run"
+  exit 1
 fi
 
 # ── Combined short + long syntax detection (single awk pass) ────────────
@@ -156,8 +156,9 @@ in_block {
     if ($0 ~ /^[[:space:]]+published:/) {
       saw_published = 1
     }
-    # Match host_ip: 127.0.0.1 with optional quotes, but NOT inside comments
-    if ($0 !~ /^[[:space:]]*#/ && $0 ~ /host_ip:[[:space:]]*"?127\.0\.0\.1"?/) {
+    # Match loopback host_ip (127.0.0.1 / ::1) with optional single/double quotes,
+    # but NOT inside comments
+    if ($0 !~ /^[[:space:]]*#/ && $0 ~ /host_ip:[[:space:]]*["'\'']?(127\.0\.0\.1|::1)["'\'']?/) {
       has_host_ip = 1
     }
   }
