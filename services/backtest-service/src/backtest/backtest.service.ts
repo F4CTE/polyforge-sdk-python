@@ -7,12 +7,12 @@ import {
   PriceState,
   SimPosition,
   createSimState,
+  clearPendingOrders,
   checkSafety,
   checkTriggers,
   checkConditions,
   executeActions,
   checkAutoExits,
-  clearPendingOrders,
   computeMaxLookback,
   SimFill,
 } from "./evaluator";
@@ -138,9 +138,10 @@ export class BacktestService {
       const fillRecs: FillRecord[] = [];
       const pending: Prisma.BacktestOrderCreateManyInput[] = [];
 
-      // Compute the maximum lookback window needed by any TA trigger so we
-      // can cap per-token priceHistory arrays and avoid unbounded growth.
-      const maxLookback = computeMaxLookback(triggers);
+      // Compute the maximum TA lookback required by triggers, with a
+      // sensible floor for strategies that have no TA triggers configured
+      const computedLookback = computeMaxLookback(triggers);
+      const maxLookback = computedLookback > 0 ? computedLookback : 200;
 
       let cumulativePnl = 0;
       let currentDay = "";
@@ -169,17 +170,19 @@ export class BacktestService {
         };
         prices.set(tokenId, ps);
 
-        // Accumulate rolling price history for TA triggers (only when
-        // TA triggers are configured, so non-TA backtests keep zero overhead)
-        if (maxLookback > 0) {
-          const hist = priceHistory.get(tokenId) ?? [];
-          hist.push(Number(tick.close));
-          // Cap history to the maximum lookback required by configured TA triggers
-          if (hist.length > maxLookback) {
-            hist.splice(0, hist.length - maxLookback);
-          }
-          priceHistory.set(tokenId, hist);
+        // Accumulate rolling price history for TA indicators
+        if (!priceHistory.has(tokenId)) {
+          priceHistory.set(tokenId, []);
         }
+        const hist = priceHistory.get(tokenId)!;
+        hist.push(ps.price);
+        // Trim to configured lookback to prevent unbounded growth on long date ranges
+        if (hist.length > maxLookback) {
+          priceHistory.set(tokenId, hist.slice(-maxLookback));
+        }
+
+        // Clear stale pending orders from previous ticks before safety/conditions
+        clearPendingOrders(state);
 
         // Auto-exits (stop-loss / take-profit)
         const autoFills = checkAutoExits(state, prices, positions);
@@ -195,11 +198,6 @@ export class BacktestService {
           fillRecs.push(rec);
           pending.push(this.toOrderInput(runId, fill, rec));
         }
-
-        // Clear pending orders from previous tick — fills were already
-        // applied to positions via applyFill(), so retaining them would
-        // double-count exposure in safety/condition checks below.
-        clearPendingOrders(state);
 
         // Safety halt check
         if (!checkSafety(safety, state, prices, positions)) {
@@ -270,7 +268,9 @@ export class BacktestService {
   private extractTokenIds(blocks: Block[]): string[] {
     const ids = new Set<string>();
     for (const b of blocks) {
-      const tokenId = String((b.config ?? {}).tokenId ?? "").trim();
+      const tokenId = String(
+        b.params?.tokenId ?? b.config?.tokenId ?? "",
+      ).trim();
       if (tokenId) ids.add(tokenId);
     }
     return Array.from(ids);
@@ -314,18 +314,6 @@ export class BacktestService {
       const existing = positions.get(tokenId);
       if (existing) {
         const totalSize = existing.size + size;
-        if (totalSize <= 0) {
-          positions.delete(tokenId);
-          state.betsToday++;
-          state.totalOrders++;
-          state.lastTradeAt = simulatedAt.getTime();
-          return {
-            side,
-            pnl,
-            equityCurve,
-            simulatedAt,
-          };
-        }
         const avgPrice =
           (existing.avgPrice * existing.size + price * size) / totalSize;
         positions.set(tokenId, { size: totalSize, avgPrice });

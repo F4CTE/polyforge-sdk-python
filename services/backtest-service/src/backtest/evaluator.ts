@@ -8,13 +8,17 @@
  *
  * SAFETY:    stop_if_daily_loss, max_orders_total, stop_if_consecutive_loss
  * TRIGGERS:  every_tick, price_above, price_below, price_crosses_up,
- *            price_crosses_down, spread_below, ma_crossover, macd_crossover,
- *            bollinger_bands, rsi_threshold_tick
+ *            price_crosses_down, spread_below, price_above_tick,
+ *            price_below_tick, ma_crossover_tick, macd_signal_tick,
+ *            bollinger_breakout_tick, rsi_threshold_tick, vwap_cross_tick
+ *            (legacy alias: ma_crossover, macd_crossover, bollinger_bands)
  * CONDITIONS: max_bets_per_day, daily_loss_limit, price_in_range,
  *             max_position, cooldown_after_trade
  * ACTIONS:   buy_yes, buy_no, set_stop_loss, take_profit,
  *            scale_in, scale_out, skip_bet
  */
+
+// ─── Inline TA functions (no cross-service dep needed for pure math) ──────────
 
 import { validateStopLossTakeProfitPct } from "@polyforge/shared-types";
 
@@ -55,20 +59,59 @@ function _rsiWilder(prices: number[], period: number): number {
   return 100 - 100 / (1 + avgGain / avgLoss);
 }
 
-function _macdLine(prices: number[], fast = 12, slow = 26): number {
-  if (prices.length < slow) return NaN;
+function _macdFull(
+  prices: number[],
+  fast = 12,
+  slow = 26,
+  signal = 9,
+): { macdLine: number; signalLine: number; histogram: number } {
+  const nan = { macdLine: NaN, signalLine: NaN, histogram: NaN };
+  if (prices.length < slow + signal - 1) return nan;
+
+  const macdSeries: number[] = [];
   const kFast = 2 / (fast + 1);
   const kSlow = 2 / (slow + 1);
+
   let emaFast = prices.slice(0, fast).reduce((s, p) => s + p, 0) / fast;
   let emaSlow = prices.slice(0, slow).reduce((s, p) => s + p, 0) / slow;
+
   for (let i = fast; i < slow; i++) {
     emaFast = prices[i] * kFast + emaFast * (1 - kFast);
   }
+
+  macdSeries.push(emaFast - emaSlow);
+
   for (let i = slow; i < prices.length; i++) {
     emaFast = prices[i] * kFast + emaFast * (1 - kFast);
     emaSlow = prices[i] * kSlow + emaSlow * (1 - kSlow);
+    macdSeries.push(emaFast - emaSlow);
   }
-  return emaFast - emaSlow;
+
+  if (macdSeries.length < signal) return nan;
+
+  const kSignal = 2 / (signal + 1);
+  let signalEma =
+    macdSeries.slice(0, signal).reduce((s, v) => s + v, 0) / signal;
+  for (let i = signal; i < macdSeries.length; i++) {
+    signalEma = macdSeries[i] * kSignal + signalEma * (1 - kSignal);
+  }
+
+  const macdLine = macdSeries[macdSeries.length - 1];
+  return { macdLine, signalLine: signalEma, histogram: macdLine - signalEma };
+}
+
+function _vwap(prices: number[], volumes: number[]): number {
+  const len = Math.min(prices.length, volumes.length);
+  if (len === 0) return NaN;
+
+  let totalVolume = 0;
+  let totalPV = 0;
+  for (let i = 0; i < len; i++) {
+    totalVolume += volumes[i];
+    totalPV += prices[i] * volumes[i];
+  }
+  if (totalVolume === 0) return NaN;
+  return totalPV / totalVolume;
 }
 
 function _bollingerBands(
@@ -87,6 +130,7 @@ function _bollingerBands(
 
 export interface Block {
   type: string;
+  params?: Record<string, unknown>;
   config?: Record<string, unknown>;
 }
 
@@ -155,7 +199,7 @@ export function checkSafety(
   positions: Map<string, SimPosition>,
 ): boolean {
   for (const block of safety) {
-    const cfg = block.config ?? {};
+    const cfg = { ...(block.config ?? {}), ...(block.params ?? {}) };
     switch (block.type) {
       case "stop_if_daily_loss": {
         const max = parseFloat(String(cfg.maxLossUsdc ?? 0));
@@ -196,18 +240,21 @@ export function checkSafety(
 
 // ─── Triggers ────────────────────────────────────────────────────────────────
 
-/**
- * Compute the maximum price-history lookback required by TA triggers.
- * Non-TA triggers and triggers without a period config return 0.
- */
 export function computeMaxLookback(triggers: Block[]): number {
   let max = 0;
   for (const block of triggers) {
-    const cfg = block.config ?? {};
+    const cfg = { ...(block.config ?? {}), ...(block.params ?? {}) };
     switch (block.type) {
-      case "ma_crossover": {
-        const fastPeriod = parseInt(String(cfg.fastPeriod ?? 10), 10);
-        const slowPeriod = parseInt(String(cfg.slowPeriod ?? 20), 10);
+      case "ma_crossover":
+      case "ma_crossover_tick": {
+        const fastPeriod = parseInt(
+          String(cfg.fastPeriod ?? cfg.shortPeriod ?? 10),
+          10,
+        );
+        const slowPeriod = parseInt(
+          String(cfg.slowPeriod ?? cfg.longPeriod ?? 20),
+          10,
+        );
         const period = Math.max(
           isNaN(fastPeriod) ? 0 : fastPeriod,
           isNaN(slowPeriod) ? 0 : slowPeriod,
@@ -215,19 +262,27 @@ export function computeMaxLookback(triggers: Block[]): number {
         if (period > 0) max = Math.max(max, period + 1);
         break;
       }
-      case "macd_crossover": {
+      case "macd_crossover":
+      case "macd_signal_tick": {
         const slow = parseInt(String(cfg.slowPeriod ?? 26), 10);
-        if (!isNaN(slow)) max = Math.max(max, slow + 1);
+        const signalPeriod = parseInt(String(cfg.signalPeriod ?? 9), 10);
+        if (!isNaN(slow) && !isNaN(signalPeriod))
+          max = Math.max(max, slow + signalPeriod);
         break;
       }
-      case "bollinger_bands": {
+      case "bollinger_bands":
+      case "bollinger_breakout_tick": {
         const period = parseInt(String(cfg.period ?? 20), 10);
-        if (!isNaN(period)) max = Math.max(max, period);
+        if (!isNaN(period)) max = Math.max(max, period + 1);
         break;
       }
       case "rsi_threshold_tick": {
         const period = parseInt(String(cfg.period ?? 14), 10);
         if (!isNaN(period)) max = Math.max(max, period + 1);
+        break;
+      }
+      case "vwap_cross_tick": {
+        max = Math.max(max, 250);
         break;
       }
     }
@@ -247,19 +302,17 @@ export function checkTriggers(
     // every_tick always fires regardless of current token
     if (block.type === "every_tick") return true;
 
-    const cfg = block.config ?? {};
+    const cfg = { ...(block.config ?? {}), ...(block.params ?? {}) };
     const tokenId = String(cfg.tokenId ?? "");
 
     // Gate non-every_tick triggers to the token updated by the current tick.
     // Without this, a token-A trigger can fire repeatedly on token-B ticks
     // because token-A's price/history hasn't changed.
     if (currentTokenId && tokenId && tokenId !== currentTokenId) continue;
-
     const ps = prices.get(tokenId);
     const hist = priceHistory.get(tokenId) ?? [];
 
     switch (block.type) {
-
       case "price_above": {
         const threshold = parseFloat(String(cfg.threshold ?? 0));
         if (ps && ps.price > threshold) return true;
@@ -293,7 +346,10 @@ export function checkTriggers(
       case "price_above_tick":
       case "price_below_tick": {
         // Same as price_above/below for backtest purposes
-        const threshold = parseFloat(String(cfg.threshold ?? 0));
+        // Support legacy `price` field as fallback for live parity
+        const threshold = parseFloat(
+          String(cfg.threshold ?? cfg.price ?? 0),
+        );
         if (block.type === "price_above_tick" && ps && ps.price > threshold)
           return true;
         if (block.type === "price_below_tick" && ps && ps.price < threshold)
@@ -303,11 +359,26 @@ export function checkTriggers(
 
       // ─── TA Triggers (require rolling price history) ───────────────────────
 
-      case "ma_crossover": {
-        // Fires when fast MA crosses above slow MA
-        const fastPeriod = parseInt(String(cfg.fastPeriod ?? 10), 10);
-        const slowPeriod = parseInt(String(cfg.slowPeriod ?? 20), 10);
+      case "ma_crossover":
+      case "ma_crossover_tick": {
+        // Fires when short MA crosses above/below long MA (configurable direction)
+        // Backward compat: old config used fastPeriod/slowPeriod
+        // Live engine uses shortPeriod/longPeriod + direction
+        const fastPeriod = parseInt(
+          String(cfg.fastPeriod ?? cfg.shortPeriod ?? 10),
+          10,
+        );
+        const slowPeriod = parseInt(
+          String(cfg.slowPeriod ?? cfg.longPeriod ?? 50),
+          10,
+        );
         const maType = String(cfg.maType ?? "sma");
+        const direction = String(
+          block.type === "ma_crossover"
+            ? (cfg.direction ?? "golden_cross") // legacy: default golden_cross
+            : (cfg.direction ?? ""), // live parity: direction required
+        );
+        if (!direction) break; // ma_crossover_tick requires direction like live
         if (hist.length >= slowPeriod + 1) {
           const prevHist = hist.slice(0, -1);
           const maFn = maType === "ema" ? _ema : _sma;
@@ -315,34 +386,85 @@ export function checkTriggers(
           const slowNow = maFn(hist, slowPeriod);
           const fastPrev = maFn(prevHist, fastPeriod);
           const slowPrev = maFn(prevHist, slowPeriod);
-          if (fastPrev <= slowPrev && fastNow > slowNow) return true;
+          if (direction === "death_cross") {
+            if (fastPrev > slowPrev && fastNow <= slowNow) return true;
+          } else if (direction === "golden_cross") {
+            if (fastPrev < slowPrev && fastNow >= slowNow) return true;
+          }
+          // Unknown direction → fail closed (no-op)
         }
         break;
       }
 
-      case "macd_crossover": {
-        // Fires when MACD line crosses above/below zero or signal line
+      case "macd_crossover":
+      case "macd_signal_tick": {
+        // Fires on MACD signal conditions
+        // macd_crossover (legacy): crossAbove (boolean)
+        // macd_signal_tick (live): signal (line_cross | histogram_sign_change)
         const fast = parseInt(String(cfg.fastPeriod ?? 12), 10);
         const slow = parseInt(String(cfg.slowPeriod ?? 26), 10);
+        const signalPeriod = parseInt(String(cfg.signalPeriod ?? 9), 10);
+        const signal = String(cfg.signal ?? "");
         const crossAbove = String(cfg.crossAbove ?? "true") !== "false";
-        if (hist.length >= slow + 1) {
-          const macdNow = _macdLine(hist, fast, slow);
-          const macdPrev = _macdLine(hist.slice(0, -1), fast, slow);
-          if (crossAbove && macdPrev <= 0 && macdNow > 0) return true;
-          if (!crossAbove && macdPrev >= 0 && macdNow < 0) return true;
+        const minLen = slow + signalPeriod;
+
+        // Reject signal-less macd_signal_tick — parity with live engine
+        // which requires signal to be "line_cross" or "histogram_sign_change"
+        if (block.type === "macd_signal_tick" && !signal) break;
+
+        if (hist.length >= minLen) {
+          // Compute MACD with signal line for full fidelity (shared indicator)
+          const currMacd = _macdFull(hist, fast, slow, signalPeriod);
+          const prevMacd = _macdFull(
+            hist.slice(0, -1),
+            fast,
+            slow,
+            signalPeriod,
+          );
+          if (isNaN(currMacd.macdLine) || isNaN(prevMacd.macdLine)) break;
+
+          if (signal === "line_cross") {
+            // MACD line crosses signal line
+            const prevDiff = prevMacd.macdLine - prevMacd.signalLine;
+            const currDiff = currMacd.macdLine - currMacd.signalLine;
+            if (prevDiff * currDiff < 0) return true;
+          } else if (signal === "histogram_sign_change") {
+            // MACD histogram changes sign
+            if (prevMacd.histogram * currMacd.histogram < 0) return true;
+          } else if (block.type === "macd_crossover") {
+            // Legacy: zero-line crossover (backward compat for macd_crossover)
+            if (crossAbove && prevMacd.macdLine <= 0 && currMacd.macdLine > 0)
+              return true;
+            if (!crossAbove && prevMacd.macdLine >= 0 && currMacd.macdLine < 0)
+              return true;
+          }
+          // macd_signal_tick with unknown signal → fail closed (no-op)
         }
         break;
       }
 
-      case "bollinger_bands": {
+      case "bollinger_bands":
+      case "bollinger_breakout_tick": {
         // Fires when price breaks outside upper or lower band
+        // Old config: band (upper | lower)
+        // Live config: direction (upper_break | lower_break)
         const period = parseInt(String(cfg.period ?? 20), 10);
-        const stdDev = parseFloat(String(cfg.stdDev ?? 2));
-        const band = String(cfg.band ?? "upper"); // "upper" | "lower"
-        if (ps && hist.length >= period) {
-          const bands = _bollingerBands(hist, period, stdDev);
-          if (band === "upper" && ps.price > bands.upper) return true;
-          if (band === "lower" && ps.price < bands.lower) return true;
+        const stdDev = parseFloat(
+          String(cfg.stdDev ?? cfg.stdDevMultiplier ?? 2),
+        );
+        const band = String(cfg.band ?? "");
+        const direction = String(cfg.direction ?? "");
+        if (ps && hist.length > period) {
+          const bands = _bollingerBands(hist.slice(0, -1), period, stdDev);
+          const dir = band || direction; // support both config key names
+          if (dir === "upper" || dir === "upper_break") {
+            if (ps.prevPrice <= bands.upper && ps.price > bands.upper)
+              return true;
+          }
+          if (dir === "lower" || dir === "lower_break") {
+            if (ps.prevPrice >= bands.lower && ps.price < bands.lower)
+              return true;
+          }
         }
         break;
       }
@@ -356,6 +478,25 @@ export function checkTriggers(
           if (!isNaN(rsi)) {
             if (direction === "above" && rsi > level) return true;
             if (direction === "below" && rsi < level) return true;
+          }
+        }
+        break;
+      }
+
+      case "vwap_cross_tick": {
+        // Fires when price crosses the session VWAP
+        const direction = String(cfg.direction ?? "");
+        if (!direction) break;
+        if (ps && hist.length >= 3) {
+          const prevPrice = hist[hist.length - 2];
+          const volumes = Array<number>(hist.length).fill(1);
+          const vwapValue = _vwap(hist, volumes);
+          if (isNaN(vwapValue)) break;
+          if (direction === "above") {
+            if (prevPrice <= vwapValue && ps.price > vwapValue) return true;
+          }
+          if (direction === "below") {
+            if (prevPrice >= vwapValue && ps.price < vwapValue) return true;
           }
         }
         break;
@@ -378,7 +519,7 @@ export function checkConditions(
   nowMs: number,
 ): boolean {
   for (const block of conditions) {
-    const cfg = block.config ?? {};
+    const cfg = { ...(block.config ?? {}), ...(block.params ?? {}) };
 
     switch (block.type) {
       case "max_bets_per_day": {
@@ -453,7 +594,7 @@ export function executeActions(
   const fills: SimFill[] = [];
 
   for (const block of actions) {
-    const cfg = block.config ?? {};
+    const cfg = { ...(block.config ?? {}), ...(block.params ?? {}) };
 
     switch (block.type) {
       case "skip_bet":

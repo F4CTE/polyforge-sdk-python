@@ -37,6 +37,7 @@ export interface Block {
   id: string;
   type: string;
   params?: Record<string, unknown>;
+  config?: Record<string, unknown>;
 }
 
 export interface LogicBlock extends Block {
@@ -252,7 +253,9 @@ export class StrategyRunner {
         // New key: set TTL to 25 hours so it expires safely after UTC midnight
         await redisClient.expire(key, 90_000);
       }
-      const maxDaily = await this.betaLimits.getLimit("maxDailyStrategyExecutions");
+      const maxDaily = await this.betaLimits.getLimit(
+        "maxDailyStrategyExecutions",
+      );
       if (count > maxDaily) {
         this.logger.warn(
           `Strategy ${this.strategyId} hit daily execution limit (${maxDaily}) — pausing until midnight UTC`,
@@ -346,7 +349,7 @@ export class StrategyRunner {
       // Group by tokenId to batch price-window reads
       const priceCache = new Map<string, number[]>();
       for (const block of taBlocks) {
-        const p = block.params ?? {};
+        const p = StrategyRunner.mergedParams(block);
         const tokenId = typeof p.tokenId === "string" ? p.tokenId : "";
         if (!tokenId) continue;
 
@@ -402,7 +405,10 @@ export class StrategyRunner {
 
         const resolvedBlock = {
           ...block,
-          params: resolveParams(block.params ?? {}, ctx.variables ?? {}),
+          params: resolveParams(
+            { ...(block.config ?? {}), ...(block.params ?? {}) },
+            ctx.variables ?? {},
+          ),
         };
 
         // Gather numeric inputs from variables referenced in params
@@ -446,20 +452,29 @@ export class StrategyRunner {
           `Unknown safety block type: ${block.type}. Failing closed for safety.`,
         );
         this.stop();
-        await this.onStatusChange("STOPPED", `Unknown safety block: ${block.type}`);
+        await this.onStatusChange(
+          "STOPPED",
+          `Unknown safety block: ${block.type}`,
+        );
         await this.prisma.strategy
           .update({
             where: { id: this.strategyId },
             data: { status: StrategyStatus.IDLE },
           })
           .catch(() => {});
-        await this.emitStrategyEvent("STRATEGY_STOPPED", `Unknown safety block: ${block.type}`);
+        await this.emitStrategyEvent(
+          "STRATEGY_STOPPED",
+          `Unknown safety block: ${block.type}`,
+        );
         return;
       }
 
       const resolvedBlock = {
         ...block,
-        params: resolveParams(block.params ?? {}, ctx.variables ?? {}),
+        params: resolveParams(
+          { ...(block.config ?? {}), ...(block.params ?? {}) },
+          ctx.variables ?? {},
+        ),
       };
       const result = await evaluator.evaluate(
         resolvedBlock,
@@ -489,7 +504,10 @@ export class StrategyRunner {
 
       const resolvedBlock = {
         ...block,
-        params: resolveParams(block.params ?? {}, ctx.variables ?? {}),
+        params: resolveParams(
+          { ...(block.config ?? {}), ...(block.params ?? {}) },
+          ctx.variables ?? {},
+        ),
       };
       const result = await evaluator.evaluate(
         resolvedBlock,
@@ -517,7 +535,10 @@ export class StrategyRunner {
 
       const resolvedBlock = {
         ...block,
-        params: resolveParams(block.params ?? {}, ctx.variables ?? {}),
+        params: resolveParams(
+          { ...(block.config ?? {}), ...(block.params ?? {}) },
+          ctx.variables ?? {},
+        ),
       };
       const result = await evaluator.evaluate(
         resolvedBlock,
@@ -551,7 +572,10 @@ export class StrategyRunner {
 
       const resolvedBlock = {
         ...block,
-        params: resolveParams(block.params ?? {}, ctx.variables ?? {}),
+        params: resolveParams(
+          { ...(block.config ?? {}), ...(block.params ?? {}) },
+          ctx.variables ?? {},
+        ),
       };
       const result = await evaluator.execute(
         resolvedBlock,
@@ -722,6 +746,11 @@ export class StrategyRunner {
     this.delayedActions.set(blockId, timer);
   }
 
+  /** Merge config + params with params taking priority (consistent with evaluation phases). */
+  private static mergedParams(block: Block): Record<string, unknown> {
+    return { ...(block.config ?? {}), ...(block.params ?? {}) };
+  }
+
   /** Precomputed: all tokenIds referenced in triggers + actions */
   private _cachedTokenIds: string[] | null = null;
 
@@ -729,7 +758,7 @@ export class StrategyRunner {
     if (this._cachedTokenIds) return this._cachedTokenIds;
     const ids = new Set<string>();
     for (const block of [...this.triggers, ...this.actions]) {
-      const params = block.params;
+      const params = StrategyRunner.mergedParams(block);
       if (params?.tokenId && typeof params.tokenId === "string")
         ids.add(params.tokenId);
     }

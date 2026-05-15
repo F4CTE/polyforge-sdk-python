@@ -376,6 +376,47 @@ describe("StrategyRunner — SAFETY evaluation", () => {
       expect.objectContaining({ type: "STRATEGY_STOPPED" }),
     );
   });
+
+  it("resolves safety block params from config fallback", async () => {
+    const state = makeState();
+    const redis = makeRedis();
+    const onStatusChange = vi.fn().mockResolvedValue(undefined);
+    const prisma = makePrisma();
+
+    const runner = makeRunner({
+      execMode: "EVENT",
+      state,
+      redis,
+      prisma,
+      onStatusChange,
+      safety: [
+        {
+          id: "safety-1",
+          type: "stop_if_daily_loss",
+          config: { maxLossUsdc: "10" },
+        },
+      ],
+    });
+
+    // Set dailyPnl below limit — without the config fallback, maxLossUsdc
+    // would default to 0 and the block would fire (pass), not stopping.
+    state.get.mockResolvedValue({ ...DEFAULT_STATE, dailyPnl: -15 });
+
+    await runner.onPriceEvent("tok1", 0.5);
+
+    expect(runner.status).toBe("STOPPED");
+    expect(onStatusChange).toHaveBeenCalledWith(
+      "STOPPED",
+      expect.stringContaining("SAFETY STOP"),
+    );
+    expect(prisma.strategy.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { status: "IDLE" } }),
+    );
+    expect(redis.xadd).toHaveBeenCalledWith(
+      "stream:events",
+      expect.objectContaining({ type: "STRATEGY_STOPPED" }),
+    );
+  });
 });
 
 describe("StrategyRunner — TRIGGER evaluation", () => {
@@ -444,6 +485,37 @@ describe("StrategyRunner — TRIGGER evaluation", () => {
     const state = makeState();
     const runner = makeRunner({ execMode: "EVENT", state, triggers: [] });
     await runner.onPriceEvent("tok1", 0.5);
+    expect(state.get).toHaveBeenCalled();
+  });
+
+  it("resolves trigger block params from config fallback", async () => {
+    const state = makeState();
+    const redis = makeRedis();
+    const onIntents = vi
+      .fn<(intents: OrderIntent[]) => Promise<void>>()
+      .mockResolvedValue(undefined);
+
+    // Use price_above_tick with config (not params) to exercise the fallback.
+    // Without config fallback, tokenId would be empty and the trigger would not fire.
+    const runner = makeRunner({
+      execMode: "EVENT",
+      state,
+      redis,
+      onIntents,
+      triggers: [
+        {
+          id: "t1",
+          type: "price_above_tick",
+          config: { tokenId: "tok1", threshold: "0.4" },
+        },
+      ],
+    });
+
+    state.get.mockResolvedValue(DEFAULT_STATE);
+
+    await runner.onPriceEvent("tok1", 0.5);
+
+    // Trigger should fire because price 0.5 > 0.4 threshold via config fallback
     expect(state.get).toHaveBeenCalled();
   });
 });
@@ -1051,6 +1123,84 @@ describe("StrategyRunner — getPrimaryTokenId", () => {
 
     await runner.onPriceEvent("tok-primary", 0.5);
     expect(state.getPrice).toHaveBeenCalledWith("tok-primary");
+  });
+});
+
+describe("StrategyRunner — config fallback for token discovery and prefetch", () => {
+  it("resolves primary token from trigger config (not params)", async () => {
+    const state = makeState();
+    state.get.mockResolvedValue({ ...DEFAULT_STATE });
+    state.getPrice = vi.fn().mockResolvedValue({ price: 0.5 });
+
+    const runner = makeRunner({
+      execMode: "EVENT",
+      state,
+      variables: [
+        { id: "v1", name: "testVar", expression: "currentPrice * 2" },
+      ],
+      triggers: [
+        { id: "t1", type: "every_tick", config: { tokenId: "tok-config" } },
+      ],
+    });
+
+    await runner.onPriceEvent("tok-config", 0.5);
+    expect(state.getPrice).toHaveBeenCalledWith("tok-config");
+  });
+
+  it("detects stale data for config-only tokenId", async () => {
+    const redis = makeRedis({
+      getClient: vi.fn().mockReturnValue({
+        lrange: vi.fn().mockResolvedValue([]),
+        mget: vi
+          .fn()
+          .mockResolvedValue([
+            JSON.stringify({ price: 0.5, timestamp: Date.now() - 6000 }),
+          ]),
+        incr: vi.fn().mockResolvedValue(1),
+        expire: vi.fn().mockResolvedValue(1),
+        set: vi.fn().mockResolvedValue("OK"),
+        del: vi.fn().mockResolvedValue(1),
+      }),
+    });
+    const state = makeState();
+    const runner = makeRunner({
+      execMode: "EVENT",
+      state,
+      redis,
+      triggers: [
+        {
+          id: "t1",
+          type: "every_tick",
+          config: { tokenId: "tok-stale-config" },
+        },
+      ],
+    });
+
+    await runner.onPriceEvent("tok-stale-config", 0.5);
+    expect(runner.status).toBe("PAUSED");
+    expect(runner.pauseReason).toBe("stale_market_data:tok-stale-config");
+  });
+
+  it("mergedParams returns tokenId from config when params is missing", () => {
+    const block = {
+      id: "b1",
+      type: "every_tick",
+      config: { tokenId: "tok-cfg" },
+    };
+    const merged = (StrategyRunner as any).mergedParams(block);
+    expect(merged.tokenId).toBe("tok-cfg");
+  });
+
+  it("mergedParams prefers params over config", () => {
+    const block = {
+      id: "b1",
+      type: "every_tick",
+      config: { tokenId: "tok-cfg", period: 10 },
+      params: { tokenId: "tok-params" },
+    };
+    const merged = (StrategyRunner as any).mergedParams(block);
+    expect(merged.tokenId).toBe("tok-params");
+    expect(merged.period).toBe(10);
   });
 });
 

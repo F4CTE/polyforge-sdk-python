@@ -14,7 +14,10 @@ import { FillsService, OrderIntent } from "../fills/fills.service";
 const STREAM = "stream:paper_orders";
 const GROUP = "paper-order-service";
 const CONSUMER = `paper-${process.pid}`;
-const PEL_MIN_IDLE_MS = 30_000;
+const DLQ_STREAM = "stream:paper_orders:dlq";
+const MAX_RETRIES = 3;
+const RETRY_KEY = (id: string) => `paper:retry:${id}`;
+const RETRY_TTL = 3600;
 
 @Injectable()
 export class StreamConsumerService implements OnModuleInit, OnModuleDestroy {
@@ -36,10 +39,39 @@ export class StreamConsumerService implements OnModuleInit, OnModuleDestroy {
       stream: STREAM,
       group: GROUP,
       consumer: CONSUMER,
-      minIdleMs: PEL_MIN_IDLE_MS,
+      minIdleMs: 30_000,
       handler: async (entry) => {
         const intent = entry.fields as unknown as OrderIntent;
-        await this.fills.simulate(intent);
+        try {
+          await this.fills.simulate(intent);
+        } catch (err: unknown) {
+          const client = this.redis.getClient();
+          const retries = await client.incr(RETRY_KEY(entry.id));
+          await client.expire(RETRY_KEY(entry.id), RETRY_TTL);
+          if (retries > MAX_RETRIES) {
+            const fieldsArr = Object.entries(entry.fields).flat();
+            await client.xadd(
+              DLQ_STREAM,
+              "*",
+              ...fieldsArr,
+              "error",
+              String(err instanceof Error ? err.message : String(err)),
+              "source",
+              "pel_reclaim",
+            );
+            await client.xack(STREAM, GROUP, entry.id);
+            await client.del(RETRY_KEY(entry.id));
+            this.logger.warn(
+              `DLQ'd reclaimed poison message ${entry.id} after ${retries} retries`,
+            );
+            return;
+          }
+          this.logger.error(
+            `Failed reclaimed intent ${intent.intentId} (attempt ${retries}/${MAX_RETRIES}) — NOT acking for retry`,
+            err instanceof Error ? err.message : String(err),
+          );
+          throw err;
+        }
       },
     });
     this.running = true;
@@ -88,14 +120,33 @@ export class StreamConsumerService implements OnModuleInit, OnModuleDestroy {
             const intent = this.parseFields(fields) as unknown as OrderIntent;
             try {
               await this.fills.simulate(intent);
+              await client.xack(STREAM, GROUP, id);
+              // Clear retry counter on success
+              await client.del(RETRY_KEY(id));
             } catch (err: unknown) {
-              this.logger.error(
-                `Failed to simulate intent ${intent.intentId}`,
-                err instanceof Error ? err.message : String(err),
-              );
+              const retries = await client.incr(RETRY_KEY(id));
+              await client.expire(RETRY_KEY(id), RETRY_TTL);
+              if (retries > MAX_RETRIES) {
+                // Dead-letter: permanently bad message, isolate and ACK
+                await client.xadd(
+                  DLQ_STREAM,
+                  "*",
+                  ...fields,
+                  "error",
+                  String(err instanceof Error ? err.message : String(err)),
+                );
+                await client.xack(STREAM, GROUP, id);
+                await client.del(RETRY_KEY(id));
+                this.logger.warn(
+                  `DLQ'd poison message ${id} after ${retries} retries`,
+                );
+              } else {
+                this.logger.error(
+                  `Failed to simulate intent ${intent.intentId} (attempt ${retries}/${MAX_RETRIES}) — NOT acking for retry`,
+                  err instanceof Error ? err.message : String(err),
+                );
+              }
             }
-            // Always ACK — fill simulation is idempotent on PaperOrder creation
-            await client.xack(STREAM, GROUP, id);
           }
         }
       } catch (err: unknown) {

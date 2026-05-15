@@ -1203,6 +1203,7 @@ async function main() {
       status: 'CONFIRMED',
       fillSize: '100.000000',
       fillPrice: '0.480000',
+      intentId: 'seed-alice-order-1',
       createdAt: hoursAgo(36),
     },
   });
@@ -1232,6 +1233,7 @@ async function main() {
       status: 'CONFIRMED',
       fillSize: '25.000000',
       fillPrice: '0.522000',
+      intentId: 'seed-bob-order-1',
       createdAt: hoursAgo(6),
     },
   });
