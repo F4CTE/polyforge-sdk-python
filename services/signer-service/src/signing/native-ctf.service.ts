@@ -573,24 +573,31 @@ export class NativeCtfService {
         // may create a ghost lock.  Clean it up with the same token-checked
         // Lua unlock so a delayed cleanup cannot delete a newer owner's lock.
         if (raceWinner === "timeout") {
-          void setPromise.then((lateResult: string | null) => {
-            if (lateResult === "OK") {
-              this.logger.debug(`Cleaning up ghost CTF nonce lock: ${key}`);
-              client
-                .eval(
-                  NativeCtfService.UNLOCK_SCRIPT,
-                  1,
-                  key,
-                  attemptToken,
-                )
-                .catch((cleanupErr: unknown) => {
-                  this.logger.error(
-                    `Failed to clean up ghost CTF nonce lock: ${key}`,
-                    (cleanupErr as Error)?.message,
-                  );
-                });
-            }
-          });
+          void setPromise
+            .then((lateResult: string | null) => {
+              if (lateResult === "OK") {
+                this.logger.debug(`Cleaning up ghost CTF nonce lock: ${key}`);
+                client
+                  .eval(
+                    NativeCtfService.UNLOCK_SCRIPT,
+                    1,
+                    key,
+                    attemptToken,
+                  )
+                  .catch((cleanupErr: unknown) => {
+                    this.logger.error(
+                      `Failed to clean up ghost CTF nonce lock: ${key}`,
+                      (cleanupErr as Error)?.message,
+                    );
+                  });
+              }
+            })
+            .catch(() => {
+              // The late SET rejected after the timeout raced ahead —
+              // expected when the Redis connection drops or the command
+              // is cancelled during ioredis offline-queue replay.
+              // Nothing to clean up (no ghost lock was created).
+            });
         }
 
         // Transient error — backoff and retry.

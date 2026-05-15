@@ -1208,6 +1208,59 @@ describe("NativeCtfService", () => {
       expect(loggerErrorSpy).toHaveBeenCalled();
     });
 
+    it("survives late SET rejection after timeout without unhandled rejection", async () => {
+      vi.useFakeTimers();
+
+      const { redisService, client } = makeMockRedis();
+
+      // First SET hangs until explicitly rejected (simulates ioredis
+      // offline-queue failure after the local timeout has already won).
+      let rejectSetPromise!: (reason: Error) => void;
+      const firstSetPromise = new Promise<string | null>((_resolve, reject) => {
+        rejectSetPromise = reject;
+      });
+      client.set.mockReturnValueOnce(firstSetPromise);
+
+      // Second invocation (after backoff): succeeds normally.
+      client.set.mockResolvedValueOnce("OK");
+
+      const svcWithRedis = new NativeCtfService(redisService);
+
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ result: "0x1" }),
+      });
+
+      const creds = makeTestCreds();
+      let caught: Error | null = null;
+      const promise = svcWithRedis
+        .redeemPosition(creds, 137, "http://fake-rpc", {
+          conditionId: CONDITION_ID,
+          indexSets: [1n],
+        })
+        .catch((e: Error) => {
+          caught = e;
+        });
+
+      // Advance past the first attempt's 3 s timeout + backoff delay.
+      await vi.advanceTimersByTimeAsync(3_500);
+
+      // Now reject the first (timed-out) SET — simulating ioredis offline
+      // queue where the queued SET command eventually fails.
+      rejectSetPromise(new Error("Connection closed"));
+      await vi.advanceTimersByTimeAsync(1_000);
+      await promise;
+      vi.useRealTimers();
+      zeroCredentials(creds);
+
+      // Operation should succeed (second attempt acquired the lock).
+      expect(caught).toBeNull();
+      // client.eval is called exactly once: for the normal lock release
+      // (the second attempt's release).  The ghost-cleanup path did not
+      // fire because the late SET rejected, so no ghost lock was created.
+      expect(client.eval).toHaveBeenCalledTimes(1);
+    });
+
     it("does not use Redis lock when RedisService is not injected", async () => {
       const svc = new NativeCtfService(); // no Redis
 
