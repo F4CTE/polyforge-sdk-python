@@ -66,6 +66,8 @@ from polyforge.models import (
     WebhookEvent,
     WebhookTestResult,
     WhaleTrade,
+    PersonalDataExport,
+    PersonalDataExportMeta,
 )
 
 
@@ -419,6 +421,108 @@ class TestModelParsing:
         assert market.description is None
         assert market.end_date is None
         assert market.resolved is False
+
+    def test_market_symbol_is_optional_with_default_none(self):
+        """symbol field is deprecated — default should be None not empty string."""
+        market = Market()
+        assert market.symbol is None
+
+    def test_market_updated_at_is_optional_with_default_none(self):
+        """updated_at field is deprecated — default should be None not empty string."""
+        market = Market()
+        assert market.updated_at is None
+
+    def test_market_import_available_from_package_root(self):
+        """Market must be importable from polyforge (not just polyforge.models)."""
+        from polyforge import Market as RootMarket  # noqa: F811
+        assert RootMarket is Market
+
+    def test_strategy_exec_mode_import_available_from_package_root(self):
+        """StrategyExecMode must be importable from polyforge package root."""
+        from polyforge import StrategyExecMode as RootExecMode  # noqa: F811
+        assert RootExecMode is StrategyExecMode
+
+    def test_support_ticket_import_available_from_package_root(self):
+        """SupportTicket must be importable from polyforge package root."""
+        from polyforge import SupportTicket  # noqa: F401
+        assert SupportTicket is not None
+
+    def test_market_parses_resolved_string_true(self):
+        """_parse must coerce \"true\" string to True for boolean fields."""
+        api_response = {
+            "id": "mkt-str-bool",
+            "title": "String bool test",
+            "category": "Crypto",
+            "resolved": "true",
+        }
+        market = _parse(Market, api_response)
+        assert market.resolved is True
+
+    def test_market_parses_resolved_string_false(self):
+        """_parse must coerce \"false\" string to False for boolean fields."""
+        api_response = {
+            "id": "mkt-str-bool",
+            "title": "String bool test",
+            "category": "Crypto",
+            "resolved": "false",
+        }
+        market = _parse(Market, api_response)
+        assert market.resolved is False
+
+    def test_market_parses_resolved_numeric_one(self):
+        """_parse must coerce numeric 1 to True for boolean fields."""
+        api_response = {
+            "id": "mkt-num-bool",
+            "title": "Numeric bool test",
+            "category": "Crypto",
+            "resolved": 1,
+        }
+        market = _parse(Market, api_response)
+        assert market.resolved is True
+
+    def test_market_parses_resolved_numeric_zero(self):
+        """_parse must coerce numeric 0 to False for boolean fields."""
+        api_response = {
+            "id": "mkt-num-bool",
+            "title": "Numeric bool test",
+            "category": "Crypto",
+            "resolved": 0,
+        }
+        market = _parse(Market, api_response)
+        assert market.resolved is False
+
+    def test_market_parses_rejects_unrecognized_bool_string(self):
+        """_parse must reject unrecognized boolean strings like \"on\"."""
+        api_response = {
+            "id": "mkt-bad-str",
+            "title": "Bad bool string",
+            "category": "Crypto",
+            "resolved": "on",
+        }
+        with pytest.raises(ValueError, match="Unrecognized boolean string"):
+            _parse(Market, api_response)
+
+    def test_market_parses_rejects_out_of_range_numeric_bool(self):
+        """_parse must reject numeric bool values other than 0/1 (e.g. 2)."""
+        api_response = {
+            "id": "mkt-bad-num",
+            "title": "Bad numeric bool",
+            "category": "Crypto",
+            "resolved": 2,
+        }
+        with pytest.raises(ValueError, match="Numeric value out of range"):
+            _parse(Market, api_response)
+
+    def test_market_parses_rejects_negative_numeric_bool(self):
+        """_parse must reject negative numeric bool values like -1."""
+        api_response = {
+            "id": "mkt-neg-num",
+            "title": "Negative bool",
+            "category": "Crypto",
+            "resolved": -1,
+        }
+        with pytest.raises(ValueError, match="Numeric value out of range"):
+            _parse(Market, api_response)
 
     def test_strategy_model_instantiation(self):
         """Should instantiate Strategy model."""
@@ -8726,3 +8830,336 @@ class TestRewardsEndpointRoundtrips:
             assert captured["raw_path"] == b"/api/v1/rewards/sponsor-url/market%2Fwith%2Fslashes"
         finally:
             client.close()
+
+
+# ── GDPR Personal Data Export (POLA-3611) ──────────────────────────────────
+
+
+class TestExportPersonalDataPresence:
+    """Surface check: export_personal_data exists on both clients (POLA-3611)."""
+
+    def test_method_present_on_sync_client(self):
+        assert callable(getattr(PolyforgeClient, "export_personal_data", None))
+
+    def test_method_present_on_async_client(self):
+        assert callable(getattr(AsyncPolyforgeClient, "export_personal_data", None))
+
+
+class TestExportPersonalDataSignature:
+    """Verify export_personal_data accepts the expected parameter (POLA-3611)."""
+
+    def test_sync_accepts_format_param(self):
+        import inspect
+        sig = inspect.signature(PolyforgeClient.export_personal_data)
+        assert "format" in sig.parameters
+        assert sig.parameters["format"].default == "json"
+
+    def test_async_accepts_format_param(self):
+        import inspect
+        sig = inspect.signature(AsyncPolyforgeClient.export_personal_data)
+        assert "format" in sig.parameters
+        assert sig.parameters["format"].default == "json"
+
+
+class TestExportPersonalDataPath:
+    """Verify export_personal_data targets the correct controller path (POLA-3611)."""
+
+    def test_sync_uses_correct_path(self):
+        import inspect
+        src = inspect.getsource(PolyforgeClient.export_personal_data)
+        assert '"/api/v1/me/export"' in src
+
+    def test_async_uses_correct_path(self):
+        import inspect
+        src = inspect.getsource(AsyncPolyforgeClient.export_personal_data)
+        assert '"/api/v1/me/export"' in src
+
+
+class TestExportPersonalDataValidation:
+    """Verify export_personal_data rejects invalid format values (POLA-3611)."""
+
+    def test_rejects_invalid_format(self):
+        client = PolyforgeClient(api_key="test")
+        try:
+            with pytest.raises(ValueError, match="format must be"):
+                client.export_personal_data(format="xml")
+        finally:
+            client.close()
+
+    def test_accepts_json_format(self):
+        import inspect
+        src = inspect.getsource(PolyforgeClient.export_personal_data)
+        assert "json" in src
+        assert "csv" in src
+
+    def test_async_rejects_invalid_format(self):
+        import pytest
+        client = AsyncPolyforgeClient(api_key="test")
+        try:
+            with pytest.raises(ValueError, match="format must be"):
+                import asyncio
+                asyncio.run(client.export_personal_data(format="xml"))
+        finally:
+            import asyncio
+            try:
+                asyncio.run(client.close())
+            except Exception:
+                pass
+
+
+class TestExportPersonalDataRoundtrips:
+    """Stub the HTTP layer and exercise export_personal_data (POLA-3611)."""
+
+    @staticmethod
+    def _client_with(handler):
+        transport = httpx.MockTransport(handler)
+        client = PolyforgeClient(api_key="test", api_url="http://localhost:9999")
+        client._client = httpx.Client(
+            base_url="http://localhost:9999",
+            headers={"Authorization": "Bearer test"},
+            transport=transport,
+        )
+        return client
+
+    @staticmethod
+    def _async_client_with(handler):
+        transport = httpx.MockTransport(handler)
+        client = AsyncPolyforgeClient(api_key="test", api_url="http://localhost:9999")
+        client._client = httpx.AsyncClient(
+            base_url="http://localhost:9999",
+            headers={"Authorization": "Bearer test"},
+            transport=transport,
+        )
+        return client
+
+    def test_json_export_returns_personal_data_export(self):
+        def handler(request):
+            assert request.method == "GET"
+            assert request.url.path == "/api/v1/me/export"
+            return httpx.Response(200, json={
+                "generatedAt": "2026-05-10T12:00:00Z",
+                "formatVersion": "1.0.0",
+                "_meta": {
+                    "maxRecordsPerCollection": 1000,
+                    "collectionsTruncated": {"orders": 5000},
+                },
+                "account": {"email": "user@example.com", "createdAt": "2025-01-01T00:00:00Z"},
+                "settings": {"notificationSettings": {}},
+                "security": {"logins": []},
+                "trading": {"strategies": [], "orders": []},
+                "communications": {"webhooks": [{"url": "example.com"}]},
+                "social": {"likes": []},
+            })
+
+        client = self._client_with(handler)
+        try:
+            result = client.export_personal_data(format="json")
+            assert isinstance(result, PersonalDataExport)
+            assert result.generated_at == "2026-05-10T12:00:00Z"
+            assert result.format_version == "1.0.0"
+            assert result.meta is not None
+            assert isinstance(result.meta, PersonalDataExportMeta)
+            assert result.meta.max_records_per_collection == 1000
+            assert result.meta.collections_truncated == {"orders": 5000}
+            assert result.account["email"] == "user@example.com"
+            assert result.communications["webhooks"] == [{"url": "example.com"}]
+        finally:
+            client.close()
+
+    def test_csv_export_returns_raw_text(self):
+        def handler(request):
+            assert request.method == "GET"
+            assert request.url.path == "/api/v1/me/export"
+            assert request.url.params.get("format") == "csv"
+            return httpx.Response(200, text="col1,col2\nval1,val2\n",
+                                  headers={"Content-Type": "text/csv"})
+
+        client = self._client_with(handler)
+        try:
+            result = client.export_personal_data(format="csv")
+            assert isinstance(result, str)
+            assert "col1,col2" in result
+            assert "val1,val2" in result
+        finally:
+            client.close()
+
+    def test_json_default_format_no_query_param(self):
+        def handler(request):
+            assert request.method == "GET"
+            assert request.url.path == "/api/v1/me/export"
+            assert "format" not in request.url.params
+            return httpx.Response(200, json={
+                "generatedAt": "2026-05-10T12:00:00Z",
+                "formatVersion": "1.0.0",
+                "_meta": {"maxRecordsPerCollection": 1000, "collectionsTruncated": {}},
+                "account": {},
+                "settings": {},
+                "security": {},
+                "trading": {},
+                "communications": {},
+                "social": {},
+            })
+
+        client = self._client_with(handler)
+        try:
+            result = client.export_personal_data()
+            assert isinstance(result, PersonalDataExport)
+        finally:
+            client.close()
+
+    def test_async_json_export(self):
+        def handler(request):
+            assert request.method == "GET"
+            assert request.url.path == "/api/v1/me/export"
+            return httpx.Response(200, json={
+                "generatedAt": "2026-05-10T12:00:00Z",
+                "formatVersion": "1.0.0",
+                "_meta": {"maxRecordsPerCollection": 1000, "collectionsTruncated": {}},
+                "account": {},
+                "settings": {},
+                "security": {},
+                "trading": {},
+                "communications": {},
+                "social": {},
+            })
+
+        async def _run():
+            client = self._async_client_with(handler)
+            try:
+                result = await client.export_personal_data(format="json")
+                assert isinstance(result, PersonalDataExport)
+                assert result.generated_at == "2026-05-10T12:00:00Z"
+            finally:
+                await client.close()
+
+        import asyncio
+        asyncio.run(_run())
+
+    def test_async_csv_export(self):
+        def handler(request):
+            assert request.method == "GET"
+            assert request.url.path == "/api/v1/me/export"
+            assert request.url.params.get("format") == "csv"
+            return httpx.Response(200, text="col1,col2\nval1,val2\n",
+                                  headers={"Content-Type": "text/csv"})
+
+        async def _run():
+            client = self._async_client_with(handler)
+            try:
+                result = await client.export_personal_data(format="csv")
+                assert isinstance(result, str)
+                assert "col1,col2" in result
+            finally:
+                await client.close()
+
+        import asyncio
+        asyncio.run(_run())
+
+    def test_error_propagated_from_server(self):
+        def handler(request):
+            return httpx.Response(401, json={"message": "Unauthorized", "code": "UNAUTHORIZED"})
+
+        client = self._client_with(handler)
+        try:
+            with pytest.raises(AuthenticationError):
+                client.export_personal_data()
+        finally:
+            client.close()
+
+
+class TestPersonalDataExportModelParsing:
+    """Verify _parse correctly maps the platform JSON shape to PersonalDataExport (POLA-3611)."""
+
+    def test_parse_full_json_payload(self):
+        raw = {
+            "generatedAt": "2026-05-10T12:00:00Z",
+            "formatVersion": "1.0.0",
+            "_meta": {
+                "maxRecordsPerCollection": 1000,
+                "collectionsTruncated": {"orders": 5000, "positions": 1200},
+            },
+            "account": {
+                "id": "u-abc",
+                "email": "user@example.com",
+                "username": "trader1",
+                "createdAt": "2025-01-01T00:00:00Z",
+                "totpEnabled": True,
+            },
+            "settings": {
+                "notificationSettings": {"emailEnabled": True},
+                "betaUsage": False,
+            },
+            "security": {
+                "logins": [
+                    {"ip": "1.2.3.4", "timestamp": "2026-01-01T00:00:00Z", "success": True},
+                ],
+                "apiKeyCount": 3,
+            },
+            "trading": {
+                "strategies": [{"id": "s-1", "name": "Momentum"}],
+                "orders": [
+                    {"id": "o-1", "side": "BUY", "outcome": "YES", "size": "10.00", "price": "0.55"},
+                ],
+            },
+            "communications": {
+                "webhooks": [
+                    {"id": "wh-1", "url": "example.com", "events": ["ORDER_FILLED"]},
+                ],
+            },
+            "social": {
+                "likes": [{"strategyId": "s-99", "likedAt": "2026-02-01T00:00:00Z"}],
+            },
+        }
+        result = _parse(PersonalDataExport, raw)
+        assert isinstance(result, PersonalDataExport)
+        assert result.generated_at == "2026-05-10T12:00:00Z"
+        assert result.format_version == "1.0.0"
+
+        assert result.meta is not None
+        assert isinstance(result.meta, PersonalDataExportMeta)
+        assert result.meta.max_records_per_collection == 1000
+        assert result.meta.collections_truncated == {"orders": 5000, "positions": 1200}
+
+        assert result.account["email"] == "user@example.com"
+        assert result.account["totpEnabled"] is True
+        assert result.security["logins"][0]["ip"] == "1.2.3.4"
+        assert result.trading["strategies"][0]["name"] == "Momentum"
+        assert result.communications["webhooks"][0]["url"] == "example.com"
+        assert result.social["likes"][0]["strategyId"] == "s-99"
+
+    def test_parse_minimal_json_payload_no_meta(self):
+        raw = {
+            "generatedAt": "2026-05-10T12:00:00Z",
+            "formatVersion": "1.0.0",
+            "account": {},
+            "settings": {},
+            "security": {},
+            "trading": {},
+            "communications": {},
+            "social": {},
+        }
+        result = _parse(PersonalDataExport, raw)
+        assert isinstance(result, PersonalDataExport)
+        assert result.meta is None
+
+    def test_model_defaults(self):
+        export = PersonalDataExport()
+        assert export.generated_at == ""
+        assert export.format_version == ""
+        assert export.meta is None
+        assert export.account == {}
+        assert export.settings == {}
+        assert export.security == {}
+        assert export.trading == {}
+        assert export.communications == {}
+        assert export.social == {}
+
+    def test_meta_defaults(self):
+        meta = PersonalDataExportMeta()
+        assert meta.max_records_per_collection == 1000
+        assert meta.collections_truncated == {}
+
+    def test_model_exports_from_package(self):
+        from polyforge import PersonalDataExport, PersonalDataExportMeta
+        assert PersonalDataExport is not None
+        assert PersonalDataExportMeta is not None
