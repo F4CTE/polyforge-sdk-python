@@ -14,7 +14,7 @@ import type {
   PriceCandle,
   CandleResolution,
 } from "@polyforge/shared-types";
-import { ClobClientService } from "../clob-client/clob-client.service";
+import { ClobClientService, type ClobInterval } from "../clob-client/clob-client.service";
 
 interface PolymarketAuthContext {
   order: Record<string, unknown>;
@@ -27,7 +27,7 @@ interface PolymarketCancelContext {
 
 const RESOLUTION_TO_PARAMS: Record<
   CandleResolution,
-  { interval: string; fidelity?: number }
+  { interval: ClobInterval; fidelity?: number }
 > = {
   "1m": { interval: "max", fidelity: 1 },
   "5m": { interval: "max", fidelity: 5 },
