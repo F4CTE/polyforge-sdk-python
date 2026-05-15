@@ -492,7 +492,7 @@ export class StrategyRunner {
             if (this.status === "RUNNING") {
               void this.tick();
             }
-          });
+          }).catch(() => {});
         }
       } else if (!lockAcquired && this.status === "RUNNING") {
         // Lock acquisition failed without any pending coalesced tick.
@@ -522,7 +522,7 @@ export class StrategyRunner {
             if (this.status === "RUNNING") {
               void this.tick();
             }
-          });
+          }).catch(() => {});
         } else if (this.execMode === "HYBRID" && this.followUpTimer === null) {
           this.scheduledFollowUp = true;
           this.followUpTimer = setTimeout(() => {
