@@ -3396,7 +3396,7 @@ describe("StrategyRunner — concurrent tick serialization", () => {
     await runner.onPriceEvent("tok1", 0.5);
 
     // tickInFlight must NOT be leaked — finally always resets it
-    expect(runner.tickInFlight).toBe(false);
+    expect(runner['tickInFlight']).toBe(false);
     // Runner is not dead — another tick would succeed
     expect(runner.status).toBe("RUNNING");
   });
@@ -3438,7 +3438,7 @@ describe("StrategyRunner — concurrent tick serialization", () => {
     // First tick: Redis lock contested → evaluation skipped, tick gate released
     await runner.onPriceEvent("tok1", 0.5);
     expect(state.getStateAndPrices).not.toHaveBeenCalled();
-    expect(runner.tickInFlight).toBe(false);
+    expect(runner['tickInFlight']).toBe(false);
     expect(runner.status).toBe("RUNNING");
 
     // Advance past MIN_TICK_MS so the next tick passes debounce
