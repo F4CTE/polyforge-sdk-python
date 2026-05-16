@@ -427,6 +427,39 @@ export class StrategyRunner {
         this.activeLockToken = null;
       }
 
+      // Start Redis distributed unlock before releasing tickInFlight so
+      // follow-up ticks can observe pendingRedisUnlock in local race windows.
+      if (lockAcquired) {
+        const redisClient = this.redis.getClient();
+        const lockKey = `lock:tick:${this.strategyId}`;
+        const unlockPromise = redisClient.eval(
+          "if redis.call('GET', KEYS[1]) == ARGV[1] then return redis.call('DEL', KEYS[1]) else return 0 end",
+          1,
+          lockKey,
+          lockToken,
+        );
+        const thisUnlock = unlockPromise;
+        this.pendingRedisUnlock = thisUnlock;
+        thisUnlock
+          .then((result) => {
+            if (result !== 1) {
+              this.logger.warn(
+                `Lock release for ${this.strategyId} did not delete the key (already expired or taken by another instance)`,
+              );
+            }
+          })
+          .catch((err) => {
+            this.logger.warn(
+              `Failed to release lock for ${this.strategyId}: ${String(err)} — lock will expire naturally in 10s`,
+            );
+          })
+          .finally(() => {
+            if (this.pendingRedisUnlock === thisUnlock) {
+              this.pendingRedisUnlock = null;
+            }
+          });
+      }
+
       // Release the local in-flight gate immediately — do NOT block on
       // Redis unlock.  A slow or stuck Redis eval() would otherwise hold
       // tickInFlight=true and stall all tick processing, turning a
@@ -512,10 +545,7 @@ export class StrategyRunner {
                 if (this.pendingRedisUnlockRetryFor === pendingUnlock) {
                   this.pendingRedisUnlockRetryFor = null;
                 }
-                if (
-                  this.status === "RUNNING" &&
-                  this.pendingRedisUnlock === pendingUnlock
-                ) {
+                if (this.status === "RUNNING") {
                   this.scheduledFollowUp = true;
                   void this.tick();
                 }
@@ -567,10 +597,7 @@ export class StrategyRunner {
                 if (this.pendingRedisUnlockRetryFor === pendingUnlock) {
                   this.pendingRedisUnlockRetryFor = null;
                 }
-                if (
-                  this.status === "RUNNING" &&
-                  this.pendingRedisUnlock === pendingUnlock
-                ) {
+                if (this.status === "RUNNING") {
                   this.scheduledFollowUp = true;
                   void this.tick();
                 }
@@ -584,46 +611,6 @@ export class StrategyRunner {
             void this.tick();
           }, 200);
         }
-      }
-
-      // Release the Redis distributed lock asynchronously — do NOT block
-      // the tick-processing pipeline on Redis unlock latency.  The lock
-      // carries a 10s TTL and self-expires if this no-await call fails
-      // or is delayed.
-      //
-      // The pending promise is exposed so EVENT-mode lock-miss paths can
-      // distinguish a failed SET NX caused by our own unfinished unlock
-      // (race window — must retry) from a failed SET NX caused by another
-      // instance holding the lock (multi-instance dedup — must not retry).
-      if (lockAcquired) {
-        const redisClient = this.redis.getClient();
-        const lockKey = `lock:tick:${this.strategyId}`;
-        const unlockPromise = redisClient.eval(
-          "if redis.call('GET', KEYS[1]) == ARGV[1] then return redis.call('DEL', KEYS[1]) else return 0 end",
-          1,
-          lockKey,
-          lockToken,
-        );
-        const thisUnlock = unlockPromise;
-        this.pendingRedisUnlock = thisUnlock;
-        thisUnlock
-          .then((result) => {
-            if (result !== 1) {
-              this.logger.warn(
-                `Lock release for ${this.strategyId} did not delete the key (already expired or taken by another instance)`,
-              );
-            }
-          })
-          .catch((err) => {
-            this.logger.warn(
-              `Failed to release lock for ${this.strategyId}: ${String(err)} — lock will expire naturally in 10s`,
-            );
-          })
-          .finally(() => {
-            if (this.pendingRedisUnlock === thisUnlock) {
-              this.pendingRedisUnlock = null;
-            }
-          });
       }
     }
   }

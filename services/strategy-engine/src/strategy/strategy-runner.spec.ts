@@ -3315,7 +3315,10 @@ describe("StrategyRunner — concurrent tick serialization", () => {
       resolveUnlockA(1);
       await vi.advanceTimersByTimeAsync(0);
 
-      expect(client.set).toHaveBeenCalledTimes(5);
+      // Both unlock generations can now schedule their own retries:
+      // retry behind unlock C (already asserted via state call count) and
+      // the older retry behind unlock A during cleanup resolution.
+      expect(client.set).toHaveBeenCalledTimes(6);
     } finally {
       vi.useRealTimers();
     }
