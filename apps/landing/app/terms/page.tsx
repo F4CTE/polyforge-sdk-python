@@ -593,51 +593,59 @@ export default function TermsPage() {
             </Section>
 
             {/* §11 */}
-            <Section title="11. Financial Risk Disclaimer">
-              <Disclaimer>
-                Read this section carefully. It contains critical information
-                about the risks of using the Service.
-              </Disclaimer>
-
-              <Sub title="11.1 Trading Risk">
-                <p>
-                  Prediction market trading involves the risk of loss of funds.
-                  There is no guarantee that any strategy will be profitable.
-                  You may lose some or all funds you commit. You should only
-                  trade with funds you can afford to lose.
-                </p>
-              </Sub>
-
-              <Sub title="11.2 Backtested and Simulated Performance">
+            <section
+              id="risk-disclosure"
+              className="border-b border-subtle py-10 last:border-b-0"
+            >
+              <h2 className="text-display-sm font-semibold text-primary mb-4">
+                11. Financial Risk Disclaimer
+              </h2>
+              <div className="text-body-md text-secondary leading-[1.75] space-y-4">
                 <Disclaimer>
-                  Past performance does not guarantee future results.
+                  Read this section carefully. It contains critical information
+                  about the risks of using the Service.
                 </Disclaimer>
-                <p>
-                  Backtested results are hypothetical, subject to hindsight
-                  bias, ideal execution assumptions, non-recurring market
-                  conditions, and unaccounted fees/slippage. All simulated
-                  metrics are illustrative only.
-                </p>
-              </Sub>
 
-              <Sub title="11.3 System and Technology Risk">
-                <p>
-                  Automated trading systems are subject to software bugs,
-                  latency, connectivity failures, API disruptions, and exchange
-                  outages. PolyForge is not liable for losses arising from
-                  system failures.
-                </p>
-              </Sub>
+                <Sub title="11.1 Trading Risk">
+                  <p>
+                    Prediction market trading involves the risk of loss of
+                    funds. There is no guarantee that any strategy will be
+                    profitable. You may lose some or all funds you commit. You
+                    should only trade with funds you can afford to lose.
+                  </p>
+                </Sub>
 
-              <Sub title="11.4 Regulatory Risk">
-                <p>
-                  The legal status of prediction markets is subject to change.
-                  Regulatory actions could materially affect your ability to use
-                  the Service. PolyForge is not responsible for losses from
-                  regulatory changes.
-                </p>
-              </Sub>
-            </Section>
+                <Sub title="11.2 Backtested and Simulated Performance">
+                  <Disclaimer>
+                    Past performance does not guarantee future results.
+                  </Disclaimer>
+                  <p>
+                    Backtested results are hypothetical, subject to hindsight
+                    bias, ideal execution assumptions, non-recurring market
+                    conditions, and unaccounted fees/slippage. All simulated
+                    metrics are illustrative only.
+                  </p>
+                </Sub>
+
+                <Sub title="11.3 System and Technology Risk">
+                  <p>
+                    Automated trading systems are subject to software bugs,
+                    latency, connectivity failures, API disruptions, and
+                    exchange outages. PolyForge is not liable for losses arising
+                    from system failures.
+                  </p>
+                </Sub>
+
+                <Sub title="11.4 Regulatory Risk">
+                  <p>
+                    The legal status of prediction markets is subject to change.
+                    Regulatory actions could materially affect your ability to
+                    use the Service. PolyForge is not responsible for losses
+                    from regulatory changes.
+                  </p>
+                </Sub>
+              </div>
+            </section>
 
             {/* §12 */}
             <Section title="12. No Financial Advice">

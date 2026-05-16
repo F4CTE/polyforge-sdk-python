@@ -4,19 +4,16 @@ import { PolyforgeLogomark } from "@polyforge/ui";
 import { FOOTER_LINKS } from "../data/landing-data";
 
 const SOCIAL_ICONS: { label: string; href: string; letter: string }[] = [
-  { label: "Follow on X", href: "https://twitter.com/polyforge", letter: "X" },
-  { label: "Join Discord", href: "https://discord.gg/polyforge", letter: "D" },
-  {
-    label: "Join Telegram",
-    href: "https://t.me/polyforge",
-    letter: "T",
-  },
-  {
-    label: "GitHub",
-    href: "https://github.com/polyforge",
-    letter: "G",
-  },
+  { label: "Follow on X", href: "https://x.com/polyforge", letter: "X" },
+  { label: "GitHub", href: "https://github.com/F4CTE", letter: "G" },
 ];
+
+function linkAttrs(href: string, external?: boolean) {
+  if (external || /^(https?:\/\/|mailto:)/.test(href)) {
+    return { target: "_blank", rel: "noopener noreferrer" };
+  }
+  return {};
+}
 
 export function Footer() {
   return (
@@ -66,16 +63,40 @@ export function Footer() {
                 {col.title}
               </p>
               <ul className="flex flex-col gap-2.5">
-                {col.links.map((label) => (
-                  <li key={label}>
-                    <a
-                      href="#"
-                      className="text-body-sm text-secondary hover:text-primary transition-colors duration-micro focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-text rounded-sm"
-                    >
-                      {label}
-                    </a>
-                  </li>
-                ))}
+                {col.links.map((link) => {
+                  const attrs = linkAttrs(link.href, link.external);
+                  const isCookieSettings = link.href === "#cookie-settings";
+                  return (
+                    <li key={link.label}>
+                      {isCookieSettings ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            try {
+                              localStorage.removeItem("polyforge:consent");
+                            } catch {
+                              // silent
+                            }
+                            window.dispatchEvent(
+                              new CustomEvent("polyforge:consent-reset"),
+                            );
+                          }}
+                          className="text-body-sm text-secondary hover:text-primary transition-colors duration-micro focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-text rounded-sm bg-transparent border-0 p-0 cursor-pointer font-sans"
+                        >
+                          {link.label}
+                        </button>
+                      ) : (
+                        <a
+                          href={link.href}
+                          className="text-body-sm text-secondary hover:text-primary transition-colors duration-micro focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-text rounded-sm"
+                          {...attrs}
+                        >
+                          {link.label}
+                        </a>
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
             </nav>
           ))}

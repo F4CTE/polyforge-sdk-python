@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
-import Script from "next/script";
 import { PostHogProvider } from "./providers";
+import { CookieConsent } from "./components/cookie-consent";
+import { PlausibleAnalytics } from "./components/plausible-analytics";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -83,7 +84,7 @@ const jsonLd = {
     description: "Early access — free during beta",
   },
   featureList: [
-    "Visual drag-and-drop strategy builder with 50+ blocks",
+    "Visual drag-and-drop strategy builder with 36 blocks",
     "Paper trading and historical backtesting",
     "Live 24/7 automated execution",
     "Copy trading with whale mirroring",
@@ -134,12 +135,8 @@ export default function RootLayout({
           Skip to main content
         </a>
         <PostHogProvider>{children}</PostHogProvider>
-        <Script
-          defer
-          data-domain="polyforge.app"
-          src="https://plausible.io/js/script.js"
-          strategy="afterInteractive"
-        />
+        <CookieConsent />
+        <PlausibleAnalytics />
       </body>
     </html>
   );

@@ -103,15 +103,11 @@ export function FeatureMatrix() {
         </div>
 
         <div className="mt-4 flex justify-center gap-2.5 flex-wrap font-mono text-xs text-tertiary">
-          <span>100+ API endpoints</span>
+          <span>API &amp; SDK developer platform</span>
           <span aria-hidden="true">·</span>
-          <span>33 MCP tools</span>
+          <span>MCP protocol integration</span>
           <span aria-hidden="true">·</span>
-          <span>15 achievement badges</span>
-          <span aria-hidden="true">·</span>
-          <span>13 backend services</span>
-          <span aria-hidden="true">·</span>
-          <span>3 SDKs</span>
+          <span>3 cross-platform SDKs</span>
         </div>
       </div>
     </section>

@@ -37,11 +37,52 @@ function getSentryEnvelopeEndpoint(dsn: string | undefined) {
   }
 }
 
+const POSTHOG_API_HOST =
+  process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://us.i.posthog.com";
+const POSTHOG_ASSETS_HOST = POSTHOG_API_HOST.replace(
+  /^https:\/\/([^.]+)\./,
+  "https://$1-assets.",
+);
+
 const nextConfig: NextConfig = {
   output: isStaticExport ? "export" : "standalone",
   transpilePackages: ["@polyforge/ui"],
   env: {
     NEXT_PUBLIC_SENTRY_TUNNEL: isStaticExport ? "" : "/monitoring",
+  },
+  // Security headers as defense-in-depth (nginx also sets these at the
+  // reverse-proxy layer, but Next.js headers protect direct access).
+  async headers() {
+    return [
+      {
+        source: "/(.*)",
+        headers: [
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "X-XSS-Protection", value: "1; mode=block" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          {
+            key: "Permissions-Policy",
+            value:
+              "camera=(), microphone=(), geolocation=(), interest-cohort=()",
+          },
+          {
+            key: "Content-Security-Policy",
+            value: [
+              "default-src 'self'",
+              `script-src 'self' 'wasm-unsafe-eval' 'unsafe-inline' https://plausible.io ${POSTHOG_ASSETS_HOST}`,
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+              "img-src 'self' data: blob:",
+              `connect-src 'self' https://plausible.io ${POSTHOG_API_HOST} ${POSTHOG_ASSETS_HOST}`,
+              "font-src 'self' data: https://fonts.gstatic.com",
+              "frame-ancestors 'none'",
+              "base-uri 'self'",
+              "form-action 'self'",
+            ].join("; "),
+          },
+        ],
+      },
+    ];
   },
   // redirects/rewrites are not supported by output:'export' and are redundant
   // in all docker setups (nginx handles /auth and /api-docs routing).
@@ -86,12 +127,8 @@ module.exports = withSentryConfig(nextConfig, {
   project: process.env.SENTRY_PROJECT,
   widenClientFileUpload: true,
   // Disable server-side Sentry tracing in static export mode — no Node.js runtime.
-  // Exclude /_global-error from Sentry auto-instrumentation to prevent the
-  // Sentry React wrapper from being injected during SSR (which would cause a
-  // second useContext crash even after the Next.js appConfig patch).
   webpack: {
     autoInstrumentServerFunctions: !isStaticExport,
-    excludeServerRoutes: ["/_global-error"],
     treeshake: {
       removeDebugLogging: true,
     },
