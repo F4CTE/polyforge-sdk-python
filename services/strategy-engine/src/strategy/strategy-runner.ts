@@ -422,7 +422,7 @@ export class StrategyRunner {
             }
             this.activeLockToken = null;
           });
-      }, 5_000);
+      }, 5_000).unref();
 
       // Enforce daily execution limit — auto-stop if exceeded
       const key = dailyExecKey(this.strategyId);
