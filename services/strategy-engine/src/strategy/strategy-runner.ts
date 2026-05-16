@@ -106,9 +106,10 @@ export class StrategyRunner {
    *  vs. another instance holding the lock (multi-instance dedup). */
   private pendingRedisUnlock: Promise<unknown> | null = null;
 
-  /** One-shot guard so only one EVENT retry is chained while waiting on
-   *  the current local pendingRedisUnlock to finish. */
-  private pendingRedisUnlockRetryArmed = false;
+  /** Unlock promise generation that already has a chained EVENT retry.
+   *  Guard is scoped per unlock promise, not globally, so a newer unlock
+   *  generation can still arm exactly one retry. */
+  private pendingRedisUnlockRetryFor: Promise<unknown> | null = null;
 
   /** Tracks child strategy IDs launched by RUN_STRATEGY action blocks */
   readonly childStrategies: Set<string> = new Set();
@@ -552,19 +553,23 @@ export class StrategyRunner {
         // pendingRedisUnlock is non-null and we MUST retry once the
         // unlock completes — otherwise the event is silently dropped.
         if (this.pendingRedisUnlock) {
-          // One-shot guard: only chain one retry while waiting on our
-          // current pendingRedisUnlock (same rationale as pendingTick branch above).
-          if (!this.pendingRedisUnlockRetryArmed) {
-            this.pendingRedisUnlockRetryArmed = true;
-            const pendingUnlock = this.pendingRedisUnlock;
+          const pendingUnlock = this.pendingRedisUnlock;
+          // One-shot guard scoped to this exact unlock promise generation.
+          if (this.pendingRedisUnlockRetryFor !== pendingUnlock) {
+            this.pendingRedisUnlockRetryFor = pendingUnlock;
             // Bypass the min-tick throttle when the retry fires so the
             // evaluation is not blocked by lastTickMs having been advanced
             // by the failed tick itself.
             if (this.followUpTimer) clearTimeout(this.followUpTimer);
             void pendingUnlock
               .finally(() => {
-                this.pendingRedisUnlockRetryArmed = false;
-                if (this.status === "RUNNING") {
+                if (this.pendingRedisUnlockRetryFor === pendingUnlock) {
+                  this.pendingRedisUnlockRetryFor = null;
+                }
+                if (
+                  this.status === "RUNNING" &&
+                  this.pendingRedisUnlock === pendingUnlock
+                ) {
                   this.scheduledFollowUp = true;
                   void this.tick();
                 }

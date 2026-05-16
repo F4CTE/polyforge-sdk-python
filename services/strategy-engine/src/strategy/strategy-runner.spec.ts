@@ -3230,6 +3230,92 @@ describe("StrategyRunner — concurrent tick serialization", () => {
     }
   });
 
+  it("arms retry once per unlock generation so a newer pending unlock is not starved by an older armed retry (POLA-5150)", async () => {
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(300);
+
+      let resolveUnlockA!: (value: number) => void;
+      const unlockA = new Promise<number>((resolve) => {
+        resolveUnlockA = resolve;
+      });
+      let resolveUnlockC!: (value: number) => void;
+      const unlockC = new Promise<number>((resolve) => {
+        resolveUnlockC = resolve;
+      });
+
+      let setCallCount = 0;
+      let evalCallCount = 0;
+      const client = {
+        lrange: vi.fn().mockResolvedValue([]),
+        mget: vi
+          .fn()
+          .mockResolvedValue([
+            JSON.stringify({ price: 0.5, timestamp: Date.now() }),
+          ]),
+        incr: vi.fn().mockResolvedValue(1),
+        expire: vi.fn().mockResolvedValue(1),
+        set: vi.fn().mockImplementation(() => {
+          setCallCount++;
+          // 1: Tick A acquires
+          // 2: Tick B misses behind unlock A (arms retry for unlock A)
+          // 3: Tick C acquires (new unlock generation while unlock A still pending)
+          // 4: Tick D misses behind unlock C (must arm retry for unlock C too)
+          // 5: Retry behind unlock C acquires
+          if (setCallCount === 2 || setCallCount === 4) return Promise.resolve(null);
+          return Promise.resolve("OK");
+        }),
+        del: vi.fn().mockResolvedValue(1),
+        eval: vi.fn().mockImplementation((..._args: unknown[]) => {
+          evalCallCount++;
+          if (evalCallCount === 1) return unlockA;
+          if (evalCallCount === 2) return unlockC;
+          return Promise.resolve(1);
+        }),
+      };
+      const redis = makeRedis({ getClient: vi.fn().mockReturnValue(client) });
+      const state = makeState();
+      state.getStateAndPrices.mockResolvedValue({
+        state: { ...DEFAULT_STATE },
+        prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]),
+      });
+
+      const runner = makeRunner({ execMode: "EVENT", state, redis });
+
+      await runner.onPriceEvent("tok1", 0.5); // Tick A (acquire)
+      expect(state.getStateAndPrices).toHaveBeenCalledTimes(1);
+
+      vi.setSystemTime(550);
+      await vi.advanceTimersByTimeAsync(0);
+      await runner.onPriceEvent("tok1", 0.55); // Tick B (lock miss, arms unlock A retry)
+      expect(state.getStateAndPrices).toHaveBeenCalledTimes(1);
+
+      vi.setSystemTime(800);
+      await vi.advanceTimersByTimeAsync(0);
+      await runner.onPriceEvent("tok1", 0.56); // Tick C (acquire, unlock C pending)
+      expect(state.getStateAndPrices).toHaveBeenCalledTimes(2);
+
+      vi.setSystemTime(1050);
+      await vi.advanceTimersByTimeAsync(0);
+      await runner.onPriceEvent("tok1", 0.57); // Tick D (lock miss behind unlock C)
+      expect(state.getStateAndPrices).toHaveBeenCalledTimes(2);
+
+      // Resolve only unlock C first: retry for unlock C must still fire even
+      // though unlock A's retry was armed earlier and remains unresolved.
+      resolveUnlockC(1);
+      await vi.advanceTimersByTimeAsync(0);
+      expect(state.getStateAndPrices).toHaveBeenCalledTimes(3);
+
+      // Cleanup unresolved unlock A to avoid leaking pending work in fake timers.
+      resolveUnlockA(1);
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect(client.set).toHaveBeenCalledTimes(5);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("coalesces TICK mode ticks into a delayed follow-up after long evaluation", async () => {
     vi.useFakeTimers();
     try {
