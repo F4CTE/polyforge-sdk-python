@@ -1,10 +1,8 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { EventEmitter2 } from "@nestjs/event-emitter";
-import {
-  BaseVenueWsService,
-  parseFiniteDecimal,
-} from "@polyforge/shared-types";
+import { BaseVenueWsService } from "@polyforge/venue-ws";
+import { parseFiniteDecimal } from "@polyforge/shared-types";
 import { KalshiAuthService } from "./kalshi-auth.service";
 import type { KalshiCommunicationsEvent } from "./kalshi-rest.service";
 import {

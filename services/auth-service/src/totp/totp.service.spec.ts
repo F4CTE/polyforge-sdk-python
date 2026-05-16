@@ -66,7 +66,7 @@ describe('TotpService', () => {
       expect(
         () => new TotpService(db as any, redis as any, badConfig as any),
       ).toThrow(
-        'TOTP_ENCRYPTION_KEY must be a 64-character hex string (32 bytes)',
+        'TOTP_ENCRYPTION_KEY is not properly configured',
       );
     });
   });

@@ -42,11 +42,35 @@ describe("PosthogService", () => {
       });
     });
 
-    it("identify delegates to the client", () => {
-      service.identify("user-1", { email: "a@b.com" });
+    it("identify delegates to the client — non-PII properties pass through", () => {
+      service.identify("user-1", { username: "alice" });
       expect(mockIdentify).toHaveBeenCalledWith({
         distinctId: "user-1",
-        properties: { email: "a@b.com" },
+        properties: { username: "alice" },
+      });
+    });
+
+    it("identify strips PII properties before forwarding", () => {
+      service.identify("user-1", {
+        email: "a@b.com",
+        username: "alice",
+        walletAddress: "0x123",
+      });
+      expect(mockIdentify).toHaveBeenCalledWith({
+        distinctId: "user-1",
+        properties: { username: "alice" },
+      });
+    });
+
+    it("capture strips PII properties before forwarding", () => {
+      service.capture("user-1", "test_event", {
+        email: "a@b.com",
+        strategyId: "s-1",
+      });
+      expect(mockCapture).toHaveBeenCalledWith({
+        distinctId: "user-1",
+        event: "test_event",
+        properties: { strategyId: "s-1" },
       });
     });
 

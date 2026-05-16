@@ -38,12 +38,13 @@ export class StrategyBuilderPage {
     }
 
     private async waitForAnyVisible(label: string, locators: Locator[], timeout = 20_000): Promise<void> {
-        const deadline = Date.now() + timeout;
-        while (Date.now() < deadline) {
-            if (await this.anyVisible(locators)) return;
-            await this.page.waitForTimeout(250);
+        try {
+            await expect(async () => {
+                expect(await this.anyVisible(locators)).toBe(true);
+            }).toPass({ timeout });
+        } catch {
+            throw new Error(`Timed out waiting for ${label} at ${this.page.url()}`);
         }
-        throw new Error(`Timed out waiting for ${label} at ${this.page.url()}`);
     }
 
     private async dismissTutorialIfPresent(): Promise<void> {

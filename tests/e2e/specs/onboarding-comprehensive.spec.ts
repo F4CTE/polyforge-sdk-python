@@ -198,7 +198,7 @@ test.describe.serial('Onboarding — Full Workflow Coverage', () => {
         if (await marketItem.isVisible().catch(() => false)) {
             const toggleBtn = marketItem.locator('button').first();
             await toggleBtn.click();
-            await page.waitForTimeout(500);
+            await page.waitForLoadState('networkidle');
         }
 
         // Re-read progress

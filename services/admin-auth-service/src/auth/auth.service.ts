@@ -16,10 +16,10 @@ import * as QRCode from "qrcode";
 import {
   randomUUID,
   randomBytes,
-  createHash,
   createCipheriv,
   createDecipheriv,
 } from "crypto";
+import { invalidateAdminJwtCacheForSession } from "@polyforge/shared-auth";
 import { AdminLoginDto } from "./dto/login.dto";
 
 const PENDING_TOTP_TTL = 300; // 5 minutes
@@ -42,9 +42,7 @@ export class AuthService implements OnModuleInit {
     const keyHex = this.config.getOrThrow<string>("TOTP_ENCRYPTION_KEY");
     this.encryptionKey = Buffer.from(keyHex, "hex");
     if (this.encryptionKey.length !== 32) {
-      throw new Error(
-        "TOTP_ENCRYPTION_KEY must be a 64-character hex string (32 bytes)",
-      );
+      throw new Error("TOTP_ENCRYPTION_KEY is not properly configured");
     }
   }
 
@@ -565,6 +563,7 @@ export class AuthService implements OnModuleInit {
       const token = authHeader.slice(7);
       const payload = this.jwtService.verify<AdminJwtPayload>(token);
       await this.redis.del(`admin:session:${payload.sessionId}`);
+      invalidateAdminJwtCacheForSession(payload.sessionId);
     } catch {
       // Token already expired or invalid — nothing to revoke
     }

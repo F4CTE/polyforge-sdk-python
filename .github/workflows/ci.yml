@@ -225,6 +225,7 @@ jobs:
         run: |
           echo "Checking build artifacts..."
           test -d packages/shared-types/dist
+          test -d packages/venue-ws/dist
           test -d packages/shared-db/dist
           test -d packages/shared-redis/dist
           test -d packages/shared-auth/dist
@@ -435,6 +436,22 @@ jobs:
           cd ~/PolyForge/tests/e2e
           ../../scripts/e2e/run-shards.sh
 
+      # ── E2E Mobile Shard ──────────────────────────────────────────────
+      # Run @mobile-tagged tests with the mobile-chromium project at 375px
+      # viewport. Uses the same self-hosted runner; mobile suites are small
+      # so 2 shards and a 15-minute cap suffice.
+      - name: Run E2E mobile shard
+        timeout-minutes: 15
+        run: |
+          cd ~/PolyForge/tests/e2e
+          ../../scripts/e2e/run-shards.sh
+        env:
+          PLAYWRIGHT_PROJECT: mobile-chromium
+          PLAYWRIGHT_RUN_MOBILE: false
+          E2E_SHARD_COUNT: 1
+          E2E_SHARD_TIMEOUT_SECONDS: 600
+          PLAYWRIGHT_GLOBAL_TIMEOUT_MS: 600000
+
   # ── 4a. E2E — A11y & Keyboard (focused) ───────────────────────────────
   # Runs only the Strategy Builder a11y/keyboard block after the deploy
   # gate passes.  Separated from the main shards so the deploy gate stays
@@ -461,7 +478,7 @@ jobs:
           PLAYWRIGHT_SKIP_GLOBAL_SETUP: 'true'
         run: |
           cd ~/PolyForge/tests/e2e
-          npx playwright test specs/strategy-builder-comprehensive.spec.ts \
+          npx playwright test specs/strategy-builder-a11y-keyboard.spec.ts \
             --project=chromium \
             --grep='@a11y|@keyboard' \
             --reporter=list

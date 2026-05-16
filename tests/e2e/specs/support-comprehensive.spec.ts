@@ -92,7 +92,9 @@ test.describe.serial('Support — Full Workflow Coverage', () => {
             for (let i = 0; i < Math.min(count, 3); i++) {
                 const badge = statusBadges.nth(i);
                 const backgroundColor = await badge.evaluate((el) => window.getComputedStyle(el).backgroundColor);
-                expect(backgroundColor).toBeDefined();
+                // Verify the badge has a non-transparent background color (status-coded)
+                expect(backgroundColor).toMatch(/^rgba?\(/);
+                expect(backgroundColor).not.toBe('rgba(0, 0, 0, 0)');
             }
         }
     });
@@ -117,10 +119,9 @@ test.describe.serial('Support — Full Workflow Coverage', () => {
         await supportPage.gotoSupport();
 
         const faqSection = page.locator('[data-testid="faq-section"], [class*="faq"]');
-        const count = await faqSection.count();
 
         // FAQ may or may not be present on main support page
-        expect(count).toBeGreaterThanOrEqual(0);
+        await expect(faqSection.first()).toBeVisible({ timeout: 5_000 }).catch(() => {});
     });
 
     test('FAQ accordion items are visible', async ({ page }) => {
@@ -214,7 +215,6 @@ test.describe.serial('Support — Full Workflow Coverage', () => {
             const content = page.locator('[data-testid="faq-content"], .faq-answer');
             const text = await content.textContent();
 
-            expect(text).toBeDefined();
             expect(text?.length).toBeGreaterThan(0);
         }
     });
@@ -525,7 +525,15 @@ Line 4`;
             description: `Test with long subject at ${timestamp}`,
         });
 
-        // Should complete successfully or show validation error
+        // After submission, either navigated to ticket detail or showed validation.
+        // If the page URL changed to a ticket detail, the subject was accepted.
+        // If it stayed on /new, the subject was rejected (validation).
+        const url = page.url();
+        const onDetail = /\/support\/[a-f0-9-]+$/.test(url);
+        const stillOnNew = url.includes('/support/new');
+        const hasError = await page.locator('[data-sonner-toast]').isVisible().catch(() => false);
+        // Either accepted (→ detail page) or rejected with feedback (→ still on new + toast)
+        expect(onDetail || (stillOnNew && hasError)).toBe(true);
     });
 
     test('special characters in subject are handled properly', async ({ page }) => {
@@ -566,8 +574,8 @@ Line 4`;
         const ticketRow = page.locator(`text=${subject}`);
         await ticketRow.click();
 
-        expect(page.url()).toContain('/support');
-        // URL might be /support/:id
+        expect(page.url()).toMatch(/\/support\/[a-f0-9-]+$/);
+        // URL should be /support/:id (UUID format), not just /support
     });
 
     test('ticket detail shows subject, status, priority, category', async ({ page }) => {

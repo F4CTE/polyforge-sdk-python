@@ -44,6 +44,7 @@ export default defineConfig({
     projects: [
         {
             name: 'chromium',
+            grepInvert: /@mobile/,
             use: {
                 ...devices['Desktop Chrome'],
                 // CI Docker containers have limited /dev/shm (64 MB default).
@@ -59,10 +60,36 @@ export default defineConfig({
                 } : {}),
             },
         },
+        // Mobile viewport project — tests tagged with @mobile run at iPhone SE size.
+        // These tests verify responsive layout, touch targets, bottom nav, and
+        // mobile sidebar overlay behavior at 375px (WCAG 2.5.5 compliant touch targets).
+        {
+            name: 'mobile-chromium',
+            testMatch: '**/*.spec.ts',
+            grep: /@mobile/,
+            use: {
+                // Use proper mobile device emulation: touch events, mobile user agent,
+                // viewport sized for iPhone SE (375×812). Falls back to Desktop Chrome
+                // launch args on CI to avoid GPU/shm issues.
+                ...devices['iPhone SE'],
+                viewport: { width: 375, height: 812 },
+                storageState: './storage-state.json',
+                ...(process.env.CI ? {
+                    launchOptions: {
+                        args: [
+                            '--disable-dev-shm-usage',
+                            '--disable-gpu',
+                            '--no-sandbox',
+                        ],
+                    },
+                } : {}),
+            },
+        },
         // Firefox is slow on GitHub Actions runners causing flaky timeouts.
         // Run locally for cross-browser coverage; skip on CI for reliability.
         ...(!process.env.CI ? [{
             name: 'firefox' as const,
+            grepInvert: /@mobile/,
             use: { ...devices['Desktop Firefox'] },
         }] : []),
     ],

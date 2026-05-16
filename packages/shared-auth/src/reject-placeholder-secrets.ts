@@ -56,7 +56,7 @@ export function rejectPlaceholderSecrets(
 
   if (violations.length > 0) {
     throw new Error(
-      `[${serviceName}] Placeholder secrets detected in production: ${violations.join(", ")}. ` +
+      `[${serviceName}] ${violations.length} placeholder secret(s) detected in production. ` +
         `Replace with real values from your secrets manager.`,
     );
   }

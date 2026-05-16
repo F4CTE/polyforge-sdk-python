@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import { HttpStatus } from "@nestjs/common";
 import * as bcrypt from "bcrypt";
 import { verifySync } from "otplib";
+import { invalidateAdminJwtCacheForSession } from "@polyforge/shared-auth";
 import { AuthService } from "./auth.service";
 
 // ─── Factories ────────────────────────────────────────────────────────────────
@@ -66,6 +67,14 @@ vi.mock("qrcode", () => ({
   },
   toDataURL: vi.fn().mockResolvedValue("data:image/png;base64,mock"),
 }));
+
+vi.mock("@polyforge/shared-auth", async () => {
+  const actual = await vi.importActual("@polyforge/shared-auth");
+  return {
+    ...actual,
+    invalidateAdminJwtCacheForSession: vi.fn(),
+  };
+});
 
 // ─── Suite ───────────────────────────────────────────────────────────────────
 
@@ -536,12 +545,7 @@ describe("AdminAuthService", () => {
       redis.getClient().set.mockResolvedValue(null); // already consumed
 
       await expect(
-        service.disableTotp(
-          admin.id,
-          "test-session-id",
-          "Passw0rd!",
-          "123456",
-        ),
+        service.disableTotp(admin.id, "test-session-id", "Passw0rd!", "123456"),
       ).rejects.toMatchObject({
         response: { code: "RE_AUTH_FAILED" },
         status: HttpStatus.UNAUTHORIZED,
@@ -732,6 +736,21 @@ describe("AdminAuthService", () => {
         service.logout("Bearer expired-token"),
       ).resolves.toBeUndefined();
       expect(redis.del).not.toHaveBeenCalled();
+    });
+
+    it("invalidates the in-memory JWT cache for the session", async () => {
+      const sessionId = fakeUuid();
+      jwtService.verify.mockReturnValue({
+        sessionId,
+        sub: "admin-id",
+        email: "a@b.com",
+      });
+
+      await service.logout(`Bearer valid-token`);
+
+      expect(vi.mocked(invalidateAdminJwtCacheForSession)).toHaveBeenCalledWith(
+        sessionId,
+      );
     });
   });
 

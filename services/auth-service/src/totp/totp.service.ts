@@ -37,7 +37,7 @@ export class TotpService {
     this.encryptionKey = Buffer.from(keyHex, 'hex');
     if (this.encryptionKey.length !== 32) {
       throw new Error(
-        'TOTP_ENCRYPTION_KEY must be a 64-character hex string (32 bytes)',
+        'TOTP_ENCRYPTION_KEY is not properly configured',
       );
     }
   }

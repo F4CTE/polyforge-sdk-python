@@ -30,6 +30,7 @@
     "@polyforge/shared-redis": "workspace:*",
     "@polyforge/shared-schemas": "workspace:*",
     "@polyforge/shared-types": "workspace:*",
+    "@polyforge/venue-ws": "workspace:*",
     "@polymarket/clob-client": "^5.8.1",
     "@sentry/nestjs": "^10.53.1",
     "axios": "^1.16.1",

@@ -1,7 +1,10 @@
 export { JwtStrategy } from "./jwt.strategy";
 export { JwtAuthGuard } from "./jwt-auth.guard";
 export { InternalJwtGuard } from "./internal-jwt.guard";
-export { AdminJwtGuard } from "./admin-jwt.guard";
+export {
+  AdminJwtGuard,
+  invalidateAdminJwtCacheForSession,
+} from "./admin-jwt.guard";
 export { RolesGuard, ROLES_KEY } from "./roles.guard";
 export { Roles } from "./roles.decorator";
 export { CurrentUser } from "./current-user.decorator";

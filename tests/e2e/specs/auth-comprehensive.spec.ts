@@ -4,9 +4,13 @@ import { RegisterPage } from '../pages/register.page';
 import {
     apiLogin,
     apiRegister,
+    apiRegisterAndVerify,
+    apiSetupTotp,
+    apiConfirmTotp,
     uniqueEmail,
     uniqueUsername,
 } from '../helpers/api';
+import { verifyTotp } from '../helpers/totp';
 import {
     clearAllMessages,
     clearMessagesForRecipient,
@@ -368,22 +372,101 @@ test.describe('Authentication — Full Workflow Coverage', () => {
     });
 
     test('login with 2FA enabled shows TOTP input', async ({ page }) => {
-        test.skip(true, '2FA setup required in backend — skipped for now');
-        // This test requires:
-        // 1. API to enable 2FA on a user account
-        // 2. Knowledge of the TOTP secret/seed
-        // 3. TOTP library to generate valid codes
-        // Placeholder for when 2FA is implemented
+        const loginPage = new LoginPage(page);
+        const email = uniqueEmail('2fa-show');
+        const username = uniqueUsername('2fashow');
+        const password = 'Password123!';
+
+        // 1. Register, verify, and enable 2FA via API
+        const { token } = await apiRegisterAndVerify(email, username, password);
+        const { secret } = await apiSetupTotp(token);
+        await verifyTotp(secret, (code) => apiConfirmTotp(token, code));
+
+        // 2. Login via UI — backend should respond with TOTP_REQUIRED
+        await loginPage.goto();
+        await loginPage.email.fill(email);
+        await loginPage.password.fill(password);
+        await loginPage.submit.click();
+
+        // 3. TOTP input field should appear (backend returns TOTP_REQUIRED)
+        await expect(loginPage.totpInput).toBeVisible({ timeout: 15_000 });
     });
 
     test('login with 2FA enabled and correct TOTP code succeeds', async ({ page }) => {
-        test.skip(true, '2FA setup required in backend — skipped for now');
-        // Placeholder for when 2FA is implemented
+        test.setTimeout(120_000); // extended for TOTP period boundary wait
+        const loginPage = new LoginPage(page);
+        const email = uniqueEmail('2fa-ok');
+        const username = uniqueUsername('2faok');
+        const password = 'Password123!';
+
+        // 1. Register, verify, and enable 2FA via API
+        const { token } = await apiRegisterAndVerify(email, username, password);
+        const { secret } = await apiSetupTotp(token);
+        // `apiConfirmTotp` marks the current-window TOTP code as consumed
+        // in Redis for TOTP_REPLAY_WINDOW (90s).  Advance to the next 30s
+        // TOTP period so the login path generates fresh, unconsumed codes.
+        await verifyTotp(secret, (code) => apiConfirmTotp(token, code));
+        await expect
+          .poll(() => Math.floor(Date.now() / 30_000), { timeout: 31_000 })
+          .toBeGreaterThan(Math.floor(Date.now() / 30_000));
+
+        // 2. Login — first attempt triggers TOTP_REQUIRED
+        await loginPage.goto();
+        await loginPage.email.fill(email);
+        await loginPage.password.fill(password);
+        await loginPage.submit.click();
+
+        // 3. TOTP input appears — fill valid code and resubmit.
+        //    Retry with adjacent-window codes if the current code expires
+        //    before the API round-trip completes.
+        await expect(loginPage.totpInput).toBeVisible({ timeout: 15_000 });
+        await verifyTotp(secret, (code) =>
+          loginPage.submitTotpAndRedirect(code),
+        );
+
+        // 4. Should redirect away from /login
+        expect(page.url()).not.toContain('/login');
     });
 
     test('login with 2FA enabled and wrong TOTP code shows error', async ({ page }) => {
-        test.skip(true, '2FA setup required in backend — skipped for now');
-        // Placeholder for when 2FA is implemented
+        const loginPage = new LoginPage(page);
+        const email = uniqueEmail('2fa-bad');
+        const username = uniqueUsername('2fabadd');
+        const password = 'Password123!';
+
+        // 1. Register, verify, and enable 2FA via API
+        const { token } = await apiRegisterAndVerify(email, username, password);
+        const { secret } = await apiSetupTotp(token);
+        await verifyTotp(secret, (code) => apiConfirmTotp(token, code));
+
+        // 2. Login — first attempt triggers TOTP_REQUIRED
+        await loginPage.goto();
+        await loginPage.email.fill(email);
+        await loginPage.password.fill(password);
+        await loginPage.submit.click();
+
+        // 3. TOTP input appears — fill WRONG code and resubmit
+        await expect(loginPage.totpInput).toBeVisible({ timeout: 15_000 });
+        await loginPage.totpInput.fill('000000');
+        await loginPage.submit.click();
+
+        // 4. Error should appear (TOTP_INVALID)
+        const errText = await loginPage.errorText();
+        expect(errText.toLowerCase()).toMatch(/invalid|wrong|incorrect|failed|code/);
+    });
+
+    // Backup codes cannot be used in the login TOTP flow: the login TOTP input
+    // enforces maxLength={6} (numeric-only), and the backend login DTO validates
+    // totpCode with @Matches(/^\d{6}$/).  A 20-char backup code would be
+    // truncated by the UI and rejected by schema validation before reaching
+    // any backup-code logic.  This flow is not supported in the product.
+    test.skip('login with 2FA enabled can use backup code instead of TOTP', async () => {
+        // Backup-code login cannot succeed through the 6-digit TOTP field.
+    });
+
+    test.skip('login with 2FA enabled and invalid backup code shows error', async () => {
+        // 20-char input is truncated/rejected by schema validation, so this
+        // never exercises actual backup-code rejection logic.
     });
 
     test('session persistence: refresh page stays logged in', async ({ page }) => {

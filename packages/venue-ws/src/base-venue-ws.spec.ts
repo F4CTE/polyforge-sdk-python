@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import WebSocket from "ws";
-import { BaseVenueWsService, type VenueWsConfig } from "./base-venue-ws";
+import { BaseVenueWsService } from "./base-venue-ws";
+import type { VenueWsConfig } from "@polyforge/shared-types";
 
 type WsHandler = (...args: any[]) => void;
 
@@ -71,10 +72,6 @@ class TestWsService extends BaseVenueWsService {
   protected createWebSocket(): WebSocket {
     this.mockSocket = new MockVenueSocket();
     return this.mockSocket as unknown as WebSocket;
-  }
-
-  public exposeConnect() {
-    return this.connect();
   }
 }
 

@@ -359,6 +359,72 @@ describe("StrategyRunner — SAFETY evaluation", () => {
     );
   });
 
+  it("falls back to CONDITION_REGISTRY when MAX_POSITION_SIZE is in safety blocks", async () => {
+    const state = makeState();
+    const prisma = makePrisma();
+    // No position exists → MaxPositionBlock returns fired: true
+    prisma.position.findUnique.mockResolvedValue(null);
+    const onStatusChange = vi.fn().mockResolvedValue(undefined);
+
+    const runner = makeRunner({
+      execMode: "EVENT",
+      state,
+      prisma,
+      onStatusChange,
+      safety: [
+        {
+          id: "safety-1",
+          type: "MAX_POSITION_SIZE",
+          params: { tokenId: "tok1", maxUsdc: "100" },
+        },
+      ],
+    });
+
+    await runner.onPriceEvent("tok1", 0.5);
+
+    // Strategy should remain RUNNING (not fail-closed) since
+    // MaxPositionBlock resolved via CONDITION_REGISTRY and fired: true
+    expect(runner.status).toBe("RUNNING");
+    expect(onStatusChange).not.toHaveBeenCalledWith(
+      "STOPPED",
+      expect.anything(),
+    );
+  });
+
+  it("stops strategy on unknown safety block type (fail closed)", async () => {
+    const state = makeState();
+    const redis = makeRedis();
+    const onStatusChange = vi.fn().mockResolvedValue(undefined);
+    const prisma = makePrisma();
+
+    const runner = makeRunner({
+      execMode: "EVENT",
+      state,
+      redis,
+      prisma,
+      onStatusChange,
+      safety: [
+        {
+          id: "safety-1",
+          type: "NONEXISTENT_SAFETY_BLOCK",
+          params: {},
+        },
+      ],
+    });
+
+    await runner.onPriceEvent("tok1", 0.5);
+
+    expect(runner.status).toBe("STOPPED");
+    expect(onStatusChange).toHaveBeenCalledWith(
+      "STOPPED",
+      expect.stringContaining("unknown safety block"),
+    );
+    expect(prisma.strategy.update).toHaveBeenCalled();
+    expect(redis.xadd).toHaveBeenCalledWith(
+      "stream:events",
+      expect.objectContaining({ type: "STRATEGY_STOPPED" }),
+    );
+  });
   it("resolves safety block params from config fallback", async () => {
     const state = makeState();
     const redis = makeRedis();
@@ -423,7 +489,7 @@ describe("StrategyRunner — SAFETY evaluation", () => {
     expect(runner.status).toBe("STOPPED");
     expect(onStatusChange).toHaveBeenCalledWith(
       "STOPPED",
-      expect.stringContaining("safety_block_type_missing:NO_SUCH_SAFETY_BLOCK"),
+      expect.stringContaining("unknown safety block: NO_SUCH_SAFETY_BLOCK"),
     );
     expect(prisma.strategy.update).toHaveBeenCalledWith(
       expect.objectContaining({ data: { status: "IDLE" } }),
