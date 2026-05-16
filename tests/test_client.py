@@ -7485,6 +7485,27 @@ class TestMiscUtilityEnumValidation:
         finally:
             client.close()
 
+    def test_accuracy_leaderboard_offset_without_limit_uses_default_limit(self):
+        def handler(request):
+            assert request.url.path == "/api/v1/accuracy/leaderboard"
+            assert request.url.params.get("page") == "2"
+            assert request.url.params.get("limit") == "20"
+            return httpx.Response(200, json={"data": [], "total": 0, "page": 2, "limit": 20})
+
+        transport = httpx.MockTransport(handler)
+        client = PolyforgeClient(api_key="test", api_url="http://localhost:9999")
+        client._client = httpx.Client(
+            base_url="http://localhost:9999",
+            headers={"Authorization": "Bearer test"},
+            transport=transport,
+        )
+        try:
+            result = client.get_accuracy_leaderboard(offset=20)
+            assert result.page == 2
+            assert result.limit == 20
+        finally:
+            client.close()
+
 
 class TestMiscUtilityEndpointRoundtrips:
     """Stub the HTTP layer with httpx.MockTransport and exercise each method."""
@@ -8135,6 +8156,26 @@ class TestMiscUtilityEndpointsAsync:
             try:
                 with pytest.raises(ValueError, match="limit must be >= 1"):
                     await client.get_accuracy_leaderboard(limit=0)
+            finally:
+                await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_accuracy_leaderboard_offset_without_limit_uses_default_limit(self):
+        import asyncio
+
+        def handler(request):
+            assert request.url.path == "/api/v1/accuracy/leaderboard"
+            assert request.url.params.get("page") == "2"
+            assert request.url.params.get("limit") == "20"
+            return httpx.Response(200, json={"data": [], "total": 0, "page": 2, "limit": 20})
+
+        async def _run():
+            client = self._async_client_with(handler)
+            try:
+                result = await client.get_accuracy_leaderboard(offset=20)
+                assert result.page == 2
+                assert result.limit == 20
             finally:
                 await client.close()
 
