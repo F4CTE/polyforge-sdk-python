@@ -372,16 +372,16 @@ def _raise_for_status(response: httpx.Response) -> None:
         return
 
     try:
-        body = response.json()
+        body: dict[str, Any] = response.json()
     except Exception:
         body = {}
 
-    message = body.get("message") or body.get("error") or response.reason_phrase or "Unknown error"
-    code = body.get("code", "")
-    request_id = body.get("requestId", "")
-    suggestion = body.get("suggestion") or None
+    message: str = body.get("message", "") or body.get("error", "") or response.reason_phrase or "Unknown error"
+    code: str = str(body.get("code") or "")
+    request_id: str = str(body.get("requestId") or "")
+    suggestion: str | None = body.get("suggestion") or None
 
-    kwargs = dict(status_code=response.status_code, code=code, request_id=request_id, suggestion=suggestion)
+    kwargs: dict[str, Any] = dict(status_code=response.status_code, code=code, request_id=request_id, suggestion=suggestion)
 
     match response.status_code:
         case 401:
@@ -666,7 +666,7 @@ def _resolve_and_validate_ips(hostname: str) -> list[str]:
 
     validated: list[str] = []
     for _family, _, _, _, sockaddr in addrinfos:
-        ip_str = sockaddr[0]
+        ip_str = str(sockaddr[0])
         try:
             addr = ipaddress.ip_address(ip_str)
         except ValueError:

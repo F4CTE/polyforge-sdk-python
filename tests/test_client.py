@@ -4349,7 +4349,7 @@ class TestPolymarketPortfolioEndpoints:
         asyncio.run(_run())
 
 
-class TestNewModels:
+class TestNewModelsPOLA476:
     """Tests for new model classes (POLA-476)."""
 
     def test_news_article_model_fields(self):
@@ -4815,6 +4815,7 @@ class TestRewardsMethods:
             "min_size": "100",
         })
         result = client.get_market_rewards_detail(market_id="some-market")
+        assert result is not None
         assert result.condition_id == "0xabc"
         assert result.rate_per_day == "50.0"
         client._get.assert_called_once_with("/api/v1/rewards/market/some-market")
@@ -5004,6 +5005,7 @@ class TestCrossVenueArbitrage:
         result = client.get_spread_comparison()
         assert len(result) == 1
         assert result[0].yes_spread_pct == 10.0
+        assert result[0].polymarket is not None
         assert result[0].polymarket.market_id == "p1"
         client.close()
 
@@ -5071,7 +5073,9 @@ class TestCrossVenueArbitrage:
         result = client.get_cross_venue_comparison("m1")
         assert result.match_id == "m1"
         assert result.spread_pct == 10.0
+        assert result.polymarket is not None
         assert result.polymarket.market_id == "p1"
+        assert result.kalshi is not None
         assert result.kalshi.yes_price == 0.5
         assert result.verified is True
         client._get.assert_called_once_with("/api/v1/arbitrage/cross-venue/m1/comparison")
@@ -5250,15 +5254,15 @@ class TestPublicHealthEndpoint:
         original_send = client._client.send
 
         captured_req = {}
-        def _fake_send(req, **kw):
-            captured_req["method"] = req.method
-            captured_req["url"] = str(req.url)
-            captured_req["headers"] = dict(req.headers)
+        def _fake_send(request, **kw):
+            captured_req["method"] = request.method
+            captured_req["url"] = str(request.url)
+            captured_req["headers"] = dict(request.headers)
             r = httpx.Response(200, json={"status": "ok"})
-            r.request = req
+            r.request = request
             return r
 
-        client._client.send = _fake_send
+        client._client.send = _fake_send  # type: ignore[assignment]
         try:
             result = client._get_no_auth("/health")
             assert result == {"status": "ok"}
@@ -5278,13 +5282,13 @@ class TestPublicHealthEndpoint:
         original_send = client._client.send
         stripped_headers = {}
 
-        def _fake_send(req, **kw):
-            stripped_headers.update({k.lower(): v for k, v in req.headers.items()})
+        def _fake_send(request, **kw):
+            stripped_headers.update({k.lower(): v for k, v in request.headers.items()})
             r = httpx.Response(200, json={"status": "ok"})
-            r.request = req
+            r.request = request
             return r
 
-        client._client.send = _fake_send
+        client._client.send = _fake_send  # type: ignore[assignment]
         try:
             client._get_no_auth("/health")
             assert "authorization" not in stripped_headers, \
@@ -5296,7 +5300,7 @@ class TestPublicHealthEndpoint:
     def test_get_health_preserves_zero_uptime(self):
         """Zero uptime must be preserved, not dropped by falsy-or parsing."""
         client = PolyforgeClient(api_key="test-key")
-        client._get_no_auth = lambda _path: {
+        client._get_no_auth = lambda path: {
             "status": "starting",
             "service": "api-service",
             "version": "2.0.0",
@@ -5310,7 +5314,7 @@ class TestPublicHealthEndpoint:
     def test_get_health_preserves_int_zero_uptime(self):
         """Integer zero uptime must be preserved, not dropped by falsy-or parsing."""
         client = PolyforgeClient(api_key="test-key")
-        client._get_no_auth = lambda _path: {
+        client._get_no_auth = lambda path: {
             "status": "starting",
             "uptime": 0,
         }
@@ -6611,7 +6615,7 @@ class TestTradingCopyNumericValidation:
     def test_update_copy_config_rejects_invalid_numeric_kwargs(self):
         client = PolyforgeClient(api_key="test")
         with pytest.raises(ValueError, match="Infinity"):
-            client.update_copy_config("copy-1", max_exposure="Infinity")
+            client.update_copy_config("copy-1", max_exposure="Infinity")  # type: ignore[arg-type]
         client.close()
 
     def test_update_copy_config_allows_negative_price_offset(self):
@@ -6795,7 +6799,7 @@ class TestTradingCopyNumericValidation:
                     max_daily_loss=0,
                 )
             with pytest.raises(ValueError, match="Infinity"):
-                await client.update_copy_config("copy-1", price_offset="Infinity")
+                await client.update_copy_config("copy-1", price_offset="Infinity")  # type: ignore[arg-type]
             await client.close()
 
         asyncio.run(_run())
@@ -8534,13 +8538,15 @@ class TestArbExecutionAsync:
             assert result.arb_position_id == "pos-9"
             assert result.buy_leg is not None and result.buy_leg.price == 0.31
             client._post.assert_awaited_once()
-            assert client._post.await_args.args == ("/api/v1/arbitrage/execute",)
-            assert client._post.await_args.kwargs["json"] == {
+            call_args = client._post.await_args
+            assert call_args is not None
+            assert call_args.args == ("/api/v1/arbitrage/execute",)
+            assert call_args.kwargs["json"] == {
                 "matchId": VALID_ARB_MATCH_ID,
                 "size": 200.0,
                 "maxSlippagePct": 2.0,
             }
-            _assert_valid_idempotency_key(client._post.await_args.kwargs["idempotency_key"])
+            _assert_valid_idempotency_key(call_args.kwargs["idempotency_key"])
             await client.close()
 
         asyncio.run(_run())
@@ -8557,8 +8563,10 @@ class TestArbExecutionAsync:
             assert isinstance(result, ArbCloseResponse)
             assert result.status == "CLOSING"
             client._post.assert_awaited_once()
-            assert client._post.await_args.args == ("/api/v1/arbitrage/positions/pos-9/close",)
-            _assert_valid_idempotency_key(client._post.await_args.kwargs["idempotency_key"])
+            call_args = client._post.await_args
+            assert call_args is not None
+            assert call_args.args == ("/api/v1/arbitrage/positions/pos-9/close",)
+            _assert_valid_idempotency_key(call_args.kwargs["idempotency_key"])
             await client.close()
 
         asyncio.run(_run())
