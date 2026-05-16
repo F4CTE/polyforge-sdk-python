@@ -174,6 +174,7 @@ class Strategy:
     blocks: list[StrategyBlock] = field(default_factory=list)
     created_at: str = ""
     updated_at: str = ""
+    kalshi_subaccount: str | None = None
 
 
 @dataclass

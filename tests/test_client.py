@@ -1313,6 +1313,7 @@ class TestCreateStrategyParams:
         assert "tags" in params
         assert "variables" in params
         assert "canvas" in params
+        assert "kalshi_subaccount" in params
 
     def test_async_create_strategy_accepts_block_params(self):
         """Async create_strategy() must also accept the expanded params."""
@@ -1324,6 +1325,7 @@ class TestCreateStrategyParams:
         assert "triggers" in params
         assert "actions" in params
         assert "tags" in params
+        assert "kalshi_subaccount" in params
 
     def test_create_strategy_sends_camel_case_fields(self):
         """create_strategy() must send camelCase field names to the API."""
@@ -1337,6 +1339,7 @@ class TestCreateStrategyParams:
         assert '"actions"' in source
         assert '"safety"' in source
         assert '"tags"' in source
+        assert '"kalshiSubaccount"' in source
 
 
 class TestUpdateStrategyParams:
@@ -1351,7 +1354,7 @@ class TestUpdateStrategyParams:
             "name", "description", "market_id", "visibility", "exec_mode",
             "tick_ms", "triggers", "conditions", "actions", "safety",
             "logic_blocks", "calc_blocks", "tags", "variables", "canvas",
-            "market_slots",
+            "market_slots", "kalshi_subaccount",
         ):
             assert expected in params, f"missing param: {expected}"
 
@@ -1364,7 +1367,7 @@ class TestUpdateStrategyParams:
             "name", "description", "market_id", "visibility", "exec_mode",
             "tick_ms", "triggers", "conditions", "actions", "safety",
             "logic_blocks", "calc_blocks", "tags", "variables", "canvas",
-            "market_slots",
+            "market_slots", "kalshi_subaccount",
         ):
             assert expected in params, f"missing async param: {expected}"
 
@@ -1376,7 +1379,7 @@ class TestUpdateStrategyParams:
             '"visibility"', '"execMode"', '"tickMs"', '"triggers"',
             '"conditions"', '"actions"', '"safety"', '"logicBlocks"',
             '"calcBlocks"', '"tags"', '"variables"', '"canvas"',
-            '"marketSlots"',
+            '"marketSlots"', '"kalshiSubaccount"',
         ):
             assert camel in source, f"missing camelCase key: {camel}"
 
