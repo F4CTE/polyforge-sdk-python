@@ -47,7 +47,9 @@ describe("runOncePerCluster", () => {
       "NX",
     );
     expect(job).toHaveBeenCalledTimes(1);
-    expect(client.del).toHaveBeenCalledWith("lock:job");
+    // Lock is NOT deleted on success — TTL handles cleanup to prevent
+    // a second caller from re-acquiring and re-running the same job.
+    expect(client.del).not.toHaveBeenCalled();
   });
 
   it("returns null without running the job when another worker owns the lock", async () => {

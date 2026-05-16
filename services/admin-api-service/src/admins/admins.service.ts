@@ -107,8 +107,12 @@ export class AdminsService {
       },
     });
 
-    // Invalidate all active sessions if role or active status changed
-    if (dto.role !== undefined || dto.active !== undefined) {
+    // Invalidate all active sessions if role, active status, or password changed
+    if (
+      dto.password !== undefined ||
+      dto.role !== undefined ||
+      dto.active !== undefined
+    ) {
       await this.invalidateAdminSessions(id);
     }
 

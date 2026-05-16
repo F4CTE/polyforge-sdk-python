@@ -66,7 +66,7 @@ describe('TotpService', () => {
       expect(
         () => new TotpService(db as any, redis as any, badConfig as any),
       ).toThrow(
-        'TOTP_ENCRYPTION_KEY must be a 64-character hex string (32 bytes)',
+        'TOTP_ENCRYPTION_KEY is not properly configured',
       );
     });
   });
@@ -198,6 +198,29 @@ describe('TotpService', () => {
       );
       expect(db.$transaction).not.toHaveBeenCalled();
       expect(redis.del).not.toHaveBeenCalledWith('totp:pending:user-id');
+    });
+
+    it('fails closed (503) when Redis replay-key write errors during confirm', async () => {
+      mockedVerifySync.mockReturnValueOnce({ valid: true } as any);
+      redis.get.mockResolvedValue('JBSWY3DPEHPK3PXP');
+      redis._ioClient.set.mockRejectedValueOnce(new Error('READONLY'));
+
+      const logSpy = vi
+        .spyOn((service as any).logger, 'error')
+        .mockImplementation(() => undefined);
+
+      await expect(
+        service.confirm('user-id', '123456'),
+      ).rejects.toMatchObject({
+        response: { code: 'TOTP_SETUP_FAILED' },
+        status: HttpStatus.SERVICE_UNAVAILABLE,
+      });
+
+      expect(logSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ event: 'TOTP_REPLAY_CHECK_FAILED' }),
+        'Redis replay-key write failed during TOTP confirm',
+      );
+      expect(db.$transaction).not.toHaveBeenCalled();
     });
   });
 
@@ -333,6 +356,38 @@ describe('TotpService', () => {
         'EX',
         90,
         'NX',
+      );
+      expect(db.user.update).not.toHaveBeenCalled();
+    });
+
+    it('fails closed (503) when Redis replay-key write errors during disable', async () => {
+      const bcrypt = await import('bcrypt');
+      const hash = await bcrypt.hash('correct_password', 10);
+      const secret = generateSecret({ length: 20 });
+      const validCode = generateSync({ secret, strategy: 'totp' });
+      const encrypted = (service as any).encrypt(secret);
+      const user = userFactory({
+        totpEnabled: true,
+        passwordHash: hash,
+        totpSecret: encrypted,
+      } as any);
+      db.user.findUniqueOrThrow.mockResolvedValue(user as any);
+      redis._ioClient.set.mockRejectedValueOnce(new Error('READONLY'));
+
+      const logSpy = vi
+        .spyOn((service as any).logger, 'error')
+        .mockImplementation(() => undefined);
+
+      await expect(
+        service.disable(user.id, 'correct_password', validCode),
+      ).rejects.toMatchObject({
+        response: { code: 'TOTP_DISABLE_FAILED' },
+        status: HttpStatus.SERVICE_UNAVAILABLE,
+      });
+
+      expect(logSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ event: 'TOTP_REPLAY_CHECK_FAILED' }),
+        'Redis replay-key write failed during TOTP disable',
       );
       expect(db.user.update).not.toHaveBeenCalled();
     });
@@ -535,6 +590,38 @@ describe('TotpService', () => {
       expect(redis._ioClient.expire).toHaveBeenCalledWith(
         `totp:fail:${user.id}`,
         900,
+      );
+    });
+
+    it('fails closed (503) when Redis replay-key write errors during verify', async () => {
+      redis._ioClient.get.mockResolvedValue(null);
+      redis._ioClient.set.mockRejectedValueOnce(new Error('READONLY'));
+
+      const secret = generateSecret({ length: 20 });
+      const validCode = generateSync({ secret, strategy: 'totp' });
+      const encrypted = (service as any).encrypt(secret);
+
+      const user = {
+        ...userFactory({ totpEnabled: true }),
+        totpSecret: encrypted,
+        totpBackupCodes: [],
+      };
+      db.user.findUnique.mockResolvedValue(user as any);
+
+      const logSpy = vi
+        .spyOn((service as any).logger, 'error')
+        .mockImplementation(() => undefined);
+
+      await expect(
+        service.verify(user.id, validCode),
+      ).rejects.toMatchObject({
+        response: { code: 'TOTP_VERIFY_FAILED' },
+        status: HttpStatus.SERVICE_UNAVAILABLE,
+      });
+
+      expect(logSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ event: 'TOTP_REPLAY_CHECK_FAILED' }),
+        'Redis replay-key write failed during TOTP verify',
       );
     });
 

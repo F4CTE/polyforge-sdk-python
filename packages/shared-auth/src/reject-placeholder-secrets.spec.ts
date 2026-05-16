@@ -36,7 +36,7 @@ describe("rejectPlaceholderSecrets", () => {
         NODE_ENV: "production",
         MY_SECRET: placeholder,
       }),
-    ).toThrow("Placeholder secrets detected in production");
+    ).toThrow(/placeholder secret.*detected in production/);
   });
 
   it("rejects all-zeros 64-char hex value in production", () => {
@@ -47,7 +47,7 @@ describe("rejectPlaceholderSecrets", () => {
         NODE_ENV: "production",
         KEY: allZeros,
       }),
-    ).toThrow("Placeholder secrets detected");
+    ).toThrow(/placeholder secret.*detected/);
   });
 
   it("rejects the checked-in dev encryption keys in production", () => {
@@ -68,7 +68,7 @@ describe("rejectPlaceholderSecrets", () => {
           NODE_ENV: "production",
         },
       ),
-    ).toThrow(/MASTER_ENCRYPTION_KEY, TOTP_ENCRYPTION_KEY/);
+    ).toThrow(/placeholder secret.*detected/i);
   });
 
   it.each([
@@ -84,7 +84,7 @@ describe("rejectPlaceholderSecrets", () => {
           NODE_ENV: "production",
           KEY: variant,
         }),
-      ).toThrow("Placeholder secrets detected");
+      ).toThrow(/placeholder secret.*detected/);
     },
   );
 
@@ -107,7 +107,7 @@ describe("rejectPlaceholderSecrets", () => {
         B: "dev-b",
         C: "real-value",
       }),
-    ).toThrow(/A, B/);
+    ).toThrow(/2 placeholder secret.*detected/);
   });
 
   it("skips undefined env vars without error", () => {

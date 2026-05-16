@@ -28,7 +28,7 @@ export function Testimonials() {
             Built with the people who trade it.
           </h2>
           <p className="text-base text-secondary leading-relaxed">
-            Private beta. Public feedback.
+            Illustrative usage examples from early design partners.
           </p>
         </div>
 

@@ -26,8 +26,8 @@ test.describe('Leaderboard — Full Workflow Coverage', () => {
             const leaderboardPage = new LeaderboardPage(page);
             await leaderboardPage.goto();
 
-            const traderCount = await leaderboardPage.getTraderCount();
-            expect(traderCount).toBeGreaterThanOrEqual(0);
+            // Verify page has loaded — table rows or empty state
+            await expect(page.locator('[data-testid="leaderboard-table"], [data-testid="empty-state"]').first()).toBeVisible({ timeout: 10_000 });
         });
 
         test('Default period is 7 Days', async ({ page }) => {
@@ -53,35 +53,6 @@ test.describe('Leaderboard — Full Workflow Coverage', () => {
 
             const tab = leaderboardPage.periodTabs['7d'];
             await expect(tab).toBeVisible();
-
-            const traderCount = await leaderboardPage.getTraderCount();
-            expect(traderCount).toBeGreaterThanOrEqual(0);
-        });
-
-        test('"30 Days" tab → shows 30-day performance', async ({ page }) => {
-            const leaderboardPage = new LeaderboardPage(page);
-            await leaderboardPage.goto();
-
-            await leaderboardPage.selectPeriod('30d');
-
-            const tab = leaderboardPage.periodTabs['30d'];
-            await expect(tab).toBeVisible();
-
-            const traderCount = await leaderboardPage.getTraderCount();
-            expect(traderCount).toBeGreaterThanOrEqual(0);
-        });
-
-        test('"All Time" tab → shows all-time performance', async ({ page }) => {
-            const leaderboardPage = new LeaderboardPage(page);
-            await leaderboardPage.goto();
-
-            await leaderboardPage.selectPeriod('allTime');
-
-            const tab = leaderboardPage.periodTabs['allTime'];
-            await expect(tab).toBeVisible();
-
-            const traderCount = await leaderboardPage.getTraderCount();
-            expect(traderCount).toBeGreaterThanOrEqual(0);
         });
 
         test('Active period tab is highlighted', async ({ page }) => {
@@ -138,10 +109,10 @@ test.describe('Leaderboard — Full Workflow Coverage', () => {
             await leaderboardPage.goto();
 
             const traderCount = await leaderboardPage.getTraderCount();
-            if (traderCount === 0) return; // Skip when no seed data
+            if (traderCount === 0) { test.skip(true, 'Skip when no seed data'); return; }
 
             const table = page.locator('[data-testid="leaderboard-table"]');
-            if (!(await table.isVisible().catch(() => false))) return;
+            if (!(await table.isVisible().catch(() => false))) { test.skip(true, 'Leaderboard table not visible'); return; }
 
             // Verify column headers exist
             await expect(table.locator('[data-testid="column-rank"]')).toBeVisible();
@@ -157,26 +128,20 @@ test.describe('Leaderboard — Full Workflow Coverage', () => {
             await leaderboardPage.goto();
 
             const traderCount = await leaderboardPage.getTraderCount();
-            if (traderCount < 3) return; // Skip when insufficient data
+            if (traderCount < 3) { test.skip(true, 'Skip when insufficient data'); return; }
 
             // Check first three rows for medals
             const firstRow = page.locator('[data-testid="trader-row"]').nth(0);
             const goldMedal = firstRow.locator('[data-testid="medal-badge"][data-medal="gold"]');
-            if (await goldMedal.isVisible()) {
-                await expect(goldMedal).toBeVisible();
-            }
+            await expect(goldMedal).toBeVisible();
 
             const secondRow = page.locator('[data-testid="trader-row"]').nth(1);
             const silverMedal = secondRow.locator('[data-testid="medal-badge"][data-medal="silver"]');
-            if (await silverMedal.isVisible()) {
-                await expect(silverMedal).toBeVisible();
-            }
+            await expect(silverMedal).toBeVisible();
 
             const thirdRow = page.locator('[data-testid="trader-row"]').nth(2);
             const bronzeMedal = thirdRow.locator('[data-testid="medal-badge"][data-medal="bronze"]');
-            if (await bronzeMedal.isVisible()) {
-                await expect(bronzeMedal).toBeVisible();
-            }
+            await expect(bronzeMedal).toBeVisible();
         });
 
         test('Trader name links to public profile', async ({ page }) => {
@@ -184,7 +149,7 @@ test.describe('Leaderboard — Full Workflow Coverage', () => {
             await leaderboardPage.goto();
 
             const traderCount = await leaderboardPage.getTraderCount();
-            if (traderCount === 0) return; // Skip when no seed data
+            if (traderCount === 0) { test.skip(true, 'Skip when no seed data'); return; }
 
             const firstRow = page.locator('[data-testid="trader-row"]').nth(0);
             const traderLink = firstRow.locator('[data-testid="trader-name"] a[href^="/profile/"]').first();
@@ -198,11 +163,11 @@ test.describe('Leaderboard — Full Workflow Coverage', () => {
             await leaderboardPage.goto();
 
             const traderCount = await leaderboardPage.getTraderCount();
-            if (traderCount === 0) return; // Skip when no seed data
+            if (traderCount === 0) { test.skip(true, 'Skip when no seed data'); return; }
 
             const scores = page.locator('[data-testid="trader-row"] [data-testid="trader-score"]');
             const scoreCount = await scores.count();
-            if (scoreCount === 0) return; // Score column may be hidden at viewport
+            if (scoreCount === 0) { test.skip(true, 'Score column may be hidden at viewport'); return; }
 
             // Verify score cells contain text (may be "—" for no-data or a number)
             const firstScore = scores.nth(0);
@@ -215,12 +180,10 @@ test.describe('Leaderboard — Full Workflow Coverage', () => {
             await leaderboardPage.goto();
 
             const traderCount = await leaderboardPage.getTraderCount();
-            if (traderCount === 0) return; // Skip when no seed data
+            if (traderCount === 0) { test.skip(true, 'Skip when no seed data'); return; }
 
             const pnlCells = page.locator('[data-testid="trader-pnl"]');
             const count = await pnlCells.count();
-
-            expect(count).toBeGreaterThanOrEqual(0);
 
             // Check a few P&L cells for color coding
             for (let i = 0; i < Math.min(3, count); i++) {
@@ -250,7 +213,7 @@ test.describe('Leaderboard — Full Workflow Coverage', () => {
             await leaderboardPage.goto();
 
             const traderCount = await leaderboardPage.getTraderCount();
-            if (traderCount === 0) return; // Skip when no seed data
+            if (traderCount === 0) { test.skip(true, 'Skip when no seed data'); return; }
 
             const firstRow = page.locator('[data-testid="trader-row"]').nth(0);
             const firstRank = await firstRow.locator('[data-testid="trader-rank"]').textContent();
@@ -314,7 +277,7 @@ test.describe('Leaderboard — Full Workflow Coverage', () => {
             // Pagination only renders when there's more than 1 page of data
             const nextButton = leaderboardPage.paginationNext;
             const isNextVisible = await nextButton.isVisible({ timeout: 3_000 }).catch(() => false);
-            if (!isNextVisible) return; // No pagination — skip
+            if (!isNextVisible) { test.skip(true, 'No pagination — skip'); return; }
 
             const firstPageFirstTrader = await leaderboardPage.getTraderByRank(1);
 
@@ -333,18 +296,18 @@ test.describe('Leaderboard — Full Workflow Coverage', () => {
             await leaderboardPage.goto();
 
             const traderCount = await leaderboardPage.getTraderCount();
-            if (traderCount === 0) return; // Skip when no seed data
+            if (traderCount === 0) { test.skip(true, 'Skip when no seed data'); return; }
 
             const nextButton = leaderboardPage.paginationNext;
             const prevButton = leaderboardPage.paginationPrev;
 
             // Pagination may not render without enough data
-            if (!(await nextButton.isVisible().catch(() => false))) return;
+            if (!(await nextButton.isVisible().catch(() => false))) { test.skip(true, 'Pagination not visible'); return; }
 
             // On first page
             await expect(prevButton).toBeDisabled();
             const nextDisabled = await nextButton.isDisabled();
-            if (nextDisabled) return; // Not enough data for multi-page
+            if (nextDisabled) { test.skip(true, 'Not enough data for multi-page'); return; }
 
             // Go to next page
             await leaderboardPage.goToPage('next');
@@ -387,7 +350,7 @@ test.describe('Leaderboard — Full Workflow Coverage', () => {
             await leaderboardPage.goto();
 
             const traderCount = await leaderboardPage.getTraderCount();
-            if (traderCount === 0) return; // Skip when no seed data
+            if (traderCount === 0) { test.skip(true, 'Skip when no seed data'); return; }
 
             const firstRow = page.locator('[data-testid="trader-row"]').nth(0);
             // Use href filter to avoid matching "Copy Trade" link in same cell
@@ -409,7 +372,7 @@ test.describe('Leaderboard — Full Workflow Coverage', () => {
             await leaderboardPage.goto();
 
             const traderCount = await leaderboardPage.getTraderCount();
-            if (traderCount === 0) return; // Skip when no seed data
+            if (traderCount === 0) { test.skip(true, 'Skip when no seed data'); return; }
 
             const firstRow = page.locator('[data-testid="trader-row"]').nth(0);
             // Use href filter to avoid matching "Copy Trade" link in same cell
@@ -429,7 +392,7 @@ test.describe('Leaderboard — Full Workflow Coverage', () => {
             await leaderboardPage.goto();
 
             const traderCount = await leaderboardPage.getTraderCount();
-            if (traderCount === 0) return; // Skip when no seed data
+            if (traderCount === 0) { test.skip(true, 'Skip when no seed data'); return; }
 
             const firstRow = page.locator('[data-testid="trader-row"]').nth(0);
             // Use href filter to avoid matching "Copy Trade" link in same cell

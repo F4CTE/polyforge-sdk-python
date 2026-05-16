@@ -198,7 +198,7 @@ describe("AccuracyService.getLeaderboard", () => {
   });
 
   it("returns empty paginated response when no resolved positions exist", async () => {
-    db.position.findMany.mockResolvedValue([] as any);
+    db.position.findMany.mockResolvedValue([]);
 
     const result = await service.getLeaderboard({ period: "30d" });
 
@@ -219,8 +219,18 @@ describe("AccuracyService.getLeaderboard", () => {
       makePosition({ id: "p4", userId: "user-2", realizedPnl: "-2.00" }),
     ] as any);
     db.user.findMany.mockResolvedValue([
-      { id: "user-1", username: "alice", displayName: "Alice", avatarUrl: null },
-      { id: "user-2", username: "bob", displayName: null, avatarUrl: "/bob.png" },
+      {
+        id: "user-1",
+        username: "alice",
+        displayName: "Alice",
+        avatarUrl: null,
+      },
+      {
+        id: "user-2",
+        username: "bob",
+        displayName: null,
+        avatarUrl: "/bob.png",
+      },
     ] as any);
 
     const result = await service.getLeaderboard({ period: "30d" });
@@ -268,7 +278,11 @@ describe("AccuracyService.getLeaderboard", () => {
       })) as any,
     );
 
-    const result = await service.getLeaderboard({ period: "7d", page: 2, limit: 10 });
+    const result = await service.getLeaderboard({
+      period: "7d",
+      page: 2,
+      limit: 10,
+    });
 
     expect(result.page).toBe(2);
     expect(result.limit).toBe(10);
@@ -280,7 +294,7 @@ describe("AccuracyService.getLeaderboard", () => {
   });
 
   it("defaults to page=1 limit=20", async () => {
-    db.position.findMany.mockResolvedValue([] as any);
+    db.position.findMany.mockResolvedValue([]);
 
     const result = await service.getLeaderboard({});
 
@@ -289,7 +303,7 @@ describe("AccuracyService.getLeaderboard", () => {
   });
 
   it("caps limit at 100", async () => {
-    db.position.findMany.mockResolvedValue([] as any);
+    db.position.findMany.mockResolvedValue([]);
 
     const result = await service.getLeaderboard({ limit: 200 });
 
@@ -300,7 +314,7 @@ describe("AccuracyService.getLeaderboard", () => {
     db.position.findMany.mockResolvedValue([
       makePosition({ id: "p1", userId: "ghost", realizedPnl: "1.00" }),
     ] as any);
-    db.user.findMany.mockResolvedValue([] as any);
+    db.user.findMany.mockResolvedValue([]);
 
     const result = await service.getLeaderboard({ period: "30d" });
 

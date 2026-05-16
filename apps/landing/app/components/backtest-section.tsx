@@ -7,6 +7,9 @@ import {
 function EquityCurveCard() {
   return (
     <div className="bg-surface border border-subtle rounded-xl p-5">
+      <span className="inline-flex items-center h-5 px-2 rounded bg-warning/10 border border-warning/20 text-[10px] font-mono font-medium text-warning uppercase tracking-wider mb-2">
+        Example — not real results
+      </span>
       <div className="font-mono text-caption text-tertiary uppercase tracking-widest">
         Equity curve · 30d
       </div>
@@ -132,10 +135,7 @@ function CategoryPnlCard() {
             <div
               className="absolute top-0 bottom-0 rounded-full"
               style={{
-                left:
-                  tone === "loss"
-                    ? `${50 - Math.abs(pct) / 2}%`
-                    : "50%",
+                left: tone === "loss" ? `${50 - Math.abs(pct) / 2}%` : "50%",
                 width: `${Math.abs(pct) / 2}%`,
                 background: `var(--${tone})`,
                 opacity: 0.8,

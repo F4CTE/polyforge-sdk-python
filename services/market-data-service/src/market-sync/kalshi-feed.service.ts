@@ -3,10 +3,8 @@ import { ConfigService } from "@nestjs/config";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { JwtService } from "@nestjs/jwt";
 import { randomUUID } from "crypto";
-import {
-  BaseVenueWsService,
-  parseFiniteDecimal,
-} from "@polyforge/shared-types";
+import { BaseVenueWsService } from "@polyforge/venue-ws";
+import { parseFiniteDecimal } from "@polyforge/shared-types";
 import type { PriceUpdateEvent } from "./polymarket-ws.service";
 
 const REFRESH_MARGIN_SECS = 300;

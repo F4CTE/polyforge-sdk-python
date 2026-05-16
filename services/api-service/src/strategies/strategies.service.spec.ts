@@ -356,6 +356,34 @@ describe("StrategiesService", () => {
         service.create("user-1", { name: "Under limit" } as any),
       ).resolves.toBeDefined();
     });
+
+    it("rejects MAX_POSITION_SIZE in safety blocks", async () => {
+      const dto: CreateStrategyDto = {
+        name: "Bad Safety",
+        safety: [{ type: "MAX_POSITION_SIZE", config: { maxUsdc: "500" } }],
+      };
+      db.strategy.count.mockResolvedValue(0);
+
+      await expect(service.create("user-1", dto)).rejects.toMatchObject({
+        response: { code: "MAX_POSITION_SIZE_IN_SAFETY" },
+        status: 422,
+      });
+      expect(db.strategy.create).not.toHaveBeenCalled();
+    });
+
+    it("rejects max_position_size (lowercase) in safety blocks", async () => {
+      const dto: CreateStrategyDto = {
+        name: "Bad Safety Lower",
+        safety: [{ type: "max_position_size", config: { maxUsdc: "500" } }],
+      };
+      db.strategy.count.mockResolvedValue(0);
+
+      await expect(service.create("user-1", dto)).rejects.toMatchObject({
+        response: { code: "MAX_POSITION_SIZE_IN_SAFETY" },
+        status: 422,
+      });
+      expect(db.strategy.create).not.toHaveBeenCalled();
+    });
   });
 
   // ── findOne ───────────────────────────────────────────────────────────────
@@ -572,6 +600,39 @@ describe("StrategiesService", () => {
 
       const dataArg = (db.strategy.update as any).mock.calls[0][0].data;
       expect(dataArg.version).toEqual({ increment: 1 });
+    });
+
+    it("rejects MAX_POSITION_SIZE in safety blocks on update", async () => {
+      const strategy = makeStrategy({
+        userId: "user-1",
+        status: StrategyStatus.IDLE,
+      });
+      db.strategy.findUnique.mockResolvedValue(strategy as any);
+
+      await expect(
+        service.update(strategy.id, "user-1", {
+          safety: [{ type: "MAX_POSITION_SIZE", config: { maxUsdc: "100" } }],
+        } as any),
+      ).rejects.toMatchObject({
+        response: { code: "MAX_POSITION_SIZE_IN_SAFETY" },
+        status: 422,
+      });
+      expect(db.strategy.update).not.toHaveBeenCalled();
+    });
+
+    it("handles null safety without throwing", async () => {
+      const strategy = makeStrategy({
+        userId: "user-1",
+        status: StrategyStatus.IDLE,
+      });
+      db.strategy.findUnique.mockResolvedValue(strategy as any);
+      db.strategy.update.mockResolvedValue({ ...strategy, version: 2 } as any);
+
+      await expect(
+        service.update(strategy.id, "user-1", {
+          safety: null,
+        } as any),
+      ).resolves.toBeDefined();
     });
 
     it("only sends defined fields to prisma.update", async () => {
@@ -2179,14 +2240,36 @@ describe("StrategiesService", () => {
       });
     });
 
-    it("rejects MAX_POSITION_SIZE in safety section during import", async () => {
+    it("rejects MAX_POSITION_SIZE in safety blocks", async () => {
       const importDto = {
         polyforge: "1.0",
         strategy: {
-          name: "Position in Safety",
+          name: "Bad Safety",
           blocks: {
-            safety: [{ type: "MAX_POSITION_SIZE", config: { maxUsdc: "100" } }],
-            conditions: [{ type: "PRICE_ABOVE", config: { threshold: "0.5" } }],
+            safety: [
+              { type: "DAILY_LOSS_LIMIT", config: { maxLossUsdc: "100" } },
+              { type: "MAX_POSITION_SIZE", config: { maxUsdc: "500" } },
+            ],
+          },
+        },
+      };
+      db.strategy.count.mockResolvedValue(0);
+
+      await expect(
+        service.importStrategy(importDto as any, "user-1"),
+      ).rejects.toMatchObject({
+        response: { code: "IMPORT_MAX_POSITION_SIZE_IN_SAFETY" },
+        status: 422,
+      });
+    });
+
+    it("rejects max_position_size (lowercase) in safety blocks", async () => {
+      const importDto = {
+        polyforge: "1.0",
+        strategy: {
+          name: "Bad Safety Lower",
+          blocks: {
+            safety: [{ type: "max_position_size", config: { maxUsdc: "500" } }],
           },
         },
       };

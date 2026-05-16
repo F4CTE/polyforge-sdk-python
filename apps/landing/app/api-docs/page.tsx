@@ -140,10 +140,7 @@ export default function ApiDocsPage() {
         </section>
 
         {/* REST reference — coming soon */}
-        <section
-          className="py-20"
-          aria-labelledby="reference-heading"
-        >
+        <section className="py-20" aria-labelledby="reference-heading">
           <div className="max-w-container-landing mx-auto px-6">
             <div className="rounded-lg border border-subtle bg-surface p-8 md:p-12 flex flex-col md:flex-row md:items-center gap-8">
               <div className="flex-1">

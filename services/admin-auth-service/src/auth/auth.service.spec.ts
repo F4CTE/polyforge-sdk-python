@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import { HttpStatus } from "@nestjs/common";
 import * as bcrypt from "bcrypt";
 import { verifySync } from "otplib";
+import { invalidateAdminJwtCacheForSession } from "@polyforge/shared-auth";
 import { AuthService } from "./auth.service";
 
 // ─── Factories ────────────────────────────────────────────────────────────────
@@ -66,6 +67,14 @@ vi.mock("qrcode", () => ({
   },
   toDataURL: vi.fn().mockResolvedValue("data:image/png;base64,mock"),
 }));
+
+vi.mock("@polyforge/shared-auth", async () => {
+  const actual = await vi.importActual("@polyforge/shared-auth");
+  return {
+    ...actual,
+    invalidateAdminJwtCacheForSession: vi.fn(),
+  };
+});
 
 // ─── Suite ───────────────────────────────────────────────────────────────────
 
@@ -284,6 +293,38 @@ describe("AdminAuthService", () => {
       );
     });
 
+    it("fails closed (503) when Redis replay-key write errors during login", async () => {
+      const admin = await adminFactory({
+        totpEnabled: true,
+        totpSecret: "encrypted:secret",
+      });
+      adminDb.admin.findUnique.mockResolvedValue(admin);
+      vi.spyOn(service as any, "decrypt").mockReturnValue("JBSWY3DPEHPK3PXP");
+
+      const redisClient = redis.getClient();
+      redisClient.set.mockRejectedValueOnce(new Error("READONLY"));
+
+      const logSpy = vi
+        .spyOn((service as any).logger, "error")
+        .mockImplementation(() => undefined);
+
+      await expect(
+        service.login({
+          email: admin.email,
+          password: "Passw0rd!",
+          totpCode: "123456",
+        }),
+      ).rejects.toMatchObject({
+        response: { code: "TOTP_VERIFY_FAILED" },
+        status: HttpStatus.SERVICE_UNAVAILABLE,
+      });
+
+      expect(logSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ event: "TOTP_REPLAY_CHECK_FAILED" }),
+        "Redis replay-key write failed during admin login",
+      );
+    });
+
     it("never exposes passwordHash in the response", async () => {
       const admin = await adminFactory();
       adminDb.admin.findUnique.mockResolvedValue(admin);
@@ -405,6 +446,28 @@ describe("AdminAuthService", () => {
       expect(adminDb.admin.update).not.toHaveBeenCalled();
     });
 
+    it("fails closed (503) when Redis replay-key write errors during confirm", async () => {
+      redis.get.mockResolvedValue("JBSWY3DPEHPK3PXP");
+      redis.getClient().set.mockRejectedValueOnce(new Error("READONLY"));
+
+      const logSpy = vi
+        .spyOn((service as any).logger, "error")
+        .mockImplementation(() => undefined);
+
+      await expect(
+        service.confirmTotp("admin-1", "123456"),
+      ).rejects.toMatchObject({
+        response: { code: "TOTP_SETUP_FAILED" },
+        status: HttpStatus.SERVICE_UNAVAILABLE,
+      });
+
+      expect(logSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ event: "TOTP_REPLAY_CHECK_FAILED" }),
+        "Redis replay-key write failed during TOTP confirm",
+      );
+      expect(adminDb.admin.update).not.toHaveBeenCalled();
+    });
+
     it("throws TOTP_SETUP_EXPIRED (400) when no pending secret exists", async () => {
       redis.get.mockResolvedValue(null);
 
@@ -482,12 +545,7 @@ describe("AdminAuthService", () => {
       redis.getClient().set.mockResolvedValue(null); // already consumed
 
       await expect(
-        service.disableTotp(
-          admin.id,
-          "test-session-id",
-          "Passw0rd!",
-          "123456",
-        ),
+        service.disableTotp(admin.id, "test-session-id", "Passw0rd!", "123456"),
       ).rejects.toMatchObject({
         response: { code: "RE_AUTH_FAILED" },
         status: HttpStatus.UNAUTHORIZED,
@@ -499,6 +557,40 @@ describe("AdminAuthService", () => {
         "EX",
         90,
         "NX",
+      );
+      expect(adminDb.admin.update).not.toHaveBeenCalled();
+    });
+
+    it("fails closed (503) when Redis replay-key write errors during disable", async () => {
+      const admin = await adminFactory({
+        totpEnabled: true,
+        totpSecret: "encrypted",
+      });
+      adminDb.admin.findUnique.mockResolvedValue(admin);
+      redis.get.mockResolvedValue("1"); // session is live
+
+      vi.spyOn(service as any, "decrypt").mockReturnValue("JBSWY3DPEHPK3PXP");
+      redis.getClient().set.mockRejectedValueOnce(new Error("READONLY"));
+
+      const logSpy = vi
+        .spyOn((service as any).logger, "error")
+        .mockImplementation(() => undefined);
+
+      await expect(
+        service.disableTotp(
+          admin.id,
+          "test-session-id",
+          "Passw0rd!",
+          "123456",
+        ),
+      ).rejects.toMatchObject({
+        response: { code: "TOTP_DISABLE_FAILED" },
+        status: HttpStatus.SERVICE_UNAVAILABLE,
+      });
+
+      expect(logSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ event: "TOTP_REPLAY_CHECK_FAILED" }),
+        "Redis replay-key write failed during admin 2FA disable",
       );
       expect(adminDb.admin.update).not.toHaveBeenCalled();
     });
@@ -644,6 +736,21 @@ describe("AdminAuthService", () => {
         service.logout("Bearer expired-token"),
       ).resolves.toBeUndefined();
       expect(redis.del).not.toHaveBeenCalled();
+    });
+
+    it("invalidates the in-memory JWT cache for the session", async () => {
+      const sessionId = fakeUuid();
+      jwtService.verify.mockReturnValue({
+        sessionId,
+        sub: "admin-id",
+        email: "a@b.com",
+      });
+
+      await service.logout(`Bearer valid-token`);
+
+      expect(vi.mocked(invalidateAdminJwtCacheForSession)).toHaveBeenCalledWith(
+        sessionId,
+      );
     });
   });
 

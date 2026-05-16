@@ -93,6 +93,7 @@ test("external fork pull requests cannot execute self-hosted CI jobs", () => {
   for (const jobName of [
     "lint",
     "nginx-security",
+    "docker-compose-security",
     "typecheck",
     "test",
     "build",
@@ -122,7 +123,7 @@ test("CI includes a secret-scanning gate and a matching pre-commit hook", () => 
   );
   assert.ok(
     jobBlock(workflow, "build").includes(
-      "needs: [secret-scan, lint, typecheck, test, nginx-security]",
+      "needs: [secret-scan, semgrep, lint, typecheck, test, nginx-security, docker-compose-security]",
     ),
   );
   assert.ok(

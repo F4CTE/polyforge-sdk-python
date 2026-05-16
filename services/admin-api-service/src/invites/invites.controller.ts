@@ -38,8 +38,7 @@ export class InvitesController {
     @CurrentAdmin() admin: AdminJwtPayload,
     @AdminIp() ip: string,
   ) {
-    const result = await this.invites.generate(dto);
-    await this.audit.log({
+    const auditMeta = {
       adminId: admin.sub,
       action: "INVITE_GENERATE",
       targetType: "invite",
@@ -49,7 +48,11 @@ export class InvitesController {
         ttlDays: dto.ttlDays,
       },
       ip,
-    });
+    } as const;
+
+    await this.audit.log({ ...auditMeta, status: "attempt" });
+    const result = await this.invites.generate(dto);
+    await this.audit.logSafe({ ...auditMeta, status: "success" });
     return result;
   }
 
@@ -66,14 +69,17 @@ export class InvitesController {
     @CurrentAdmin() admin: AdminJwtPayload,
     @AdminIp() ip: string,
   ) {
-    await this.invites.revoke(code);
-    await this.audit.log({
+    const auditMeta = {
       adminId: admin.sub,
       action: "INVITE_REVOKE",
       targetType: "invite",
       targetId: code.toUpperCase(),
       ip,
-    });
+    } as const;
+
+    await this.audit.log({ ...auditMeta, status: "attempt" });
+    await this.invites.revoke(code);
+    await this.audit.logSafe({ ...auditMeta, status: "success" });
     return { message: "Invite code revoked" };
   }
 }

@@ -16,8 +16,9 @@ export async function runOncePerCluster<T>(opts: {
     return await opts.job();
   } catch (err) {
     logger.error(`Job ${opts.key} failed`, err);
-    throw err;
-  } finally {
+    // Delete lock on failure so the job can be retried on the next call;
+    // for successes, rely on the Redis key TTL to prevent re-execution.
     await client.del(opts.key).catch(() => {});
+    throw err;
   }
 }

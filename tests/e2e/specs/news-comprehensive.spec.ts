@@ -36,8 +36,8 @@ test.describe('News — Full Workflow Coverage', () => {
             const newsPage = new NewsPage(page);
             await newsPage.goto();
 
-            const count = await newsPage.getNewsCount();
-            expect(count).toBeGreaterThanOrEqual(0);
+            // Verify page has loaded — news cards or empty state
+            await expect(page.locator('[data-testid="news-card"], [data-testid="empty-state"]').first()).toBeVisible({ timeout: 10_000 });
         });
 
         test('News items display: title, summary, source, timestamp, sentiment', async ({ page }) => {
@@ -45,7 +45,7 @@ test.describe('News — Full Workflow Coverage', () => {
             await newsPage.goto();
 
             const firstCard = page.locator('[data-testid="news-card"]').first();
-            if (!(await firstCard.isVisible({ timeout: 3_000 }).catch(() => false))) return;
+            if (!(await firstCard.isVisible({ timeout: 3_000 }).catch(() => false))) { test.skip(true, 'No news cards visible'); return; }
 
             await expect(firstCard.locator('[data-testid="news-title"]')).toBeVisible();
             await expect(firstCard.locator('[data-testid="news-source"]')).toBeVisible();
@@ -68,7 +68,6 @@ test.describe('News — Full Workflow Coverage', () => {
                 .catch(() => {}); // No positive cards — that's also valid
 
             const positiveCount = await newsPage.getNewsCount();
-            expect(positiveCount).toBeGreaterThanOrEqual(0);
 
             // Verify all visible cards have positive sentiment
             if (positiveCount > 0) {
@@ -76,7 +75,7 @@ test.describe('News — Full Workflow Coverage', () => {
                 // If the API doesn't filter server-side and all sentiments are shown,
                 // the filter may be decorative — skip the strict assertion.
                 const allPositive = sentiments.every(s => s.toLowerCase().includes('positive'));
-                if (!allPositive) return; // Filter not working as expected — skip gracefully
+                if (!allPositive) { test.skip(true, 'Filter not working as expected — skip gracefully'); return; }
                 sentiments.forEach(sentiment => {
                     expect(sentiment.toLowerCase()).toContain('positive');
                 });
@@ -95,12 +94,11 @@ test.describe('News — Full Workflow Coverage', () => {
                 .catch(() => {});
 
             const negativeCount = await newsPage.getNewsCount();
-            expect(negativeCount).toBeGreaterThanOrEqual(0);
 
             if (negativeCount > 0) {
                 const sentiments = await page.locator('[data-testid="news-card"] [data-testid="news-sentiment"]').allTextContents();
                 const allNegative = sentiments.every(s => s.toLowerCase().includes('negative'));
-                if (!allNegative) return;
+                if (!allNegative) { test.skip(true, 'Filter not working as expected — skip gracefully'); return; }
                 sentiments.forEach(sentiment => {
                     expect(sentiment.toLowerCase()).toContain('negative');
                 });
@@ -114,11 +112,10 @@ test.describe('News — Full Workflow Coverage', () => {
             await newsPage.filterBySentiment('Neutral');
 
             const neutralCount = await newsPage.getNewsCount();
-            expect(neutralCount).toBeGreaterThanOrEqual(0);
 
             if (neutralCount > 0) {
                 // Wait for filter API response to complete before reading DOM
-                await page.waitForTimeout(1_000);
+                await page.waitForLoadState('networkidle');
                 const sentiments = await page.locator('[data-testid="news-card"] [data-testid="news-sentiment"]').allTextContents();
                 const allNeutral = sentiments.every(s => s.toLowerCase().includes('neutral'));
                 // Filter may not have applied yet on slow CI — pass if at least some are neutral
@@ -149,7 +146,7 @@ test.describe('News — Full Workflow Coverage', () => {
             await newsPage.goto();
 
             const newsCount = await newsPage.getNewsCount();
-            if (newsCount === 0) return;
+            if (newsCount === 0) { test.skip(true, 'No news articles seeded'); return; }
 
             const firstCard = page.locator('[data-testid="news-card"]').first();
             const sentimentBadge = firstCard.locator('[data-testid="news-sentiment"]');
@@ -170,7 +167,6 @@ test.describe('News — Full Workflow Coverage', () => {
             await newsPage.filterBySource('Reuters');
 
             const filteredCount = await newsPage.getNewsCount();
-            expect(filteredCount).toBeGreaterThanOrEqual(0);
 
             if (filteredCount > 0) {
                 const sources = await page.locator('[data-testid="news-card"] [data-testid="news-source"]').allTextContents();
@@ -197,7 +193,7 @@ test.describe('News — Full Workflow Coverage', () => {
             await newsPage.goto();
 
             const initialCount = await newsPage.getNewsCount();
-            if (initialCount === 0) return; // No seeded articles in this environment
+            if (initialCount === 0) { test.skip(true, 'No seeded articles in this environment'); return; }
 
             // Pick the first non-"All" source available in the dropdown
             const options = newsPage.sourceSelect.locator('option');
@@ -207,7 +203,7 @@ test.describe('News — Full Workflow Coverage', () => {
                 const text = (await options.nth(i).textContent())?.trim() ?? '';
                 if (text && text !== 'All') { targetSource = text; break; }
             }
-            if (!targetSource) return; // No non-All sources seeded — skip gracefully
+            if (!targetSource) { test.skip(true, 'No non-All sources seeded — skip gracefully'); return; }
 
             // Apply a source filter then clear — the waitForResponse in filterBySource
             // can time out if the API is slow in Docker, so catch gracefully.
@@ -215,7 +211,7 @@ test.describe('News — Full Workflow Coverage', () => {
                 await newsPage.filterBySource(targetSource);
                 await newsPage.filterBySource('All');
             } catch {
-                return; // API timeout — skip gracefully
+                test.skip(true, 'API timeout — skip gracefully'); return;
             }
             const clearedCount = await newsPage.getNewsCount();
 
@@ -265,10 +261,8 @@ test.describe('News — Full Workflow Coverage', () => {
                 const firstCard = cardsWithSignals.first();
                 const signalReasoning = firstCard.locator('[data-testid="signal-reasoning"]');
 
-                if (await signalReasoning.isVisible()) {
-                    const reasoningText = await signalReasoning.textContent();
-                    expect(reasoningText).toBeTruthy();
-                }
+                await expect(signalReasoning).toBeVisible();
+                await expect(signalReasoning).not.toBeEmpty();
             }
         });
     });
@@ -279,7 +273,7 @@ test.describe('News — Full Workflow Coverage', () => {
             await newsPage.goto();
 
             const firstCard = page.locator('[data-testid="news-card"]').first();
-            if (!(await firstCard.isVisible({ timeout: 3_000 }).catch(() => false))) return;
+            if (!(await firstCard.isVisible({ timeout: 3_000 }).catch(() => false))) { test.skip(true, 'No news cards visible'); return; }
 
             // Click the internal "View details →" link (not the external title link)
             const viewDetailsLink = firstCard.locator('a', { hasText: /View details/ });
@@ -294,7 +288,7 @@ test.describe('News — Full Workflow Coverage', () => {
             await newsPage.goto();
 
             const firstCard = page.locator('[data-testid="news-card"]').first();
-            if (!(await firstCard.isVisible({ timeout: 3_000 }).catch(() => false))) return;
+            if (!(await firstCard.isVisible({ timeout: 3_000 }).catch(() => false))) { test.skip(true, 'No news cards visible'); return; }
 
             // Navigate via View details link
             const viewDetailsLink = firstCard.locator('a', { hasText: /View details/ });
@@ -312,7 +306,7 @@ test.describe('News — Full Workflow Coverage', () => {
                 '[data-testid="article-content"], [data-testid="article-title"], text=Article not found, text=not found'
             ).first();
             const appeared = await contentOrNotFound.isVisible({ timeout: 20_000 }).catch(() => false);
-            if (!appeared) return; // Article API didn't respond in time — skip gracefully
+            if (!appeared) { test.skip(true, 'Article API did not respond in time — skip gracefully'); return; }
         });
 
         test('Shows signals and reasoning on detail page', async ({ page }) => {
@@ -340,7 +334,7 @@ test.describe('News — Full Workflow Coverage', () => {
             await newsPage.goto();
 
             const firstCard = page.locator('[data-testid="news-card"]').first();
-            if (!(await firstCard.isVisible({ timeout: 3_000 }).catch(() => false))) return;
+            if (!(await firstCard.isVisible({ timeout: 3_000 }).catch(() => false))) { test.skip(true, 'No news cards visible'); return; }
 
             // Navigate to detail page
             const viewDetailsLink = firstCard.locator('a', { hasText: /View details/ });
@@ -388,10 +382,10 @@ test.describe('News — Full Workflow Coverage', () => {
             const prevButton = newsPage.paginationPrev;
 
             const isNextVisible = await nextButton.isVisible({ timeout: 3_000 }).catch(() => false);
-            if (!isNextVisible) return; // No pagination needed
+            if (!isNextVisible) { test.skip(true, 'No pagination needed'); return; }
 
             const isNextEnabled = !(await nextButton.isDisabled());
-            if (!isNextEnabled) return;
+            if (!isNextEnabled) { test.skip(true, 'Pagination next not enabled'); return; }
 
             // Go to next page
             await newsPage.goToPage('next');

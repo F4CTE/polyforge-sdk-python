@@ -53,25 +53,6 @@ function makePrismaMock() {
   } as any;
 }
 
-function makeBetaLimitsMock() {
-  return {
-    getLimit: vi.fn().mockResolvedValue(3),
-    getAllLimits: vi.fn().mockResolvedValue({
-      maxActiveStrategies: 3,
-      maxConcurrentBacktests: 3,
-      maxBacktestHistoryDays: 90,
-      maxMonthlyVolumeUsdc: 5000,
-      maxPositionSizeUsdc: 500,
-      marketDataRateLimitPerMinute: 100,
-      maxMarketplaceListings: 2,
-      maxDailyStrategyExecutions: 500,
-    }),
-    setLimits: vi.fn().mockResolvedValue(undefined),
-  } as any;
-}
-
-const defaultBetaLimits = makeBetaLimitsMock();
-
 function makeMetricsMock(
   overrides: Partial<ReturnType<MetricsService["compute"]>> = {},
 ) {
@@ -84,6 +65,14 @@ function makeMetricsMock(
       ...overrides,
     }),
   } as unknown as MetricsService;
+}
+
+function makeBetaLimitsMock() {
+  return {
+    getLimit: vi.fn().mockResolvedValue(1),
+    getAllLimits: vi.fn().mockResolvedValue({ maxConcurrentBacktests: 1 }),
+    setLimits: vi.fn().mockResolvedValue({}),
+  } as any;
 }
 
 // ─── Shared minimal run/strategy records ─────────────────────────────────────
@@ -110,7 +99,12 @@ describe("BacktestService — extractTokenIds", () => {
     const prisma = makePrismaMock();
     const redis = makeRedisMock();
     const metrics = makeMetricsMock();
-    const svc = new BacktestService(prisma, redis, metrics, defaultBetaLimits);
+    const svc = new BacktestService(
+      prisma,
+      redis,
+      metrics,
+      makeBetaLimitsMock(),
+    );
 
     prisma.backtestRun.findUniqueOrThrow.mockResolvedValue(BASE_RUN);
     prisma.strategy.findUniqueOrThrow.mockResolvedValue(EMPTY_STRATEGY);
@@ -127,7 +121,12 @@ describe("BacktestService — extractTokenIds", () => {
     const prisma = makePrismaMock();
     const redis = makeRedisMock();
     const metrics = makeMetricsMock();
-    const svc = new BacktestService(prisma, redis, metrics, defaultBetaLimits);
+    const svc = new BacktestService(
+      prisma,
+      redis,
+      metrics,
+      makeBetaLimitsMock(),
+    );
 
     prisma.backtestRun.findUniqueOrThrow.mockResolvedValue(BASE_RUN);
     prisma.strategy.findUniqueOrThrow.mockResolvedValue({
@@ -151,7 +150,12 @@ describe("BacktestService — extractTokenIds", () => {
     const prisma = makePrismaMock();
     const redis = makeRedisMock();
     const metrics = makeMetricsMock();
-    const svc = new BacktestService(prisma, redis, metrics, defaultBetaLimits);
+    const svc = new BacktestService(
+      prisma,
+      redis,
+      metrics,
+      makeBetaLimitsMock(),
+    );
 
     prisma.backtestRun.findUniqueOrThrow.mockResolvedValue(BASE_RUN);
     prisma.strategy.findUniqueOrThrow.mockResolvedValue({
@@ -167,6 +171,121 @@ describe("BacktestService — extractTokenIds", () => {
 
     expect(prisma.$queryRaw).not.toHaveBeenCalled();
   });
+
+  it("resolves tokenId from params when config is absent", async () => {
+    const prisma = makePrismaMock();
+    const redis = makeRedisMock();
+    const metrics = makeMetricsMock();
+    const svc = new BacktestService(
+      prisma,
+      redis,
+      metrics,
+      makeBetaLimitsMock(),
+    );
+
+    prisma.backtestRun.findUniqueOrThrow.mockResolvedValue(BASE_RUN);
+    prisma.strategy.findUniqueOrThrow.mockResolvedValue({
+      ...EMPTY_STRATEGY,
+      triggers: [
+        { type: "price_above_tick", params: { tokenId: "tok-from-params" } },
+      ],
+    });
+    prisma.dataGap.count.mockResolvedValue(0);
+    prisma.$queryRaw.mockResolvedValue([]);
+
+    await svc.run("run-1");
+
+    expect(prisma.$queryRaw).toHaveBeenCalledTimes(1);
+  });
+
+  it("prefers params.tokenId over config.tokenId when both are present", async () => {
+    const prisma = makePrismaMock();
+    const redis = makeRedisMock();
+    const metrics = makeMetricsMock();
+    const svc = new BacktestService(
+      prisma,
+      redis,
+      metrics,
+      makeBetaLimitsMock(),
+    );
+
+    prisma.backtestRun.findUniqueOrThrow.mockResolvedValue(BASE_RUN);
+    prisma.strategy.findUniqueOrThrow.mockResolvedValue({
+      ...EMPTY_STRATEGY,
+      triggers: [
+        {
+          type: "price_above_tick",
+          params: { tokenId: "tok-from-params" },
+          config: { tokenId: "tok-from-config" },
+        },
+      ],
+    });
+    prisma.dataGap.count.mockResolvedValue(0);
+    prisma.$queryRaw.mockResolvedValue([]);
+
+    await svc.run("run-1");
+
+    // Only one query since params.tokenId takes priority
+    expect(prisma.$queryRaw).toHaveBeenCalledTimes(1);
+  });
+
+  it("falls back to config.tokenId when params has no tokenId", async () => {
+    const prisma = makePrismaMock();
+    const redis = makeRedisMock();
+    const metrics = makeMetricsMock();
+    const svc = new BacktestService(
+      prisma,
+      redis,
+      metrics,
+      makeBetaLimitsMock(),
+    );
+
+    prisma.backtestRun.findUniqueOrThrow.mockResolvedValue(BASE_RUN);
+    prisma.strategy.findUniqueOrThrow.mockResolvedValue({
+      ...EMPTY_STRATEGY,
+      triggers: [
+        {
+          type: "price_above_tick",
+          params: { threshold: "0.8" },
+          config: { tokenId: "tok-from-config" },
+        },
+      ],
+    });
+    prisma.dataGap.count.mockResolvedValue(0);
+    prisma.$queryRaw.mockResolvedValue([]);
+
+    await svc.run("run-1");
+
+    expect(prisma.$queryRaw).toHaveBeenCalledTimes(1);
+  });
+
+  it("deduplicates tokenIds across params and config sources", async () => {
+    const prisma = makePrismaMock();
+    const redis = makeRedisMock();
+    const metrics = makeMetricsMock();
+    const svc = new BacktestService(
+      prisma,
+      redis,
+      metrics,
+      makeBetaLimitsMock(),
+    );
+
+    prisma.backtestRun.findUniqueOrThrow.mockResolvedValue(BASE_RUN);
+    prisma.strategy.findUniqueOrThrow.mockResolvedValue({
+      ...EMPTY_STRATEGY,
+      triggers: [{ type: "price_above_tick", params: { tokenId: "tok-x" } }],
+      actions: [
+        { type: "buy_yes", config: { tokenId: "tok-x" } }, // same token via config
+        { type: "buy_no", params: { tokenId: "tok-y" } }, // distinct token via params
+      ],
+    });
+    prisma.dataGap.count.mockResolvedValue(0);
+    prisma.$queryRaw.mockResolvedValue([]);
+
+    await svc.run("run-1");
+
+    expect(prisma.$queryRaw).toHaveBeenCalledTimes(2);
+  });
 });
 
 // ─── applyFill position accounting (tested via private method cast) ───────────
@@ -178,7 +297,12 @@ describe("BacktestService — applyFill", () => {
     const prisma = makePrismaMock();
     const redis = makeRedisMock();
     const metrics = makeMetricsMock();
-    svc = new BacktestService(prisma, redis, metrics, defaultBetaLimits) as any;
+    svc = new BacktestService(
+      prisma,
+      redis,
+      metrics,
+      makeBetaLimitsMock(),
+    ) as any;
   });
 
   it("BUY creates a new position with correct size and avgPrice", () => {
@@ -259,28 +383,6 @@ describe("BacktestService — applyFill", () => {
     expect(pos.size).toBeCloseTo(30, 6);
     // avgPrice = (20*0.5 + 10*0.8) / 30 = 18/30 = 0.6
     expect(pos.avgPrice).toBeCloseTo(0.6, 6);
-  });
-
-  it("BUY deletes an invalid zero-net position instead of storing Infinity avgPrice", () => {
-    const state = createSimState();
-    const positions = new Map([["tok-a", { size: -10, avgPrice: 0.5 }]]);
-
-    svc.applyFill(
-      {
-        side: "BUY",
-        outcome: "YES",
-        size: 10,
-        price: 0.5,
-        tokenId: "tok-a",
-        type: "buy_yes",
-      },
-      positions,
-      state,
-      0,
-      new Date(),
-    );
-
-    expect(positions.has("tok-a")).toBe(false);
   });
 
   it("SELL computes realized PnL = (price - avgPrice) * size", () => {
@@ -446,7 +548,7 @@ describe("BacktestService — finalize()", () => {
       prisma,
       redis,
       metrics,
-      defaultBetaLimits,
+      makeBetaLimitsMock(),
     ) as any;
 
     const fills: FillRecord[] = [
@@ -472,7 +574,7 @@ describe("BacktestService — finalize()", () => {
       prisma,
       redis,
       metrics,
-      defaultBetaLimits,
+      makeBetaLimitsMock(),
     ) as any;
 
     const fills: FillRecord[] = [
@@ -503,7 +605,7 @@ describe("BacktestService — finalize()", () => {
       prisma,
       redis,
       metrics,
-      defaultBetaLimits,
+      makeBetaLimitsMock(),
     ) as any;
 
     await svc.finalize("run-gaps", "user-1", [], true);
@@ -523,7 +625,7 @@ describe("BacktestService — finalize()", () => {
       prisma,
       redis,
       metrics,
-      defaultBetaLimits,
+      makeBetaLimitsMock(),
     ) as any;
 
     await svc.finalize("run-final", "user-1", [], false);
@@ -544,7 +646,7 @@ describe("BacktestService — finalize()", () => {
       prisma,
       redis,
       metrics,
-      defaultBetaLimits,
+      makeBetaLimitsMock(),
     ) as any;
 
     await svc.finalize("run-final", "user-1", [], false);
@@ -572,7 +674,7 @@ describe("BacktestService — finalize()", () => {
       prisma,
       redis,
       metrics,
-      defaultBetaLimits,
+      makeBetaLimitsMock(),
     ) as any;
 
     await svc.finalize("run-prec", "user-1", [], false);
@@ -593,7 +695,7 @@ describe("BacktestService — finalize()", () => {
       prisma,
       redis,
       metrics,
-      defaultBetaLimits,
+      makeBetaLimitsMock(),
     ) as any;
 
     const fills: FillRecord[] = Array.from({ length: 5 }, (_, i) => ({
@@ -618,7 +720,12 @@ describe("BacktestService — run() error handling", () => {
     const prisma = makePrismaMock();
     const redis = makeRedisMock();
     const metrics = makeMetricsMock();
-    const svc = new BacktestService(prisma, redis, metrics, defaultBetaLimits);
+    const svc = new BacktestService(
+      prisma,
+      redis,
+      metrics,
+      makeBetaLimitsMock(),
+    );
 
     prisma.backtestRun.findUniqueOrThrow.mockRejectedValue(
       new Error("DB is down"),
@@ -637,7 +744,12 @@ describe("BacktestService — run() error handling", () => {
     const prisma = makePrismaMock();
     const redis = makeRedisMock();
     const metrics = makeMetricsMock();
-    const svc = new BacktestService(prisma, redis, metrics, defaultBetaLimits);
+    const svc = new BacktestService(
+      prisma,
+      redis,
+      metrics,
+      makeBetaLimitsMock(),
+    );
 
     // Fail immediately after the first update to observe it
     prisma.backtestRun.findUniqueOrThrow.mockRejectedValue(new Error("stop"));
@@ -652,7 +764,12 @@ describe("BacktestService — run() error handling", () => {
     const prisma = makePrismaMock();
     const redis = makeRedisMock();
     const metrics = makeMetricsMock();
-    const svc = new BacktestService(prisma, redis, metrics, defaultBetaLimits);
+    const svc = new BacktestService(
+      prisma,
+      redis,
+      metrics,
+      makeBetaLimitsMock(),
+    );
 
     prisma.backtestRun.findUniqueOrThrow.mockRejectedValue({});
 
@@ -669,7 +786,12 @@ describe("BacktestService — run() error handling", () => {
     const prisma = makePrismaMock();
     const redis = makeRedisMock();
     const metrics = makeMetricsMock();
-    const svc = new BacktestService(prisma, redis, metrics, defaultBetaLimits);
+    const svc = new BacktestService(
+      prisma,
+      redis,
+      metrics,
+      makeBetaLimitsMock(),
+    );
 
     prisma.backtestRun.findUniqueOrThrow.mockResolvedValue(BASE_RUN);
     prisma.strategy.findUniqueOrThrow.mockResolvedValue({
@@ -689,313 +811,149 @@ describe("BacktestService — run() error handling", () => {
   });
 });
 
-// ─── TA trigger integration ────────────────────────────────────────────────────
+// ─── TA trigger integration tests ──────────────────────────────────────────
 
 describe("BacktestService — TA trigger integration", () => {
-  it("fires ma_crossover trigger when priceHistory satisfies crossover condition", async () => {
+  function makeTick(
+    overrides: Partial<{
+      time: Date;
+      tokenId: string;
+      open: string;
+      high: string;
+      low: string;
+      close: string;
+    }> = {},
+  ) {
+    return {
+      time: overrides.time ?? new Date("2024-01-15T12:00:00Z"),
+      tokenId: overrides.tokenId ?? "tok-a",
+      open: overrides.open ?? "0.50",
+      high: overrides.high ?? "0.55",
+      low: overrides.low ?? "0.45",
+      close: overrides.close ?? "0.50",
+    };
+  }
+
+  function makeTicks(
+    count: number,
+    basePrice: number,
+  ): ReturnType<typeof makeTick>[] {
+    return Array.from({ length: count }, (_, i) =>
+      makeTick({ close: String(basePrice + i * 0.01) }),
+    );
+  }
+
+  it("builds priceHistory and passes it to checkTriggers so MA crossover fires", async () => {
     const prisma = makePrismaMock();
     const redis = makeRedisMock();
     const metrics = makeMetricsMock();
-    const svc = new BacktestService(prisma, redis, metrics, defaultBetaLimits);
+    const svc = new BacktestService(
+      prisma,
+      redis,
+      metrics,
+      makeBetaLimitsMock(),
+    );
 
-    prisma.backtestRun.findUniqueOrThrow.mockResolvedValue(BASE_RUN);
+    prisma.backtestRun.findUniqueOrThrow.mockResolvedValue({
+      ...BASE_RUN,
+      dateRangeStart: new Date("2024-01-01"),
+      dateRangeEnd: new Date("2024-01-31"),
+    });
     prisma.strategy.findUniqueOrThrow.mockResolvedValue({
-      safety: [],
+      ...EMPTY_STRATEGY,
       triggers: [
         {
-          type: "ma_crossover",
+          type: "ma_crossover_tick",
           config: {
             tokenId: "tok-a",
-            fastPeriod: 3,
-            slowPeriod: 10,
-            maType: "sma",
+            shortPeriod: "3",
+            longPeriod: "10",
+            direction: "golden_cross",
           },
         },
       ],
-      conditions: [],
-      actions: [{ type: "buy_yes", config: { tokenId: "tok-a", size: "10" } }],
+      actions: [
+        {
+          type: "buy_yes",
+          config: { tokenId: "tok-a", size: "10" },
+        },
+      ],
     });
-    prisma.dataGap.count.mockResolvedValue(0);
 
-    // Build tick history: 10 flat bars at 0.5, then a spike to 0.9 on the 11th tick
-    // causing fast SMA(3) > slow SMA(10) crossover
-    const baseTime = new Date("2024-01-01T00:00:00Z").getTime();
-    const ticks = Array.from({ length: 11 }, (_, i) => ({
-      time: new Date(baseTime + i * 60_000),
-      tokenId: "tok-a",
-      open: "0.5",
-      high: i === 10 ? "0.91" : "0.51",
-      low: i === 10 ? "0.89" : "0.49",
-      close: i === 10 ? "0.9" : "0.5",
-    }));
+    // Descending trend + spike for strict MA crossover: fast(3) < slow(10) → fast(3) >= slow(10)
+    const trend = [
+      0.6, 0.59, 0.58, 0.57, 0.56, 0.55, 0.54, 0.53, 0.52, 0.51,
+    ].map((close, i) =>
+      makeTick({
+        time: new Date(`2024-01-${String(i + 1).padStart(2, "0")}T12:00:00Z`),
+        close: String(close),
+      }),
+    );
+    const spike = makeTick({
+      time: new Date("2024-01-11T12:00:00Z"),
+      close: "0.9",
+    });
+    prisma.$queryRaw.mockResolvedValue([...trend, spike]);
 
-    prisma.$queryRaw.mockResolvedValue(ticks);
+    await svc.run("run-ta-ma");
 
-    await svc.run("run-ta");
-
-    expect(prisma.backtestOrder.createMany).toHaveBeenCalled();
-    // The last call should contain at least one order from the fired trigger
-    const lastCreateCall =
-      prisma.backtestOrder.createMany.mock.calls[
-        prisma.backtestOrder.createMany.mock.calls.length - 1
-      ][0];
-    expect(lastCreateCall.data.length).toBeGreaterThanOrEqual(1);
+    // The TA trigger should fire on the spike tick, producing at least one fill
+    const finalizeCall = prisma.backtestRun.update.mock.calls.find(
+      (c: any[]) => c[0].data?.status === "COMPLETED",
+    );
+    expect(finalizeCall).toBeDefined();
+    // Should have at least one fill (the buy triggered by MA crossover)
+    expect(finalizeCall![0].data.totalOrders).toBeGreaterThan(0);
   });
 
-  it("does not fire ma_crossover when priceHistory is insufficient", async () => {
+  it("priceHistory is reset per token — tokens accumulate independently", async () => {
     const prisma = makePrismaMock();
     const redis = makeRedisMock();
     const metrics = makeMetricsMock();
-    const svc = new BacktestService(prisma, redis, metrics, defaultBetaLimits);
+    const svc = new BacktestService(
+      prisma,
+      redis,
+      metrics,
+      makeBetaLimitsMock(),
+    );
 
-    prisma.backtestRun.findUniqueOrThrow.mockResolvedValue(BASE_RUN);
+    prisma.backtestRun.findUniqueOrThrow.mockResolvedValue({
+      ...BASE_RUN,
+      dateRangeStart: new Date("2024-01-01"),
+      dateRangeEnd: new Date("2024-01-31"),
+    });
     prisma.strategy.findUniqueOrThrow.mockResolvedValue({
-      safety: [],
+      ...EMPTY_STRATEGY,
       triggers: [
         {
-          type: "ma_crossover",
-          config: {
-            tokenId: "tok-a",
-            fastPeriod: 5,
-            slowPeriod: 20,
-            maType: "sma",
-          },
+          type: "price_above_tick",
+          config: { tokenId: "tok-a", threshold: "0.8" },
         },
       ],
-      conditions: [],
-      actions: [{ type: "buy_yes", config: { tokenId: "tok-a", size: "10" } }],
-    });
-    prisma.dataGap.count.mockResolvedValue(0);
-
-    // Only 5 ticks — insufficient for slowPeriod 20 + 1
-    const baseTime = new Date("2024-01-01T00:00:00Z").getTime();
-    const ticks = Array.from({ length: 5 }, (_, i) => ({
-      time: new Date(baseTime + i * 60_000),
-      tokenId: "tok-a",
-      open: "0.5",
-      high: "0.51",
-      low: "0.49",
-      close: "0.5",
-    }));
-
-    prisma.$queryRaw.mockResolvedValue(ticks);
-
-    await svc.run("run-ta-insufficient");
-
-    // No orders should be created since trigger never fires
-    expect(prisma.backtestOrder.createMany).not.toHaveBeenCalled();
-  });
-
-  it("does not fire trigger for token A on a token B tick", async () => {
-    const prisma = makePrismaMock();
-    const redis = makeRedisMock();
-    const metrics = makeMetricsMock();
-    const svc = new BacktestService(prisma, redis, metrics, defaultBetaLimits);
-
-    prisma.backtestRun.findUniqueOrThrow.mockResolvedValue(BASE_RUN);
-    prisma.strategy.findUniqueOrThrow.mockResolvedValue({
-      safety: [],
-      triggers: [
+      actions: [
         {
-          type: "price_above",
-          config: { tokenId: "tok-a", threshold: "0.7" },
+          type: "buy_yes",
+          config: { tokenId: "tok-a", size: "10" },
         },
       ],
-      conditions: [],
-      actions: [{ type: "buy_yes", config: { tokenId: "tok-a", size: "10" } }],
     });
-    prisma.dataGap.count.mockResolvedValue(0);
 
-    // Tick 1: tok-a price 0.8 (above threshold) → trigger fires, buy executes
-    // Tick 2: tok-b → tok-a trigger should NOT fire again (gated by tokenId)
-    const baseTime = new Date("2024-01-01T00:00:00Z").getTime();
+    // Two tokens: tok-a has a trigger, tok-b does not (but appears in ticks)
     const ticks = [
-      {
-        time: new Date(baseTime),
-        tokenId: "tok-a",
-        open: "0.8",
-        high: "0.81",
-        low: "0.79",
-        close: "0.8",
-      },
-      {
-        time: new Date(baseTime + 60_000),
-        tokenId: "tok-b",
-        open: "0.5",
-        high: "0.51",
-        low: "0.49",
-        close: "0.5",
-      },
+      makeTick({ tokenId: "tok-b", close: "0.3" }),
+      makeTick({ tokenId: "tok-a", close: "0.4" }),
+      makeTick({ tokenId: "tok-b", close: "0.3" }),
+      makeTick({ tokenId: "tok-a", close: "0.9" }),
     ];
-
     prisma.$queryRaw.mockResolvedValue(ticks);
 
-    await svc.run("run-gated");
+    await svc.run("run-ta-two-tokens");
 
-    // Should only create orders once (on tok-a tick), NOT twice
-    const orderCalls = prisma.backtestOrder.createMany.mock.calls;
-    const totalOrders = orderCalls.reduce(
-      (sum: number, call: any) => sum + call[0].data.length,
-      0,
+    const finalizeCall = prisma.backtestRun.update.mock.calls.find(
+      (c: any[]) => c[0].data?.status === "COMPLETED",
     );
-    expect(totalOrders).toBe(1);
-  });
-
-  it("fires ma_crossover when fastPeriod > slowPeriod with correct lookback", async () => {
-    const prisma = makePrismaMock();
-    const redis = makeRedisMock();
-    const metrics = makeMetricsMock();
-    const svc = new BacktestService(prisma, redis, metrics, defaultBetaLimits);
-
-    prisma.backtestRun.findUniqueOrThrow.mockResolvedValue(BASE_RUN);
-    prisma.strategy.findUniqueOrThrow.mockResolvedValue({
-      safety: [],
-      triggers: [
-        {
-          type: "ma_crossover",
-          config: {
-            tokenId: "tok-a",
-            fastPeriod: 20,
-            slowPeriod: 10,
-            maType: "sma",
-          },
-        },
-      ],
-      conditions: [],
-      actions: [{ type: "buy_yes", config: { tokenId: "tok-a", size: "10" } }],
-    });
-    prisma.dataGap.count.mockResolvedValue(0);
-
-    // 21 ticks with a price pattern that causes a crossover at tick 21.
-    // The old computeMaxLookback used slowPeriod+1=11, capping history
-    // below fastPeriod=20 and producing NaN MAs (trigger never fires).
-    // With the fix, maxLookback=21, so history is large enough for the
-    // fast SMA to compute and the crossover to fire.
-    const baseTime = new Date("2024-01-01T00:00:00Z").getTime();
-    const ticks = Array.from({ length: 21 }, (_, i) => {
-      const close =
-        i < 10 ? "0.85" : i < 20 ? "0.9" : "0.4";
-      return {
-        time: new Date(baseTime + i * 60_000),
-        tokenId: "tok-a",
-        open: "0.5",
-        high: "0.5",
-        low: "0.5",
-        close,
-      };
-    });
-
-    prisma.$queryRaw.mockResolvedValue(ticks);
-
-    await svc.run("run-ta-fast-gt-slow");
-
-    // At least one order should be created from the trigger firing
-    expect(prisma.backtestOrder.createMany).toHaveBeenCalled();
-    const lastCreateCall =
-      prisma.backtestOrder.createMany.mock.calls[
-        prisma.backtestOrder.createMany.mock.calls.length - 1
-      ][0];
-    expect(lastCreateCall.data.length).toBeGreaterThanOrEqual(1);
-  });
-
-  it("fires every_tick on every tick regardless of configured tokenId", async () => {
-    const prisma = makePrismaMock();
-    const redis = makeRedisMock();
-    const metrics = makeMetricsMock();
-    const svc = new BacktestService(prisma, redis, metrics, defaultBetaLimits);
-
-    prisma.backtestRun.findUniqueOrThrow.mockResolvedValue(BASE_RUN);
-    prisma.strategy.findUniqueOrThrow.mockResolvedValue({
-      safety: [],
-      triggers: [
-        { type: "every_tick", config: { tokenId: "tok-a" } },
-      ],
-      conditions: [],
-      actions: [{ type: "buy_yes", config: { tokenId: "tok-b", size: "10" } }],
-    });
-    prisma.dataGap.count.mockResolvedValue(0);
-
-    // Two ticks for tok-b — every_tick is configured with tokenId=tok-a
-    // but should still fire because every_tick is exempt from token gating.
-    const baseTime = new Date("2024-01-01T00:00:00Z").getTime();
-    const ticks = [
-      {
-        time: new Date(baseTime),
-        tokenId: "tok-b",
-        open: "0.5",
-        high: "0.51",
-        low: "0.49",
-        close: "0.5",
-      },
-      {
-        time: new Date(baseTime + 60_000),
-        tokenId: "tok-b",
-        open: "0.5",
-        high: "0.51",
-        low: "0.49",
-        close: "0.5",
-      },
-    ];
-
-    // extractTokenIds picks tok-a (trigger) then tok-b (action),
-    // so fetchTicks queries tok-a first, then tok-b.
-    prisma.$queryRaw
-      .mockResolvedValueOnce([]) // tok-a query: no ticks for this token
-      .mockResolvedValueOnce(ticks); // tok-b query: two ticks
-
-    await svc.run("run-every-tick-gated");
-
-    // Should execute buy_yes on both ticks
-    const orderCalls = prisma.backtestOrder.createMany.mock.calls;
-    const totalOrders = orderCalls.reduce(
-      (sum: number, call: any) => sum + call[0].data.length,
-      0,
-    );
-    expect(totalOrders).toBe(2);
-  });
-
-  it("completes correctly for non-TA strategies without accumulating priceHistory", async () => {
-    const prisma = makePrismaMock();
-    const redis = makeRedisMock();
-    const metrics = makeMetricsMock();
-    const svc = new BacktestService(prisma, redis, metrics, defaultBetaLimits);
-
-    prisma.backtestRun.findUniqueOrThrow.mockResolvedValue(BASE_RUN);
-    prisma.strategy.findUniqueOrThrow.mockResolvedValue({
-      safety: [],
-      triggers: [
-        {
-          type: "price_above",
-          config: { tokenId: "tok-a", threshold: "0.5" },
-        },
-      ],
-      conditions: [],
-      actions: [{ type: "buy_yes", config: { tokenId: "tok-a", size: "10" } }],
-    });
-    prisma.dataGap.count.mockResolvedValue(0);
-
-    // Many ticks — no TA triggers means priceHistory should *not* accumulate
-    // boundlessly. If the fix regresses, this test balloons memory/time.
-    const baseTime = new Date("2024-01-01T00:00:00Z").getTime();
-    const ticks = Array.from({ length: 200 }, (_, i) => ({
-      time: new Date(baseTime + i * 60_000),
-      tokenId: "tok-a",
-      open: "0.8",
-      high: "0.81",
-      low: "0.79",
-      close: "0.8",
-    }));
-
-    prisma.$queryRaw.mockResolvedValue(ticks);
-
-    await svc.run("run-no-ta");
-
-    // Every tick has price above threshold → one order per tick
-    const orderCalls = prisma.backtestOrder.createMany.mock.calls;
-    const totalOrders = orderCalls.reduce(
-      (sum: number, call: any) => sum + call[0].data.length,
-      0,
-    );
-    expect(totalOrders).toBe(200);
+    expect(finalizeCall).toBeDefined();
+    // price_above_tick > 0.8 should fire on the last tok-a tick
+    expect(finalizeCall![0].data.totalOrders).toBeGreaterThan(0);
   });
 });

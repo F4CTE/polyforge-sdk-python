@@ -4,9 +4,10 @@ import { SentryGlobalFilter } from "@sentry/nestjs/setup";
 import { ConfigModule } from "@nestjs/config";
 import { JwtModule } from "@nestjs/jwt";
 import { ThrottlerModule, ThrottlerGuard } from "@nestjs/throttler";
+import { ThrottlerStorageRedisService } from "@nest-lab/throttler-storage-redis";
 import { APP_FILTER, APP_GUARD } from "@nestjs/core";
 import { LoggerModule } from "@polyforge/logger";
-import { RedisModule } from "@polyforge/shared-redis";
+import { RedisModule, RedisService } from "@polyforge/shared-redis";
 import { EncryptionModule } from "./encryption/encryption.module";
 import { CredentialsModule } from "./credentials/credentials.module";
 import { SigningModule } from "./signing/signing.module";
@@ -18,7 +19,14 @@ import { HealthController } from "./health/health.controller";
     SentryModule.forRoot(),
     ConfigModule.forRoot({ isGlobal: true }),
     JwtModule.register({}),
-    ThrottlerModule.forRoot([{ ttl: 60000, limit: 120 }]),
+    ThrottlerModule.forRootAsync({
+      imports: [RedisModule],
+      inject: [RedisService],
+      useFactory: (redis: RedisService) => ({
+        throttlers: [{ ttl: 60000, limit: 120 }],
+        storage: new ThrottlerStorageRedisService(redis.getClient()),
+      }),
+    }),
     LoggerModule,
     RedisModule,
     EncryptionModule,

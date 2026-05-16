@@ -107,7 +107,7 @@ describe("StopIfDailyLossBlock", () => {
 describe("StopIfOrdersPerMinBlock", () => {
   it("fires when order rate is below limit", async () => {
     const redis = makeRedis();
-    (redis.getClient() as any).zcard = vi.fn().mockResolvedValue(5);
+    redis.getClient().zcard = vi.fn().mockResolvedValue(5);
     const ctx = makeCtx();
     const res = await StopIfOrdersPerMinBlock.evaluate(
       block("stop_if_orders_per_min", { maxOrders: "10" }),
@@ -120,7 +120,7 @@ describe("StopIfOrdersPerMinBlock", () => {
 
   it("does NOT fire when order rate meets or exceeds limit", async () => {
     const redis = makeRedis();
-    (redis.getClient() as any).zcard = vi.fn().mockResolvedValue(10);
+    redis.getClient().zcard = vi.fn().mockResolvedValue(10);
     const ctx = makeCtx();
     const res = await StopIfOrdersPerMinBlock.evaluate(
       block("stop_if_orders_per_min", { maxOrders: "10" }),
@@ -134,7 +134,7 @@ describe("StopIfOrdersPerMinBlock", () => {
 
   it("treats non-numeric zcard return as 0 orders", async () => {
     const redis = makeRedis();
-    (redis.getClient() as any).zcard = vi.fn().mockResolvedValue(null);
+    redis.getClient().zcard = vi.fn().mockResolvedValue(null);
     const ctx = makeCtx();
     const res = await StopIfOrdersPerMinBlock.evaluate(
       block("stop_if_orders_per_min", { maxOrders: "1" }),
@@ -149,7 +149,7 @@ describe("StopIfOrdersPerMinBlock", () => {
     const redis = makeRedis();
     const zcard = vi.fn().mockResolvedValue(0);
     const zremrangebyscore = vi.fn().mockResolvedValue(0);
-    const client = redis.getClient() as any;
+    const client = redis.getClient();
     client.zcard = zcard;
     client.zremrangebyscore = zremrangebyscore;
     const ctx = makeCtx();
@@ -169,7 +169,7 @@ describe("StopIfOrdersPerMinBlock", () => {
 
   it("defaults maxOrders to 60 when not provided", async () => {
     const redis = makeRedis();
-    (redis.getClient() as any).zcard = vi.fn().mockResolvedValue(59);
+    redis.getClient().zcard = vi.fn().mockResolvedValue(59);
     const ctx = makeCtx();
     const res = await StopIfOrdersPerMinBlock.evaluate(
       block("stop_if_orders_per_min", {}),

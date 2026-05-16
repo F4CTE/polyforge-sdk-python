@@ -99,7 +99,8 @@ export const SAFETY_REGISTRY: Record<string, BlockEvaluator> = {
   stop_if_exposure_exceeds: StopIfExposureExceedsBlock,
   PAUSE_AFTER_FILL: PauseAfterFillBlock,
   pause_after_fill: PauseAfterFillBlock,
-  MAX_POSITION_SIZE: MaxPositionBlock, // legacy alias — migrated to CONDITION_REGISTRY
+  // MAX_POSITION_SIZE intentionally removed — canonical entry is in CONDITION_REGISTRY.
+  // Runtime backward compat is handled by strategy-runner.ts condition fallback.
   max_orders_total: MaxOrdersTotalBlock,
 };
 
@@ -115,8 +116,10 @@ export const TRIGGER_REGISTRY: Record<string, BlockEvaluator> = {
   loss_streak: LossStreakBlock,
   LOSS_STREAK: LossStreakBlock,
   price_above_tick: PriceAboveTickBlock,
+  price_above: PriceAboveTickBlock,
   PRICE_ABOVE: PriceAboveTickBlock,
   price_below_tick: PriceBelowTickBlock,
+  price_below: PriceBelowTickBlock,
   PRICE_BELOW: PriceBelowTickBlock,
   spread_below_tick: SpreadBelowTickBlock,
   SPREAD_ABOVE: SpreadBelowTickBlock,

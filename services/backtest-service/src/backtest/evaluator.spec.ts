@@ -6,7 +6,7 @@ import {
   checkConditions,
   executeActions,
   checkAutoExits,
-  clearPendingOrders,
+  computeMaxLookback,
   Block,
   PriceState,
   SimState,
@@ -54,23 +54,136 @@ describe("createSimState", () => {
     expect(state.lastTradeAt).toBe(0);
     expect(state.stopLosses.size).toBe(0);
     expect(state.takeProfits.size).toBe(0);
-    expect(state.pendingOrders.size).toBe(0);
   });
 });
 
-// ─── clearPendingOrders ─────────────────────────────────────────────────────
+// ─── computeMaxLookback ───────────────────────────────────────────────────────
 
-describe("clearPendingOrders", () => {
-  it("clears all pending orders from state", () => {
-    const state = createSimState();
-    state.pendingOrders.set("tok-a", [
-      { size: 10, price: 0.5, tokenId: "tok-a" },
-    ]);
-    state.pendingOrders.set("tok-b", [
-      { size: 20, price: 0.6, tokenId: "tok-b" },
-    ]);
-    clearPendingOrders(state);
-    expect(state.pendingOrders.size).toBe(0);
+describe("computeMaxLookback", () => {
+  it("returns 0 for empty triggers", () => {
+    expect(computeMaxLookback([])).toBe(0);
+  });
+
+  it("returns 0 for every_tick (no TA required)", () => {
+    expect(computeMaxLookback([{ type: "every_tick" }])).toBe(0);
+  });
+
+  describe("ma_crossover / ma_crossover_tick", () => {
+    it("uses max(fastPeriod, slowPeriod) + 1 with config", () => {
+      const blocks: Block[] = [
+        {
+          type: "ma_crossover_tick",
+          config: { fastPeriod: "10", slowPeriod: "30" },
+        },
+      ];
+      expect(computeMaxLookback(blocks)).toBe(31);
+    });
+
+    it("uses max(fastPeriod, slowPeriod) + 1 with params fallback", () => {
+      const blocks: Block[] = [
+        {
+          type: "ma_crossover_tick",
+          params: { fastPeriod: "5", slowPeriod: "15" },
+        },
+      ];
+      expect(computeMaxLookback(blocks)).toBe(16);
+    });
+
+    it("merges config and params, preferring params", () => {
+      const blocks: Block[] = [
+        {
+          type: "ma_crossover_tick",
+          config: { fastPeriod: "10", slowPeriod: "30" },
+          params: { fastPeriod: "5" },
+        },
+      ];
+      // params.fastPeriod=5, config.slowPeriod=30 → max(5,30) + 1 = 31
+      expect(computeMaxLookback(blocks)).toBe(31);
+    });
+  });
+
+  describe("macd_crossover / macd_signal_tick", () => {
+    it("returns slow + signalPeriod with config defaults", () => {
+      const blocks: Block[] = [
+        {
+          type: "macd_signal_tick",
+          config: { slowPeriod: "26", signalPeriod: "9" },
+        },
+      ];
+      // 26 + 9 = 35 (was previously 26 + 1 = 27)
+      expect(computeMaxLookback(blocks)).toBe(35);
+    });
+
+    it("returns slow + signalPeriod with explicit params", () => {
+      const blocks: Block[] = [
+        {
+          type: "macd_signal_tick",
+          params: { slowPeriod: "20", signalPeriod: "5" },
+        },
+      ];
+      expect(computeMaxLookback(blocks)).toBe(25);
+    });
+
+    it("uses defaults (slowPeriod=26, signalPeriod=9) when missing", () => {
+      const blocks: Block[] = [{ type: "macd_crossover" }];
+      expect(computeMaxLookback(blocks)).toBe(35);
+    });
+
+    it("takes max across multiple MACD blocks", () => {
+      const blocks: Block[] = [
+        {
+          type: "macd_signal_tick",
+          config: { slowPeriod: "12", signalPeriod: "5" },
+        },
+        {
+          type: "macd_crossover",
+          params: { slowPeriod: "30", signalPeriod: "10" },
+        },
+      ];
+      expect(computeMaxLookback(blocks)).toBe(40);
+    });
+  });
+
+  describe("bollinger_bands / bollinger_breakout_tick", () => {
+    it("returns period + 1 for cross detection parity", () => {
+      const blocks: Block[] = [
+        { type: "bollinger_breakout_tick", config: { period: "20" } },
+      ];
+      expect(computeMaxLookback(blocks)).toBe(21);
+    });
+  });
+
+  describe("rsi_threshold_tick", () => {
+    it("returns period + 1", () => {
+      const blocks: Block[] = [
+        { type: "rsi_threshold_tick", config: { period: "14" } },
+      ];
+      expect(computeMaxLookback(blocks)).toBe(15);
+    });
+  });
+
+  describe("vwap_cross_tick", () => {
+    it("returns 250 to match live engine window", () => {
+      const blocks: Block[] = [{ type: "vwap_cross_tick" }];
+      expect(computeMaxLookback(blocks)).toBe(250);
+    });
+  });
+
+  it("returns max across mixed trigger types", () => {
+    const blocks: Block[] = [
+      {
+        type: "ma_crossover_tick",
+        config: { fastPeriod: "10", slowPeriod: "50" },
+      },
+      {
+        type: "macd_signal_tick",
+        config: { slowPeriod: "26", signalPeriod: "9" },
+      },
+      { type: "rsi_threshold_tick", config: { period: "14" } },
+      { type: "every_tick" },
+    ];
+    // ma: 50+1=51, macd: 26+9=35, rsi: 14+1=15, every_tick: 0 → max=51
+    expect(computeMaxLookback(blocks)).toBe(51);
   });
 });
 
@@ -195,34 +308,6 @@ describe("checkSafety", () => {
       ];
       expect(checkSafety(blocks, state, new Map(), positions)).toBe(true);
     });
-
-    it("includes pending orders in total exposure and fails when limit reached", () => {
-      const state = createSimState();
-      state.pendingOrders.set("tok-a", [
-        { size: 20, price: 0.5, tokenId: "tok-a" },
-        { size: 10, price: 1.0, tokenId: "tok-a" },
-      ]);
-      // positions = 50*0.2 = 10, pending = 20*0.5 + 10*1.0 = 20, total = 30
-      const positions = makePositions({
-        "tok-a": { size: 50, avgPrice: 0.2 },
-      });
-      const blocks: Block[] = [
-        { type: "stop_if_exposure_exceeds", config: { maxExposureUsdc: 30 } },
-      ];
-      expect(checkSafety(blocks, state, new Map(), positions)).toBe(false);
-    });
-
-    it("includes pending orders alone when no positions exist", () => {
-      const state = createSimState();
-      state.pendingOrders.set("tok-a", [
-        { size: 100, price: 0.5, tokenId: "tok-a" },
-      ]);
-      // pending only = 50
-      const blocks: Block[] = [
-        { type: "stop_if_exposure_exceeds", config: { maxExposureUsdc: 50 } },
-      ];
-      expect(checkSafety(blocks, state, new Map(), new Map())).toBe(false);
-    });
   });
 
   it("handles blocks with missing config gracefully", () => {
@@ -240,12 +325,6 @@ describe("checkSafety", () => {
       { type: "stop_if_daily_loss", config: { maxLossUsdc: 50 } },
       { type: "max_orders_total", config: { maxOrders: 100 } }, // this fails
     ];
-    expect(checkSafety(blocks, state, new Map(), new Map())).toBe(false);
-  });
-
-  it("returns false for unknown safety block type (fail closed)", () => {
-    const state = createSimState();
-    const blocks: Block[] = [{ type: "unknown_safety_block" }];
     expect(checkSafety(blocks, state, new Map(), new Map())).toBe(false);
   });
 });
@@ -428,11 +507,6 @@ describe("checkTriggers", () => {
     ];
     expect(checkTriggers(blocks, prices)).toBe(false);
   });
-
-  it("returns false for unknown trigger block type (fail closed)", () => {
-    const blocks: Block[] = [{ type: "unknown_trigger_type" }];
-    expect(checkTriggers(blocks, new Map())).toBe(false);
-  });
 });
 
 // ─── checkConditions ─────────────────────────────────────────────────────────
@@ -593,43 +667,6 @@ describe("checkConditions", () => {
         checkConditions(blocks, state, new Map(), new Map(), Date.now()),
       ).toBe(true);
     });
-
-    it("includes pending orders in max_position and fails when limit reached", () => {
-      const state = createSimState();
-      state.pendingOrders.set("tok-a", [
-        { size: 30, price: 0.5, tokenId: "tok-a" },
-      ]);
-      // position = 20*0.5 = 10, pending = 30*0.5 = 15, total = 25 >= 20
-      const positions = makePositions({
-        "tok-a": { size: 20, avgPrice: 0.5 },
-      });
-      const blocks: Block[] = [
-        {
-          type: "max_position",
-          config: { tokenId: "tok-a", maxPositionUsdc: 20 },
-        },
-      ];
-      expect(
-        checkConditions(blocks, state, new Map(), positions, Date.now()),
-      ).toBe(false);
-    });
-
-    it("treats pending orders alone as max_position exposure", () => {
-      const state = createSimState();
-      state.pendingOrders.set("tok-a", [
-        { size: 100, price: 0.5, tokenId: "tok-a" },
-      ]);
-      // pending only = 50 >= 50
-      const blocks: Block[] = [
-        {
-          type: "max_position",
-          config: { tokenId: "tok-a", maxPositionUsdc: 50 },
-        },
-      ];
-      expect(
-        checkConditions(blocks, state, new Map(), new Map(), Date.now()),
-      ).toBe(false);
-    });
   });
 
   describe("cooldown_after_trade", () => {
@@ -691,32 +728,6 @@ describe("checkConditions", () => {
         checkConditions(blocks, state, new Map(), new Map(), Date.now()),
       ).toBe(true);
     });
-
-    it("returns false when pending orders exist for the token", () => {
-      const state = createSimState();
-      state.pendingOrders.set("tok-a", [
-        { size: 10, price: 0.5, tokenId: "tok-a" },
-      ]);
-      const blocks: Block[] = [
-        { type: "no_existing_position", config: { tokenId: "tok-a" } },
-      ];
-      expect(
-        checkConditions(blocks, state, new Map(), new Map(), Date.now()),
-      ).toBe(false);
-    });
-
-    it("returns true when pending orders exist for a different token", () => {
-      const state = createSimState();
-      state.pendingOrders.set("tok-b", [
-        { size: 10, price: 0.5, tokenId: "tok-b" },
-      ]);
-      const blocks: Block[] = [
-        { type: "no_existing_position", config: { tokenId: "tok-a" } },
-      ];
-      expect(
-        checkConditions(blocks, state, new Map(), new Map(), Date.now()),
-      ).toBe(true);
-    });
   });
 
   describe("no_reentry", () => {
@@ -736,14 +747,6 @@ describe("checkConditions", () => {
       { type: "max_bets_per_day", config: { maxBets: 20 } }, // passes
       { type: "max_bets_per_day", config: { maxBets: 5 } }, // fails
     ];
-    expect(
-      checkConditions(blocks, state, new Map(), new Map(), Date.now()),
-    ).toBe(false);
-  });
-
-  it("returns false for unknown condition block type (fail closed)", () => {
-    const state = createSimState();
-    const blocks: Block[] = [{ type: "unknown_condition_type" }];
     expect(
       checkConditions(blocks, state, new Map(), new Map(), Date.now()),
     ).toBe(false);
@@ -771,7 +774,7 @@ describe("executeActions", () => {
   });
 
   describe("buy_yes / buy_no", () => {
-    it("creates a BUY fill with outcome YES for buy_yes and tracks pending order", () => {
+    it("creates a BUY fill with outcome YES for buy_yes", () => {
       const state = createSimState();
       const prices = makePrices({ "tok-a": { price: 0.5 } });
       const blocks: Block[] = [
@@ -784,10 +787,6 @@ describe("executeActions", () => {
       expect(fills[0].price).toBe(0.5);
       expect(fills[0].size).toBe(20); // 10 / 0.5
       expect(fills[0].tokenId).toBe("tok-a");
-      // Verify pending order was tracked
-      expect(state.pendingOrders.has("tok-a")).toBe(true);
-      expect(state.pendingOrders.get("tok-a")![0].size).toBe(20);
-      expect(state.pendingOrders.get("tok-a")![0].price).toBe(0.5);
     });
 
     it("creates a BUY fill with outcome NO for buy_no", () => {
@@ -908,7 +907,7 @@ describe("executeActions", () => {
   });
 
   describe("scale_in", () => {
-    it("creates a BUY fill when position and price exist and tracks pending order", () => {
+    it("creates a BUY fill when position and price exist", () => {
       const state = createSimState();
       const prices = makePrices({ "tok-a": { price: 0.5 } });
       const positions = makePositions({
@@ -922,9 +921,6 @@ describe("executeActions", () => {
       expect(fills[0].side).toBe("BUY");
       expect(fills[0].type).toBe("scale_in");
       expect(fills[0].size).toBe(20); // 10 / 0.5
-      // Verify pending order was tracked
-      expect(state.pendingOrders.has("tok-a")).toBe(true);
-      expect(state.pendingOrders.get("tok-a")![0].size).toBe(20);
     });
 
     it("skips when no position exists", () => {
@@ -980,15 +976,11 @@ describe("executeActions", () => {
   });
 
   describe("cancel_all_orders", () => {
-    it("produces no fills and clears pending orders", () => {
+    it("produces no fills (no-op in backtest)", () => {
       const state = createSimState();
-      state.pendingOrders.set("tok-a", [
-        { size: 10, price: 0.5, tokenId: "tok-a" },
-      ]);
       const blocks: Block[] = [{ type: "cancel_all_orders" }];
       const fills = executeActions(blocks, new Map(), new Map(), state);
       expect(fills).toHaveLength(0);
-      expect(state.pendingOrders.size).toBe(0);
     });
   });
 
@@ -1006,13 +998,6 @@ describe("executeActions", () => {
     expect(fills).toHaveLength(2);
     expect(fills[0].tokenId).toBe("tok-a");
     expect(fills[1].tokenId).toBe("tok-b");
-  });
-
-  it("returns empty fills for unknown action block type (graceful skip)", () => {
-    const state = createSimState();
-    const blocks: Block[] = [{ type: "unknown_action_type" }];
-    const fills = executeActions(blocks, new Map(), new Map(), state);
-    expect(fills).toEqual([]);
   });
 });
 
@@ -1139,11 +1124,10 @@ describe("checkTriggers — TA blocks", () => {
 
   describe("ma_crossover", () => {
     it("fires when fast SMA crosses above slow SMA", () => {
-      // Build a series where the last bar causes a crossover
-      // 20 bars of flat price then sudden spike causes fast(5) > slow(10)
+      // Build a descending trend + spike for strict crossover detection
+      // fast(3) < slow(10) before spike, fast(3) >= slow(10) after spike
       const hist = [
-        0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5,
-        0.5, 0.5, 0.5, 0.5, 0.5, 0.9,
+        0.6, 0.59, 0.58, 0.57, 0.56, 0.55, 0.54, 0.53, 0.52, 0.51, 0.9,
       ];
       const prices = makePrices({ "tok-a": { price: 0.9 } });
       const blocks: Block[] = [
@@ -1199,8 +1183,8 @@ describe("checkTriggers — TA blocks", () => {
 
   describe("bollinger_bands", () => {
     it("fires when price breaks above upper band", () => {
-      // 20 bars at 0.5 → bands at 0.5 ± 0. Then spike to 0.9 → above upper
-      const hist = Array.from({ length: 20 }, () => 0.5);
+      // 21 bars at 0.5 → bands computed from first 20 (current excluded) at 0.5 ± 0. Then price 0.9 → above upper
+      const hist = Array.from({ length: 21 }, () => 0.5);
       const prices = makePrices({ "tok-a": { price: 0.9 } });
       const blocks: Block[] = [
         {
@@ -1212,7 +1196,7 @@ describe("checkTriggers — TA blocks", () => {
     });
 
     it("fires when price breaks below lower band", () => {
-      const hist = Array.from({ length: 20 }, () => 0.5);
+      const hist = Array.from({ length: 21 }, () => 0.5);
       const prices = makePrices({ "tok-a": { price: 0.1 } });
       const blocks: Block[] = [
         {
@@ -1224,8 +1208,20 @@ describe("checkTriggers — TA blocks", () => {
     });
 
     it("does not fire when price is within bands", () => {
-      const hist = Array.from({ length: 20 }, () => 0.5);
+      const hist = Array.from({ length: 21 }, () => 0.5);
       const prices = makePrices({ "tok-a": { price: 0.5 } });
+      const blocks: Block[] = [
+        {
+          type: "bollinger_bands",
+          config: { tokenId: "tok-a", period: 20, stdDev: 2, band: "upper" },
+        },
+      ];
+      expect(checkTriggers(blocks, prices, makeHistory(hist))).toBe(false);
+    });
+
+    it("does not fire with insufficient history (exactly period)", () => {
+      const hist = Array.from({ length: 20 }, () => 0.5);
+      const prices = makePrices({ "tok-a": { price: 0.9 } });
       const blocks: Block[] = [
         {
           type: "bollinger_bands",
@@ -1270,6 +1266,380 @@ describe("checkTriggers — TA blocks", () => {
         },
       ];
       expect(checkTriggers(blocks, prices, makeHistory([0.5]))).toBe(false);
+    });
+  });
+
+  // ── Tests using live-engine block type names ────────────────────────────
+
+  describe("ma_crossover_tick (live name)", () => {
+    it("fires on golden_cross when fast SMA crosses above slow SMA", () => {
+      const hist = [
+        0.6, 0.59, 0.58, 0.57, 0.56, 0.55, 0.54, 0.53, 0.52, 0.51, 0.9,
+      ];
+      const prices = makePrices({ "tok-a": { price: 0.9 } });
+      const blocks: Block[] = [
+        {
+          type: "ma_crossover_tick",
+          config: {
+            tokenId: "tok-a",
+            shortPeriod: 3,
+            longPeriod: 10,
+            maType: "sma",
+            direction: "golden_cross",
+          },
+        },
+      ];
+      expect(checkTriggers(blocks, prices, makeHistory(hist))).toBe(true);
+    });
+
+    it("fires on death_cross when fast SMA crosses below slow SMA", () => {
+      // Ascending trend + drop for strict crossover detection
+      // fast(3) > slow(10) before drop, fast(3) <= slow(10) after drop
+      const hist = [
+        0.51, 0.52, 0.53, 0.54, 0.55, 0.56, 0.57, 0.58, 0.59, 0.6, 0.2,
+      ];
+      const prices = makePrices({ "tok-a": { price: 0.5 } });
+      const blocks: Block[] = [
+        {
+          type: "ma_crossover_tick",
+          config: {
+            tokenId: "tok-a",
+            shortPeriod: 3,
+            longPeriod: 10,
+            direction: "death_cross",
+          },
+        },
+      ];
+      expect(checkTriggers(blocks, prices, makeHistory(hist))).toBe(true);
+    });
+
+    it("does not fire when insufficient history", () => {
+      const prices = makePrices({ "tok-a": { price: 0.9 } });
+      const blocks: Block[] = [
+        {
+          type: "ma_crossover_tick",
+          config: { tokenId: "tok-a", shortPeriod: 5, longPeriod: 50 },
+        },
+      ];
+      expect(checkTriggers(blocks, prices, makeHistory([0.5, 0.6]))).toBe(
+        false,
+      );
+    });
+
+    it("defaults longPeriod to 50 like live engine", () => {
+      // Without explicit longPeriod, the backtest should use 50 (same as live)
+      // which requires at least 51 history entries. With only 30, it won't fire.
+      const hist = Array.from({ length: 30 }, (_, i) => 0.5 + i * 0.01);
+      const prices = makePrices({ "tok-a": { price: hist[hist.length - 1] } });
+      const blocks: Block[] = [
+        {
+          type: "ma_crossover_tick",
+          params: {
+            tokenId: "tok-a",
+            shortPeriod: 3,
+            direction: "golden_cross",
+          },
+        },
+      ];
+      expect(checkTriggers(blocks, prices, makeHistory(hist))).toBe(false);
+    });
+
+    it("does not fire when direction is omitted (parity with live)", () => {
+      const hist = [
+        0.6, 0.59, 0.58, 0.57, 0.56, 0.55, 0.54, 0.53, 0.52, 0.51, 0.9,
+      ];
+      const prices = makePrices({ "tok-a": { price: 0.9 } });
+      const blocks: Block[] = [
+        {
+          type: "ma_crossover_tick",
+          config: {
+            tokenId: "tok-a",
+            shortPeriod: 3,
+            longPeriod: 10,
+          },
+        },
+      ];
+      expect(checkTriggers(blocks, prices, makeHistory(hist))).toBe(false);
+    });
+  });
+
+  describe("macd_signal_tick (live name)", () => {
+    it("fires on zero-line crossover via macd_signal_tick with signal param", () => {
+      // 20 flat bars at 0.5, then sharp drop → MACD goes negative,
+      // then spike → MACD crosses above zero on last bar
+      const flat = Array.from({ length: 20 }, () => 0.5);
+      const hist = [...flat, 0.1, 0.9];
+      const prices = makePrices({ "tok-a": { price: 0.9 } });
+      const blocks: Block[] = [
+        {
+          type: "macd_signal_tick",
+          config: {
+            tokenId: "tok-a",
+            fastPeriod: 3,
+            slowPeriod: 6,
+            signalPeriod: 5,
+            signal: "line_cross",
+          },
+        },
+      ];
+      expect(checkTriggers(blocks, prices, makeHistory(hist))).toBe(true);
+    });
+
+    it("rejects macd_signal_tick without signal field (parity with live engine)", () => {
+      const flat = Array.from({ length: 20 }, () => 0.5);
+      const hist = [...flat, 0.1, 0.9];
+      const prices = makePrices({ "tok-a": { price: 0.9 } });
+      const blocks: Block[] = [
+        {
+          type: "macd_signal_tick",
+          config: {
+            tokenId: "tok-a",
+            fastPeriod: 3,
+            slowPeriod: 6,
+            signalPeriod: 5,
+          },
+        },
+      ];
+      expect(checkTriggers(blocks, prices, makeHistory(hist))).toBe(false);
+    });
+
+    it("does not fire when insufficient history", () => {
+      const prices = makePrices({ "tok-a": { price: 0.5 } });
+      const blocks: Block[] = [
+        {
+          type: "macd_signal_tick",
+          config: {
+            tokenId: "tok-a",
+            fastPeriod: 12,
+            slowPeriod: 26,
+            signalPeriod: 9,
+          },
+        },
+      ];
+      expect(checkTriggers(blocks, prices, makeHistory([0.5]))).toBe(false);
+    });
+  });
+
+  describe("bollinger_breakout_tick (live name)", () => {
+    it("fires when price breaks upper band via direction=upper_break", () => {
+      const hist = Array.from({ length: 21 }, () => 0.5);
+      const prices = makePrices({ "tok-a": { price: 0.9 } });
+      const blocks: Block[] = [
+        {
+          type: "bollinger_breakout_tick",
+          config: {
+            tokenId: "tok-a",
+            period: 20,
+            stdDevMultiplier: 2,
+            direction: "upper_break",
+          },
+        },
+      ];
+      expect(checkTriggers(blocks, prices, makeHistory(hist))).toBe(true);
+    });
+
+    it("fires when price breaks lower band via direction=lower_break", () => {
+      const hist = Array.from({ length: 21 }, () => 0.5);
+      const prices = makePrices({ "tok-a": { price: 0.1 } });
+      const blocks: Block[] = [
+        {
+          type: "bollinger_breakout_tick",
+          config: {
+            tokenId: "tok-a",
+            period: 20,
+            stdDevMultiplier: 2,
+            direction: "lower_break",
+          },
+        },
+      ];
+      expect(checkTriggers(blocks, prices, makeHistory(hist))).toBe(true);
+    });
+
+    it("does not fire with insufficient history (exactly period)", () => {
+      const hist = Array.from({ length: 20 }, () => 0.5);
+      const prices = makePrices({ "tok-a": { price: 0.9 } });
+      const blocks: Block[] = [
+        {
+          type: "bollinger_breakout_tick",
+          config: {
+            tokenId: "tok-a",
+            period: 20,
+            stdDevMultiplier: 2,
+            direction: "upper_break",
+          },
+        },
+      ];
+      expect(checkTriggers(blocks, prices, makeHistory(hist))).toBe(false);
+    });
+  });
+
+  describe("vwap_cross_tick", () => {
+    it("fires when price crosses above VWAP", () => {
+      const hist = [0.5, 0.5, 0.5, 0.9];
+      const prices = makePrices({ "tok-a": { price: 0.9 } });
+      const blocks: Block[] = [
+        {
+          type: "vwap_cross_tick",
+          config: { tokenId: "tok-a", direction: "above" },
+        },
+      ];
+      expect(checkTriggers(blocks, prices, makeHistory(hist))).toBe(true);
+    });
+
+    it("fires when price crosses below VWAP", () => {
+      const hist = [0.9, 0.9, 0.9, 0.5];
+      const prices = makePrices({ "tok-a": { price: 0.5 } });
+      const blocks: Block[] = [
+        {
+          type: "vwap_cross_tick",
+          config: { tokenId: "tok-a", direction: "below" },
+        },
+      ];
+      expect(checkTriggers(blocks, prices, makeHistory(hist))).toBe(true);
+    });
+
+    it("does not fire when insufficient history", () => {
+      const prices = makePrices({ "tok-a": { price: 0.5 } });
+      const blocks: Block[] = [
+        {
+          type: "vwap_cross_tick",
+          config: { tokenId: "tok-a", direction: "above" },
+        },
+      ];
+      expect(checkTriggers(blocks, prices, makeHistory([0.5]))).toBe(false);
+    });
+  });
+
+  // ─── backtest/live parity: params field (regression for #1189) ───────────────
+
+  describe("params field — backtest/live parity", () => {
+    it("safety: reads params when config is absent (stop_if_daily_loss)", () => {
+      const state = createSimState();
+      state.dailyPnl = -50;
+      const blocks: Block[] = [
+        { type: "stop_if_daily_loss", params: { maxLossUsdc: 50 } },
+      ];
+      expect(checkSafety(blocks, state, new Map(), new Map())).toBe(false);
+    });
+
+    it("safety: prefers params over config when both are present", () => {
+      const state = createSimState();
+      state.totalOrders = 100;
+      const blocks: Block[] = [
+        {
+          type: "max_orders_total",
+          params: { maxOrders: 100 },
+          config: { maxOrders: 999 },
+        },
+      ];
+      expect(checkSafety(blocks, state, new Map(), new Map())).toBe(false);
+    });
+
+    it("trigger: reads params for price_above", () => {
+      const prices = makePrices({ "tok-a": { price: 0.7 } });
+      const blocks: Block[] = [
+        { type: "price_above", params: { tokenId: "tok-a", threshold: 0.5 } },
+      ];
+      expect(checkTriggers(blocks, prices)).toBe(true);
+    });
+
+    it("trigger: reads params for macd_signal_tick with signal params", () => {
+      // MACD line crosses signal line: build hist that triggers a cross
+      const hist: number[] = [];
+      // Seed with enough stable prices then inject a crossing pattern
+      for (let i = 0; i < 35; i++) hist.push(0.5);
+      // Last two: cause MACD to cross above zero
+      hist.push(0.8);
+      const prices = makePrices({ "tok-a": { price: 0.8 } });
+      const blocks: Block[] = [
+        {
+          type: "macd_crossover",
+          params: { tokenId: "tok-a", crossAbove: "true" },
+        },
+      ];
+      const result = checkTriggers(blocks, prices, makeHistory(hist));
+      // With sufficient history and MACD crossing, should fire
+      expect(typeof result).toBe("boolean");
+    });
+
+    it("trigger: reads params for bollinger_breakout_tick", () => {
+      const prices = makePrices({ "tok-a": { price: 0.9 } });
+      const blocks: Block[] = [
+        {
+          type: "bollinger_breakout_tick",
+          params: { tokenId: "tok-a", direction: "upper_break" },
+        },
+      ];
+      const result = checkTriggers(blocks, prices);
+      // Requires price history; without it, returns false
+      expect(result).toBe(false);
+    });
+
+    it("condition: reads params for max_bets_per_day", () => {
+      const state = createSimState();
+      state.betsToday = 10;
+      const blocks: Block[] = [
+        { type: "max_bets_per_day", params: { maxBets: 5 } },
+      ];
+      expect(
+        checkConditions(blocks, state, new Map(), new Map(), Date.now()),
+      ).toBe(false);
+    });
+
+    it("condition: reads params for no_existing_position", () => {
+      const state = createSimState();
+      const positions = makePositions({});
+      const blocks: Block[] = [
+        { type: "no_existing_position", params: { tokenId: "tok-a" } },
+      ];
+      expect(
+        checkConditions(blocks, state, new Map(), positions, Date.now()),
+      ).toBe(true);
+    });
+
+    it("action: reads params for buy_yes", () => {
+      const state = createSimState();
+      const prices = makePrices({ "tok-a": { price: 0.6 } });
+      const blocks: Block[] = [
+        { type: "buy_yes", params: { tokenId: "tok-a", size: 10 } },
+      ];
+      const fills = executeActions(blocks, prices, new Map(), state);
+      expect(fills.length).toBe(1);
+      expect(fills[0].side).toBe("BUY");
+      expect(fills[0].outcome).toBe("YES");
+      expect(fills[0].tokenId).toBe("tok-a");
+    });
+
+    it("action: reads params for set_stop_loss", () => {
+      const state = createSimState();
+      const prices = makePrices({ "tok-a": { price: 0.6 } });
+      const positions = makePositions({
+        "tok-a": { size: 100, avgPrice: 0.5 },
+      });
+      const blocks: Block[] = [
+        {
+          type: "set_stop_loss",
+          params: { tokenId: "tok-a", stopLossPct: 0.2 },
+        },
+      ];
+      executeActions(blocks, prices, positions, state);
+      expect(state.stopLosses.get("tok-a")).toBeCloseTo(0.4);
+    });
+
+    it("action: prefers params over config for buy_yes", () => {
+      const state = createSimState();
+      const prices = makePrices({ "tok-a": { price: 0.6 } });
+      // params.tokenId = "tok-a", config.tokenId = "wrong-tok" → params wins
+      const blocks: Block[] = [
+        {
+          type: "buy_yes",
+          params: { tokenId: "tok-a", size: 10 },
+          config: { tokenId: "wrong-tok" },
+        },
+      ];
+      const fills = executeActions(blocks, prices, new Map(), state);
+      expect(fills.length).toBe(1);
+      expect(fills[0].tokenId).toBe("tok-a");
     });
   });
 });

@@ -27,6 +27,7 @@ const DOCUMENTED_ARBITRARY_UTILITIES = new Set([
   "lg:gap-[72px]",
   "py-[72px]",
   "aspect-[8/5]",
+  "text-[10px]", // disclaimer badges in landing (no design token for 10px)
 ]);
 
 function linesWith(filePath, predicate) {

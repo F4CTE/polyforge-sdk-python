@@ -53,24 +53,33 @@ describe("AdminJwtGuard", () => {
     process.env.ADMIN_JWT_SECRET = TEST_SECRET;
   });
 
-  it("can be instantiated without ADMIN_JWT_SECRET", async () => {
+  it("does not throw at construction when ADMIN_JWT_SECRET is missing (lazy validation)", () => {
     delete process.env.ADMIN_JWT_SECRET;
     vi.resetModules();
-    const mod = await import("./admin-jwt.guard");
-    const Guard = mod.AdminJwtGuard;
-    expect(() => new Guard(jwtService as any, redis as any)).not.toThrow();
+    // Construction succeeds — validation is deferred to request time
+    expect(
+      () => new AdminJwtGuard(jwtService as any, redis as any),
+    ).not.toThrow();
   });
 
   it("throws UnauthorizedException at request time when ADMIN_JWT_SECRET is missing", async () => {
     delete process.env.ADMIN_JWT_SECRET;
-    const ctx = makeContext({ authorization: "Bearer some-token" });
-    await expect(guard.canActivate(ctx)).rejects.toThrow(UnauthorizedException);
+    vi.resetModules();
+    const mod = await import("./admin-jwt.guard");
+    const Guard = mod.AdminJwtGuard;
+    const g = new Guard(jwtService as any, redis as any);
+    const ctx = makeContext({ authorization: "Bearer admin-token" });
+    await expect(g.canActivate(ctx)).rejects.toThrow(UnauthorizedException);
   });
 
   it("throws UnauthorizedException at request time when ADMIN_JWT_SECRET is too short", async () => {
     process.env.ADMIN_JWT_SECRET = "short";
-    const ctx = makeContext({ authorization: "Bearer some-token" });
-    await expect(guard.canActivate(ctx)).rejects.toThrow(UnauthorizedException);
+    vi.resetModules();
+    const mod = await import("./admin-jwt.guard");
+    const Guard = mod.AdminJwtGuard;
+    const g = new Guard(jwtService as any, redis as any);
+    const ctx = makeContext({ authorization: "Bearer admin-token" });
+    await expect(g.canActivate(ctx)).rejects.toThrow(UnauthorizedException);
   });
 
   it("throws UnauthorizedException when no token is provided", async () => {
@@ -149,5 +158,29 @@ describe("AdminJwtGuard", () => {
     await guard.canActivate(ctx);
 
     expect(redis.get).toHaveBeenCalledWith("admin:session:sess-123");
+  });
+
+  it("caches JWT verification (does not re-verify same token)", async () => {
+    const ctx = makeContext({ authorization: "Bearer admin-token" });
+
+    await guard.canActivate(ctx);
+    await guard.canActivate(ctx);
+
+    expect(jwtService.verify).toHaveBeenCalledTimes(1);
+  });
+
+  it("invalidates JWT cache after key rotation on same guard instance", async () => {
+    const ROTATED_SECRET = "b]4Gl0$nQ!yS8wR3xM9oK5dZ7cU1vI6t";
+    const ctx = makeContext({ authorization: "Bearer admin-token" });
+
+    await guard.canActivate(ctx);
+    expect(jwtService.verify).toHaveBeenCalledTimes(1);
+
+    process.env.ADMIN_JWT_SECRET = ROTATED_SECRET;
+
+    jwtService.verify.mockReturnValue(validPayload);
+    await guard.canActivate(ctx);
+
+    expect(jwtService.verify).toHaveBeenCalledTimes(2);
   });
 });

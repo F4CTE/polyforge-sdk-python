@@ -70,15 +70,15 @@ export const TRUST_ITEMS = [
   {
     icon: "check" as const,
     title: "Open APIs",
-    desc: "OpenAPI 3.1 spec, HMAC webhooks, TOTP 2FA, JWT auth. No cookies.",
+    desc: "OpenAPI 3.1 spec, HMAC webhooks, TOTP 2FA, JWT auth.",
   },
 ] as const;
 
 export const METRICS = [
-  { value: "12,400+", label: "Traders building" },
-  { value: "847", label: "Live strategies" },
-  { value: "$2.3M", label: "Monthly volume" },
-  { value: "200ms", label: "Median tick latency" },
+  { value: "36", label: "Strategy blocks", note: "visual canvas" },
+  { value: "3", label: "Open-source SDKs", note: "TS · Python · Rust" },
+  { value: "AGPL-3.0", label: "License", note: "free & open source" },
+  { value: "Self-host", label: "Deployment", note: "Docker Compose" },
 ] as const;
 
 export interface WhaleTrade {
@@ -402,19 +402,19 @@ export interface Testimonial {
 export const TESTIMONIALS: Testimonial[] = [
   {
     who: "Alex K.",
-    role: "Quant, ex-Jane Street",
+    role: "Quant, ex-Jane Street — illustrative",
     quote:
       "The block registry is the cleanest IF/THEN I've used outside of our internal tooling. Paper mode → live in one click.",
   },
   {
     who: "Sarah R.",
-    role: "Discretionary trader",
+    role: "Discretionary trader — illustrative",
     quote:
       "I mirror two whale wallets with Kelly sizing. Alerts hit Telegram before I'd even see the tweet. Edge, finally legible.",
   },
   {
     who: "Marcus C.",
-    role: "Crypto fund analyst",
+    role: "Crypto fund analyst — illustrative",
     quote:
       "Replaced three internal scripts and a Notion page. The backtest-compare view alone earned the subscription.",
   },
@@ -474,33 +474,85 @@ export const FEATURE_CELLS: FeatureCell[] = [
   },
 ];
 
-export const FOOTER_LINKS = [
+export interface FooterLinkItem {
+  label: string;
+  href: string;
+  external?: boolean;
+}
+
+export const FOOTER_LINKS: {
+  title: string;
+  links: readonly FooterLinkItem[];
+}[] = [
   {
     title: "Product",
     links: [
-      "Strategy builder",
-      "Whale intelligence",
-      "Backtest",
-      "Paper trading",
-      "Marketplace",
+      {
+        label: "Strategy builder",
+        href: "/strategies/new",
+      },
+      {
+        label: "Whale intelligence",
+        href: "/whales",
+      },
+      {
+        label: "Backtest",
+        href: "/backtest",
+      },
+      {
+        label: "Paper trading",
+        href: "/portfolio",
+      },
+      {
+        label: "Marketplace",
+        href: "/marketplace",
+      },
     ],
   },
   {
     title: "Developers",
     links: [
-      "API reference",
-      "TypeScript SDK",
-      "Python SDK",
-      "Rust SDK",
-      "MCP server",
+      { label: "API reference", href: "/api-docs" },
+      {
+        label: "TypeScript SDK",
+        href: "https://github.com/F4CTE/polyforge-sdk-ts",
+        external: true,
+      },
+      {
+        label: "Python SDK",
+        href: "https://github.com/F4CTE/polyforge-sdk-python",
+        external: true,
+      },
+      {
+        label: "Rust SDK",
+        href: "https://github.com/F4CTE/polyforge-sdk-rust",
+        external: true,
+      },
+      {
+        label: "MCP server",
+        href: "https://github.com/F4CTE/polyforge-mcp",
+        external: true,
+      },
     ],
   },
   {
     title: "Company",
-    links: ["About", "Changelog", "Roadmap", "Status", "Contact"],
+    links: [
+      { label: "About", href: "/" },
+      { label: "Contact", href: "mailto:hello@polyforge.app" },
+    ],
   },
-  { title: "Legal", links: ["Terms", "Privacy", "Risk disclosure", "Cookies"] },
-] as const;
+  {
+    title: "Legal",
+    links: [
+      { label: "Terms", href: "/terms" },
+      { label: "Privacy", href: "/privacy" },
+      { label: "Risk disclosure", href: "/terms#risk-disclosure" },
+      { label: "Cookies", href: "/cookies" },
+      { label: "Cookie settings", href: "#cookie-settings" },
+    ],
+  },
+];
 
 export const CODE_TOKENS = [
   { line: 1, tokens: [{ cls: "cm", text: "// TypeScript SDK" }] },

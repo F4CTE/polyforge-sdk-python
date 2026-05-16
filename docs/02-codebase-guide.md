@@ -97,15 +97,15 @@ Every TypeScript interface in the system lives here. Never define a type in a se
 ```typescript
 // packages/shared-types/src/index.ts
 export interface OrderIntent {
-  intentId:   string;
-  userId:     string;
+  intentId: string;
+  userId: string;
   strategyId: string | null;
-  tokenId:    string;
-  side:       OrderSide;
-  size:       string;      // decimal string — NEVER float
-  price:      string;
-  orderType:  OrderType;
-  timestamp:  number;
+  tokenId: string;
+  side: OrderSide;
+  size: string; // decimal string — NEVER float
+  price: string;
+  orderType: OrderType;
+  timestamp: number;
 }
 ```
 
@@ -116,11 +116,11 @@ Zod schemas for all API request/response validation. Services import these for t
 ```typescript
 // packages/shared-schemas/src/order.schema.ts
 export const PlaceOrderSchema = z.object({
-  tokenId:   z.string().min(1),
-  side:      z.enum(['BUY', 'SELL']),
-  size:      z.string().regex(/^\d+\.?\d*$/),  // decimal string
-  price:     z.string().regex(/^0\.\d+$/),      // 0.xx format
-  orderType: z.enum(['GTC', 'GTD', 'FOK', 'FAK']),
+  tokenId: z.string().min(1),
+  side: z.enum(["BUY", "SELL"]),
+  size: z.string().regex(/^\d+\.?\d*$/), // decimal string
+  price: z.string().regex(/^0\.\d+$/), // 0.xx format
+  orderType: z.enum(["GTC", "GTD", "FOK", "FAK"]),
 });
 ```
 
@@ -130,11 +130,11 @@ All Redis operations go through this package. **Never instantiate `new Redis()` 
 
 ```typescript
 // Usage in any service:
-import { RedisService, StreamService } from '@polyforge/shared-redis';
+import { RedisService, StreamService } from "@polyforge/shared-redis";
 
 // Publish to a stream:
-await streamService.publish('stream:events', {
-  event_type: 'ORDER_FILLED',
+await streamService.publish("stream:events", {
+  event_type: "ORDER_FILLED",
   userId,
   orderId,
   fillPrice,
@@ -179,17 +179,17 @@ This is the most common extension point. Follow every step in order.
 
 export enum BlockType {
   // ... existing blocks ...
-  VOLUME_SPIKE = 'volume_spike',
+  VOLUME_SPIKE = "volume_spike",
 }
 
 export interface VolumeSpikeBlock extends BaseBlock {
-  type:        BlockType.VOLUME_SPIKE;
-  category:    'trigger';
-  execMode:    'tick';
+  type: BlockType.VOLUME_SPIKE;
+  category: "trigger";
+  execMode: "tick";
   config: {
-    tokenId:     string;
-    multiplier:  number;   // spike must be X times average volume
-    windowMins:  number;   // rolling average window
+    tokenId: string;
+    multiplier: number; // spike must be X times average volume
+    windowMins: number; // rolling average window
   };
 }
 
@@ -197,8 +197,8 @@ export interface VolumeSpikeBlock extends BaseBlock {
 export type Block =
   | PriceCrossesUpBlock
   | PriceCrossesDownBlock
-  | VolumeSpikeBlock
-  // ... other blocks
+  | VolumeSpikeBlock;
+// ... other blocks
 ```
 
 **Step 2 — Add the Zod schema in `shared-schemas`:**
@@ -206,10 +206,10 @@ export type Block =
 ```typescript
 // packages/shared-schemas/src/blocks.schema.ts
 export const VolumeSpikeBlockSchema = z.object({
-  type:     z.literal(BlockType.VOLUME_SPIKE),
-  category: z.literal('trigger'),
+  type: z.literal(BlockType.VOLUME_SPIKE),
+  category: z.literal("trigger"),
   config: z.object({
-    tokenId:    z.string().min(1),
+    tokenId: z.string().min(1),
     multiplier: z.number().min(1.1).max(100),
     windowMins: z.number().int().min(1).max(60),
   }),
@@ -220,21 +220,28 @@ export const VolumeSpikeBlockSchema = z.object({
 
 ```typescript
 // services/strategy-engine/src/blocks/triggers/volume-spike.block.ts
-import { BlockEvaluator, EvalContext, BlockResult } from '../block.types';
-import { VolumeSpikeBlock } from '@polyforge/shared-types';
-import { RedisService } from '@polyforge/shared-redis';
+import { BlockEvaluator, EvalContext, BlockResult } from "../block.types";
+import { VolumeSpikeBlock } from "@polyforge/shared-types";
+import { RedisService } from "@polyforge/shared-redis";
 
 export class VolumeSpikeEvaluator implements BlockEvaluator<VolumeSpikeBlock> {
   constructor(private redis: RedisService) {}
 
-  async evaluate(block: VolumeSpikeBlock, ctx: EvalContext): Promise<BlockResult> {
+  async evaluate(
+    block: VolumeSpikeBlock,
+    ctx: EvalContext,
+  ): Promise<BlockResult> {
     const { tokenId, multiplier, windowMins } = block.config;
 
-    const bookData = await this.redis.getJson<OrderBook>(`cache:book:${tokenId}`);
-    if (!bookData) return { fired: false, reason: 'no_book_data' };
+    const bookData = await this.redis.getJson<OrderBook>(
+      `cache:book:${tokenId}`,
+    );
+    if (!bookData) return { fired: false, reason: "no_book_data" };
 
-    const avgVolume = await this.redis.getFloat(`volume:avg:${tokenId}:${windowMins}m`);
-    if (!avgVolume) return { fired: false, reason: 'no_volume_history' };
+    const avgVolume = await this.redis.getFloat(
+      `volume:avg:${tokenId}:${windowMins}m`,
+    );
+    if (!avgVolume) return { fired: false, reason: "no_volume_history" };
 
     const currentVolume = bookData.volumeRate24h;
     const fired = currentVolume >= avgVolume * multiplier;
@@ -254,7 +261,7 @@ export class VolumeSpikeEvaluator implements BlockEvaluator<VolumeSpikeBlock> {
 
 ```typescript
 // services/strategy-engine/src/blocks/registry.ts
-import { VolumeSpikeEvaluator } from './triggers/volume-spike.block';
+import { VolumeSpikeEvaluator } from "./triggers/volume-spike.block";
 
 export const BLOCK_REGISTRY: BlockRegistry = {
   // ... existing blocks ...
@@ -276,15 +283,30 @@ export const BLOCK_DEFS: Record<BlockSection, BlockDef[]> = {
   triggers: [
     // ... existing trigger blocks ...
     {
-      type: 'volume_spike',
-      label: 'Volume Spike',
-      description: 'Fire when volume is N times above average.',
+      type: "volume_spike",
+      label: "Volume Spike",
+      description: "Fire when volume is N times above average.",
       fields: [
-        { key: 'marketSlot', label: 'Market', type: 'market_slot', placeholder: '$MARKET_A' },
-        { key: 'multiplier', label: 'Spike multiplier', type: 'number', placeholder: '2' },
-        { key: 'windowMs', label: 'Rolling window (ms)', type: 'number', placeholder: '60000' },
+        {
+          key: "marketSlot",
+          label: "Market",
+          type: "market_slot",
+          placeholder: "$MARKET_A",
+        },
+        {
+          key: "multiplier",
+          label: "Spike multiplier",
+          type: "number",
+          placeholder: "2",
+        },
+        {
+          key: "windowMs",
+          label: "Rolling window (ms)",
+          type: "number",
+          placeholder: "60000",
+        },
       ],
-      group: 'Technical Analysis',
+      group: "Technical Analysis",
     },
   ],
   safety: [
@@ -343,36 +365,42 @@ Block positions and connections are persisted via a `canvasJson` column (Prisma 
 
 ```typescript
 // services/strategy-engine/src/blocks/triggers/volume-spike.block.spec.ts
-import { describe, it, expect, vi } from 'vitest';
-import { VolumeSpikeEvaluator } from './volume-spike.block';
+import { describe, it, expect, vi } from "vitest";
+import { VolumeSpikeEvaluator } from "./volume-spike.block";
 
-describe('VolumeSpikeEvaluator', () => {
-  it('fires when current volume exceeds multiplier * average', async () => {
+describe("VolumeSpikeEvaluator", () => {
+  it("fires when current volume exceeds multiplier * average", async () => {
     const redis = {
-      getJson:  vi.fn().mockResolvedValue({ volumeRate24h: 1000 }),
+      getJson: vi.fn().mockResolvedValue({ volumeRate24h: 1000 }),
       getFloat: vi.fn().mockResolvedValue(400),
     };
     const evaluator = new VolumeSpikeEvaluator(redis as any);
-    const result = await evaluator.evaluate({
-      type: BlockType.VOLUME_SPIKE,
-      category: 'trigger',
-      config: { tokenId: 'token1', multiplier: 2, windowMins: 15 },
-    }, {});
-    expect(result.fired).toBe(true);   // 1000 >= 2 * 400
+    const result = await evaluator.evaluate(
+      {
+        type: BlockType.VOLUME_SPIKE,
+        category: "trigger",
+        config: { tokenId: "token1", multiplier: 2, windowMins: 15 },
+      },
+      {},
+    );
+    expect(result.fired).toBe(true); // 1000 >= 2 * 400
   });
 
-  it('does not fire when volume is below threshold', async () => {
+  it("does not fire when volume is below threshold", async () => {
     const redis = {
-      getJson:  vi.fn().mockResolvedValue({ volumeRate24h: 500 }),
+      getJson: vi.fn().mockResolvedValue({ volumeRate24h: 500 }),
       getFloat: vi.fn().mockResolvedValue(400),
     };
     const evaluator = new VolumeSpikeEvaluator(redis as any);
-    const result = await evaluator.evaluate({
-      type: BlockType.VOLUME_SPIKE,
-      category: 'trigger',
-      config: { tokenId: 'token1', multiplier: 2, windowMins: 15 },
-    }, {});
-    expect(result.fired).toBe(false);  // 500 < 2 * 400
+    const result = await evaluator.evaluate(
+      {
+        type: BlockType.VOLUME_SPIKE,
+        category: "trigger",
+        config: { tokenId: "token1", multiplier: 2, windowMins: 15 },
+      },
+      {},
+    );
+    expect(result.fired).toBe(false); // 500 < 2 * 400
   });
 });
 ```
@@ -395,19 +423,19 @@ Example: `GET /api/v1/markets/:id/price-history`
 ```typescript
 // packages/shared-types/src/market.types.ts
 export interface PriceHistoryPoint {
-  time:   string;  // ISO timestamp
-  open:   string;
-  high:   string;
-  low:    string;
-  close:  string;
+  time: string; // ISO timestamp
+  open: string;
+  high: string;
+  low: string;
+  close: string;
   volume: string;
 }
 
 export interface PriceHistoryResponse {
-  tokenId:    string;
-  resolution: '1m' | '1h' | '1d';
-  data:       PriceHistoryPoint[];
-  hasGaps:    boolean;
+  tokenId: string;
+  resolution: "1m" | "1h" | "1d";
+  data: PriceHistoryPoint[];
+  hasGaps: boolean;
 }
 ```
 
@@ -416,10 +444,10 @@ export interface PriceHistoryResponse {
 ```typescript
 // packages/shared-schemas/src/market.schema.ts
 export const PriceHistoryQuerySchema = z.object({
-  resolution: z.enum(['1m', '1h', '1d']).default('1h'),
-  from:       z.string().datetime().optional(),
-  to:         z.string().datetime().optional(),
-  limit:      z.coerce.number().int().min(1).max(1000).default(100),
+  resolution: z.enum(["1m", "1h", "1d"]).default("1h"),
+  from: z.string().datetime().optional(),
+  to: z.string().datetime().optional(),
+  limit: z.coerce.number().int().min(1).max(1000).default(100),
 });
 ```
 
@@ -427,11 +455,11 @@ export const PriceHistoryQuerySchema = z.object({
 
 ```typescript
 // services/api-service/src/markets/dto/price-history-query.dto.ts
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from "@nestjs/swagger";
 
 export class PriceHistoryQueryDto {
-  @ApiProperty({ enum: ['1m', '1h', '1d'], default: '1h' })
-  resolution: '1m' | '1h' | '1d' = '1h';
+  @ApiProperty({ enum: ["1m", "1h", "1d"], default: "1h" })
+  resolution: "1m" | "1h" | "1d" = "1h";
 
   @ApiProperty({ required: false })
   from?: string;
@@ -669,43 +697,55 @@ npx prisma generate
 - Use `readonly` on config objects and injected services
 - Prefer `interface` over `type` for object shapes
 
-#### CJS/ESM Interop & `resolution-mode`
+#### TS6 ESM/CJS Interop — `resolution-mode: "import"`
 
-TypeScript 6 with `module: "node16"` **requires** `"resolution-mode": "import"` on type-only imports of ESM packages from CJS files. Without it, `tsc` emits TS1541: *"Type-only import of an ECMAScript module from a CommonJS module must have a 'resolution-mode' attribute."*
+TypeScript 6 with `module: node16` / `moduleResolution: node16` requires explicit resolution mode on `import type` statements that reference ESM-only modules from CJS (CommonJS) files. Without this attribute, TS6 silently degrades all imported types to `any`, eliminating type safety.
 
-This feature is mandatory for CJS→ESM type imports, but it is **brittle** for certain export kinds. It has historically caused class/constructor types to silently resolve as `any` (notably `ClobClient` from `@polymarket/clob-client` and types from `@polymarket/order-utils`). Pure type exports (interfaces, type aliases, enums) usually resolve correctly.
-
-**Rule of thumb:**
-
-- **Interfaces / type aliases / enums from ESM packages** → use `import type` with `"resolution-mode": "import"` and verify with `tsc --noEmit` that they resolve to concrete types, not `any`.
-- **Class constructors from ESM packages** → do NOT import them as types. Instead, use the require + local interface pattern below.
-
-**When a type resolves as `any` with `resolution-mode`**, use the require + local interface pattern:
+**Pattern** — add `with { "resolution-mode": "import" }` to `import type` from ESM-only packages:
 
 ```typescript
-import type { SomeType } from "some-esm-pkg" with { "resolution-mode": "import" };
-
-// Define a local interface capturing only the methods you actually use
-export interface SdkLike {
-  readonly host: string;
-  getOrderBook(tokenID: string): Promise<SomeType>;
-  // ...only the methods your service calls
-}
-
-// require() the CJS module with a type assertion
-type SdkModule = { SdkClient: new (...args: any[]) => SdkLike };
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const { SdkClient } = require("some-esm-pkg") as SdkModule;
-
-// Use the local interface as the field type
-@Injectable()
-export class MyService {
-  readonly sdk: SdkLike;
-  constructor() { this.sdk = new SdkClient(url); }
-}
+import type { SomeType, AnotherType } from "esm-only-package" with {
+  "resolution-mode": "import",
+};
 ```
 
-This pattern keeps type safety at the module boundary even when the upstream package's ESM types are incompatible with `resolution-mode`. Known packages requiring this pattern: `@polymarket/clob-client`.
+**When to use this pattern:**
+
+- Your file runs as CJS (no `"type": "module"` in the nearest `package.json`)
+- The dependency is ESM-only (`"type": "module"` in its `package.json`)
+- You cannot convert the file to ESM without broader work (e.g., NestJS compatibility)
+
+**Combined with `require()`** — when you also need the runtime value from an ESM-only package, use a typed wrapper interface alongside `require()`:
+
+```typescript
+// Type imports with resolution-mode
+import type { Foo } from "esm-pkg" with { "resolution-mode": "import" };
+
+// Local interface for the subset of the API you use
+export interface FooLike {
+  doThing(x: string): Promise<Foo>;
+}
+
+// Typed require() with a module-shaped type assertion
+/* eslint-disable @typescript-eslint/no-require-imports */
+const { FooClass } = require("esm-pkg") as {
+  FooClass: new (...args: any[]) => FooLike;
+};
+/* eslint-enable @typescript-eslint/no-require-imports */
+```
+
+**Runtime verification:** compile-time assertions in test files catch regressions:
+
+```typescript
+type IsAny<T> = 0 extends 1 & T ? true : false;
+type AssertFalse<T extends false> = T;
+type _FieldIsNotAny = AssertFalse<IsAny<SomeService["sdk"]>>;
+```
+
+**Real-world usage in this codebase:**
+
+- `services/order-service/src/clob-client/clob-client.service.ts` — `import type` from `@polymarket/clob-client` with resolution-mode, plus `ClobClientLike` interface and typed `require()`
+- `services/strategy-engine/src/common/safe-evaluate.ts` — `import type` from `mathjs` with resolution-mode, plus `MathJsRequireType` wrapper
 
 ### NestJS Rules
 
@@ -854,22 +894,22 @@ Usage: `import { getMarkets } from '@polyforge/api-client/user'`
 
 State management uses Zustand with one store per domain concern:
 
-| Store | File | Purpose |
-|---|---|---|
-| `useAuthStore` | `stores/auth.store.ts` | User session, JWT token, login/logout |
-| `useThemeStore` | `stores/theme.store.ts` | Dark/light mode toggle, persistence |
-| `useNotificationStore` | `stores/notification.store.ts` | Toast queue, notification bell count |
-| `useWebSocketStore` | `stores/websocket.store.ts` | WS connection, message dispatch |
-| `useBuilderStore` | `stores/builder.store.ts` | Strategy builder canvas state, blocks, connections |
+| Store                  | File                           | Purpose                                            |
+| ---------------------- | ------------------------------ | -------------------------------------------------- |
+| `useAuthStore`         | `stores/auth.store.ts`         | User session, JWT token, login/logout              |
+| `useThemeStore`        | `stores/theme.store.ts`        | Dark/light mode toggle, persistence                |
+| `useNotificationStore` | `stores/notification.store.ts` | Toast queue, notification bell count               |
+| `useWebSocketStore`    | `stores/websocket.store.ts`    | WS connection, message dispatch                    |
+| `useBuilderStore`      | `stores/builder.store.ts`      | Strategy builder canvas state, blocks, connections |
 
 ### Hooks
 
 Custom hooks encapsulate common patterns:
 
-| Hook | Purpose |
-|---|---|
-| `useAuth()` | Access auth state + login/logout actions |
-| `usePriceUpdates(tokenId)` | Subscribe to real-time price feed via WebSocket |
+| Hook                            | Purpose                                              |
+| ------------------------------- | ---------------------------------------------------- |
+| `useAuth()`                     | Access auth state + login/logout actions             |
+| `usePriceUpdates(tokenId)`      | Subscribe to real-time price feed via WebSocket      |
 | `useStrategyEvents(strategyId)` | Subscribe to strategy execution events via WebSocket |
 
 ### Guard Components
@@ -1052,4 +1092,4 @@ The MCP server is a standalone Node.js process that communicates over stdio. It 
 
 ---
 
-*Next: [OpenAPI Code Generation](./03-openapi-codegen.md) | [Database & Redis](./04-database-and-redis.md)*
+_Next: [OpenAPI Code Generation](./03-openapi-codegen.md) | [Database & Redis](./04-database-and-redis.md)_

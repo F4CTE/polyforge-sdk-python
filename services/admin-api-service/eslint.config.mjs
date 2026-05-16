@@ -6,7 +6,7 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   {
-    ignores: ['eslint.config.mjs', '**/*.d.ts', '**/dist/**', '**/node_modules/**'],
+    ignores: ['eslint.config.mjs', '**/*.d.ts', '**/dist/**', '**/node_modules/**', '**/*.spec.ts', '**/test/**/*.ts'],
   },
   eslint.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
@@ -44,16 +44,5 @@ export default tseslint.config(
       'prettier/prettier': ['error', { endOfLine: 'auto' }],
     },
   },
-  {
-    files: ['**/*.spec.ts', '**/test/**/*.ts'],
-    rules: {
-      '@typescript-eslint/unbound-method': 'off',
-      '@typescript-eslint/no-unsafe-argument': 'off',
-      '@typescript-eslint/no-unsafe-assignment': 'off',
-      '@typescript-eslint/no-unsafe-call': 'off',
-      '@typescript-eslint/no-unsafe-member-access': 'off',
-      '@typescript-eslint/no-unsafe-return': 'off',
-      '@typescript-eslint/require-await': 'off',
-    },
-  },
+
 );

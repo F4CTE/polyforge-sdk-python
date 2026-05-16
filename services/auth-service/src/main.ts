@@ -52,7 +52,7 @@ function validateEnv() {
     const secret = process.env[key];
     if (secret && secret.length < 32) {
       process.stderr.write(
-        `[auth-service] ${key} must be at least 32 characters long (current length: ${secret.length})\n`,
+        `[auth-service] ${key} is not properly configured\n`,
       );
       process.exit(1);
     }

@@ -1,32 +1,34 @@
-import type { NextConfig } from 'next';
-import { withSentryConfig } from '@sentry/nextjs';
+import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs";
 
 // NEXT_STATIC_EXPORT=true is set by the gateway Dockerfile to produce a static
 // out/ directory for nginx file serving. Dev and the landing Dockerfile keep
 // standalone mode so the Next.js server runs normally.
-const isStaticExport = process.env.NEXT_STATIC_EXPORT === 'true';
-const sentryEnvelopeEndpoint = getSentryEnvelopeEndpoint(process.env.NEXT_PUBLIC_SENTRY_DSN);
+const isStaticExport = process.env.NEXT_STATIC_EXPORT === "true";
+const sentryEnvelopeEndpoint = getSentryEnvelopeEndpoint(
+  process.env.NEXT_PUBLIC_SENTRY_DSN,
+);
 
 function getSentryEnvelopeEndpoint(dsn: string | undefined) {
   if (!dsn) return undefined;
 
   try {
     const dsnUrl = new URL(dsn);
-    const segments = dsnUrl.pathname.split('/').filter(Boolean);
-    const apiIndex = segments.lastIndexOf('api');
+    const segments = dsnUrl.pathname.split("/").filter(Boolean);
+    const apiIndex = segments.lastIndexOf("api");
     const projectId = apiIndex >= 0 ? segments[apiIndex + 1] : segments.at(-1);
 
     if (!projectId) return undefined;
 
     const envelopeUrl = new URL(dsn);
-    envelopeUrl.username = '';
-    envelopeUrl.password = '';
+    envelopeUrl.username = "";
+    envelopeUrl.password = "";
     envelopeUrl.pathname = `/api/${projectId}/envelope/`;
-    envelopeUrl.search = '';
-    envelopeUrl.searchParams.set('sentry_version', '7');
+    envelopeUrl.search = "";
+    envelopeUrl.searchParams.set("sentry_version", "7");
 
     if (dsnUrl.username) {
-      envelopeUrl.searchParams.set('sentry_key', dsnUrl.username);
+      envelopeUrl.searchParams.set("sentry_key", dsnUrl.username);
     }
 
     return envelopeUrl.toString();
@@ -35,11 +37,52 @@ function getSentryEnvelopeEndpoint(dsn: string | undefined) {
   }
 }
 
+const POSTHOG_API_HOST =
+  process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://us.i.posthog.com";
+const POSTHOG_ASSETS_HOST = POSTHOG_API_HOST.replace(
+  /^https:\/\/([^.]+)\./,
+  "https://$1-assets.",
+);
+
 const nextConfig: NextConfig = {
-  output: isStaticExport ? 'export' : 'standalone',
-  transpilePackages: ['@polyforge/ui'],
+  output: isStaticExport ? "export" : "standalone",
+  transpilePackages: ["@polyforge/ui"],
   env: {
-    NEXT_PUBLIC_SENTRY_TUNNEL: isStaticExport ? '' : '/monitoring',
+    NEXT_PUBLIC_SENTRY_TUNNEL: isStaticExport ? "" : "/monitoring",
+  },
+  // Security headers as defense-in-depth (nginx also sets these at the
+  // reverse-proxy layer, but Next.js headers protect direct access).
+  async headers() {
+    return [
+      {
+        source: "/(.*)",
+        headers: [
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "X-XSS-Protection", value: "1; mode=block" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          {
+            key: "Permissions-Policy",
+            value:
+              "camera=(), microphone=(), geolocation=(), interest-cohort=()",
+          },
+          {
+            key: "Content-Security-Policy",
+            value: [
+              "default-src 'self'",
+              `script-src 'self' 'wasm-unsafe-eval' 'unsafe-inline' https://plausible.io ${POSTHOG_ASSETS_HOST}`,
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+              "img-src 'self' data: blob:",
+              `connect-src 'self' https://plausible.io ${POSTHOG_API_HOST} ${POSTHOG_ASSETS_HOST}`,
+              "font-src 'self' data: https://fonts.gstatic.com",
+              "frame-ancestors 'none'",
+              "base-uri 'self'",
+              "form-action 'self'",
+            ].join("; "),
+          },
+        ],
+      },
+    ];
   },
   // redirects/rewrites are not supported by output:'export' and are redundant
   // in all docker setups (nginx handles /auth and /api-docs routing).
@@ -47,8 +90,8 @@ const nextConfig: NextConfig = {
     async redirects() {
       return [
         {
-          source: '/api-docs',
-          destination: process.env.APP_URL ?? 'http://localhost:5173/api-docs',
+          source: "/api-docs",
+          destination: process.env.APP_URL ?? "http://localhost:5173/api-docs",
           permanent: false,
         },
       ];
@@ -58,14 +101,14 @@ const nextConfig: NextConfig = {
         ...(sentryEnvelopeEndpoint
           ? [
               {
-                source: '/monitoring',
+                source: "/monitoring",
                 destination: sentryEnvelopeEndpoint,
               },
             ]
           : []),
         {
-          source: '/auth/:path*',
-          destination: `${process.env.API_URL ?? 'http://localhost:4000'}/auth/:path*`,
+          source: "/auth/:path*",
+          destination: `${process.env.API_URL ?? "http://localhost:4000"}/auth/:path*`,
         },
       ];
     },

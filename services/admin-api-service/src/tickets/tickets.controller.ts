@@ -59,14 +59,17 @@ export class TicketsAdminController {
     @CurrentAdmin() admin: AdminJwtPayload,
     @AdminIp() ip: string,
   ) {
-    const result = await this.tickets.addReply(id, admin.sub, dto);
-    await this.audit.log({
+    const auditMeta = {
       adminId: admin.sub,
       action: "TICKET_REPLY",
       targetType: "ticket",
       targetId: id,
       ip,
-    });
+    } as const;
+
+    await this.audit.log({ ...auditMeta, status: "attempt" });
+    const result = await this.tickets.addReply(id, admin.sub, dto);
+    await this.audit.logSafe({ ...auditMeta, status: "success" });
     return result;
   }
 
@@ -77,15 +80,18 @@ export class TicketsAdminController {
     @CurrentAdmin() admin: AdminJwtPayload,
     @AdminIp() ip: string,
   ) {
-    const result = await this.tickets.update(id, admin.sub, dto);
-    await this.audit.log({
+    const auditMeta = {
       adminId: admin.sub,
       action: "UPDATE_TICKET",
       targetType: "ticket",
       targetId: id,
       payload: dto as any,
       ip,
-    });
+    } as const;
+
+    await this.audit.log({ ...auditMeta, status: "attempt" });
+    const result = await this.tickets.update(id, admin.sub, dto);
+    await this.audit.logSafe({ ...auditMeta, status: "success" });
     return result;
   }
 
@@ -96,14 +102,17 @@ export class TicketsAdminController {
     @CurrentAdmin() admin: AdminJwtPayload,
     @AdminIp() ip: string,
   ) {
-    const result = await this.tickets.close(id, admin.sub);
-    await this.audit.log({
+    const auditMeta = {
       adminId: admin.sub,
       action: "CLOSE_TICKET",
       targetType: "ticket",
       targetId: id,
       ip,
-    });
+    } as const;
+
+    await this.audit.log({ ...auditMeta, status: "attempt" });
+    const result = await this.tickets.close(id, admin.sub);
+    await this.audit.logSafe({ ...auditMeta, status: "success" });
     return result;
   }
 }

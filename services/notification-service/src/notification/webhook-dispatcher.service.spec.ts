@@ -55,9 +55,6 @@ describe("WebhookDispatcherService", () => {
 
       await service.dispatch("user-1", "ORDER_FILLED", { orderId: "123" });
 
-      // Wait for fire-and-forget
-      await new Promise((r) => setTimeout(r, 50));
-
       expect(mockFetch).toHaveBeenCalled();
       const callUrl = mockFetch.mock.calls[0][0];
       expect(callUrl).toBe("https://example.com/hook");
@@ -90,7 +87,6 @@ describe("WebhookDispatcherService", () => {
       vi.stubGlobal("fetch", mockFetch);
 
       await service.dispatch("user-1", "ORDER_FILLED", { test: true });
-      await new Promise((r) => setTimeout(r, 50));
 
       const sentBody = mockFetch.mock.calls[0][1].body;
       const sentHeaders = mockFetch.mock.calls[0][1].headers;
@@ -110,7 +106,6 @@ describe("WebhookDispatcherService", () => {
 
       // Should not throw
       await service.dispatch("user-1", "ORDER_FILLED", {});
-      await new Promise((r) => setTimeout(r, 100));
 
       // Retried once (2 total calls)
       expect(mockFetch).toHaveBeenCalledTimes(2);
@@ -141,7 +136,6 @@ describe("WebhookDispatcherService", () => {
       vi.stubGlobal("fetch", mockFetch);
 
       await service.dispatch("user-1", "ORDER_FILLED", { test: true });
-      await new Promise((r) => setTimeout(r, 50));
 
       expect(mockFetch).not.toHaveBeenCalled();
     });
@@ -156,7 +150,6 @@ describe("WebhookDispatcherService", () => {
       vi.stubGlobal("fetch", mockFetch);
 
       await service.dispatch("user-1", "ORDER_FILLED", {});
-      await new Promise((r) => setTimeout(r, 50));
 
       expect(mockFetch).not.toHaveBeenCalled();
     });
@@ -174,7 +167,6 @@ describe("WebhookDispatcherService", () => {
       vi.stubGlobal("fetch", mockFetch);
 
       await service.dispatch("user-1", "ORDER_FILLED", {});
-      await new Promise((r) => setTimeout(r, 50));
 
       expect(mockFetch).not.toHaveBeenCalled();
     });
@@ -189,7 +181,6 @@ describe("WebhookDispatcherService", () => {
       vi.stubGlobal("fetch", mockFetch);
 
       await service.dispatch("user-1", "ORDER_FILLED", {});
-      await new Promise((r) => setTimeout(r, 50));
 
       expect(mockFetch).not.toHaveBeenCalled();
     });
@@ -204,7 +195,6 @@ describe("WebhookDispatcherService", () => {
       vi.stubGlobal("fetch", mockFetch);
 
       await service.dispatch("user-1", "ORDER_FILLED", { test: true });
-      await new Promise((r) => setTimeout(r, 50));
 
       expect(mockFetch).toHaveBeenCalled();
     });

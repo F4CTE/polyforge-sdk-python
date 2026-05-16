@@ -38,8 +38,49 @@ export interface OrderIntent {
 }
 
 const PAPER_PNL_KEY = (userId: string) => `paper:${userId}:pnl`;
+const PNL_DEDUP_KEY = (intentId: string) => `paper:pnl:applied:${intentId}`;
+const PNL_DEDUP_TTL = 604800;
+const EVENT_DEDUP_KEY = (intentId: string) => `paper:event:emitted:${intentId}`;
+const EVENT_DEDUP_TTL = 604800;
 const SERIALIZABLE_TRANSACTION = { isolationLevel: "Serializable" as const };
 const MAX_SERIALIZABLE_RETRIES = 3;
+
+const ATOMIC_PNL_SCRIPT = `
+  local dedupKey = KEYS[1]
+  local pnlKey = KEYS[2]
+  local realizedPnl = tonumber(ARGV[1])
+  local ttl = tonumber(ARGV[2])
+
+  if redis.call('EXISTS', dedupKey) == 1 then
+    return 0
+  end
+  if realizedPnl ~= 0 then
+    redis.call('INCRBYFLOAT', pnlKey, realizedPnl)
+  end
+  redis.call('SET', dedupKey, '1', 'EX', ttl)
+  return 1
+`;
+
+const ATOMIC_EVENT_SCRIPT = `
+  local dedupKey = KEYS[1]
+  local streamKey = KEYS[2]
+  local ttl = tonumber(ARGV[1])
+
+  if redis.call('EXISTS', dedupKey) == 1 then
+    return 0
+  end
+
+  -- Collect field pairs from remaining ARGV (even count expected)
+  local fieldCount = #ARGV - 1
+  local xaddArgs = {'*'}
+  for i = 2, #ARGV do
+    xaddArgs[#xaddArgs + 1] = ARGV[i]
+  end
+
+  local result = redis.call('XADD', streamKey, unpack(xaddArgs))
+  redis.call('SET', dedupKey, '1', 'EX', ttl)
+  return result
+`;
 
 type PrismaTx = Pick<PrismaService, "paperOrder" | "paperPosition">;
 
@@ -53,6 +94,32 @@ export class FillsService {
   ) {}
 
   async simulate(intent: OrderIntent): Promise<void> {
+    // ── Idempotency pre-check: handle duplicate/replayed intents ─────────────
+    const existing = await this.prisma.paperOrder.findUnique({
+      where: { intentId: intent.intentId },
+    });
+
+    if (existing?.fillCompletedAt && existing.redisEffectsApplied) {
+      // Already fully processed — ACK silently
+      return;
+    }
+
+    if (existing?.fillCompletedAt && !existing.redisEffectsApplied) {
+      await this.recoverRedisEffects(existing, intent.intentId);
+      return;
+    }
+
+    if (existing && !existing.fillCompletedAt) {
+      // In-flight: order record exists but transaction was rolled back.
+      // This should not happen with Serializable atomicity, but defensively
+      // treat as an error to avoid double-processing.
+      throw new Error(
+        `Intent ${intent.intentId} has an incomplete order record (missing fillCompletedAt)`,
+      );
+    }
+
+    // ── Normal path: no existing order ───────────────────────────────────────
+
     const fillPrice = await this.resolveFillPrice(intent);
     if (!Number.isFinite(fillPrice) || fillPrice < 0) {
       throw new Error("Invalid paper order numeric input");
@@ -66,59 +133,162 @@ export class FillsService {
       throw new Error("Invalid paper order numeric input");
     }
 
-    const { orderId, realizedPnl } = await this.withSerializableRetry(
-      async (tx) => {
-        const order = await tx.paperOrder.create({
-          data: {
-            userId: intent.userId,
-            strategyId: intent.strategyId || null,
-            marketId: intent.marketId,
-            tokenId: intent.tokenId,
-            side: intent.side as OrderSide,
-            outcome: intent.outcome as OrderOutcome,
-            size: intent.size,
-            price: intent.price,
-            orderType: intent.orderType as OrderType,
-            status: OrderStatus.CONFIRMED,
-            fillSize: String(fillSize),
-            fillPrice: String(fillPrice),
-          },
+    try {
+      const { orderId, realizedPnl } = await this.withSerializableRetry(
+        async (tx) => {
+          const order = await tx.paperOrder.create({
+            data: {
+              userId: intent.userId,
+              strategyId: intent.strategyId || null,
+              marketId: intent.marketId,
+              tokenId: intent.tokenId,
+              side: intent.side as OrderSide,
+              outcome: intent.outcome as OrderOutcome,
+              size: intent.size,
+              price: intent.price,
+              orderType: intent.orderType as OrderType,
+              status: OrderStatus.CONFIRMED,
+              fillSize: String(fillSize),
+              fillPrice: String(fillPrice),
+              intentId: intent.intentId,
+              fillCompletedAt: new Date(),
+            },
+          });
+
+          const realized = await this.upsertPosition(
+            tx,
+            intent,
+            fillPrice,
+            fillSize,
+          );
+
+          await tx.paperOrder.update({
+            where: { id: order.id },
+            data: { realizedPnl: String(realized) },
+          });
+
+          return { orderId: order.id, realizedPnl: realized };
+        },
+      );
+
+      // 3. Apply Redis side-effects (P&L counter + event emission)
+      await this.applyRedisEffects(
+        intent,
+        orderId,
+        fillPrice,
+        fillSize,
+        realizedPnl,
+      );
+
+      // 4. Mark Redis effects as applied
+      await this.prisma.paperOrder.update({
+        where: { id: orderId },
+        data: { redisEffectsApplied: true },
+      });
+
+      this.logger.log(
+        `Paper fill: ${intent.side} ${fillSize} ${intent.tokenId} @ ${fillPrice} for user ${intent.userId}`,
+      );
+    } catch (err: unknown) {
+      // P2002 on intentId: another worker won the race — treat as idempotent
+      if (this.isIntentIdDuplicate(err)) {
+        const duplicate = await this.prisma.paperOrder.findUnique({
+          where: { intentId: intent.intentId },
         });
+        if (duplicate?.fillCompletedAt && duplicate.redisEffectsApplied) {
+          return;
+        }
+        if (duplicate?.fillCompletedAt && !duplicate.redisEffectsApplied) {
+          // Crash recovery for the winning worker's order
+          await this.recoverRedisEffects(duplicate, intent.intentId);
+          return;
+        }
+        // If still in-flight, re-throw so the message retries
+      }
+      throw err;
+    }
+  }
 
-        const realized = await this.upsertPosition(
-          tx,
-          intent,
-          fillPrice,
-          fillSize,
-        );
+  // ─── Redis side-effects ────────────────────────────────────────────────────
 
-        return { orderId: order.id, realizedPnl: realized };
-      },
-    );
-
-    // 3. Update running Redis P&L counter (real-time)
+  private async applyRedisEffects(
+    intent: OrderIntent,
+    orderId: string,
+    fillPrice: number,
+    fillSize: number,
+    realizedPnl: number,
+  ): Promise<void> {
     if (realizedPnl !== 0) {
+      const dedupKey = PNL_DEDUP_KEY(intent.intentId);
+      const pnlKey = PAPER_PNL_KEY(intent.userId);
       await this.redis
         .getClient()
-        .incrbyfloat(PAPER_PNL_KEY(intent.userId), realizedPnl);
+        .eval(
+          ATOMIC_PNL_SCRIPT,
+          2,
+          dedupKey,
+          pnlKey,
+          realizedPnl,
+          PNL_DEDUP_TTL,
+        );
     }
 
-    // 4. Emit PAPER_ORDER_FILLED to stream:events
-    await this.redis.xadd("stream:events", {
-      type: "PAPER_ORDER_FILLED",
-      orderId,
-      intentId: intent.intentId,
-      userId: intent.userId,
-      strategyId: intent.strategyId,
-      tokenId: intent.tokenId,
-      side: intent.side,
-      fillSize: String(fillSize),
-      simulatedPrice: String(fillPrice),
-      ts: String(Date.now()),
+    await this.redis.getClient().eval(
+      ATOMIC_EVENT_SCRIPT,
+      2,
+      EVENT_DEDUP_KEY(intent.intentId),
+      "stream:events",
+      EVENT_DEDUP_TTL,
+      "type", "PAPER_ORDER_FILLED",
+      "orderId", orderId,
+      "intentId", intent.intentId,
+      "userId", intent.userId,
+      "strategyId", intent.strategyId ?? "",
+      "tokenId", intent.tokenId,
+      "side", intent.side,
+      "fillSize", String(fillSize),
+      "simulatedPrice", String(fillPrice),
+      "ts", String(Date.now()),
+    );
+  }
+
+  private async recoverRedisEffects(
+    existing: { id: string; userId: string; strategyId: string | null; marketId: string; tokenId: string; side: string; outcome: string; fillPrice: unknown; fillSize: unknown; realizedPnl: unknown; orderType: string | null },
+    intentId: string,
+  ): Promise<void> {
+    const fillPrice = parseFloat(String(existing.fillPrice ?? 0));
+    const fillSize = parseFloat(String(existing.fillSize ?? 0));
+    const realizedPnl = parseFloat(String(existing.realizedPnl ?? 0));
+
+    const recoveryIntent: OrderIntent = {
+      intentId,
+      userId: existing.userId,
+      strategyId: existing.strategyId ?? "",
+      marketId: existing.marketId,
+      tokenId: existing.tokenId,
+      side: existing.side,
+      outcome: existing.outcome,
+      size: String(existing.fillSize ?? "0"),
+      price: String(existing.fillPrice ?? "0"),
+      orderType: existing.orderType ?? "LIMIT",
+      expiration: "0",
+    };
+
+    await this.applyRedisEffects(
+      recoveryIntent,
+      existing.id,
+      fillPrice,
+      fillSize,
+      realizedPnl,
+    );
+
+    await this.prisma.paperOrder.update({
+      where: { intentId },
+      data: { redisEffectsApplied: true },
     });
 
     this.logger.log(
-      `Paper fill: ${intent.side} ${fillSize} ${intent.tokenId} @ ${fillPrice} for user ${intent.userId}`,
+      `Recovered Redis effects for intent ${intentId} (order ${existing.id})`,
     );
   }
 
@@ -282,12 +452,10 @@ export class FillsService {
           SERIALIZABLE_TRANSACTION,
         );
       } catch (err) {
-        if (
-          !this.isSerializableConflict(err) ||
-          attempt === MAX_SERIALIZABLE_RETRIES
-        ) {
-          throw err;
+        if (this.isSerializableConflict(err) && attempt < MAX_SERIALIZABLE_RETRIES) {
+          continue;
         }
+        throw err;
       }
     }
 
@@ -301,5 +469,20 @@ export class FillsService {
       "code" in err &&
       (err as { code?: unknown }).code === "P2034"
     );
+  }
+
+  /** Handle P2002 (unique constraint) on intentId as idempotent duplicate success. */
+  private isIntentIdDuplicate(err: unknown): boolean {
+    if (
+      !(typeof err === "object" && err !== null && "code" in err) ||
+      (err as { code?: unknown }).code !== "P2002"
+    ) {
+      return false;
+    }
+    const meta = (err as { meta?: unknown }).meta;
+    if (Array.isArray((meta as { target?: unknown })?.target)) {
+      return (meta as { target: string[] }).target.includes("intentId");
+    }
+    return false;
   }
 }

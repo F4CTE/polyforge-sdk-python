@@ -155,7 +155,7 @@ export class BadgeService {
       });
       if (user?.polymarketAddress) {
         const wallet =
-          tryChecksumEthereumAddress(user.polymarketAddress) ??
+          (await tryChecksumEthereumAddress(user.polymarketAddress)) ??
           user.polymarketAddress;
         const copierCount = await this.prisma.copyConfig.count({
           where: {

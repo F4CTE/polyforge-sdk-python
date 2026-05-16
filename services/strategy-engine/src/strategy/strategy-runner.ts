@@ -37,6 +37,7 @@ export interface Block {
   id: string;
   type: string;
   params?: Record<string, unknown>;
+  config?: Record<string, unknown>;
 }
 
 export interface LogicBlock extends Block {
@@ -78,6 +79,8 @@ export class StrategyRunner {
   readonly childStrategies: Set<string> = new Set();
   /** Maps child strategy IDs to their sub-strategy mode */
   private readonly childModes: Map<string, SubStrategyMode> = new Map();
+  /** Tracks already-warned safety blocks to avoid per-tick log spam */
+  private _warnedSafetyFallbackIds?: Set<string>;
 
   constructor(
     private readonly strategyId: string,
@@ -252,7 +255,9 @@ export class StrategyRunner {
         // New key: set TTL to 25 hours so it expires safely after UTC midnight
         await redisClient.expire(key, 90_000);
       }
-      const maxDaily = await this.betaLimits.getLimit("maxDailyStrategyExecutions");
+      const maxDaily = await this.betaLimits.getLimit(
+        "maxDailyStrategyExecutions",
+      );
       if (count > maxDaily) {
         this.logger.warn(
           `Strategy ${this.strategyId} hit daily execution limit (${maxDaily}) — pausing until midnight UTC`,
@@ -290,7 +295,15 @@ export class StrategyRunner {
   }
 
   private async evaluate() {
-    const stateData = await this.state.get(this.strategyId);
+    // 0. Fetch strategy state + all referenced price caches in a single
+    //    Redis pipeline.  This eliminates the old double-read where
+    //    state.get() and detectStaleData() each fetched prices separately.
+    const tokenIds = this.getReferencedTokenIds();
+    const { state: stateData, prices } = await this.state.getStateAndPrices(
+      this.strategyId,
+      tokenIds,
+    );
+
     const ctx: EvalContext = {
       strategyId: this.strategyId,
       userId: this.userId,
@@ -302,7 +315,24 @@ export class StrategyRunner {
         : {}),
     };
 
-    // 0. Evaluate user-defined calculation variables
+    // 0.1 Check stale data — pause if any subscribed token's price is stale.
+    //     Moved before expensive variable / TA evaluation so we bail early
+    //     when market data is not fresh.
+    const staleToken = this.detectStaleFromPrices(tokenIds, prices);
+    if (staleToken) {
+      if (this.status === "RUNNING") {
+        this.pause(`stale_market_data:${staleToken}`);
+        await this.onStatusChange("PAUSED", `stale_market_data:${staleToken}`);
+        await this.emitStrategyEvent(
+          "STRATEGY_PAUSED",
+          `stale_market_data:${staleToken}`,
+        );
+      }
+      return;
+    }
+
+    // 0.2 Evaluate user-defined calculation variables.
+    //     Uses the pre-fetched price cache instead of a separate Redis call.
     const variables: Record<string, number> = {};
     if (this.variables.length > 0) {
       const scope: Record<string, number> = {
@@ -313,10 +343,9 @@ export class StrategyRunner {
         totalOrders: stateData.totalOrders,
       };
 
-      // Try to resolve currentPrice from the first trigger/action tokenId
-      const primaryTokenId = this.getPrimaryTokenId();
+      const primaryTokenId = tokenIds[0];
       if (primaryTokenId) {
-        const priceData = await this.state.getPrice(primaryTokenId);
+        const priceData = prices.get(primaryTokenId) ?? null;
         scope.currentPrice = priceData?.price ?? 0;
       }
 
@@ -346,7 +375,7 @@ export class StrategyRunner {
       // Group by tokenId to batch price-window reads
       const priceCache = new Map<string, number[]>();
       for (const block of taBlocks) {
-        const p = block.params ?? {};
+        const p = StrategyRunner.mergedParams(block);
         const tokenId = typeof p.tokenId === "string" ? p.tokenId : "";
         if (!tokenId) continue;
 
@@ -402,7 +431,10 @@ export class StrategyRunner {
 
         const resolvedBlock = {
           ...block,
-          params: resolveParams(block.params ?? {}, ctx.variables ?? {}),
+          params: resolveParams(
+            { ...(block.config ?? {}), ...(block.params ?? {}) },
+            ctx.variables ?? {},
+          ),
         };
 
         // Gather numeric inputs from variables referenced in params
@@ -423,43 +455,57 @@ export class StrategyRunner {
       }
     }
 
-    // 1. Check stale data — pause if any subscribed token's price is stale
-    const staleToken = await this.detectStaleData();
-    if (staleToken) {
-      if (this.status === "RUNNING") {
-        this.pause(`stale_market_data:${staleToken}`);
-        await this.onStatusChange("PAUSED", `stale_market_data:${staleToken}`);
-        await this.emitStrategyEvent(
-          "STRATEGY_PAUSED",
-          `stale_market_data:${staleToken}`,
-        );
-      }
-      return;
-    }
-
     // 2. SAFETY — any failure stops the strategy
     for (const block of this.safety) {
-      const evaluator = SAFETY_REGISTRY[block.type];
+      let evaluator = SAFETY_REGISTRY[block.type];
       if (!evaluator) {
-        // Unknown safety block — fail closed
-        this.logger.error(
-          `Unknown safety block type: ${block.type}. Failing closed for safety.`,
-        );
-        this.stop();
-        await this.onStatusChange("STOPPED", `Unknown safety block: ${block.type}`);
-        await this.prisma.strategy
-          .update({
-            where: { id: this.strategyId },
-            data: { status: StrategyStatus.IDLE },
-          })
-          .catch(() => {});
-        await this.emitStrategyEvent("STRATEGY_STOPPED", `Unknown safety block: ${block.type}`);
-        return;
+        if (block.type === "MAX_POSITION_SIZE") {
+          // Runtime compatibility: MAX_POSITION_SIZE was moved from
+          // SAFETY_REGISTRY to CONDITION_REGISTRY.  Fall back to the
+          // condition registry so existing persisted strategies don't
+          // silently lose their safety guards.
+          const fallback = CONDITION_REGISTRY[block.type];
+          if (fallback) {
+            if (!this._warnedSafetyFallbackIds?.has(block.id)) {
+              (this._warnedSafetyFallbackIds ??= new Set()).add(block.id);
+              this.logger.warn(
+                `Safety block "${block.id}" (type=${block.type}) resolved from ` +
+                  `CONDITION_REGISTRY.  Move it to the conditions section in your ` +
+                  `strategy definition.`,
+              );
+            }
+            evaluator = fallback;
+          }
+        } else {
+          this.logger.error(
+            `Unknown safety block type: ${block.type} (blockId=${block.id}). ` +
+              `Stopping strategy to avoid silently disabling a safety guard.`,
+          );
+          this.stop();
+          await this.onStatusChange(
+            "STOPPED",
+            `unknown safety block: ${block.type}`,
+          );
+          await this.prisma.strategy
+            .update({
+              where: { id: this.strategyId },
+              data: { status: StrategyStatus.IDLE },
+            })
+            .catch(() => {});
+          await this.emitStrategyEvent(
+            "STRATEGY_STOPPED",
+            `unknown safety block: ${block.type}`,
+          );
+          return;
+        }
       }
 
       const resolvedBlock = {
         ...block,
-        params: resolveParams(block.params ?? {}, ctx.variables ?? {}),
+        params: resolveParams(
+          { ...(block.config ?? {}), ...(block.params ?? {}) },
+          ctx.variables ?? {},
+        ),
       };
       const result = await evaluator.evaluate(
         resolvedBlock,
@@ -489,7 +535,10 @@ export class StrategyRunner {
 
       const resolvedBlock = {
         ...block,
-        params: resolveParams(block.params ?? {}, ctx.variables ?? {}),
+        params: resolveParams(
+          { ...(block.config ?? {}), ...(block.params ?? {}) },
+          ctx.variables ?? {},
+        ),
       };
       const result = await evaluator.evaluate(
         resolvedBlock,
@@ -517,7 +566,10 @@ export class StrategyRunner {
 
       const resolvedBlock = {
         ...block,
-        params: resolveParams(block.params ?? {}, ctx.variables ?? {}),
+        params: resolveParams(
+          { ...(block.config ?? {}), ...(block.params ?? {}) },
+          ctx.variables ?? {},
+        ),
       };
       const result = await evaluator.evaluate(
         resolvedBlock,
@@ -551,7 +603,10 @@ export class StrategyRunner {
 
       const resolvedBlock = {
         ...block,
-        params: resolveParams(block.params ?? {}, ctx.variables ?? {}),
+        params: resolveParams(
+          { ...(block.config ?? {}), ...(block.params ?? {}) },
+          ctx.variables ?? {},
+        ),
       };
       const result = await evaluator.execute(
         resolvedBlock,
@@ -722,6 +777,11 @@ export class StrategyRunner {
     this.delayedActions.set(blockId, timer);
   }
 
+  /** Merge config + params with params taking priority (consistent with evaluation phases). */
+  private static mergedParams(block: Block): Record<string, unknown> {
+    return { ...(block.config ?? {}), ...(block.params ?? {}) };
+  }
+
   /** Precomputed: all tokenIds referenced in triggers + actions */
   private _cachedTokenIds: string[] | null = null;
 
@@ -729,7 +789,7 @@ export class StrategyRunner {
     if (this._cachedTokenIds) return this._cachedTokenIds;
     const ids = new Set<string>();
     for (const block of [...this.triggers, ...this.actions]) {
-      const params = block.params;
+      const params = StrategyRunner.mergedParams(block);
       if (params?.tokenId && typeof params.tokenId === "string")
         ids.add(params.tokenId);
     }
@@ -737,16 +797,45 @@ export class StrategyRunner {
     return this._cachedTokenIds;
   }
 
-  /** Returns the first tokenId found in triggers or actions (for variable scope). */
-  private getPrimaryTokenId(): string | null {
-    return this.getReferencedTokenIds()[0] ?? null;
+  /**
+   * Check staleness using price data already fetched in-memory (from
+   * getStateAndPrices pipeline).  Avoids a second Redis round-trip.
+   */
+  private detectStaleFromPrices(
+    tokenIds: string[],
+    prices: Map<string, { price: number; timestamp: number } | null>,
+  ): string | null {
+    const now = Date.now();
+    for (const id of tokenIds) {
+      const raw = prices.get(id);
+      if (!raw) return id;
+      if (now - raw.timestamp > STALE_PRICE_MS) return id;
+    }
+    return null;
   }
 
+  /**
+   * Fallback staleness check used by the auto-resume path in tick().
+   * Uses a single GET when there is only one token (no unnecessary MGET
+   * overhead for the common single-token strategy).
+   */
   private async detectStaleData(): Promise<string | null> {
     const tokenIds = this.getReferencedTokenIds();
     if (tokenIds.length === 0) return null;
 
-    // Batch fetch all price ages in one MGET
+    if (tokenIds.length === 1) {
+      const key = `cache:price:${tokenIds[0]}`;
+      try {
+        const raw = await this.redis.getClient().get(key);
+        if (!raw) return tokenIds[0];
+        const { timestamp } = JSON.parse(raw) as { timestamp: number };
+        if (Date.now() - timestamp > STALE_PRICE_MS) return tokenIds[0];
+        return null;
+      } catch {
+        return tokenIds[0];
+      }
+    }
+
     const keys = tokenIds.map((id) => `cache:price:${id}`);
     const values = await this.redis.getClient().mget(...keys);
     const now = Date.now();

@@ -48,9 +48,12 @@ test.describe("Strategy Builder — Keyboard A11y", () => {
   ) {
     for (let i = 0; i < maxPresses; i++) {
       await page.keyboard.press(key);
-      await page.waitForTimeout(100);
-      const className = await node.getAttribute("class");
-      if (className?.includes("selected")) return;
+      try {
+        await expect(node).toHaveClass(/selected/, { timeout: 1_000 });
+        return;
+      } catch {
+        // not yet selected — press again
+      }
     }
     await expect(node).toHaveClass(/selected/, { timeout: 1_000 });
   }
@@ -114,7 +117,9 @@ test.describe("Strategy Builder — Keyboard A11y", () => {
 
     // Click canvas pane to establish focus context, then Tab to first node
     await page.locator(".react-flow__pane").click();
-    await page.waitForTimeout(200);
+    await expect(page.locator(".react-flow__pane")).toBeFocused({
+      timeout: 5_000,
+    });
     const firstNode = builder.blockCards().first();
     // React Flow marks keyboard-navigated nodes as selected; globals.css draws
     // the visible focus ring from `.react-flow__node.selected > div`.
@@ -123,7 +128,7 @@ test.describe("Strategy Builder — Keyboard A11y", () => {
     await expect(firstNode).toBeVisible();
   });
 
-  test.fixme("@a11y @keyboard should navigate to a node via Shift+Tab in reverse order", async ({
+  test.skip("@a11y @keyboard should navigate to a node via Shift+Tab in reverse order", async ({
     page,
   }, testInfo) => {
     testInfo.setTimeout(60_000);
@@ -138,7 +143,9 @@ test.describe("Strategy Builder — Keyboard A11y", () => {
 
     // Tab forward through both nodes to reach the last node
     await page.locator(".react-flow__pane").click();
-    await page.waitForTimeout(200);
+    await expect(page.locator(".react-flow__pane")).toBeFocused({
+      timeout: 5_000,
+    });
     const secondNode = builder.blockCards().nth(1);
     await pressUntilNodeSelected(page, builder.blockCards().first());
     await pressUntilNodeSelected(page, secondNode);
@@ -151,7 +158,7 @@ test.describe("Strategy Builder — Keyboard A11y", () => {
 
   // ─── Node Deletion via Keyboard ───────────────────────────────────────────
 
-  test.fixme("@a11y @keyboard should delete a focused node via Delete key", async ({
+  test.skip("@a11y @keyboard should delete a focused node via Delete key", async ({
     page,
   }, testInfo) => {
     testInfo.setTimeout(60_000);
@@ -165,12 +172,13 @@ test.describe("Strategy Builder — Keyboard A11y", () => {
 
     // Focus the node via Tab
     await page.locator(".react-flow__pane").click();
-    await page.waitForTimeout(200);
+    await expect(page.locator(".react-flow__pane")).toBeFocused({
+      timeout: 5_000,
+    });
     await pressUntilNodeSelected(page, builder.blockCards().first());
 
     // Delete via keyboard
     await page.keyboard.press("Delete");
-    await page.waitForTimeout(500);
 
     const countAfter = await builder.blockCards().count();
     expect(
@@ -179,7 +187,7 @@ test.describe("Strategy Builder — Keyboard A11y", () => {
     ).toBe(countBefore - 1);
   });
 
-  test.fixme("@a11y @keyboard should delete a focused node via Backspace key", async ({
+  test.skip("@a11y @keyboard should delete a focused node via Backspace key", async ({
     page,
   }, testInfo) => {
     testInfo.setTimeout(60_000);
@@ -193,12 +201,13 @@ test.describe("Strategy Builder — Keyboard A11y", () => {
 
     // Focus the node via Tab
     await page.locator(".react-flow__pane").click();
-    await page.waitForTimeout(200);
+    await expect(page.locator(".react-flow__pane")).toBeFocused({
+      timeout: 5_000,
+    });
     await pressUntilNodeSelected(page, builder.blockCards().first());
 
     // Delete via keyboard
     await page.keyboard.press("Backspace");
-    await page.waitForTimeout(500);
 
     const countAfter = await builder.blockCards().count();
     expect(
@@ -209,7 +218,7 @@ test.describe("Strategy Builder — Keyboard A11y", () => {
 
   // ─── Node Arrow-Key Movement ──────────────────────────────────────────────
 
-  test.fixme("@a11y @keyboard should move selected node via Arrow keys", async ({
+  test.skip("@a11y @keyboard should move selected node via Arrow keys", async ({
     page,
   }, testInfo) => {
     testInfo.setTimeout(60_000);
@@ -224,11 +233,19 @@ test.describe("Strategy Builder — Keyboard A11y", () => {
 
     // Focus the node via click (React Flow requires node selection for arrow-key move)
     await node.click();
-    await page.waitForTimeout(200);
+    await expect(
+      page.locator(".react-flow__node.selected").first(),
+    ).toBeVisible({ timeout: 5_000 });
 
     // Move right with ArrowRight (5px by default in React Flow)
     await page.keyboard.press("ArrowRight");
-    await page.waitForTimeout(200);
+    await page.waitForFunction(
+      () => {
+        const el = document.querySelector(".react-flow__node.selected");
+        return el && el.getBoundingClientRect().x > 0;
+      },
+      { timeout: 5_000 },
+    );
 
     const boxAfter = await node.boundingBox();
     expect(boxAfter).not.toBeNull();
@@ -238,7 +255,7 @@ test.describe("Strategy Builder — Keyboard A11y", () => {
     ).toBeGreaterThan(boxBefore!.x);
   });
 
-  test.fixme("@a11y @keyboard should move selected node faster via Shift+Arrow keys", async ({
+  test.skip("@a11y @keyboard should move selected node faster via Shift+Arrow keys", async ({
     page,
   }, testInfo) => {
     testInfo.setTimeout(60_000);
@@ -253,11 +270,19 @@ test.describe("Strategy Builder — Keyboard A11y", () => {
 
     // Focus the node
     await node.click();
-    await page.waitForTimeout(200);
+    await expect(
+      page.locator(".react-flow__node.selected").first(),
+    ).toBeVisible({ timeout: 5_000 });
 
     // Shift+ArrowRight moves 50px (React Flow default for shift multiplier)
     await page.keyboard.press("Shift+ArrowRight");
-    await page.waitForTimeout(200);
+    await page.waitForFunction(
+      () => {
+        const el = document.querySelector(".react-flow__node.selected");
+        return el && el.getBoundingClientRect().x > 0;
+      },
+      { timeout: 5_000 },
+    );
 
     const boxAfter = await node.boundingBox();
     expect(boxAfter).not.toBeNull();
@@ -269,7 +294,7 @@ test.describe("Strategy Builder — Keyboard A11y", () => {
 
   // ─── Undo/Redo Keyboard Shortcuts ─────────────────────────────────────────
 
-  test.fixme("@a11y @keyboard should undo node deletion via Ctrl+Z", async ({
+  test.skip("@a11y @keyboard should undo node deletion via Ctrl+Z", async ({
     page,
   }, testInfo) => {
     testInfo.setTimeout(60_000);
@@ -282,17 +307,17 @@ test.describe("Strategy Builder — Keyboard A11y", () => {
 
     // Delete the node via keyboard
     await page.locator(".react-flow__pane").click();
-    await page.waitForTimeout(200);
+    await expect(page.locator(".react-flow__pane")).toBeFocused({
+      timeout: 5_000,
+    });
     await pressUntilNodeSelected(page, builder.blockCards().first());
     await page.keyboard.press("Delete");
-    await page.waitForTimeout(500);
 
     const countAfterDelete = await builder.blockCards().count();
     expect(countAfterDelete).toBeLessThan(countBefore);
 
     // Undo with Ctrl+Z
     await page.keyboard.press("ControlOrMeta+z");
-    await page.waitForTimeout(500);
 
     const countAfterUndo = await builder.blockCards().count();
     expect(countAfterUndo, "Node should be restored after Ctrl+Z undo").toBe(
@@ -300,7 +325,7 @@ test.describe("Strategy Builder — Keyboard A11y", () => {
     );
   });
 
-  test.fixme("@a11y @keyboard should redo undone node deletion via Ctrl+Shift+Z", async ({
+  test.skip("@a11y @keyboard should redo undone node deletion via Ctrl+Shift+Z", async ({
     page,
   }, testInfo) => {
     testInfo.setTimeout(60_000);
@@ -313,19 +338,21 @@ test.describe("Strategy Builder — Keyboard A11y", () => {
 
     // Delete the node
     await page.locator(".react-flow__pane").click();
-    await page.waitForTimeout(200);
+    await expect(page.locator(".react-flow__pane")).toBeFocused({
+      timeout: 5_000,
+    });
     await pressUntilNodeSelected(page, builder.blockCards().first());
     await page.keyboard.press("Delete");
-    await page.waitForTimeout(500);
 
     // Undo
     await page.keyboard.press("ControlOrMeta+z");
-    await page.waitForTimeout(500);
-    expect(await builder.blockCards().count()).toBe(countBefore);
+    await expect(async () => {
+      const cnt = await builder.blockCards().count();
+      expect(cnt).toBe(countBefore);
+    }).toPass({ timeout: 10_000 });
 
     // Redo with Ctrl+Shift+Z
     await page.keyboard.press("ControlOrMeta+Shift+z");
-    await page.waitForTimeout(500);
 
     const countAfterRedo = await builder.blockCards().count();
     expect(
@@ -334,7 +361,7 @@ test.describe("Strategy Builder — Keyboard A11y", () => {
     ).toBeLessThan(countBefore);
   });
 
-  test.fixme("@a11y @keyboard should redo undone node deletion via Ctrl+Y", async ({
+  test.skip("@a11y @keyboard should redo undone node deletion via Ctrl+Y", async ({
     page,
   }, testInfo) => {
     testInfo.setTimeout(60_000);
@@ -347,19 +374,21 @@ test.describe("Strategy Builder — Keyboard A11y", () => {
 
     // Delete the node
     await page.locator(".react-flow__pane").click();
-    await page.waitForTimeout(200);
+    await expect(page.locator(".react-flow__pane")).toBeFocused({
+      timeout: 5_000,
+    });
     await pressUntilNodeSelected(page, builder.blockCards().first());
     await page.keyboard.press("Delete");
-    await page.waitForTimeout(500);
 
     // Undo
     await page.keyboard.press("ControlOrMeta+z");
-    await page.waitForTimeout(500);
-    expect(await builder.blockCards().count()).toBe(countBefore);
+    await expect(async () => {
+      const cnt = await builder.blockCards().count();
+      expect(cnt).toBe(countBefore);
+    }).toPass({ timeout: 10_000 });
 
     // Redo with Ctrl+Y
     await page.keyboard.press("ControlOrMeta+y");
-    await page.waitForTimeout(500);
 
     const countAfterRedo = await builder.blockCards().count();
     expect(
@@ -425,7 +454,7 @@ test.describe("Strategy Builder — Keyboard A11y", () => {
 
   // ─── Edge Deletion via Keyboard ───────────────────────────────────────────
 
-  test.fixme("@a11y @keyboard should delete an edge via keyboard Tab then Backspace", async ({
+  test.skip("@a11y @keyboard should delete an edge via keyboard Tab then Backspace", async ({
     page,
   }, testInfo) => {
     testInfo.setTimeout(60_000);
@@ -474,7 +503,6 @@ test.describe("Strategy Builder — Keyboard A11y", () => {
     // Direct Tab-to-edge navigation is pending because block nodes contain
     // internal form controls. Select the edge, then verify keyboard deletion.
     await edges.first().click();
-    await page.waitForTimeout(300);
     await expect(
       page.locator(".react-flow__edge.selected"),
       "Edge should be selected after mouse click",
@@ -482,7 +510,6 @@ test.describe("Strategy Builder — Keyboard A11y", () => {
 
     // Delete the focused edge via Backspace
     await page.keyboard.press("Backspace");
-    await page.waitForTimeout(500);
 
     // Verify edge is removed
     const edgeCountAfter = await edges.count();
@@ -545,7 +572,6 @@ test.describe("Strategy Builder — Keyboard A11y", () => {
       { steps: 15 },
     );
     await page.mouse.up();
-    await page.waitForTimeout(300);
 
     // Verify mouse drag created exactly one new edge and it is visible
     const edgeCountAfter = await page.locator(edgeSelector).count();
@@ -568,7 +594,7 @@ test.describe("Strategy Builder — Keyboard A11y", () => {
 
   // ─── Pending Features (POLA-1995 not yet implemented) ─────────────────────
 
-  test.fixme("@a11y @keyboard should tab through multiple edges and reverse-navigate via Shift+Tab", async ({
+  test.skip("@a11y @keyboard should tab through multiple edges and reverse-navigate via Shift+Tab", async ({
     page,
   }, testInfo) => {
     testInfo.setTimeout(60_000);
@@ -602,7 +628,6 @@ test.describe("Strategy Builder — Keyboard A11y", () => {
       steps: 15,
     });
     await page.mouse.up();
-    await page.waitForTimeout(200);
 
     // Connect second node → third node (edge 2)
     const src2 = await sourceHandles.nth(1).boundingBox();
@@ -617,7 +642,6 @@ test.describe("Strategy Builder — Keyboard A11y", () => {
       steps: 15,
     });
     await page.mouse.up();
-    await page.waitForTimeout(200);
 
     // Verify two edges exist
     const edges = page.locator(".react-flow__edge");
@@ -636,20 +660,20 @@ test.describe("Strategy Builder — Keyboard A11y", () => {
 
     // Tab through all 3 nodes, then the next Tab should reach the first edge
     await page.locator(".react-flow__pane").click();
-    await page.waitForTimeout(200);
+    await expect(page.locator(".react-flow__pane")).toBeFocused({
+      timeout: 5_000,
+    });
 
     const blockCount = await builder.blockCards().count();
     for (let i = 0; i < blockCount; i++) {
       await page.keyboard.press("Tab");
-      await page.waitForTimeout(150);
     }
     // First tab after nodes → first edge
     await page.keyboard.press("Tab");
-    await page.waitForTimeout(300);
     await expect(
       page.locator(".react-flow__edge.selected"),
       "Exactly one edge must be selected after keyboard Tab",
-    ).toHaveCount(1, { timeout: 5_000 });
+    ).toHaveCount(1, { timeout: 10_000 });
     const firstSelectedBox = await page
       .locator(".react-flow__edge.selected")
       .first()
@@ -661,11 +685,10 @@ test.describe("Strategy Builder — Keyboard A11y", () => {
 
     // Second tab → second edge
     await page.keyboard.press("Tab");
-    await page.waitForTimeout(300);
     await expect(
       page.locator(".react-flow__edge.selected"),
       "Exactly one edge must be selected after second keyboard Tab",
-    ).toHaveCount(1, { timeout: 5_000 });
+    ).toHaveCount(1, { timeout: 10_000 });
     const secondSelectedBox = await page
       .locator(".react-flow__edge.selected")
       .first()
@@ -681,11 +704,10 @@ test.describe("Strategy Builder — Keyboard A11y", () => {
 
     // Shift+Tab → back to first edge
     await page.keyboard.press("Shift+Tab");
-    await page.waitForTimeout(300);
     await expect(
       page.locator(".react-flow__edge.selected"),
       "Exactly one edge must be selected after Shift+Tab",
-    ).toHaveCount(1, { timeout: 5_000 });
+    ).toHaveCount(1, { timeout: 10_000 });
     const backSelectedBox = await page
       .locator(".react-flow__edge.selected")
       .first()
@@ -700,19 +722,54 @@ test.describe("Strategy Builder — Keyboard A11y", () => {
     ).toEqual(firstSelectedBox);
   });
 
-  test.fixme("@a11y @keyboard should create connection via keyboard wiring mode (C key)", async () => {
-    // POLA-1995 pending: keyboard wiring mode
+  // ── POLA-1995 keyboard A11y: feature-not-yet-implemented coverage ──────
+  // These tests are intentionally skipped because the underlying features do
+  // not exist yet.  Each stub documents the expected test flow so the
+  // coverage is explicit and actionable once POLA-1995 lands.
+  // When the feature ships, remove test.skip() and flesh out the assertions.
+  // ────────────────────────────────────────────────────────────────────────
+
+  test.skip("@a11y @keyboard should create connection via keyboard wiring mode (C key)", async ({
+    page,
+  }) => {
+    // POLA-1995 pending: keyboard wiring mode is not implemented yet.
+    // Expected flow:
+    //   1. Select source node via Enter
+    //   2. Press C to enter wiring mode (expect "wiring" banner visible)
+    //   3. Tab to target node, press Enter to confirm connection
+    //   4. Assert a new .react-flow__edge is created between source and target
+    void page; // placeholder — feature not yet wired
   });
 
-  test.fixme("@a11y @keyboard should cancel keyboard wiring via Escape", async () => {
-    // POLA-1995 pending: keyboard wiring mode
+  test.skip("@a11y @keyboard should cancel keyboard wiring via Escape", async ({
+    page,
+  }) => {
+    // POLA-1995 pending: keyboard wiring mode is not implemented yet.
+    // Expected flow:
+    //   1. Select source node via Enter, press C to enter wiring mode
+    //   2. Press Escape — wiring banner should disappear
+    //   3. Assert no new edge was created and node selection is retained
+    void page; // placeholder — feature not yet wired
   });
 
-  test.fixme("@a11y @keyboard should announce connection states to screen readers", async () => {
-    // POLA-1995 pending: sr-only announcer not yet added
+  test.skip("@a11y @keyboard should announce connection states to screen readers", async ({
+    page,
+  }) => {
+    // POLA-1995 pending: sr-only live-region announcer is not added yet.
+    // Expected flow:
+    //   1. Perform keyboard wiring or deletion action
+    //   2. Assert the sr-only announcer text updates (e.g. "Connection created")
+    void page; // placeholder — feature not yet wired
   });
 
-  test.fixme("@a11y @keyboard should save strategy via Ctrl+S", async () => {
-    // Not implemented: Ctrl+S handler
+  test.skip("@a11y @keyboard should save strategy via Ctrl+S", async ({
+    page,
+  }) => {
+    // Not implemented: Ctrl+S keyboard shortcut handler is not wired.
+    // Expected flow:
+    //   1. Modify strategy (add/remove nodes)
+    //   2. Press Ctrl+S
+    //   3. Assert a save-confirmation toast or success indicator appears
+    void page; // placeholder — feature not yet wired
   });
 });

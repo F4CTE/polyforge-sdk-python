@@ -16,7 +16,12 @@ import { isEmail } from "class-validator";
 import { AdminJwtGuard } from "../common/guard/admin-jwt.guard";
 import { RolesGuard } from "../common/guard/roles.guard";
 import { Roles } from "../common/decorators/roles.decorator";
-import { AdminRole } from "@polyforge/shared-types";
+import { AdminJwtPayload, AdminRole } from "@polyforge/shared-types";
+import { AuditService } from "../common/audit/audit.service";
+import {
+  CurrentAdmin,
+  AdminIp,
+} from "../common/decorators/current-admin.decorator";
 import { InvitesService } from "../invites/invites.service";
 import { AdminMailService } from "../mail/mail.service";
 import { WaitlistAdminService } from "./waitlist.service";
@@ -41,6 +46,7 @@ export class WaitlistAdminController {
     private readonly waitlist: WaitlistAdminService,
     private readonly invites: InvitesService,
     private readonly mail: AdminMailService,
+    private readonly audit: AuditService,
   ) {}
 
   @Get()
@@ -56,17 +62,45 @@ export class WaitlistAdminController {
     summary:
       "Generate a single-use invite code and email it to a waitlist entry",
   })
-  async sendInvite(@Param("email", ParseEmailParamPipe) email: string) {
+  async sendInvite(
+    @Param("email", ParseEmailParamPipe) email: string,
+    @CurrentAdmin() admin: AdminJwtPayload,
+    @AdminIp() ip: string,
+  ) {
+    const auditMeta = {
+      adminId: admin.sub,
+      action: "SEND_WAITLIST_INVITE",
+      targetType: "waitlist",
+      targetId: email,
+      ip,
+    } as const;
+
+    await this.audit.log({ ...auditMeta, status: "attempt" });
     const { codes } = await this.invites.generate({ count: 1, uses: 1 });
     const code = codes[0];
     await this.mail.sendInviteEmail(email, code);
+    await this.audit.logSafe({ ...auditMeta, status: "success" });
     return { code, sentTo: email };
   }
 
   @Delete(":email")
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: "Remove email from waitlist" })
-  async remove(@Param("email", ParseEmailParamPipe) email: string) {
+  async remove(
+    @Param("email", ParseEmailParamPipe) email: string,
+    @CurrentAdmin() admin: AdminJwtPayload,
+    @AdminIp() ip: string,
+  ) {
+    const auditMeta = {
+      adminId: admin.sub,
+      action: "DELETE_WAITLIST_ENTRY",
+      targetType: "waitlist",
+      targetId: email,
+      ip,
+    } as const;
+
+    await this.audit.log({ ...auditMeta, status: "attempt" });
     await this.waitlist.remove(email);
+    await this.audit.logSafe({ ...auditMeta, status: "success" });
   }
 }

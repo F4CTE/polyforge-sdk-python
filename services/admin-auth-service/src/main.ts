@@ -37,7 +37,7 @@ function validateEnv() {
   const jwtSecret = process.env.ADMIN_JWT_SECRET;
   if (jwtSecret && jwtSecret.length < 32) {
     process.stderr.write(
-      `[admin-auth-service] ADMIN_JWT_SECRET must be at least 32 characters long (current length: ${jwtSecret.length})\n`,
+      `[admin-auth-service] ADMIN_JWT_SECRET is not properly configured\n`,
     );
     process.exit(1);
   }

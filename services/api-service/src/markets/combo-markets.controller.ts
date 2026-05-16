@@ -54,7 +54,10 @@ class LookupTickerDto {
 }
 
 const COMBO_THROTTLE = {
-  default: { ttl: 60000, limit: BETA_LIMITS_DEFAULTS.marketDataRateLimitPerMinute },
+  default: {
+    ttl: 60000,
+    limit: BETA_LIMITS_DEFAULTS.marketDataRateLimitPerMinute,
+  },
 };
 
 @ApiTags("combo-markets")

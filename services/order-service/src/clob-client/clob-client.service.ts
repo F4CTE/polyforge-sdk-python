@@ -13,6 +13,8 @@ import type {
   TickSize,
 } from "@polymarket/clob-client" with { "resolution-mode": "import" };
 
+export type ClobInterval = "max" | "1d" | "1w" | "6h" | "1h";
+
 export interface ClobClientLike {
   readonly host: string;
   getOrderBook(tokenID: string): Promise<OrderBookSummary>;
@@ -25,7 +27,7 @@ export interface ClobClientLike {
   getMarket(conditionID: string): Promise<Record<string, unknown>>;
   getPricesHistory(params: {
     market: string;
-    interval?: string;
+    interval?: ClobInterval;
     fidelity?: number;
   }): Promise<MarketPrice[]>;
 }
@@ -195,13 +197,12 @@ export class ClobClientService {
   }
 
   async getClobMarketInfo(conditionId: string): Promise<ClobMarketInfo> {
-    const info: Record<string, unknown> = await this.sdk.getMarket(conditionId);
-    return info as unknown as ClobMarketInfo;
+    return this.sdk.getMarket(conditionId) as Promise<ClobMarketInfo>;
   }
 
   async getPricesHistory(
     tokenId: string,
-    interval?: string,
+    interval?: ClobInterval,
     fidelity?: number,
   ): Promise<{ history: Array<{ t: number; p: string }> }> {
     const prices: MarketPrice[] = await this.sdk.getPricesHistory({
@@ -299,7 +300,7 @@ export class ClobClientService {
 
   async getBatchPricesHistory(
     tokenIds: string[],
-    interval?: string,
+    interval?: ClobInterval,
     fidelity?: number,
   ): Promise<Record<string, Array<{ t: number; p: string }>>> {
     return this.withRetry(() =>

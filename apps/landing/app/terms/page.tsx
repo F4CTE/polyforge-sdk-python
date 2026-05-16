@@ -33,7 +33,13 @@ function Section({
   );
 }
 
-function Sub({ title, children }: { title: string; children: React.ReactNode }) {
+function Sub({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className="space-y-3 mt-6">
       <h3 className="text-body-md font-semibold text-primary">{title}</h3>
@@ -79,8 +85,7 @@ export default function TermsPage() {
         <div className="max-w-3xl mx-auto px-6 py-20">
           <h1 className="text-display-lg text-primary">Terms of Service</h1>
           <p className="text-label text-tertiary mt-2">
-            Effective Date: April 15, 2026 &middot; Last Updated: April 18,
-            2026
+            Effective Date: April 15, 2026 &middot; Last Updated: April 18, 2026
           </p>
           <p className="text-body-sm text-tertiary mt-1 mb-6">
             Operator: Shems Chelgoui, Entrepreneur Individuel (EI), trading as
@@ -89,9 +94,7 @@ export default function TermsPage() {
 
           <Callout>
             <p>
-              <strong className="text-primary">
-                IMPORTANT RISK NOTICE:
-              </strong>{" "}
+              <strong className="text-primary">IMPORTANT RISK NOTICE:</strong>{" "}
               Trading on prediction markets involves significant risk of loss.
               Past performance of any strategy &mdash; including backtested or
               simulated results &mdash; does not guarantee future results.
@@ -177,7 +180,9 @@ export default function TermsPage() {
                     trading strategies.
                   </li>
                   <li>
-                    <strong className="text-primary">Backtesting Engine:</strong>{" "}
+                    <strong className="text-primary">
+                      Backtesting Engine:
+                    </strong>{" "}
                     Historical simulation against Polymarket market data.
                   </li>
                   <li>
@@ -226,7 +231,8 @@ export default function TermsPage() {
                     or digital assets.
                   </li>
                   <li>
-                    Does not provide financial, investment, legal, or tax advice.
+                    Does not provide financial, investment, legal, or tax
+                    advice.
                   </li>
                   <li>
                     Does not guarantee or represent the profitability of any
@@ -378,7 +384,8 @@ export default function TermsPage() {
                     API keys, and wallet credentials;
                   </li>
                   <li>
-                    All activities under your account, whether or not authorized;
+                    All activities under your account, whether or not
+                    authorized;
                   </li>
                   <li>
                     Immediately notifying us of any unauthorized use or security
@@ -397,10 +404,10 @@ export default function TermsPage() {
               <Sub title="5.4 Wallet Credentials">
                 <p>
                   When you connect a Polymarket wallet, you acknowledge that
-                  PolyForge uses credentials solely to execute strategies on your
-                  behalf, does not store private keys in plain text (all key
-                  material is processed through AES-256-GCM encryption), and you
-                  remain the sole custodian of your funds.
+                  PolyForge uses credentials solely to execute strategies on
+                  your behalf, does not store private keys in plain text (all
+                  key material is processed through AES-256-GCM encryption), and
+                  you remain the sole custodian of your funds.
                 </p>
               </Sub>
             </Section>
@@ -416,8 +423,8 @@ export default function TermsPage() {
                   terms;
                 </li>
                 <li>
-                  Use the Service in a fair and ethical manner that does not harm
-                  other market participants;
+                  Use the Service in a fair and ethical manner that does not
+                  harm other market participants;
                 </li>
                 <li>
                   Maintain account security and not share access with
@@ -438,20 +445,14 @@ export default function TermsPage() {
                     Wash trading, spoofing, layering, or coordinated trading
                     schemes;
                   </li>
-                  <li>
-                    Trading on material non-public information;
-                  </li>
-                  <li>
-                    Any scheme to defraud other market participants.
-                  </li>
+                  <li>Trading on material non-public information;</li>
+                  <li>Any scheme to defraud other market participants.</li>
                 </ul>
               </Sub>
 
               <Sub title="7.2 Legal and Regulatory Violations">
                 <ul className="list-disc list-inside space-y-2 pl-1">
-                  <li>
-                    Accessing the Service from a Restricted Jurisdiction;
-                  </li>
+                  <li>Accessing the Service from a Restricted Jurisdiction;</li>
                   <li>Violating AML, CTF, or KYC requirements;</li>
                   <li>Processing proceeds of illegal activity;</li>
                   <li>Violating Polymarket&rsquo;s terms or policies.</li>
@@ -473,9 +474,7 @@ export default function TermsPage() {
 
               <Sub title="7.4 Data Harvesting">
                 <ul className="list-disc list-inside space-y-2 pl-1">
-                  <li>
-                    Scraping or data mining beyond what the API permits;
-                  </li>
+                  <li>Scraping or data mining beyond what the API permits;</li>
                   <li>
                     Commercially redistributing PolyForge data without
                     authorization.
@@ -485,9 +484,7 @@ export default function TermsPage() {
 
               <Sub title="7.5 Misrepresentation">
                 <ul className="list-disc list-inside space-y-2 pl-1">
-                  <li>
-                    Impersonating any person or entity;
-                  </li>
+                  <li>Impersonating any person or entity;</li>
                   <li>
                     Falsely representing simulated performance as live results;
                   </li>
@@ -549,9 +546,7 @@ export default function TermsPage() {
                   <li>
                     You may not distribute, sell, or sublicense any rights;
                   </li>
-                  <li>
-                    You may not remove intellectual property notices;
-                  </li>
+                  <li>You may not remove intellectual property notices;</li>
                   <li>
                     You may not use PolyForge branding without written consent.
                   </li>
@@ -598,60 +593,69 @@ export default function TermsPage() {
             </Section>
 
             {/* §11 */}
-            <Section title="11. Financial Risk Disclaimer">
-              <Disclaimer>
-                Read this section carefully. It contains critical information
-                about the risks of using the Service.
-              </Disclaimer>
-
-              <Sub title="11.1 Trading Risk">
-                <p>
-                  Prediction market trading involves the risk of loss of funds.
-                  There is no guarantee that any strategy will be profitable.
-                  You may lose some or all funds you commit. You should only
-                  trade with funds you can afford to lose.
-                </p>
-              </Sub>
-
-              <Sub title="11.2 Backtested and Simulated Performance">
+            <section
+              id="risk-disclosure"
+              className="border-b border-subtle py-10 last:border-b-0"
+            >
+              <h2 className="text-display-sm font-semibold text-primary mb-4">
+                11. Financial Risk Disclaimer
+              </h2>
+              <div className="text-body-md text-secondary leading-[1.75] space-y-4">
                 <Disclaimer>
-                  Past performance does not guarantee future results.
+                  Read this section carefully. It contains critical information
+                  about the risks of using the Service.
                 </Disclaimer>
-                <p>
-                  Backtested results are hypothetical, subject to hindsight
-                  bias, ideal execution assumptions, non-recurring market
-                  conditions, and unaccounted fees/slippage. All simulated
-                  metrics are illustrative only.
-                </p>
-              </Sub>
 
-              <Sub title="11.3 System and Technology Risk">
-                <p>
-                  Automated trading systems are subject to software bugs,
-                  latency, connectivity failures, API disruptions, and exchange
-                  outages. PolyForge is not liable for losses arising from
-                  system failures.
-                </p>
-              </Sub>
+                <Sub title="11.1 Trading Risk">
+                  <p>
+                    Prediction market trading involves the risk of loss of
+                    funds. There is no guarantee that any strategy will be
+                    profitable. You may lose some or all funds you commit. You
+                    should only trade with funds you can afford to lose.
+                  </p>
+                </Sub>
 
-              <Sub title="11.4 Regulatory Risk">
-                <p>
-                  The legal status of prediction markets is subject to change.
-                  Regulatory actions could materially affect your ability to use
-                  the Service. PolyForge is not responsible for losses from
-                  regulatory changes.
-                </p>
-              </Sub>
-            </Section>
+                <Sub title="11.2 Backtested and Simulated Performance">
+                  <Disclaimer>
+                    Past performance does not guarantee future results.
+                  </Disclaimer>
+                  <p>
+                    Backtested results are hypothetical, subject to hindsight
+                    bias, ideal execution assumptions, non-recurring market
+                    conditions, and unaccounted fees/slippage. All simulated
+                    metrics are illustrative only.
+                  </p>
+                </Sub>
+
+                <Sub title="11.3 System and Technology Risk">
+                  <p>
+                    Automated trading systems are subject to software bugs,
+                    latency, connectivity failures, API disruptions, and
+                    exchange outages. PolyForge is not liable for losses arising
+                    from system failures.
+                  </p>
+                </Sub>
+
+                <Sub title="11.4 Regulatory Risk">
+                  <p>
+                    The legal status of prediction markets is subject to change.
+                    Regulatory actions could materially affect your ability to
+                    use the Service. PolyForge is not responsible for losses
+                    from regulatory changes.
+                  </p>
+                </Sub>
+              </div>
+            </section>
 
             {/* §12 */}
             <Section title="12. No Financial Advice">
               <p>
-                PolyForge does not provide investment advice, financial planning,
-                or brokerage services. Nothing on the Service constitutes a
-                recommendation to buy or sell any financial instrument. All
-                information is for educational and informational purposes only.
-                Consult a qualified professional before making trading decisions.
+                PolyForge does not provide investment advice, financial
+                planning, or brokerage services. Nothing on the Service
+                constitutes a recommendation to buy or sell any financial
+                instrument. All information is for educational and informational
+                purposes only. Consult a qualified professional before making
+                trading decisions.
               </p>
             </Section>
 
@@ -659,8 +663,8 @@ export default function TermsPage() {
             <Section title="13. Fees, Billing, and Payment">
               <Sub title="13.1 Free Tier">
                 <p>
-                  PolyForge offers a free tier with limited features. No
-                  payment is required.
+                  PolyForge offers a free tier with limited features. No payment
+                  is required.
                 </p>
               </Sub>
 
@@ -698,17 +702,15 @@ export default function TermsPage() {
               </Sub>
 
               <Sub title="13.6 Taxes and VAT">
-                <p>
-                  You are responsible for all applicable taxes.
-                </p>
+                <p>You are responsible for all applicable taxes.</p>
                 <Callout>
                   <p>
                     <strong className="text-primary">TVA (VAT) Notice:</strong>{" "}
                     PolyForge operates under the{" "}
                     <em>franchise en base de TVA</em> (VAT exemption) pursuant
                     to Article 293 B of the French{" "}
-                    <em>Code g&eacute;n&eacute;ral des imp&ocirc;ts</em>. TVA
-                    is not applicable to invoices issued by PolyForge
+                    <em>Code g&eacute;n&eacute;ral des imp&ocirc;ts</em>. TVA is
+                    not applicable to invoices issued by PolyForge
                     (&laquo;&nbsp;TVA non applicable, article 293 B du
                     CGI&nbsp;&raquo;). This exemption may be revoked if annual
                     revenue exceeds the applicable thresholds.
@@ -724,7 +726,9 @@ export default function TermsPage() {
                 is provided &ldquo;as is&rdquo; and &ldquo;as available,&rdquo;
                 without warranties of any kind, express or implied.
               </Disclaimer>
-              <Disclaimer>PolyForge expressly disclaims all warranties, including:</Disclaimer>
+              <Disclaimer>
+                PolyForge expressly disclaims all warranties, including:
+              </Disclaimer>
               <ul className="list-disc list-inside space-y-2 pl-1 uppercase text-label tracking-wide font-semibold">
                 <li>
                   Any implied warranty of merchantability, fitness for a
@@ -816,8 +820,8 @@ export default function TermsPage() {
 
               <Sub title="17.2 Termination or Suspension by PolyForge">
                 <p>
-                  PolyForge may immediately suspend or terminate your account
-                  if you breach these Terms, become a resident of a Restricted
+                  PolyForge may immediately suspend or terminate your account if
+                  you breach these Terms, become a resident of a Restricted
                   Jurisdiction, engage in prohibited activity, attempt to
                   circumvent restrictions, or if regulatory requirements compel
                   us to restrict access.
@@ -829,8 +833,7 @@ export default function TermsPage() {
                   Upon termination: your license terminates immediately;
                   PolyForge ceases executing strategies; you remain responsible
                   for open positions and outstanding fees; survival clauses
-                  (Sections 9, 11, 12, 14, 15, 16, 18, 19, 20) remain in
-                  effect.
+                  (Sections 9, 11, 12, 14, 15, 16, 18, 19, 20) remain in effect.
                 </p>
               </Sub>
 
@@ -846,8 +849,8 @@ export default function TermsPage() {
             {/* §18 */}
             <Section title="18. Dispute Resolution and Arbitration">
               <Disclaimer>
-                Please read this section carefully. It affects your legal rights,
-                including your right to file a lawsuit in court.
+                Please read this section carefully. It affects your legal
+                rights, including your right to file a lawsuit in court.
               </Disclaimer>
 
               <Sub title="18.1 Informal Resolution First">
@@ -868,8 +871,8 @@ export default function TermsPage() {
                     International Chamber of Commerce (ICC)
                   </strong>
                   , conducted in English, seated in Paris, France, before a
-                  single arbitrator. The award is final and enforceable under the
-                  New York Convention.
+                  single arbitrator. The award is final and enforceable under
+                  the New York Convention.
                 </p>
               </Sub>
 
@@ -913,10 +916,10 @@ export default function TermsPage() {
             {/* §19 */}
             <Section title="19. Class Action Waiver">
               <Disclaimer>
-                To the maximum extent permitted by applicable law, each party may
-                only bring claims in an individual capacity, not as a plaintiff
-                or class member in any class, collective, or representative
-                action.
+                To the maximum extent permitted by applicable law, each party
+                may only bring claims in an individual capacity, not as a
+                plaintiff or class member in any class, collective, or
+                representative action.
               </Disclaimer>
               <p>
                 If you opt out of arbitration under Section 18.4, this waiver
@@ -925,9 +928,10 @@ export default function TermsPage() {
               <Callout>
                 <p>
                   <strong className="text-primary">EU Consumer Note:</strong>{" "}
-                  This waiver does not apply in EU Member States where collective
-                  redress mechanisms (such as the <em>action de groupe</em> under
-                  French law) are protected by mandatory law.
+                  This waiver does not apply in EU Member States where
+                  collective redress mechanisms (such as the{" "}
+                  <em>action de groupe</em> under French law) are protected by
+                  mandatory law.
                 </p>
               </Callout>
             </Section>
@@ -1022,13 +1026,13 @@ export default function TermsPage() {
                   necessary; remaining provisions continue.
                 </li>
                 <li>
-                  <strong className="text-primary">Waiver:</strong>{" "}
-                  Failure to enforce a provision is not a waiver.
+                  <strong className="text-primary">Waiver:</strong> Failure to
+                  enforce a provision is not a waiver.
                 </li>
                 <li>
-                  <strong className="text-primary">Assignment:</strong>{" "}
-                  You may not assign your rights without consent. PolyForge may
-                  freely assign these Terms.
+                  <strong className="text-primary">Assignment:</strong> You may
+                  not assign your rights without consent. PolyForge may freely
+                  assign these Terms.
                 </li>
                 <li>
                   <strong className="text-primary">Force Majeure:</strong>{" "}
@@ -1041,9 +1045,9 @@ export default function TermsPage() {
                   </strong>
                 </li>
                 <li>
-                  <strong className="text-primary">Language:</strong>{" "}
-                  The English version governs in any conflict, except where
-                  French or EU law mandates a local language version.
+                  <strong className="text-primary">Language:</strong> The
+                  English version governs in any conflict, except where French
+                  or EU law mandates a local language version.
                 </li>
               </ul>
             </Section>
@@ -1064,9 +1068,7 @@ export default function TermsPage() {
                 <div className="space-y-2">
                   <p>
                     Legal and compliance:{" "}
-                    <A href="mailto:legal@polyforge.app">
-                      legal@polyforge.app
-                    </A>
+                    <A href="mailto:legal@polyforge.app">legal@polyforge.app</A>
                   </p>
                   <p>
                     General support:{" "}

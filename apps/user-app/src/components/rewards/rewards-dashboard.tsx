@@ -170,7 +170,7 @@ export function RewardsDashboard() {
                 <Trophy className="size-3" />
                 Total Earned
               </span>
-              <span className="block mt-1 text-xl font-mono font-semibold text-gain">
+              <span className="block mt-1 text-xl font-mono tabular-nums font-semibold text-gain">
                 {formatUsd(totals.totalEarned)}
               </span>
             </div>
@@ -179,7 +179,7 @@ export function RewardsDashboard() {
                 <TrendingUp className="size-3" />
                 Daily Earned
               </span>
-              <span className="block mt-1 text-xl font-mono font-semibold text-accent-text">
+              <span className="block mt-1 text-xl font-mono tabular-nums font-semibold text-accent-text">
                 {formatUsd(totals.dailyEarned)}
               </span>
             </div>
@@ -188,7 +188,7 @@ export function RewardsDashboard() {
                 <Gift className="size-3" />
                 Pending
               </span>
-              <span className="block mt-1 text-xl font-mono font-semibold text-info">
+              <span className="block mt-1 text-xl font-mono tabular-nums font-semibold text-info">
                 {formatUsd(totals.pendingRewards)}
               </span>
             </div>
@@ -200,7 +200,7 @@ export function RewardsDashboard() {
               <Coins className="size-3" />
               Maker Rebates
             </span>
-            <span className="block mt-1 text-xl font-mono font-semibold text-variable-text">
+            <span className="block mt-1 text-xl font-mono tabular-nums font-semibold text-variable-text">
               {formatUsd(rebates.totalRebates)}
             </span>
             <span className="text-caption text-tertiary">{rebates.rebateCount} rebates</span>
@@ -240,16 +240,16 @@ export function RewardsDashboard() {
                 <tbody>
                   {perMarket.map(r => (
                     <tr key={r.conditionId} className="border-b border-subtle hover:bg-subtle transition-colors">
-                      <td className="px-3 py-2.5 text-primary max-w-[240px] truncate" title={r.marketQuestion}>
+                      <td className="px-3 py-2.5 text-primary max-w-60 truncate" title={r.marketQuestion}>
                         {r.marketQuestion}
                       </td>
-                      <td className="px-3 py-2.5 text-right font-mono text-gain">
+                      <td className="px-3 py-2.5 text-right font-mono tabular-nums text-gain">
                         {formatUsd(r.dailyReward)}
                       </td>
-                      <td className="px-3 py-2.5 text-right font-mono text-primary">
+                      <td className="px-3 py-2.5 text-right font-mono tabular-nums text-primary">
                         {formatUsd(r.totalReward)}
                       </td>
-                      <td className="px-3 py-2.5 text-right font-mono text-accent-text">
+                      <td className="px-3 py-2.5 text-right font-mono tabular-nums text-accent-text">
                         {(r.rewardPercentage * 100).toFixed(1)}%
                       </td>
                     </tr>
@@ -293,13 +293,13 @@ export function RewardsDashboard() {
                 <tbody>
                   {rebates.entries.slice(0, 20).map(entry => (
                     <tr key={entry.id} className="border-b border-subtle hover:bg-subtle transition-colors">
-                      <td className="px-3 py-2.5 text-primary max-w-[240px] truncate" title={entry.marketQuestion}>
+                      <td className="px-3 py-2.5 text-primary max-w-60 truncate" title={entry.marketQuestion}>
                         {entry.marketQuestion}
                       </td>
-                      <td className="px-3 py-2.5 text-right font-mono text-tertiary">
+                      <td className="px-3 py-2.5 text-right font-mono tabular-nums text-tertiary">
                         {formatUsd(entry.feeOriginal)}
                       </td>
-                      <td className="px-3 py-2.5 text-right font-mono text-gain">
+                      <td className="px-3 py-2.5 text-right font-mono tabular-nums text-gain">
                         +{formatUsd(entry.amount)}
                       </td>
                       <td className="px-3 py-2.5 text-right text-secondary">
@@ -366,7 +366,7 @@ export function RewardsDashboard() {
                       {sm.marketQuestion}
                     </Link>
                     <div className="shrink-0 text-right space-y-0.5">
-                      <div className="text-caption font-mono text-gain whitespace-nowrap">
+                      <div className="text-caption font-mono tabular-nums text-gain whitespace-nowrap">
                         ${parseFloat(sm.ratePerDay).toFixed(2)}/day
                       </div>
                       <div className="text-caption text-tertiary whitespace-nowrap">

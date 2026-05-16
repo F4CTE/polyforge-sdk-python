@@ -32,14 +32,17 @@ export class KeyRotationController {
     @CurrentAdmin() admin: AdminJwtPayload,
     @AdminIp() ip: string,
   ) {
-    const result = await this.keyRotation.startRotation();
-    await this.audit.log({
+    const auditMeta = {
       adminId: admin.sub,
       action: "START_KEY_ROTATION",
       targetType: "system",
       targetId: "jwt-secret",
       ip,
-    });
+    } as const;
+
+    await this.audit.log({ ...auditMeta, status: "attempt" });
+    const result = await this.keyRotation.startRotation();
+    await this.audit.logSafe({ ...auditMeta, status: "success" });
     return result;
   }
 }

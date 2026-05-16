@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import { NotificationsAdminService } from "./notifications.service";
+import { BadRequestException } from "@nestjs/common";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -28,6 +29,9 @@ function makeRedis() {
       scan: vi.fn().mockResolvedValue(["0", []]),
       info: vi.fn(),
       xadd: vi.fn(),
+      xrange: vi.fn().mockResolvedValue([]),
+      xdel: vi.fn().mockResolvedValue(1),
+      eval: vi.fn().mockResolvedValue("1-0"),
       zscore: vi.fn(),
       zadd: vi.fn(),
       zrangebyscore: vi.fn(),
@@ -194,7 +198,7 @@ describe("NotificationsAdminService", () => {
         subject: "Spam",
       };
 
-      await expect(service.broadcast(dto as any)).rejects.toThrow(
+      await expect(service.broadcast(dto)).rejects.toThrow(
         /5000-recipient cap/,
       );
       expect(redis.xadd).not.toHaveBeenCalled();
@@ -266,6 +270,175 @@ describe("NotificationsAdminService", () => {
       const gte: Date = last24hCall.where.sentAt.gte;
       expect(gte.getTime()).toBeGreaterThanOrEqual(before - 86400_000 - 100);
       expect(gte.getTime()).toBeLessThanOrEqual(after - 86400_000 + 100);
+    });
+  });
+
+  // ── DLQ (dead-letter queue) ────────────────────────────────────────────────
+
+  describe("DLQ", () => {
+    it("getDlqEntries returns entries from the DLQ stream", async () => {
+      const client = redis.getClient();
+      client.xrange.mockResolvedValue([
+        [
+          "1-0",
+          [
+            "originalId",
+            "msg-1",
+            "type",
+            "ORDER_FILLED",
+            "notifType",
+            "ORDER_FILLED",
+            "userId",
+            "u1",
+            "dlqReason",
+            "Exceeded 3 retries",
+            "dlqTs",
+            "1700000000000",
+          ],
+        ],
+      ]);
+
+      const result = await service.getDlqEntries();
+
+      expect(client.xrange).toHaveBeenCalledWith(
+        "stream:events:dlq",
+        "-",
+        "+",
+        "COUNT",
+        50,
+      );
+      expect(result.entries).toHaveLength(1);
+      expect(result.entries[0].id).toBe("1-0");
+      expect(result.entries[0].originalId).toBe("msg-1");
+      expect(result.entries[0].notifType).toBe("ORDER_FILLED");
+      expect(result.nextCursor).toBeNull(); // single entry < limit
+    });
+
+    it("getDlqEntries respects limit and returns cursor", async () => {
+      const client = redis.getClient();
+      const entries = Array.from({ length: 3 }, (_, i) => [
+        `1-${i}`,
+        ["originalId", `msg-${i}`, "type", "ORDER_FILLED"],
+      ]);
+      client.xrange.mockResolvedValue(entries);
+
+      const result = await service.getDlqEntries(3);
+
+      expect(client.xrange).toHaveBeenCalledWith(
+        "stream:events:dlq",
+        "-",
+        "+",
+        "COUNT",
+        3,
+      );
+      expect(result.entries).toHaveLength(3);
+      expect(result.nextCursor).toBe("1-2");
+    });
+
+    it("getDlqEntries supports cursor-based pagination", async () => {
+      const client = redis.getClient();
+      client.xrange.mockResolvedValue([["1-5", ["originalId", "msg-5"]]]);
+
+      await service.getDlqEntries(10, "1-3");
+
+      // Exclusive start: cursor is (1-3
+      expect(client.xrange).toHaveBeenCalledWith(
+        "stream:events:dlq",
+        "(1-3",
+        "+",
+        "COUNT",
+        10,
+      );
+    });
+
+    it("getDlqEntries clamps limit to 100 max", async () => {
+      const client = redis.getClient();
+      client.xrange.mockResolvedValue([]);
+
+      await service.getDlqEntries(500);
+
+      expect(client.xrange).toHaveBeenCalledWith(
+        "stream:events:dlq",
+        "-",
+        "+",
+        "COUNT",
+        100,
+      );
+    });
+
+    it("getDlqEntries clamps limit to 1 min", async () => {
+      const client = redis.getClient();
+      client.xrange.mockResolvedValue([]);
+
+      await service.getDlqEntries(0);
+
+      expect(client.xrange).toHaveBeenCalledWith(
+        "stream:events:dlq",
+        "-",
+        "+",
+        "COUNT",
+        1,
+      );
+    });
+
+    it("replayDlqEntry uses atomic Lua script and returns replayed id", async () => {
+      const client = redis.getClient();
+      client.eval.mockResolvedValue("1-0");
+
+      const result = await service.replayDlqEntry("1-0");
+
+      expect(client.eval).toHaveBeenCalledWith(
+        expect.stringContaining("XRANGE"),
+        1,
+        "stream:events:dlq",
+        "1-0",
+        "100000",
+      );
+      expect(result.replayed).toBe("1-0");
+    });
+
+    it("replayDlqEntry throws BadRequestException when entry not found", async () => {
+      const client = redis.getClient();
+      client.eval.mockResolvedValue(null); // Lua returns nil when XRANGE empty
+
+      await expect(service.replayDlqEntry("nonexistent")).rejects.toThrow(
+        BadRequestException,
+      );
+      await expect(service.replayDlqEntry("nonexistent")).rejects.toMatchObject(
+        {
+          response: {
+            code: "DLQ_ENTRY_NOT_FOUND",
+            message: expect.stringContaining("nonexistent"),
+          },
+        },
+      );
+    });
+
+    it("discardDlqEntry removes entry from DLQ stream", async () => {
+      const client = redis.getClient();
+      client.xdel.mockResolvedValue(1);
+
+      const result = await service.discardDlqEntry("1-0");
+
+      expect(client.xdel).toHaveBeenCalledWith("stream:events:dlq", "1-0");
+      expect(result.discarded).toBe("1-0");
+    });
+
+    it("discardDlqEntry throws BadRequestException when entry not found", async () => {
+      const client = redis.getClient();
+      client.xdel.mockResolvedValue(0); // 0 deleted = not found
+
+      await expect(service.discardDlqEntry("nonexistent")).rejects.toThrow(
+        BadRequestException,
+      );
+      await expect(
+        service.discardDlqEntry("nonexistent"),
+      ).rejects.toMatchObject({
+        response: {
+          code: "DLQ_ENTRY_NOT_FOUND",
+          message: expect.stringContaining("nonexistent"),
+        },
+      });
     });
   });
 });

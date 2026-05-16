@@ -363,9 +363,9 @@ function JournalEntryCard({ entry, onEdit, onDelete }: { entry: JournalEntry; on
             <span className={`inline-flex px-2 py-1 rounded-sm text-caption font-medium ${entry.outcome === 'YES' ? 'bg-gain/10 text-gain' : 'bg-loss/10 text-loss'}`}>
               {entry.outcome}
             </span>
-            <span className="font-mono text-caption text-tertiary">{entry.size} @ {entry.price}</span>
+            <span className="font-mono tabular-nums text-caption text-tertiary">{entry.size} @ {entry.price}</span>
             {entry.pnl !== undefined && (
-              <span className={`font-mono text-caption font-medium ${entry.pnl >= 0 ? 'text-gain' : 'text-loss'}`}>
+              <span className={`font-mono tabular-nums text-caption font-medium ${entry.pnl >= 0 ? 'text-gain' : 'text-loss'}`}>
                 {entry.pnl >= 0 ? '+' : ''}{entry.pnl.toFixed(2)} PnL
               </span>
             )}
@@ -1000,7 +1000,7 @@ export function Component() {
           role="tab"
           aria-selected={viewTab === 'orders'}
           onClick={() => setViewTab('orders')}
-          className={`px-3 py-2 rounded-t text-body-md font-medium transition-colors ${
+          className={`px-3 py-2 rounded-t-pf text-body-md font-medium transition-colors ${
             viewTab === 'orders' ? 'text-accent-text border-b-2 border-accent-text' : 'text-secondary hover:text-primary'
           }`}
         >
@@ -1012,7 +1012,7 @@ export function Component() {
           role="tab"
           aria-selected={viewTab === 'conditional'}
           onClick={() => setViewTab('conditional')}
-          className={`px-3 py-2 rounded-t text-body-md font-medium transition-colors ${
+          className={`px-3 py-2 rounded-t-pf text-body-md font-medium transition-colors ${
             viewTab === 'conditional' ? 'text-accent-text border-b-2 border-accent-text' : 'text-secondary hover:text-primary'
           }`}
         >
@@ -1024,7 +1024,7 @@ export function Component() {
           role="tab"
           aria-selected={viewTab === 'journal'}
           onClick={() => setViewTab('journal')}
-          className={`inline-flex items-center gap-2 px-3 py-2 rounded-t text-body-md font-medium transition-colors ${
+          className={`inline-flex items-center gap-2 px-3 py-2 rounded-t-pf text-body-md font-medium transition-colors ${
             viewTab === 'journal' ? 'text-accent-text border-b-2 border-accent-text' : 'text-secondary hover:text-primary'
           }`}
         >
@@ -1117,7 +1117,7 @@ export function Component() {
                           className={`hover:bg-surface/50 transition-colors cursor-pointer ${isJournalOpen ? 'bg-surface/30' : ''}`}
                         >
                           <td className="px-4 py-3">
-                            <span className="font-mono text-label text-tertiary">{(page - 1) * 25 + i + 1}</span>
+                            <span className="font-mono tabular-nums text-label text-tertiary">{(page - 1) * 25 + i + 1}</span>
                           </td>
                           <td className="px-4 py-3 max-w-col-sm">
                             <span className="text-primary text-label line-clamp-1" title={order.marketQuestion ?? order.marketId ?? ''}>
@@ -1139,10 +1139,10 @@ export function Component() {
                               {order.outcome}
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-right font-mono text-primary">{order.size}</td>
-                          <td className="px-4 py-3 text-right font-mono text-primary">{order.price}</td>
-                          <td className="px-4 py-3 text-right font-mono text-secondary hidden md:table-cell">{fillRatio(order)}</td>
-                          <td className="px-4 py-3 text-right font-mono text-primary hidden md:table-cell">{order.fillPrice ?? '\u2014'}</td>
+                          <td className="px-4 py-3 text-right font-mono tabular-nums text-primary">{order.size}</td>
+                          <td className="px-4 py-3 text-right font-mono tabular-nums text-primary">{order.price}</td>
+                          <td className="px-4 py-3 text-right font-mono tabular-nums text-secondary hidden md:table-cell">{fillRatio(order)}</td>
+                          <td className="px-4 py-3 text-right font-mono tabular-nums text-primary hidden md:table-cell">{order.fillPrice ?? '\u2014'}</td>
                           <td className="px-4 py-3 hidden md:table-cell">
                             <span className="font-mono text-label text-tertiary">{order.orderType}</span>
                           </td>
@@ -1222,7 +1222,7 @@ export function Component() {
               >
                 <ChevronLeft className="size-4" />
               </Button>
-              <span data-testid="page-info" className="text-body-sm font-mono text-secondary" aria-live="polite">Page {page} of {totalPages}</span>
+              <span data-testid="page-info" className="text-body-sm font-mono tabular-nums text-secondary" aria-live="polite">Page {page} of {totalPages}</span>
               <Button
                 type="button"
                 variant="ghost"
@@ -1292,8 +1292,8 @@ export function Component() {
                           <td className="px-4 py-3">
                             <span className="font-mono text-label text-tertiary">{co.marketId.slice(0, 8)}...</span>
                           </td>
-                          <td className="px-4 py-3 text-right font-mono text-primary">{co.triggerPrice}</td>
-                          <td className="px-4 py-3 text-right font-mono text-primary">{co.size}</td>
+                          <td className="px-4 py-3 text-right font-mono tabular-nums text-primary">{co.triggerPrice}</td>
+                          <td className="px-4 py-3 text-right font-mono tabular-nums text-primary">{co.size}</td>
                           <td className="px-4 py-3">
                             <span className={`inline-flex px-2 py-1 rounded-sm text-label font-medium ${
                               co.side === 'BUY' ? 'bg-gain/10 text-gain' : 'bg-loss/10 text-loss'
@@ -1358,7 +1358,7 @@ export function Component() {
               >
                 <ChevronLeft className="size-4" />
               </Button>
-              <span className="text-body-sm font-mono text-secondary" aria-live="polite">Page {condPage} of {condTotalPages}</span>
+              <span className="text-body-sm font-mono tabular-nums text-secondary" aria-live="polite">Page {condPage} of {condTotalPages}</span>
               <Button
                 type="button"
                 variant="ghost"
@@ -1408,11 +1408,11 @@ export function Component() {
             </div>
             <div className="mt-1 flex justify-between gap-3">
               <span className="text-secondary">Size</span>
-              <span className="font-mono text-primary">{pendingCancelOrder.size}</span>
+              <span className="font-mono tabular-nums text-primary">{pendingCancelOrder.size}</span>
             </div>
             <div className="mt-1 flex justify-between gap-3">
               <span className="text-secondary">Price</span>
-              <span className="font-mono text-primary">{pendingCancelOrder.price}</span>
+              <span className="font-mono tabular-nums text-primary">{pendingCancelOrder.price}</span>
             </div>
           </div>
         )}
@@ -1440,7 +1440,7 @@ export function Component() {
             </div>
             <div className="mt-1 flex justify-between gap-3">
               <span className="text-secondary">Trigger</span>
-              <span className="font-mono text-primary">{pendingCancelConditionalOrder.triggerPrice}</span>
+              <span className="font-mono tabular-nums text-primary">{pendingCancelConditionalOrder.triggerPrice}</span>
             </div>
           </div>
         )}
@@ -1469,10 +1469,10 @@ export function Component() {
                     selectedOrder.outcome === 'YES' ? 'bg-gain/10 text-gain' : 'bg-loss/10 text-loss'
                   }`}>{selectedOrder.outcome}</span>
                 )},
-                { label: 'Size', value: <span className="font-mono">{selectedOrder.size}</span> },
-                { label: 'Price', value: <span className="font-mono">{selectedOrder.price}</span> },
-                { label: 'Fill Price', value: <span className="font-mono">{selectedOrder.fillPrice ?? '\u2014'}</span> },
-                { label: 'Filled', value: <span className="font-mono">{fillRatio(selectedOrder)}</span> },
+                { label: 'Size', value: <span className="font-mono tabular-nums">{selectedOrder.size}</span> },
+                { label: 'Price', value: <span className="font-mono tabular-nums">{selectedOrder.price}</span> },
+                { label: 'Fill Price', value: <span className="font-mono tabular-nums">{selectedOrder.fillPrice ?? '\u2014'}</span> },
+                { label: 'Filled', value: <span className="font-mono tabular-nums">{fillRatio(selectedOrder)}</span> },
                 { label: 'Type', value: selectedOrder.orderType },
                 { label: 'Status', value: (() => {
                   const ss = STATUS_STYLES[selectedOrder.status] ?? STATUS_STYLES.PENDING;

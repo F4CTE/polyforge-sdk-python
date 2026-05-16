@@ -713,20 +713,24 @@ model Position {
 }
 
 model PaperOrder {
-  id         String       @id @default(uuid())
-  userId     String
-  strategyId String?
-  marketId   String       @db.VarChar(255)
-  tokenId    String       @db.VarChar(255)
-  side       OrderSide
-  outcome    OrderOutcome
-  size       Decimal      @db.Decimal(20, 6)
-  price      Decimal      @db.Decimal(10, 6)
-  orderType  OrderType
-  status     OrderStatus  @default(CONFIRMED)
-  fillSize   Decimal?     @db.Decimal(20, 6)
-  fillPrice  Decimal?     @db.Decimal(10, 6)
-  createdAt  DateTime     @default(now())
+  id                  String       @id @default(uuid())
+  userId              String
+  strategyId          String?
+  marketId            String       @db.VarChar(255)
+  tokenId             String       @db.VarChar(255)
+  side                OrderSide
+  outcome             OrderOutcome
+  size                Decimal      @db.Decimal(20, 6)
+  price               Decimal      @db.Decimal(10, 6)
+  orderType           OrderType
+  status              OrderStatus  @default(CONFIRMED)
+  fillSize            Decimal?     @db.Decimal(20, 6)
+  fillPrice           Decimal?     @db.Decimal(10, 6)
+  intentId            String       @unique @db.VarChar(128)
+  fillCompletedAt     DateTime?
+  realizedPnl         Decimal      @default(0) @db.Decimal(20, 6)
+  redisEffectsApplied Boolean      @default(false)
+  createdAt           DateTime     @default(now())
 
   user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   strategy Strategy? @relation(fields: [strategyId], references: [id], onDelete: SetNull)

@@ -31,28 +31,30 @@ export default async function globalSetup() {
   }
 
   // Clear invite-only Redis flag and approve all seed users
+  const REDIS_CONTAINER = process.env.E2E_REDIS_CONTAINER || 'polyforge-dev-redis-1';
+  const PG_CONTAINER = process.env.E2E_PG_CONTAINER || 'polyforge-dev-postgres-1';
   try {
-    const { execSync, execFileSync } = await import('child_process');
+    const { execFileSync } = await import('child_process');
 
     const REDIS_PASS = process.env.REDIS_PASSWORD;
 
     if (REDIS_PASS) {
       // Disable invite-only mode (SET to 'false' so the env-var fallback is overridden)
       execFileSync('docker', [
-        'exec', 'polyforge-dev-redis-1',
+        'exec', REDIS_CONTAINER,
         'redis-cli', '-a', REDIS_PASS, 'SET', 'config:invite_only', 'false',
       ], { stdio: 'ignore', timeout: 5000 });
 
       // Set generous beta limits for E2E tests
       execFileSync('docker', [
-        'exec', 'polyforge-dev-redis-1',
+        'exec', REDIS_CONTAINER,
         'redis-cli', '-a', REDIS_PASS, 'SET', 'config:beta_limits',
         '{"maxActiveStrategies":50,"maxConcurrentBacktests":10,"maxBacktestHistoryDays":365,"maxMonthlyVolumeUsdc":1000000,"maxPositionSizeUsdc":50000,"marketDataRateLimitPerMinute":10000,"maxMarketplaceListings":20,"maxDailyStrategyExecutions":10000}',
       ], { stdio: 'ignore', timeout: 5000 });
 
       // Also set per-field keys for individual limit reads
       execFileSync('docker', [
-        'exec', 'polyforge-dev-redis-1',
+        'exec', REDIS_CONTAINER,
         'redis-cli', '-a', REDIS_PASS,
         'MSET',
         'config:beta_limits:max_active_strategies', '50',
@@ -70,23 +72,24 @@ export default async function globalSetup() {
 
     // Approve ALL seed users — safety net in case the seed's updateMany didn't run
     // or the approved column was reset by a migration/rebuild.
-    execSync(
-      `docker exec polyforge-dev-postgres-1 psql -U poly -d polyforge -c "UPDATE users SET approved = true, \\"approvedAt\\" = NOW() WHERE approved = false AND suspended = false"`,
-      { stdio: 'ignore', timeout: 5000 },
-    );
+    execFileSync('docker', [
+      'exec', PG_CONTAINER,
+      'psql', '-U', 'poly', '-d', 'polyforge', '-c',
+      'UPDATE users SET approved = true, "approvedAt" = NOW() WHERE approved = false AND suspended = false',
+    ], { stdio: 'ignore', timeout: 5000 });
 
     // Flush all throttle counters so E2E tests don't hit rate limits.
     // Keys use the format {<hash>:default}:hits and {<hash>:default}:blocked
     // as created by @nest-lab/throttler-storage-redis v1.x.
     if (REDIS_PASS) {
       const throttleKeys = execFileSync('docker', [
-        'exec', 'polyforge-dev-redis-1',
+        'exec', REDIS_CONTAINER,
         'redis-cli', '-a', REDIS_PASS, '--scan', '--pattern', '*:default}:*',
       ], { timeout: 5000 }).toString().trim().split('\n').filter(Boolean);
 
       if (throttleKeys.length > 0) {
         execFileSync('docker', [
-          'exec', 'polyforge-dev-redis-1',
+          'exec', REDIS_CONTAINER,
           'redis-cli', '-a', REDIS_PASS, 'DEL', ...throttleKeys,
         ], { stdio: 'ignore', timeout: 5000 });
       }

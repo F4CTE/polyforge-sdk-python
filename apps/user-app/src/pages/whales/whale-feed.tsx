@@ -91,15 +91,15 @@ function WhaleFeedSkeleton() {
   return (
     <CardSkeleton>
       <div className="flex items-center gap-2">
-        <SkeletonLine h="h-4" w="w-[120px]" />
+        <SkeletonLine h="h-4" w="w-30" />
         <SkeletonBadge w="w-16" className="ml-auto" />
       </div>
-      <SkeletonLine w="w-[80%]" />
+      <SkeletonLine w="w-4/5" />
       <div className="flex gap-2">
         <SkeletonBadge w="w-12" />
         <SkeletonBadge w="w-12" />
       </div>
-      <SkeletonLine w="w-[50%]" />
+      <SkeletonLine w="w-1/2" />
     </CardSkeleton>
   );
 }
@@ -320,7 +320,7 @@ export function Component() {
         </Select>
 
         {/* Wallet search */}
-        <div className="relative flex-1 min-w-[200px] max-w-xs">
+        <div className="relative flex-1 min-w-48 max-w-xs">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-tertiary" />
           <Input
             type="text"
@@ -463,14 +463,14 @@ export function Component() {
 
               {/* Side + Outcome badges */}
               <div className="flex items-center gap-2 mb-3">
-                <span data-testid="transaction-side" className={`px-2 py-1 rounded text-label font-semibold ${
+                <span data-testid="transaction-side" className={`px-2 py-1 rounded-sm text-label font-semibold ${
                   trade.side === 'BUY'
                     ? 'bg-gain-subtle text-gain'
                     : 'bg-loss-subtle text-loss'
                 }`}>
                   {trade.side}
                 </span>
-                <span className={`px-2 py-1 rounded text-label font-semibold ${
+                <span className={`px-2 py-1 rounded-sm text-label font-semibold ${
                   trade.outcome === 'YES'
                     ? 'bg-gain-subtle text-gain'
                     : 'bg-loss-subtle text-loss'
@@ -481,9 +481,9 @@ export function Component() {
 
               {/* Size / Price / Notional */}
               <div className="flex items-center gap-4 text-label text-secondary mb-3">
-                <span data-testid="transaction-amount">Size: <span className="font-mono text-primary">{fmtUsd(trade.size)}</span></span>
-                <span>Price: <span className="font-mono text-primary">{fmtPrice(trade.price)}</span></span>
-                <span>Notional: <span className="font-mono text-primary font-semibold">{fmtUsd(trade.notional)}</span></span>
+                <span data-testid="transaction-amount">Size: <span className="font-mono tabular-nums text-primary">{fmtUsd(trade.size)}</span></span>
+                <span>Price: <span className="font-mono tabular-nums text-primary">{fmtPrice(trade.price)}</span></span>
+                <span>Notional: <span className="font-mono tabular-nums text-primary font-semibold">{fmtUsd(trade.notional)}</span></span>
               </div>
 
               {/* Separator */}
@@ -534,7 +534,7 @@ export function Component() {
           >
             <ChevronLeft className="size-4" />
           </Button>
-          <span data-testid="page-indicator" className="text-body-sm font-mono text-secondary" aria-live="polite">{page} / {totalPages}</span>
+          <span data-testid="page-indicator" className="text-body-sm font-mono tabular-nums text-secondary" aria-live="polite">{page} / {totalPages}</span>
           <Button
             type="button"
             variant="ghost"

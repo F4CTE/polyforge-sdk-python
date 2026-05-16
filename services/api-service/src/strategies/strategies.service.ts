@@ -91,6 +91,27 @@ export class StrategiesService {
       });
     }
 
+    // Reject MAX_POSITION_SIZE in safety — the engine only evaluates it
+    // as a condition (MaxPositionBlock).  It was removed from SAFETY_REGISTRY
+    // to resolve a registry collision; silently accepting it here would
+    // disable the intended stop condition at runtime.
+    if (dto.safety) {
+      for (const block of dto.safety) {
+        if (
+          block?.type === "MAX_POSITION_SIZE" ||
+          (typeof block?.type === "string" &&
+            block.type.toUpperCase() === "MAX_POSITION_SIZE")
+        ) {
+          throw new UnprocessableEntityException({
+            code: "MAX_POSITION_SIZE_IN_SAFETY",
+            message:
+              "MAX_POSITION_SIZE is a condition block, not a safety block. " +
+              "Use EXPOSURE_EXCEEDS for position size safety limits.",
+          });
+        }
+      }
+    }
+
     // Validate block config parameters (stop-loss / take-profit pct)
     for (const blocks of [
       dto.triggers,
@@ -232,8 +253,24 @@ export class StrategiesService {
       data.conditions = dto.conditions as unknown as Prisma.InputJsonValue;
     if (dto.actions !== undefined)
       data.actions = dto.actions as unknown as Prisma.InputJsonValue;
-    if (dto.safety !== undefined)
+    if (dto.safety != null) {
+      // Reject MAX_POSITION_SIZE in safety — same validation as create/import.
+      for (const block of dto.safety) {
+        if (
+          block?.type === "MAX_POSITION_SIZE" ||
+          (typeof block?.type === "string" &&
+            block.type.toUpperCase() === "MAX_POSITION_SIZE")
+        ) {
+          throw new UnprocessableEntityException({
+            code: "MAX_POSITION_SIZE_IN_SAFETY",
+            message:
+              "MAX_POSITION_SIZE is a condition block, not a safety block. " +
+              "Use EXPOSURE_EXCEEDS for position size safety limits.",
+          });
+        }
+      }
       data.safety = dto.safety as unknown as Prisma.InputJsonValue;
+    }
     if (dto.tags !== undefined) data.tags = dto.tags;
     if (dto.canvas !== undefined)
       data.canvas = dto.canvas as unknown as Prisma.InputJsonValue;
@@ -1109,27 +1146,25 @@ export class StrategiesService {
     }
 
     // Reject MAX_POSITION_SIZE in safety — the engine now only evaluates it
-    // as a condition (MaxPositionBlock).  The SAFETY_REGISTRY legacy alias
-    // preserves runtime backward compat for pre-existing persisted strategies.
-    if (Array.isArray(blocks.safety)) {
-      for (const block of blocks.safety) {
-        if (
-          block &&
-          typeof block.type === "string" &&
-          block.type.toUpperCase() === "MAX_POSITION_SIZE"
-        ) {
-          throw new UnprocessableEntityException({
-            code: "IMPORT_MAX_POSITION_SIZE_IN_SAFETY",
-            message:
-              "MAX_POSITION_SIZE must be placed in 'conditions', not 'safety'. Use EXPOSURE_EXCEEDS for a safety circuit breaker.",
-          });
-        }
+    // as a condition (MaxPositionBlock).  Runtime backward compat is handled
+    // by strategy-runner.ts condition-registry fallback.
+    const safetyBlocks = Array.isArray(blocks.safety) ? blocks.safety : [];
+    for (const block of safetyBlocks) {
+      if (
+        block?.type === "MAX_POSITION_SIZE" ||
+        (typeof block?.type === "string" &&
+          block.type.toUpperCase() === "MAX_POSITION_SIZE")
+      ) {
+        throw new UnprocessableEntityException({
+          code: "IMPORT_MAX_POSITION_SIZE_IN_SAFETY",
+          message:
+            "MAX_POSITION_SIZE must be placed in 'conditions', not 'safety'. Use EXPOSURE_EXCEEDS for a safety circuit breaker.",
+        });
       }
     }
 
     // Validate block config parameters (stop-loss / take-profit pct)
     validateBlockConfigs(allBlocks);
-
     // Strip HTML from name/description
     const stripHtml = (str: string) => str.replace(/<[^>]*>/g, "");
     if (s.name) s.name = stripHtml(s.name);

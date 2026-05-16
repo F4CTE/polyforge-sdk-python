@@ -114,7 +114,14 @@ export class RedisService implements OnModuleDestroy {
   async getJson<T>(key: string): Promise<T | null> {
     const value = await this.client.get(key);
     if (!value) return null;
-    return JSON.parse(value) as T;
+    try {
+      return JSON.parse(value) as T;
+    } catch (err) {
+      this.logger.error(`Failed to parse JSON at key "${key}"`, {
+        error: String(err),
+      });
+      return null;
+    }
   }
 
   async setJson<T>(key: string, value: T, ttlSeconds?: number): Promise<void> {
