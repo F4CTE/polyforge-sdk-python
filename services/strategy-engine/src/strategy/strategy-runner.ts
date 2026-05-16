@@ -32,6 +32,15 @@ const MIN_TICK_MS = 200;
 const STALE_PRICE_MS = 5_000;
 const MAX_STALE_CHECK_BACKOFF_MS = 60_000;
 
+/** Legacy safety block types that are handled via CONDITION_REGISTRY fallback.
+ *  These block types were historically placed under safety but are now
+ *  defined only in CONDITION_REGISTRY.  The explicit allowlist prevents
+ *  misconfigured condition-only types (e.g. VENUE_SELECT, minimize_fees)
+ *  from being accepted as safety guards via the fallback path — those
+ *  would return fired=true and turn a fail-closed safety boundary into
+ *  fail-open. */
+const LEGACY_SAFETY_ALIASES = new Set(["MAX_POSITION_SIZE", "max_position"]);
+
 export type StrategyRunnerStatus = "RUNNING" | "PAUSED" | "STOPPED";
 
 export interface Block {
@@ -819,42 +828,50 @@ export class StrategyRunner {
       // the strategy. Skipping an unknown guard could allow a strategy to
       // keep trading without an intended safety stop.
       //
-      // Backward compat: legacy configs may carry MAX_POSITION_SIZE (and
-      // other historically dual-purpose blocks) under safety instead of
-      // conditions. When a safety block type is not in SAFETY_REGISTRY,
-      // fall through to CONDITION_REGISTRY before failing closed. The
-      // condition evaluator is used as a safety guard: if the condition
-      // passes (fired=true), safety passes; if it fails (fired=false),
-      // the strategy is stopped.
+      // Backward compat: MAX_POSITION_SIZE was historically a dual-purpose
+      // block placed under both safety and conditions.  It was moved to
+      // CONDITION_REGISTRY-only, but legacy persisted strategies may still
+      // carry it under safety.  The explicit LEGACY_SAFETY_ALIASES allowlist
+      // evaluates it via CONDITION_REGISTRY as a safety guard: if the
+      // condition passes (fired=true), safety passes; if it fails
+      // (fired=false), the strategy is stopped.
+      //
+      // Restricting the fallback to an explicit allowlist prevents
+      // misconfigured condition-only types (e.g. VENUE_SELECT,
+      // minimize_fees) from being accepted as safety guards via the
+      // fallback path — those would return fired=true and turn a
+      // fail-closed safety boundary into fail-open.
       if (!evaluator) {
-        const fallbackEvaluator = CONDITION_REGISTRY[block.type];
-        if (fallbackEvaluator) {
-          const resolvedBlock = {
-            ...block,
-            params: resolveParams(
-              { ...(block.config ?? {}), ...(block.params ?? {}) },
-              ctx.variables ?? {},
-            ),
-          };
-          const result = await fallbackEvaluator.evaluate(
-            resolvedBlock,
-            ctx,
-            this.redis,
-            this.prisma,
-          );
-          if (!result.fired) {
-            this.stop();
-            await this.onStatusChange("STOPPED", result.reason);
-            await this.prisma.strategy
-              .update({
-                where: { id: this.strategyId },
-                data: { status: StrategyStatus.IDLE },
-              })
-              .catch(() => {});
-            await this.emitStrategyEvent("STRATEGY_STOPPED", result.reason);
-            return;
+        if (LEGACY_SAFETY_ALIASES.has(block.type)) {
+          const fallbackEvaluator = CONDITION_REGISTRY[block.type];
+          if (fallbackEvaluator) {
+            const resolvedBlock = {
+              ...block,
+              params: resolveParams(
+                { ...(block.config ?? {}), ...(block.params ?? {}) },
+                ctx.variables ?? {},
+              ),
+            };
+            const result = await fallbackEvaluator.evaluate(
+              resolvedBlock,
+              ctx,
+              this.redis,
+              this.prisma,
+            );
+            if (!result.fired) {
+              this.stop();
+              await this.onStatusChange("STOPPED", result.reason);
+              await this.prisma.strategy
+                .update({
+                  where: { id: this.strategyId },
+                  data: { status: StrategyStatus.IDLE },
+                })
+                .catch(() => {});
+              await this.emitStrategyEvent("STRATEGY_STOPPED", result.reason);
+              return;
+            }
+            continue;
           }
-          continue;
         }
 
         this.stop();

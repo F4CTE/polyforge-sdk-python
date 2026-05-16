@@ -101,8 +101,11 @@ export const SAFETY_REGISTRY: Record<string, BlockEvaluator> = {
   pause_after_fill: PauseAfterFillBlock,
   // MAX_POSITION_SIZE / max_position intentionally left in CONDITION_REGISTRY only.
   // Legacy configs that carry it under safety are handled by strategy-runner.ts
-  // which falls through to CONDITION_REGISTRY when a safety block type isn't found
-  // in SAFETY_REGISTRY, evaluating the condition as a safety guard.
+  // via LEGACY_SAFETY_ALIASES — an explicit allowlist that evaluates the
+  // CONDITION_REGISTRY entry as a safety guard (fired=true → pass, fired=false
+  // → stop).  Only known legacy safety types are allowed; unrecognized types
+  // fail closed to prevent misconfigured condition-only types from bypassing
+  // the safety boundary.
   max_orders_total: MaxOrdersTotalBlock,
 };
 
