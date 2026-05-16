@@ -113,7 +113,7 @@ class Market:
     id: str = ""
     title: str = ""
     # Deprecated — kept in place for positional constructor compat
-    symbol: str = ""
+    symbol: str | None = None
     category: str = ""
     tokens: list[Token] = field(default_factory=list)
     price: float = 0.0
@@ -122,7 +122,7 @@ class Market:
     liquidity: float = 0.0
     created_at: str = ""
     # Deprecated — kept in place for positional constructor compat
-    updated_at: str = ""
+    updated_at: str | None = None
     description: str | None = None
     end_date: str | None = None
     resolved: bool = False
@@ -1348,7 +1348,7 @@ class BulkCancelError:
 
 @dataclass
 class BulkCancelResult:
-    """Response from DELETE /api/v1/orders/bulk."""
+    """Response from POST /api/v1/orders/bulk."""
 
     cancelled: list[str] = field(default_factory=list)
     errors: list[BulkCancelError] = field(default_factory=list)
@@ -1782,10 +1782,10 @@ class JournalEntry:
 
 @dataclass
 class SystemHealthPublic:
-    """Public health response for GET /health (unauthenticated).
+    """Public health/status response for GET /health (unauthenticated).
 
-    Returns only public status information; operational internals
-    (DB, Redis, queue depth, internal services) are not exposed.
+    Returns only public-facing status fields. Operational internals
+    (DB, Redis, queue, services) are not exposed on this endpoint.
     """
 
     status: str = ""
