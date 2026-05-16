@@ -7448,6 +7448,78 @@ class TestMiscUtilityEnumValidation:
         finally:
             client.close()
 
+    def test_vote_market_sentiment_rejects_invalid_direction(self):
+        client = PolyforgeClient(api_key="test")
+        try:
+            with pytest.raises(ValueError, match="direction"):
+                client.vote_market_sentiment(
+                    "m1", direction="HOLD", confidence=50,
+                )
+        finally:
+            client.close()
+
+    def test_vote_market_sentiment_rejects_bool_confidence(self):
+        client = PolyforgeClient(api_key="test")
+        try:
+            with pytest.raises(TypeError, match="number"):
+                client.vote_market_sentiment(
+                    "m1", direction="BUY", confidence=True,
+                )
+        finally:
+            client.close()
+
+    def test_vote_market_sentiment_rejects_nan_confidence(self):
+        client = PolyforgeClient(api_key="test")
+        try:
+            with pytest.raises(ValueError, match="NaN"):
+                client.vote_market_sentiment(
+                    "m1", direction="BUY", confidence=float("nan"),
+                )
+        finally:
+            client.close()
+
+    def test_vote_market_sentiment_rejects_inf_confidence(self):
+        client = PolyforgeClient(api_key="test")
+        try:
+            with pytest.raises(ValueError, match="Infinity"):
+                client.vote_market_sentiment(
+                    "m1", direction="BUY", confidence=float("inf"),
+                )
+        finally:
+            client.close()
+
+    def test_vote_market_sentiment_rejects_negative_confidence(self):
+        client = PolyforgeClient(api_key="test")
+        try:
+            with pytest.raises(ValueError, match="non-negative"):
+                client.vote_market_sentiment(
+                    "m1", direction="BUY", confidence=-1,
+                )
+        finally:
+            client.close()
+
+    def test_vote_market_sentiment_rejects_confidence_above_100(self):
+        client = PolyforgeClient(api_key="test")
+        try:
+            with pytest.raises(ValueError, match="exceed 100"):
+                client.vote_market_sentiment(
+                    "m1", direction="SELL", confidence=101,
+                )
+        finally:
+            client.close()
+
+    def test_vote_market_sentiment_rejects_huge_int_confidence(self):
+        """math.isnan/isinf on huge ints raises OverflowError — range check
+        must fire first to avoid a low-level exception."""
+        client = PolyforgeClient(api_key="test")
+        try:
+            with pytest.raises(ValueError, match="exceed 100"):
+                client.vote_market_sentiment(
+                    "m1", direction="BUY", confidence=10**400,
+                )
+        finally:
+            client.close()
+
     def test_accuracy_leaderboard_invalid_period_rejected(self):
         client = PolyforgeClient(api_key="test")
         try:
@@ -7770,11 +7842,14 @@ class TestMiscUtilityEndpointRoundtrips:
 
         def handler(request):
             captured["method"] = request.method
-            if request.content:
+            captured["raw_path"] = request.url.raw_path
+            try:
                 captured["body"] = json.loads(request.content)
+            except Exception:
+                captured["body"] = request.content
             return httpx.Response(200, json={
                 "yesPercent": 60, "noPercent": 40, "totalVotes": 5,
-                "userVote": {"direction": "BUY", "confidence": 0.8},
+                "userVote": {"direction": "BUY", "confidence": 85},
             })
         client = self._client_with(handler)
         try:
@@ -7783,10 +7858,14 @@ class TestMiscUtilityEndpointRoundtrips:
             assert report.user_vote is not None
             assert report.user_vote.direction == "BUY"
 
-            voted = client.vote_market_sentiment("m1", direction="BUY", confidence=80)
+            voted = client.vote_market_sentiment(
+                "m1", direction="BUY", confidence=85,
+            )
             assert captured["method"] == "POST"
-            assert captured["body"] == {"direction": "BUY", "confidence": 80}
+            assert captured["body"] == {"direction": "BUY", "confidence": 85}
             assert voted.total_votes == 5
+            assert voted.user_vote is not None
+            assert voted.user_vote.confidence == 85
         finally:
             client.close()
 
