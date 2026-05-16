@@ -3743,6 +3743,7 @@ class TestNewModels:
         assert trade.pnl == ""
 
 
+
 class TestStrategySocialVersioningEventLog:
     """Tests for strategy social, versioning, event-log methods (#124)."""
 
@@ -4464,6 +4465,7 @@ class TestNewModelsPOLA476:
 
     def test_new_models_exported_from_package(self):
         from polyforge import (
+            AccuracyLeaderboardEntry,
             Badge,
             BatchOrderItem,
             BatchOrderResult,
@@ -4481,6 +4483,7 @@ class TestNewModelsPOLA476:
             TopTraderEntry,
         )
         assert all(m is not None for m in [
+            AccuracyLeaderboardEntry,
             Badge, BatchOrderItem, BatchOrderResult, BulkCancelError, BulkCancelResult,
             ClobBook, ClobPriceHistory, MidpointInfo, NewsArticle,
             PolymarketActivity, PolymarketEarningsEntry, PolymarketPortfolioEntry,
@@ -4540,6 +4543,18 @@ class TestNewModelsPOLA476:
         assert entry.username == "trader1"
         assert entry.display_name == "Trader One"
         assert entry.total_trades == 250
+
+    def test_accuracy_leaderboard_entry_defaults(self):
+        from polyforge.models import AccuracyLeaderboardEntry
+        entry = AccuracyLeaderboardEntry()
+        assert entry.rank == 0
+        assert entry.user_id == ""
+        assert entry.username == ""
+        assert entry.display_name is None
+        assert entry.avatar_url is None
+        assert entry.pnl == ""
+        assert entry.win_rate == ""
+        assert entry.trade_count == 0
 
 
 class TestRedeemPosition:
@@ -7263,6 +7278,9 @@ class TestMiscUtilityEndpointPaths:
     def test_get_accuracy_overview_path(self):
         assert '"/api/v1/accuracy"' in self._src(PolyforgeClient.get_accuracy_overview)
 
+    def test_get_accuracy_leaderboard_path(self):
+        assert '"/api/v1/accuracy/leaderboard"' in self._src(PolyforgeClient.get_accuracy_leaderboard)
+
     def test_get_feed_path(self):
         assert '"/api/v1/feed"' in self._src(PolyforgeClient.get_feed)
 
@@ -7424,6 +7442,67 @@ class TestMiscUtilityEnumValidation:
                 client.lookup_combo_market("col", [{"ticker": "T1", "outcome": "buy"}])
             with pytest.raises(TypeError, match="dict"):
                 client.lookup_combo_market("col", ["not-a-dict"])  # type: ignore[list-item]
+        finally:
+            client.close()
+
+    def test_accuracy_leaderboard_invalid_period_rejected(self):
+        client = PolyforgeClient(api_key="test")
+        try:
+            with pytest.raises(ValueError, match="period"):
+                client.get_accuracy_leaderboard(period="1d")
+        finally:
+            client.close()
+
+    def test_accuracy_leaderboard_negative_offset_rejected(self):
+        client = PolyforgeClient(api_key="test")
+        try:
+            with pytest.raises(ValueError, match="offset must be >= 0"):
+                client.get_accuracy_leaderboard(offset=-5)
+        finally:
+            client.close()
+
+    def test_accuracy_leaderboard_non_aligned_offset_rejected(self):
+        client = PolyforgeClient(api_key="test")
+        try:
+            with pytest.raises(ValueError, match="must be a multiple of limit"):
+                client.get_accuracy_leaderboard(offset=7, limit=10)
+        finally:
+            client.close()
+
+    def test_accuracy_leaderboard_non_positive_limit_with_offset_rejected(self):
+        client = PolyforgeClient(api_key="test")
+        try:
+            with pytest.raises(ValueError, match="limit must be >= 1"):
+                client.get_accuracy_leaderboard(offset=0, limit=0)
+        finally:
+            client.close()
+
+    def test_accuracy_leaderboard_non_positive_limit_without_offset_rejected(self):
+        client = PolyforgeClient(api_key="test")
+        try:
+            with pytest.raises(ValueError, match="limit must be >= 1"):
+                client.get_accuracy_leaderboard(limit=0)
+        finally:
+            client.close()
+
+    def test_accuracy_leaderboard_offset_without_limit_uses_default_limit(self):
+        def handler(request):
+            assert request.url.path == "/api/v1/accuracy/leaderboard"
+            assert request.url.params.get("page") == "2"
+            assert request.url.params.get("limit") == "20"
+            return httpx.Response(200, json={"data": [], "total": 0, "page": 2, "limit": 20})
+
+        transport = httpx.MockTransport(handler)
+        client = PolyforgeClient(api_key="test", api_url="http://localhost:9999")
+        client._client = httpx.Client(
+            base_url="http://localhost:9999",
+            headers={"Authorization": "Bearer test"},
+            transport=transport,
+        )
+        try:
+            result = client.get_accuracy_leaderboard(offset=20)
+            assert result.page == 2
+            assert result.limit == 20
         finally:
             client.close()
 
@@ -7817,6 +7896,43 @@ class TestMiscUtilityEndpointRoundtrips:
         finally:
             client.close()
 
+    def test_get_accuracy_leaderboard_parses_payload(self):
+        def handler(request):
+            assert request.url.path == "/api/v1/accuracy/leaderboard"
+            return httpx.Response(200, json={
+                "data": [
+                    {
+                        "rank": 1, "userId": "user-1", "username": "trader1",
+                        "displayName": "Trader One", "avatarUrl": "https://img/1.png",
+                        "pnl": "1500.42", "winRate": "0.85", "tradeCount": 340,
+                    },
+                    {
+                        "rank": 2, "userId": "user-2", "username": "trader2",
+                        "displayName": None, "avatarUrl": None,
+                        "pnl": "890.10", "winRate": "0.72", "tradeCount": 150,
+                    },
+                ],
+                "total": 2, "page": 1, "limit": 20,
+                "totalPages": 1, "hasNext": False,
+            })
+        client = self._client_with(handler)
+        try:
+            result = client.get_accuracy_leaderboard()
+            assert result.total == 2
+            assert len(result.data) == 2
+            assert result.data[0].rank == 1
+            assert result.data[0].user_id == "user-1"
+            assert result.data[0].username == "trader1"
+            assert result.data[0].display_name == "Trader One"
+            assert result.data[0].avatar_url == "https://img/1.png"
+            assert result.data[0].pnl == "1500.42"
+            assert result.data[0].win_rate == "0.85"
+            assert result.data[0].trade_count == 340
+            assert result.data[1].display_name is None
+            assert result.data[1].avatar_url is None
+        finally:
+            client.close()
+
 
 class TestMiscUtilityEndpointsAsync:
     """Smoke-check that the async client mirrors the sync surface end-to-end."""
@@ -7946,6 +8062,120 @@ class TestMiscUtilityEndpointsAsync:
                 assert res.data[0].mood == "DISCIPLINED"
                 assert res.data[0].id == "ord-1"
                 assert res.data[0].note == "plan"
+            finally:
+                await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_get_accuracy_leaderboard_parses_payload(self):
+        import asyncio
+
+        def handler(request):
+            assert request.url.path == "/api/v1/accuracy/leaderboard"
+            return httpx.Response(200, json={
+                "data": [
+                    {
+                        "rank": 1, "userId": "u1", "username": "t1",
+                        "displayName": "T1", "avatarUrl": None,
+                        "pnl": "500.00", "winRate": "0.75", "tradeCount": 100,
+                    },
+                ],
+                "total": 1, "page": 1, "limit": 20,
+                "totalPages": 1, "hasNext": False,
+            })
+
+        async def _run():
+            client = self._async_client_with(handler)
+            try:
+                result = await client.get_accuracy_leaderboard(period="7d", limit=10)
+                assert result.total == 1
+                assert result.data[0].rank == 1
+                assert result.data[0].pnl == "500.00"
+            finally:
+                await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_accuracy_leaderboard_invalid_period_rejected(self):
+        import asyncio
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test")
+            try:
+                with pytest.raises(ValueError, match="period"):
+                    await client.get_accuracy_leaderboard(period="1d")
+            finally:
+                await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_accuracy_leaderboard_negative_offset_rejected(self):
+        import asyncio
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test")
+            try:
+                with pytest.raises(ValueError, match="offset must be >= 0"):
+                    await client.get_accuracy_leaderboard(offset=-5)
+            finally:
+                await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_accuracy_leaderboard_non_aligned_offset_rejected(self):
+        import asyncio
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test")
+            try:
+                with pytest.raises(ValueError, match="must be a multiple of limit"):
+                    await client.get_accuracy_leaderboard(offset=7, limit=10)
+            finally:
+                await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_accuracy_leaderboard_non_positive_limit_with_offset_rejected(self):
+        import asyncio
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test")
+            try:
+                with pytest.raises(ValueError, match="limit must be >= 1"):
+                    await client.get_accuracy_leaderboard(offset=0, limit=0)
+            finally:
+                await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_accuracy_leaderboard_non_positive_limit_without_offset_rejected(self):
+        import asyncio
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test")
+            try:
+                with pytest.raises(ValueError, match="limit must be >= 1"):
+                    await client.get_accuracy_leaderboard(limit=0)
+            finally:
+                await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_accuracy_leaderboard_offset_without_limit_uses_default_limit(self):
+        import asyncio
+
+        def handler(request):
+            assert request.url.path == "/api/v1/accuracy/leaderboard"
+            assert request.url.params.get("page") == "2"
+            assert request.url.params.get("limit") == "20"
+            return httpx.Response(200, json={"data": [], "total": 0, "page": 2, "limit": 20})
+
+        async def _run():
+            client = self._async_client_with(handler)
+            try:
+                result = await client.get_accuracy_leaderboard(offset=20)
+                assert result.page == 2
+                assert result.limit == 20
             finally:
                 await client.close()
 
