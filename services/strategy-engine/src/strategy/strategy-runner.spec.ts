@@ -1835,16 +1835,13 @@ describe("StrategyRunner — concurrent tick serialization", () => {
       //
       // In a multi-instance deployment where every instance receives the
       // same price event, the instance that won the lock is already
-      // evaluating the event.  Retrying here would cause the losing
-      // instance to re-evaluate the same data after the winner releases
-      // the lock, producing duplicate order intents and sub-strategy
-      // launches that defeat the mutex.
-      //
-      // The losing instance must NOT schedule a retry — instead it relies
-      // on the next external price event to trigger a fresh evaluation.
-      // The interval timer (HYBRID/TICK mode) or the pendingTick coalescing
-      // path still provide retry coverage for legitimate lock misses.
+      // evaluating the event.  The losing instance schedules a one-shot
+      // crash-recovery retry after the lock TTL (10s + 1-2s jitter).
+      // When the retry fires, it GETs the lock key.  If the key still
+      // exists (holder is alive and refreshing), the retry becomes a
+      // no-op — no duplicate evaluation.
       let setCallCount = 0;
+      let getCallCount = 0;
       const client = {
         lrange: vi.fn().mockResolvedValue([]),
         mget: vi
@@ -1861,6 +1858,12 @@ describe("StrategyRunner — concurrent tick serialization", () => {
         }),
         del: vi.fn().mockResolvedValue(1),
         eval: vi.fn().mockResolvedValue(1),
+        // Lock key exists — the holder is alive and refreshing.
+        // The crash-recovery guard sees this and skips the retry.
+        get: vi.fn().mockImplementation(() => {
+          getCallCount++;
+          return Promise.resolve("alive-holder-token");
+        }),
       };
       const redis = makeRedis({ getClient: vi.fn().mockReturnValue(client) });
       const state = makeState();
@@ -1878,25 +1881,88 @@ describe("StrategyRunner — concurrent tick serialization", () => {
       // No evaluation — lock was not acquired.
       expect(state.getStateAndPrices).not.toHaveBeenCalled();
 
-      // Advance well past the 200ms retry backoff window and the
-      // potential 10-12s crash-recovery retry window.  No retry of any
-      // kind should have been scheduled — the winning instance handles
-      // the event, and EVENT-mode losers with no coalesced pendingTick
-      // must not schedule a crash-recovery retry that would replay an
-      // already-handled tick after normal contention.
+      // Advance past the crash-recovery retry window (10-12s).
+      // The crash-recovery guard fires, GETs the lock key, sees it
+      // exists (holder alive) → no retry evaluation.
       await vi.advanceTimersByTimeAsync(15_000);
 
-      // Still no evaluation — the losing instance is silent.
+      // Still no evaluation — the losing instance is silent (holder alive).
       expect(state.getStateAndPrices).not.toHaveBeenCalled();
 
+      // The crash-recovery guard checked the lock key.
+      expect(client.get).toHaveBeenCalledTimes(1);
+
       // SET should have been called exactly once (the original lock miss).
-      // No crash-recovery retry was scheduled.
       expect(client.set).toHaveBeenCalledTimes(1);
 
       // tickInFlight should be reset so the next real event can proceed.
       // Fire a fresh price event — this one should succeed.
       client.set.mockResolvedValue("OK");
       await runner.onPriceEvent("tok2", 0.55);
+      expect(state.getStateAndPrices).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("EVENT-mode crash-recovery retry fires when lock holder crashed (POLA-5150)", async () => {
+    vi.useFakeTimers();
+    try {
+      // EVENT-mode tick: SET NX fails because another instance holds the
+      // lock.  The losing instance schedules a crash-recovery retry after
+      // the lock TTL (10s + 1-2s jitter).  When the retry fires, it GETs
+      // the lock key.  If the key is absent (lock expired → holder
+      // crashed), the retry re-enters tick() to evaluate the pending event
+      // that would otherwise be permanently missed.
+      let setCallCount = 0;
+      const client = {
+        lrange: vi.fn().mockResolvedValue([]),
+        mget: vi
+          .fn()
+          .mockResolvedValue([
+            JSON.stringify({ price: 0.5, timestamp: Date.now() }),
+          ]),
+        incr: vi.fn().mockResolvedValue(1),
+        expire: vi.fn().mockResolvedValue(1),
+        set: vi.fn().mockImplementation(() => {
+          setCallCount++;
+          if (setCallCount === 1) {
+            // First SET NX: lock held by another instance.
+            return Promise.resolve(null);
+          }
+          // Retry SET NX: lock expired, acquire succeeds.
+          return Promise.resolve("OK");
+        }),
+        del: vi.fn().mockResolvedValue(1),
+        eval: vi.fn().mockResolvedValue(1),
+        // Lock key is absent → the holder crashed and the TTL expired.
+        get: vi.fn().mockResolvedValue(null),
+      };
+      const redis = makeRedis({ getClient: vi.fn().mockReturnValue(client) });
+      const state = makeState();
+      state.getStateAndPrices.mockResolvedValue({
+        state: { ...DEFAULT_STATE },
+        prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]),
+      });
+      const runner = makeRunner({ execMode: "EVENT", state, redis });
+
+      // Fire the tick — SET NX fails, lockAcquired=false,
+      // pendingTick=false, execMode=EVENT → schedules crash-recovery retry.
+      const tickPromise = runner.onPriceEvent("tok1", 0.5);
+      await tickPromise;
+
+      // No evaluation yet — lock was not acquired.
+      expect(state.getStateAndPrices).not.toHaveBeenCalled();
+
+      // Advance past the crash-recovery retry window (10-12s).
+      // The retry fires, GETs the lock key → null → lock expired →
+      // re-enters tick(), SET NX succeeds → evaluate() runs.
+      await vi.advanceTimersByTimeAsync(15_000);
+
+      // The crash-recovery guard checked the lock key.
+      expect(client.get).toHaveBeenCalledTimes(1);
+
+      // Evaluation ran after the crash-recovery retry acquired the lock.
       expect(state.getStateAndPrices).toHaveBeenCalledTimes(1);
     } finally {
       vi.useRealTimers();

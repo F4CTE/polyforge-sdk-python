@@ -562,12 +562,50 @@ export class StrategyRunner {
               })
               .catch(() => {});
           }
-        } else if (this.execMode === "HYBRID" && this.followUpTimer === null) {
-          this.followUpTimer = setTimeout(() => {
-            this.followUpTimer = null;
-            this.scheduledFollowUp = true;
-            void this.tick();
-          }, 200);
+        } else if (
+          (this.execMode === "HYBRID" || this.execMode === "EVENT") &&
+          this.followUpTimer === null
+        ) {
+          if (this.execMode === "HYBRID") {
+            this.followUpTimer = setTimeout(() => {
+              this.followUpTimer = null;
+              this.scheduledFollowUp = true;
+              void this.tick();
+            }, 200);
+          } else {
+            // EVENT-mode crash-recovery: when SET NX fails and
+            // pendingRedisUnlock is null, the lock is genuinely held by
+            // another instance.  If that instance crashes without releasing
+            // the lock, the lock key expires after the TTL (10s) and no
+            // price event is guaranteed to arrive.
+            //
+            // Schedule a one-shot retry after the TTL + jitter (1-2s).
+            // Before re-entering tick(), GET the lock key to distinguish
+            // between a live holder (key exists → skip, no duplicate eval)
+            // and a crashed holder (key expired → safe to re-evaluate).
+            //
+            // This avoids the duplicate-evaluation problem: in normal
+            // multi-instance contention the winner refreshes the key every
+            // 5s, so the key still exists after 12s and the retry is a
+            // no-op.
+            const lockTTL = 10_000;
+            const jitter = 1_000 + Math.floor(Math.random() * 2_000);
+            const lockKey = `lock:tick:${this.strategyId}`;
+            this.followUpTimer = setTimeout(() => {
+              this.followUpTimer = null;
+              try {
+                const redisClient = this.redis.getClient();
+                redisClient.get(lockKey).then((val: string | null) => {
+                  if (val === null && this.status === "RUNNING") {
+                    this.scheduledFollowUp = true;
+                    void this.tick();
+                  }
+                }).catch(() => {});
+              } catch {
+                // .get may not be available on test mocks — skip.
+              }
+            }, lockTTL + jitter);
+          }
         }
       }
 
@@ -780,7 +818,45 @@ export class StrategyRunner {
       // Fail closed: unknown / unregistered safety block types must stop
       // the strategy. Skipping an unknown guard could allow a strategy to
       // keep trading without an intended safety stop.
+      //
+      // Backward compat: legacy configs may carry MAX_POSITION_SIZE (and
+      // other historically dual-purpose blocks) under safety instead of
+      // conditions. When a safety block type is not in SAFETY_REGISTRY,
+      // fall through to CONDITION_REGISTRY before failing closed. The
+      // condition evaluator is used as a safety guard: if the condition
+      // passes (fired=true), safety passes; if it fails (fired=false),
+      // the strategy is stopped.
       if (!evaluator) {
+        const fallbackEvaluator = CONDITION_REGISTRY[block.type];
+        if (fallbackEvaluator) {
+          const resolvedBlock = {
+            ...block,
+            params: resolveParams(
+              { ...(block.config ?? {}), ...(block.params ?? {}) },
+              ctx.variables ?? {},
+            ),
+          };
+          const result = await fallbackEvaluator.evaluate(
+            resolvedBlock,
+            ctx,
+            this.redis,
+            this.prisma,
+          );
+          if (!result.fired) {
+            this.stop();
+            await this.onStatusChange("STOPPED", result.reason);
+            await this.prisma.strategy
+              .update({
+                where: { id: this.strategyId },
+                data: { status: StrategyStatus.IDLE },
+              })
+              .catch(() => {});
+            await this.emitStrategyEvent("STRATEGY_STOPPED", result.reason);
+            return;
+          }
+          continue;
+        }
+
         this.stop();
         await this.onStatusChange(
           "STOPPED",
