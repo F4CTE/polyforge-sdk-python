@@ -106,12 +106,9 @@ export class StrategyRunner {
    *  vs. another instance holding the lock (multi-instance dedup). */
   private pendingRedisUnlock: Promise<unknown> | null = null;
 
-  /** Tracks which pendingRedisUnlock promise already has a chained retry
-   *  scheduled on it.  Used as a one-shot guard so only one retry is
-   *  chained per pendingRedisUnlock instance — preventing duplicate
-   *  tick() calls when multiple ticks queue up behind the same in-flight
-   *  unlock. */
-  private pendingRedisUnlockRetry: Promise<unknown> | null = null;
+  /** One-shot guard so only one EVENT retry is chained while waiting on
+   *  the current local pendingRedisUnlock to finish. */
+  private pendingRedisUnlockRetryArmed = false;
 
   /** Tracks child strategy IDs launched by RUN_STRATEGY action blocks */
   readonly childStrategies: Set<string> = new Set();
@@ -504,16 +501,18 @@ export class StrategyRunner {
           // gates the lower retry branch.  Without this clause the
           // coalesced events would be silently dropped: no retry fires
           // and no fresh price event is guaranteed to arrive.
-          // One-shot guard: only chain one retry per pendingRedisUnlock
-          // promise instance.  Without this guard, multiple ticks that
+          // One-shot guard: only chain one retry while waiting on our
+          // current pendingRedisUnlock.  Without this guard, multiple ticks that
           // fail SET NX behind the same in-flight unlock would each
           // attach a .finally() callback, firing duplicate tick() calls
           // when the unlock finally completes.
-          if (this.pendingRedisUnlock !== this.pendingRedisUnlockRetry) {
-            this.pendingRedisUnlockRetry = this.pendingRedisUnlock;
+          if (!this.pendingRedisUnlockRetryArmed) {
+            this.pendingRedisUnlockRetryArmed = true;
+            const pendingUnlock = this.pendingRedisUnlock;
             if (this.followUpTimer) clearTimeout(this.followUpTimer);
-            void this.pendingRedisUnlock
+            void pendingUnlock
               .finally(() => {
+                this.pendingRedisUnlockRetryArmed = false;
                 if (this.status === "RUNNING") {
                   this.scheduledFollowUp = true;
                   void this.tick();
@@ -553,17 +552,18 @@ export class StrategyRunner {
         // pendingRedisUnlock is non-null and we MUST retry once the
         // unlock completes — otherwise the event is silently dropped.
         if (this.pendingRedisUnlock) {
-          // One-shot guard: only chain one retry per pendingRedisUnlock
-          // promise instance (same rationale as the pendingTick branch
-          // above).
-          if (this.pendingRedisUnlock !== this.pendingRedisUnlockRetry) {
-            this.pendingRedisUnlockRetry = this.pendingRedisUnlock;
+          // One-shot guard: only chain one retry while waiting on our
+          // current pendingRedisUnlock (same rationale as pendingTick branch above).
+          if (!this.pendingRedisUnlockRetryArmed) {
+            this.pendingRedisUnlockRetryArmed = true;
+            const pendingUnlock = this.pendingRedisUnlock;
             // Bypass the min-tick throttle when the retry fires so the
             // evaluation is not blocked by lastTickMs having been advanced
             // by the failed tick itself.
             if (this.followUpTimer) clearTimeout(this.followUpTimer);
-            void this.pendingRedisUnlock
+            void pendingUnlock
               .finally(() => {
+                this.pendingRedisUnlockRetryArmed = false;
                 if (this.status === "RUNNING") {
                   this.scheduledFollowUp = true;
                   void this.tick();
@@ -571,50 +571,12 @@ export class StrategyRunner {
               })
               .catch(() => {});
           }
-        } else if (
-          (this.execMode === "HYBRID" || this.execMode === "EVENT") &&
-          this.followUpTimer === null
-        ) {
-          if (this.execMode === "HYBRID") {
-            this.followUpTimer = setTimeout(() => {
-              this.followUpTimer = null;
-              this.scheduledFollowUp = true;
-              void this.tick();
-            }, 200);
-          } else {
-            // EVENT-mode crash-recovery: when SET NX fails and
-            // pendingRedisUnlock is null, the lock is genuinely held by
-            // another instance.  If that instance crashes without releasing
-            // the lock, the lock key expires after the TTL (10s) and no
-            // price event is guaranteed to arrive.
-            //
-            // Schedule a one-shot retry after the TTL + jitter (1-2s).
-            // Before re-entering tick(), GET the lock key to distinguish
-            // between a live holder (key exists → skip, no duplicate eval)
-            // and a crashed holder (key expired → safe to re-evaluate).
-            //
-            // This avoids the duplicate-evaluation problem: in normal
-            // multi-instance contention the winner refreshes the key every
-            // 5s, so the key still exists after 12s and the retry is a
-            // no-op.
-            const lockTTL = 10_000;
-            const jitter = 1_000 + Math.floor(Math.random() * 2_000);
-            const lockKey = `lock:tick:${this.strategyId}`;
-            this.followUpTimer = setTimeout(() => {
-              this.followUpTimer = null;
-              try {
-                const redisClient = this.redis.getClient();
-                redisClient.get(lockKey).then((val: string | null) => {
-                  if (val === null && this.status === "RUNNING") {
-                    this.scheduledFollowUp = true;
-                    void this.tick();
-                  }
-                }).catch(() => {});
-              } catch {
-                // .get may not be available on test mocks — skip.
-              }
-            }, lockTTL + jitter);
-          }
+        } else if (this.execMode === "HYBRID" && this.followUpTimer === null) {
+          this.followUpTimer = setTimeout(() => {
+            this.followUpTimer = null;
+            this.scheduledFollowUp = true;
+            void this.tick();
+          }, 200);
         }
       }
 

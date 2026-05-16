@@ -2139,8 +2139,8 @@ describe("StrategyRunner — concurrent tick serialization", () => {
       // Still no evaluation — the losing instance is silent (holder alive).
       expect(state.getStateAndPrices).not.toHaveBeenCalled();
 
-      // The crash-recovery guard checked the lock key.
-      expect(client.get).toHaveBeenCalledTimes(1);
+      // EVENT lock-miss path no longer performs delayed crash-recovery probing.
+      expect(client.get).not.toHaveBeenCalled();
 
       // SET should have been called exactly once (the original lock miss).
       expect(client.set).toHaveBeenCalledTimes(1);
@@ -2155,15 +2155,13 @@ describe("StrategyRunner — concurrent tick serialization", () => {
     }
   });
 
-  it("EVENT-mode crash-recovery retry fires when lock holder crashed (POLA-5150)", async () => {
+  it("EVENT-mode lock miss does not self-retry when remote holder disappears (POLA-5150)", async () => {
     vi.useFakeTimers();
     try {
       // EVENT-mode tick: SET NX fails because another instance holds the
-      // lock.  The losing instance schedules a crash-recovery retry after
-      // the lock TTL (10s + 1-2s jitter).  When the retry fires, it GETs
-      // the lock key.  If the key is absent (lock expired → holder
-      // crashed), the retry re-enters tick() to evaluate the pending event
-      // that would otherwise be permanently missed.
+      // lock. The losing instance must not schedule a delayed self-retry,
+      // even if the remote lock later disappears, because that can replay
+      // already-handled events and duplicate side effects.
       let setCallCount = 0;
       const client = {
         lrange: vi.fn().mockResolvedValue([]),
@@ -2176,16 +2174,12 @@ describe("StrategyRunner — concurrent tick serialization", () => {
         expire: vi.fn().mockResolvedValue(1),
         set: vi.fn().mockImplementation(() => {
           setCallCount++;
-          if (setCallCount === 1) {
-            // First SET NX: lock held by another instance.
-            return Promise.resolve(null);
-          }
-          // Retry SET NX: lock expired, acquire succeeds.
-          return Promise.resolve("OK");
+          // Lock held by another instance for the original event.
+          return Promise.resolve(null);
         }),
         del: vi.fn().mockResolvedValue(1),
         eval: vi.fn().mockResolvedValue(1),
-        // Lock key is absent → the holder crashed and the TTL expired.
+        // Lock key is absent after TTL.
         get: vi.fn().mockResolvedValue(null),
       };
       const redis = makeRedis({ getClient: vi.fn().mockReturnValue(client) });
@@ -2197,22 +2191,24 @@ describe("StrategyRunner — concurrent tick serialization", () => {
       const runner = makeRunner({ execMode: "EVENT", state, redis });
 
       // Fire the tick — SET NX fails, lockAcquired=false,
-      // pendingTick=false, execMode=EVENT → schedules crash-recovery retry.
+      // pendingTick=false, execMode=EVENT.
       const tickPromise = runner.onPriceEvent("tok1", 0.5);
       await tickPromise;
 
       // No evaluation yet — lock was not acquired.
       expect(state.getStateAndPrices).not.toHaveBeenCalled();
 
-      // Advance past the crash-recovery retry window (10-12s).
-      // The retry fires, GETs the lock key → null → lock expired →
-      // re-enters tick(), SET NX succeeds → evaluate() runs.
+      // Advance well past the old retry window; no retry should fire.
       await vi.advanceTimersByTimeAsync(15_000);
 
-      // The crash-recovery guard checked the lock key.
-      expect(client.get).toHaveBeenCalledTimes(1);
+      // No lock probing, no implicit retry, no evaluation.
+      expect(client.get).not.toHaveBeenCalled();
+      expect(client.set).toHaveBeenCalledTimes(1);
+      expect(state.getStateAndPrices).not.toHaveBeenCalled();
 
-      // Evaluation ran after the crash-recovery retry acquired the lock.
+      // A fresh event should still process normally.
+      client.set.mockResolvedValue("OK");
+      await runner.onPriceEvent("tok2", 0.55);
       expect(state.getStateAndPrices).toHaveBeenCalledTimes(1);
     } finally {
       vi.useRealTimers();
