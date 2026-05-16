@@ -97,6 +97,13 @@ export class StrategyRunner {
    *  vs. another instance holding the lock (multi-instance dedup). */
   private pendingRedisUnlock: Promise<unknown> | null = null;
 
+  /** Tracks which pendingRedisUnlock promise already has a chained retry
+   *  scheduled on it.  Used as a one-shot guard so only one retry is
+   *  chained per pendingRedisUnlock instance — preventing duplicate
+   *  tick() calls when multiple ticks queue up behind the same in-flight
+   *  unlock. */
+  private pendingRedisUnlockRetry: Promise<unknown> | null = null;
+
   /** Tracks child strategy IDs launched by RUN_STRATEGY action blocks */
   readonly childStrategies: Set<string> = new Set();
   /** Maps child strategy IDs to their sub-strategy mode */
@@ -488,27 +495,47 @@ export class StrategyRunner {
           // gates the lower retry branch.  Without this clause the
           // coalesced events would be silently dropped: no retry fires
           // and no fresh price event is guaranteed to arrive.
-          if (this.followUpTimer) clearTimeout(this.followUpTimer);
-          void this.pendingRedisUnlock
-            .finally(() => {
-              if (this.status === "RUNNING") {
-                this.scheduledFollowUp = true;
-                void this.tick();
-              }
-            })
-            .catch(() => {});
+          // One-shot guard: only chain one retry per pendingRedisUnlock
+          // promise instance.  Without this guard, multiple ticks that
+          // fail SET NX behind the same in-flight unlock would each
+          // attach a .finally() callback, firing duplicate tick() calls
+          // when the unlock finally completes.
+          if (this.pendingRedisUnlock !== this.pendingRedisUnlockRetry) {
+            this.pendingRedisUnlockRetry = this.pendingRedisUnlock;
+            if (this.followUpTimer) clearTimeout(this.followUpTimer);
+            void this.pendingRedisUnlock
+              .finally(() => {
+                if (this.status === "RUNNING") {
+                  this.scheduledFollowUp = true;
+                  void this.tick();
+                }
+              })
+              .catch(() => {});
+          }
+        } else if (this.execMode === "EVENT" && this.followUpTimer === null) {
+          // EVENT mode, lock acquisition failed, no coalesced events
+          // pending on our own Redis unlock (pendingRedisUnlock is
+          // null, so the lock is held by another instance).
+          //
+          // Schedule a crash-recovery retry after the lock TTL expires
+          // to guard against the lock holder crashing mid-evaluation.
+          // Without this, the coalesced pendingTick events would be
+          // permanently dropped when the holder fails before completing
+          // — leaving the strategy stale until a new external price
+          // event arrives.
+          //
+          // scheduledFollowUp is set inside the callback so the flag is
+          // only true when the retry actually fires — an intermediate
+          // price event that arrives between scheduling and firing must
+          // still respect the min-tick throttle.
+          const LOCK_TTL_MS = 10_000;
+          const CRASH_GRACE_MS = 1_000 + Math.floor(Math.random() * 1_000);
+          this.followUpTimer = setTimeout(() => {
+            this.followUpTimer = null;
+            this.scheduledFollowUp = true;
+            void this.tick();
+          }, LOCK_TTL_MS + CRASH_GRACE_MS);
         }
-        // EVENT mode, lock acquisition failed, no coalesced events
-        // pending on our own Redis unlock (pendingRedisUnlock is
-        // null, so the lock is held by another instance).
-        //
-        // Do NOT schedule a crash-recovery retry.  In a multi-instance
-        // deployment where every instance receives the same price
-        // event, the winning instance evaluates the latest state and
-        // processes coalesced events.  A losing-instance retry after
-        // lock TTL would re-evaluate already-processed state and
-        // produce duplicate order intents / sub-strategy launches and
-        // double-increment execution counters.
       } else if (!lockAcquired && this.status === "RUNNING") {
         // Lock acquisition failed without any pending coalesced tick.
         //
@@ -529,18 +556,24 @@ export class StrategyRunner {
         // pendingRedisUnlock is non-null and we MUST retry once the
         // unlock completes — otherwise the event is silently dropped.
         if (this.pendingRedisUnlock) {
-          // Bypass the min-tick throttle when the retry fires so the
-          // evaluation is not blocked by lastTickMs having been advanced
-          // by the failed tick itself.
-          if (this.followUpTimer) clearTimeout(this.followUpTimer);
-          void this.pendingRedisUnlock
-            .finally(() => {
-              if (this.status === "RUNNING") {
-                this.scheduledFollowUp = true;
-                void this.tick();
-              }
-            })
-            .catch(() => {});
+          // One-shot guard: only chain one retry per pendingRedisUnlock
+          // promise instance (same rationale as the pendingTick branch
+          // above).
+          if (this.pendingRedisUnlock !== this.pendingRedisUnlockRetry) {
+            this.pendingRedisUnlockRetry = this.pendingRedisUnlock;
+            // Bypass the min-tick throttle when the retry fires so the
+            // evaluation is not blocked by lastTickMs having been advanced
+            // by the failed tick itself.
+            if (this.followUpTimer) clearTimeout(this.followUpTimer);
+            void this.pendingRedisUnlock
+              .finally(() => {
+                if (this.status === "RUNNING") {
+                  this.scheduledFollowUp = true;
+                  void this.tick();
+                }
+              })
+              .catch(() => {});
+          }
         } else if (this.execMode === "HYBRID" && this.followUpTimer === null) {
           this.followUpTimer = setTimeout(() => {
             this.followUpTimer = null;

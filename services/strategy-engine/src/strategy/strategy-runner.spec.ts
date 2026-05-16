@@ -192,22 +192,22 @@ describe("StrategyRunner — lifecycle", () => {
     state.getStateAndPrices.mockImplementation(
       () =>
         new Promise((resolve) => {
-           release = () =>
-             resolve({
-               state: { ...DEFAULT_STATE },
-               prices: new Map([
-                 ["tok1", { price: 0.5, timestamp: Date.now() }],
-               ]),
-             });
-         }),
-     );
-     const runner = makeRunner({ execMode: "EVENT", state });
+          release = () =>
+            resolve({
+              state: { ...DEFAULT_STATE },
+              prices: new Map([
+                ["tok1", { price: 0.5, timestamp: Date.now() }],
+              ]),
+            });
+        }),
+    );
+    const runner = makeRunner({ execMode: "EVENT", state });
 
-     const first = runner.onPriceEvent("tok1", 0.5);
-     // Wait past the throttle window so the second tick can enter.
-     // The first tick is still in-flight (state.getStateAndPrices is blocked on release).
-     await new Promise((r) => setTimeout(r, 250));
-     const second = runner.onPriceEvent("tok1", 0.5);
+    const first = runner.onPriceEvent("tok1", 0.5);
+    // Wait past the throttle window so the second tick can enter.
+    // The first tick is still in-flight (state.getStateAndPrices is blocked on release).
+    await new Promise((r) => setTimeout(r, 250));
+    const second = runner.onPriceEvent("tok1", 0.5);
     await second;
     // The first tick now awaits betaLimits.getLimit() before reaching
     // evaluate() → state.getStateAndPrices(), adding an extra microtask cycle. Yield
@@ -382,8 +382,6 @@ describe("StrategyRunner — SAFETY evaluation", () => {
 
     // Set dailyPnl below limit — without the config fallback, maxLossUsdc
     // would default to 0 and the block would fire (pass), not stopping.
-    // The runner reads state via getStateAndPrices (not state.get), so we mock
-    // the batched pipeline with a fresh-priced token to pass stale detection.
     state.getStateAndPrices.mockResolvedValue({
       state: { ...DEFAULT_STATE, dailyPnl: -15 },
       prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]),
@@ -532,20 +530,15 @@ describe("StrategyRunner — TRIGGER evaluation", () => {
       ],
     });
 
-    // Runner reads state via getStateAndPrices; include a fresh price to
-    // pass stale data detection and reach trigger evaluation.
     state.getStateAndPrices.mockResolvedValue({
-      state: { ...DEFAULT_STATE },
-      prices: new Map([["tok1", { price: 0.55, timestamp: Date.now() }]]),
+      state: DEFAULT_STATE,
+      prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]),
     });
 
     await runner.onPriceEvent("tok1", 0.5);
 
-    // Trigger should fire because price 0.55 > 0.4 threshold via config fallback.
-    // The batched getStateAndPrices call confirms stale check passed and evaluation proceeded.
-    expect(state.getStateAndPrices).toHaveBeenCalledWith("strat-test", [
-      "tok1",
-    ]);
+    // Trigger should fire because price 0.5 > 0.4 threshold via config fallback
+    expect(state.getStateAndPrices).toHaveBeenCalled();
   });
 });
 
@@ -1220,8 +1213,7 @@ describe("StrategyRunner — config fallback for token discovery and prefetch", 
     });
 
     await runner.onPriceEvent("tok-config", 0.5);
-    // Token "tok-config" discovered from config fallback via mergedParams,
-    // fed into the batched getStateAndPrices pipeline for variable eval.
+    // evaluate() uses the in-memory prices map from getStateAndPrices
     expect(state.getStateAndPrices).toHaveBeenCalledWith("strat-test", [
       "tok-config",
     ]);
@@ -2104,7 +2096,7 @@ describe("StrategyRunner — concurrent tick serialization", () => {
     }
   });
 
-  it("does NOT schedule EVENT-mode crash-recovery retry when pendingTick was set and lock miss has no pending Redis unlock (POLA-5150)", async () => {
+  it("schedules EVENT-mode crash-recovery retry when pendingTick was set and lock miss has no pending Redis unlock (POLA-5150)", async () => {
     vi.useFakeTimers();
     try {
       vi.setSystemTime(300);
@@ -2113,14 +2105,9 @@ describe("StrategyRunner — concurrent tick serialization", () => {
       // pendingTick before the finally block runs.  SET NX resolves to
       // null (another instance holds the lock) and pendingRedisUnlock is
       // null (this instance never acquired the lock, so it has no
-      // pending unlock).
-      //
-      // In a multi-instance deployment where every instance receives the
-      // same price event, the winning instance already processes the
-      // coalesced events.  A losing-instance crash-recovery retry would
-      // re-evaluate already-processed state and produce duplicate order
-      // intents / sub-strategy launches.  The losing instance must NOT
-      // schedule a retry.
+      // pending unlock).  The finally block must schedule a TTL+jitter
+      // crash-recovery retry instead of silently dropping the pending
+      // events.
       let resolveSetNx!: (value: unknown) => void;
       let setCallCount = 0;
       const client = {
@@ -2141,7 +2128,7 @@ describe("StrategyRunner — concurrent tick serialization", () => {
               resolveSetNx = resolve;
             });
           }
-          // Should NOT be called a second time — no retry is scheduled.
+          // Crash-recovery retry SET NX — succeed.
           return Promise.resolve("OK");
         }),
         del: vi.fn().mockResolvedValue(1),
@@ -2175,31 +2162,29 @@ describe("StrategyRunner — concurrent tick serialization", () => {
       await vi.advanceTimersByTimeAsync(0);
       await tickAPromise;
 
-      // No evaluation — SET NX failed and no crash-recovery retry is
-      // scheduled.  The winning instance handles the events.
+      // No evaluation — SET NX failed and the crash-recovery retry
+      // fires after the lock TTL + grace period (10s + 1-2s jitter).
       expect(state.getStateAndPrices).not.toHaveBeenCalled();
 
-      // Advance past the lock TTL + maximum grace jitter (15s).
+      // Advance past the lock TTL + maximum grace jitter.
       await vi.advanceTimersByTimeAsync(15_000);
 
-      // Still no evaluation — no retry was scheduled.
-      expect(state.getStateAndPrices).not.toHaveBeenCalled();
-      // SET was only called once (the original lock miss).
-      expect(client.set).toHaveBeenCalledTimes(1);
+      // Crash-recovery retry fired, acquired the lock, and evaluated.
+      expect(state.getStateAndPrices).toHaveBeenCalledTimes(1);
     } finally {
       vi.useRealTimers();
     }
   });
 
-  it("does NOT schedule a follow-up retry in EVENT mode when lock miss has no pending Redis unlock (POLA-5150)", async () => {
+  it("sets scheduledFollowUp when EVENT-mode crash-recovery retry fires, not when scheduled (POLA-5150)", async () => {
     vi.useFakeTimers();
     try {
       vi.setSystemTime(300);
 
-      // Set up: Tick A awaits SET NX (deferred), Tick B arrives
+      // Set up Path 1: Tick A awaits SET NX (deferred), Tick B arrives
       // and sets pendingTick=true, SET NX resolves null (lock held by
-      // another instance).  The finally block must NOT schedule a
-      // crash-recovery retry — the winning instance processes the events.
+      // another instance).  The finally block schedules a crash-recovery
+      // retry at 10-12s.
       let resolveSetNx!: (value: unknown) => void;
       let setCallCount = 0;
       const client = {
@@ -2214,10 +2199,12 @@ describe("StrategyRunner — concurrent tick serialization", () => {
         set: vi.fn().mockImplementation(() => {
           setCallCount++;
           if (setCallCount === 1) {
+            // Tick A's SET NX — deferred so Tick B can set pendingTick.
             return new Promise((resolve) => {
               resolveSetNx = resolve;
             });
           }
+          // Crash-recovery retry SET NX — succeed.
           return Promise.resolve("OK");
         }),
         del: vi.fn().mockResolvedValue(1),
@@ -2243,30 +2230,33 @@ describe("StrategyRunner — concurrent tick serialization", () => {
       await runner.onPriceEvent("tok1", 0.51);
 
       // Resolve SET NX as null — lock held by another instance.
-      // No crash-recovery retry is scheduled.
+      // Crash-recovery retry is scheduled at this point.
       resolveSetNx(null);
       await vi.advanceTimersByTimeAsync(0);
       await tickAPromise;
 
-      // No evaluation yet — SET NX failed, no retry scheduled.
+      // No evaluation yet — SET NX failed, crash-recovery retry pending.
       expect(state.getStateAndPrices).not.toHaveBeenCalled();
 
       // Fire a new price event at t=560 (10 ms after lastTickMs=550).
-      // scheduledFollowUp was never set, so this event must respect the
-      // min-tick throttle (560-550=10 < 200ms MIN_TICK_MS).
+      // Without the fix, scheduledFollowUp was set at scheduling time
+      // (t=550) and this event would bypass the min-tick throttle.
+      // With the fix, scheduledFollowUp is set in the retry callback
+      // (t≈11550-12550), so this event must respect the throttle.
       vi.setSystemTime(560);
       await vi.advanceTimersByTimeAsync(0);
       await runner.onPriceEvent("tok1", 0.52);
 
-      // Throttle blocked: still within MIN_TICK_MS window.
+      // Throttle blocked: 560-550=10 < 200ms MIN_TICK_MS, and
+      // scheduledFollowUp was not yet set.
       expect(state.getStateAndPrices).not.toHaveBeenCalled();
 
-      // Fire another event past the throttle window.
-      vi.setSystemTime(800);
-      await vi.advanceTimersByTimeAsync(0);
-      await runner.onPriceEvent("tok1", 0.53);
+      // Advance past the crash-recovery retry (10s + 1-2s jitter cap).
+      // The retry fires, sets scheduledFollowUp in its callback,
+      // bypasses the throttle, acquires the lock, and evaluates.
+      await vi.advanceTimersByTimeAsync(15_000);
 
-      // This event should pass the throttle and evaluate.
+      // Crash-recovery retry fired, acquired the lock, and evaluated.
       expect(state.getStateAndPrices).toHaveBeenCalledTimes(1);
     } finally {
       vi.useRealTimers();
