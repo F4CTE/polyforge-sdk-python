@@ -13,13 +13,13 @@ function makeRedis(overrides: Record<string, unknown> = {}) {
     getClient: vi.fn().mockReturnValue({
       get: vi
         .fn()
-        .mockResolvedValue(
+        .mockImplementation(async () =>
           JSON.stringify({ price: 0.5, timestamp: Date.now() }),
         ),
       lrange: vi.fn().mockResolvedValue([]),
       mget: vi
         .fn()
-        .mockResolvedValue([
+        .mockImplementation(async () => [
           JSON.stringify({ price: 0.5, timestamp: Date.now() }),
         ]),
       pipeline: vi.fn().mockReturnValue({
