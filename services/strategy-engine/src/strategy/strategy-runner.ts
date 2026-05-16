@@ -589,10 +589,12 @@ export class StrategyRunner {
             if (this.followUpTimer) clearTimeout(this.followUpTimer);
             void pendingUnlock
               .finally(() => {
-                if (this.pendingRedisUnlockRetryFor === pendingUnlock) {
+                const wasCurrent =
+                  this.pendingRedisUnlockRetryFor === pendingUnlock;
+                if (wasCurrent) {
                   this.pendingRedisUnlockRetryFor = null;
                 }
-                if (this.status === "RUNNING") {
+                if (wasCurrent && this.status === "RUNNING") {
                   this.scheduledFollowUp = true;
                   void this.tick();
                 }
@@ -641,10 +643,12 @@ export class StrategyRunner {
             if (this.followUpTimer) clearTimeout(this.followUpTimer);
             void pendingUnlock
               .finally(() => {
-                if (this.pendingRedisUnlockRetryFor === pendingUnlock) {
+                const wasCurrent =
+                  this.pendingRedisUnlockRetryFor === pendingUnlock;
+                if (wasCurrent) {
                   this.pendingRedisUnlockRetryFor = null;
                 }
-                if (this.status === "RUNNING") {
+                if (wasCurrent && this.status === "RUNNING") {
                   this.scheduledFollowUp = true;
                   void this.tick();
                 }

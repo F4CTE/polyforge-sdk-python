@@ -3316,10 +3316,12 @@ describe("StrategyRunner — concurrent tick serialization", () => {
       resolveUnlockA(1);
       await vi.advanceTimersByTimeAsync(0);
 
-      // Both unlock generations can now schedule their own retries:
-      // retry behind unlock C (already asserted via state call count) and
-      // the older retry behind unlock A during cleanup resolution.
-      expect(client.set).toHaveBeenCalledTimes(6);
+      // Only the current unlock generation (C) schedules a retry.
+      // The older retry behind unlock A is suppressed because the
+      // callback detects it is no longer the active armed generation.
+      // Stale-generation suppression prevents duplicate tick() re-entry
+      // and replay of already-processed state (POLA-5150).
+      expect(client.set).toHaveBeenCalledTimes(5);
     } finally {
       vi.useRealTimers();
     }
