@@ -1,4 +1,5 @@
 import { Injectable, Logger, Optional } from "@nestjs/common";
+import { randomUUID } from "crypto";
 import {
   keccak256,
   signSecp256K1HexKey,
@@ -433,19 +434,58 @@ export class NativeCtfService {
   // ─── CTF nonce serialization ────────────────────────────────────────────────
 
   /**
-   * Execute a CTF transaction body under a per-EOA distributed mutex.
+   * Lua script for atomic lock release.
    *
-   * The lock serializes the nonce-fetch → sign → broadcast pipeline per EOA
-   * so that concurrent CTF operations for the same address do not race on
-   * the transaction count.
+   * Compares the lock value to the caller's token and only deletes the key
+   * when they match — prevents a delayed or TTL-expired unlock from removing
+   * a lock that has already been acquired by another request.
+   */
+  private static readonly UNLOCK_SCRIPT = `
+    if redis.call("GET", KEYS[1]) == ARGV[1] then
+      return redis.call("DEL", KEYS[1])
+    else
+      return 0
+    end
+  `;
+
+  /**
+   * Classify a Redis error message as permanently unrecoverable.
+   *
+   * Permanent errors (NOAUTH, WRONGPASS, NOPERM, WRONGTYPE, READONLY,
+   * wrong-number-of-arguments, syntax error) indicate a configuration or
+   * code defect that retries cannot fix.  Transient errors (LOADING, BUSY,
+   * TRYAGAIN during cluster failover, connection errors) are retried with
+   * backoff.
+   */
+  private static isPermanentRedisError(message: string): boolean {
+    return (
+      message.includes("NOAUTH") ||
+      message.includes("WRONGPASS") ||
+      message.includes("NOPERM") ||
+      message.includes("WRONGTYPE") ||
+      message.includes("READONLY") ||
+      /wrong number of arguments/i.test(message) ||
+      /syntax error/i.test(message)
+    );
+  }
+
+  /**
+   * Execute a CTF transaction body under a per-EOA, per-chain distributed mutex.
+   *
+   * The lock serializes the nonce-fetch → sign → broadcast pipeline per
+   * {@code (chainId, eoaAddress)} so that concurrent CTF operations for the same
+   * address on the same chain do not race on the transaction count.  Operations
+   * for the same EOA on different chains proceed independently.
    *
    * @param rpcUrl     - JSON-RPC endpoint for nonce / gas price / broadcast.
-   * @param eoaAddress - Lowercase 0x-prefixed EOA address (lock key).
+   * @param chainId    - Chain identifier (scoped into the lock key).
+   * @param eoaAddress - Lowercase 0x-prefixed EOA address.
    * @param body       - Callback that receives a fresh nonce and gas price
    *                     while the lock is held.
    */
   private async withCtfTransactionLock<T>(
     rpcUrl: string,
+    chainId: number,
     eoaAddress: string,
     body: (nonce: number, gasPrice: bigint) => Promise<T>,
   ): Promise<T> {
@@ -457,8 +497,8 @@ export class NativeCtfService {
       return body(nonce, gasPrice);
     }
 
-    const lockKey = `ctf:tx:lock:${eoaAddress}`;
-    await this.acquireCtfLock(lockKey);
+    const lockKey = `ctf:tx:lock:${chainId}:${eoaAddress}`;
+    const lockToken = await this.acquireCtfLock(lockKey);
 
     try {
       const [nonce, gasPrice] = await Promise.all([
@@ -467,41 +507,174 @@ export class NativeCtfService {
       ]);
       return await body(nonce, gasPrice);
     } finally {
-      await this.releaseCtfLock(lockKey);
+      await this.releaseCtfLock(lockKey, lockToken);
     }
   }
 
   /**
-   * Acquire a Redis-backed per-EOA lock with exponential backoff.
+   * Acquire a Redis-backed distributed mutex with exponential backoff.
+   *
+   * Each {@code SET NX PX} attempt is bounded by a short timeout so that a
+   * stalled / reconnecting Redis connection cannot cause the caller to hang
+   * past the overall {@code maxWaitMs} deadline.
+   *
+   * A unique lock token is generated per attempt.  If a timed-out SET later
+   * settles via ioredis offline-queue replay, the ghost lock is detected and
+   * cleaned up via the same token-checked Lua unlock so a delayed cleanup
+   * cannot delete a newer owner's lock.
+   *
+   * Only permanently unrecoverable Redis errors (NOAUTH, NOPERM,
+   * WRONGTYPE, wrong arity, syntax error) are surfaced immediately.
+   * Transient ReplyError states (LOADING, BUSY, TRYAGAIN during cluster
+   * failover) and connection errors are retried with backoff.
+   *
+   * @returns A unique lock token that must be presented to release the lock.
    *
    * Max wait: 60 s.  Backoff: 100 ms → 200 ms → 400 ms → … → 5 s cap.
    * Lock TTL: 30 s (auto-released if the process crashes mid-flight).
    */
-  private async acquireCtfLock(key: string): Promise<void> {
+  private async acquireCtfLock(key: string): Promise<string> {
     const client = this.redis!.getClient();
     const maxWaitMs = 60_000;
     const deadline = Date.now() + maxWaitMs;
     let delayMs = 100;
+    let permanentError: Error | null = null;
 
     while (Date.now() < deadline) {
-      const acquired =
-        (await client.set(key, "1", "PX", 30_000, "NX")) === "OK";
-      if (acquired) {
-        this.logger.debug(`Acquired CTF nonce lock: ${key}`);
-        return;
+      if (permanentError) {
+        throw permanentError as Error;
       }
-      await new Promise((r) => setTimeout(r, delayMs));
+      const remaining = deadline - Date.now();
+      if (remaining <= 0) break;
+
+      const attemptTimeout = Math.min(remaining, 3_000);
+      const attemptToken = randomUUID();
+      let raceWinner: "set" | "timeout" | null = null;
+      let raceTimeoutId: NodeJS.Timeout | null = null;
+
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        raceTimeoutId = setTimeout(() => {
+          raceWinner = "timeout";
+          reject(new Error("SET attempt timed out"));
+        }, attemptTimeout);
+      });
+
+      const setPromise = client
+        .set(key, attemptToken, "PX", 30_000, "NX")
+        .then((result: string | null) => {
+          if (raceWinner === null) raceWinner = "set";
+          return result;
+        });
+
+      try {
+        const acquired = await Promise.race([setPromise, timeoutPromise]);
+
+        // SET resolved first — cancel the timeout timer.
+        if (raceTimeoutId) clearTimeout(raceTimeoutId);
+
+        if (acquired === "OK") {
+          this.logger.debug(`Acquired CTF nonce lock: ${key}`);
+          return attemptToken;
+        }
+      } catch (err: unknown) {
+        // Cancel the timeout so it doesn't fire later when the error came
+        // from the SET command itself (not the timeout).
+        if (raceTimeoutId) clearTimeout(raceTimeoutId);
+
+        // Surface only permanently unrecoverable Redis errors immediately.
+        // Transient ReplyError states (LOADING, BUSY, TRYAGAIN during
+        // cluster failover) are retried with backoff.
+        if (
+          err instanceof Error &&
+          NativeCtfService.isPermanentRedisError(err.message ?? "")
+        ) {
+          throw err;
+        }
+
+        // If the timeout won the race, the SET promise is still pending.
+        // When it eventually settles via ioredis offline-queue replay it
+        // may create a ghost lock.  Clean it up with the same token-checked
+        // Lua unlock so a delayed cleanup cannot delete a newer owner's lock.
+        if (raceWinner === "timeout") {
+          void setPromise
+            .then((lateResult: string | null) => {
+              if (lateResult === "OK") {
+                this.logger.debug(`Cleaning up ghost CTF nonce lock: ${key}`);
+                client
+                  .eval(NativeCtfService.UNLOCK_SCRIPT, 1, key, attemptToken)
+                  .catch((cleanupErr: unknown) => {
+                    this.logger.error(
+                      `Failed to clean up ghost CTF nonce lock: ${key}`,
+                      (cleanupErr as Error)?.message,
+                    );
+                  });
+              }
+            })
+            .catch((lateErr: unknown) => {
+              // The late SET rejected after the timeout raced ahead.
+              // Most rejections are expected — ioredis offline-queue
+              // replay after a dropped connection.  But distinguish
+              // permanent Redis errors that should be surfaced so the
+              // caller doesn't hit the generic 60 s timeout.
+              if (
+                lateErr instanceof Error &&
+                NativeCtfService.isPermanentRedisError(lateErr.message ?? "")
+              ) {
+                this.logger.error(
+                  `Late SET rejected with permanent Redis error: ${key}`,
+                  lateErr.message,
+                );
+                permanentError = lateErr;
+              }
+            });
+        }
+
+        // Transient error — backoff and retry.
+      }
+
+      if (permanentError) {
+        throw permanentError as Error;
+      }
+
+      const sleepRemaining = deadline - Date.now();
+      if (sleepRemaining <= 0) break;
+      await new Promise((r) =>
+        setTimeout(r, Math.min(delayMs, sleepRemaining)),
+      );
       delayMs = Math.min(delayMs * 2, 5_000);
     }
 
     throw new Error(`Timed out waiting for CTF transaction lock for EOA`);
   }
 
-  private async releaseCtfLock(key: string): Promise<void> {
-    await this.redis!.getClient()
-      .del(key)
-      .catch(() => {});
-    this.logger.debug(`Released CTF nonce lock: ${key}`);
+  /**
+   * Release the Redis lock — only if the caller still owns it.
+   *
+   * Uses a Lua script to atomically compare the stored token with the
+   * caller's token before deleting, preventing a delayed {@code DEL} or
+   * a TTL-expired unlock from removing another request's lock.
+   */
+  private async releaseCtfLock(key: string, lockToken: string): Promise<void> {
+    try {
+      const deleted = await this.redis!.getClient().eval(
+        NativeCtfService.UNLOCK_SCRIPT,
+        1,
+        key,
+        lockToken,
+      );
+
+      if (deleted === 1) {
+        this.logger.debug(`Released CTF nonce lock: ${key}`);
+      } else {
+        // Token mismatch — another request owns the lock or it expired.
+        this.logger.debug(`CTF nonce lock release skipped (not owner): ${key}`);
+      }
+    } catch (err) {
+      this.logger.error(
+        `Failed to release CTF nonce lock: ${key}`,
+        (err as Error)?.message,
+      );
+    }
   }
 
   // ─── CTF operations ─────────────────────────────────────────────────────────
@@ -543,6 +716,7 @@ export class NativeCtfService {
 
     return this.withCtfTransactionLock(
       rpcUrl,
+      chainId,
       eoaAddress,
       async (nonce, gasPrice) => {
         const rawTx = this.signTransaction(creds, chainId, {
@@ -601,6 +775,7 @@ export class NativeCtfService {
 
     return this.withCtfTransactionLock(
       rpcUrl,
+      chainId,
       eoaAddress,
       async (nonce, gasPrice) => {
         const rawTx = this.signTransaction(creds, chainId, {
@@ -659,6 +834,7 @@ export class NativeCtfService {
 
     return this.withCtfTransactionLock(
       rpcUrl,
+      chainId,
       eoaAddress,
       async (nonce, gasPrice) => {
         const rawTx = this.signTransaction(creds, chainId, {
