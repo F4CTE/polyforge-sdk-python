@@ -433,6 +433,256 @@ describe("StrategyRunner — SAFETY evaluation", () => {
       expect.objectContaining({ type: "STRATEGY_STOPPED" }),
     );
   });
+
+  it("legacy alias MAX_POSITION_SIZE in safety passes when position is below max", async () => {
+    const state = makeState();
+    const redis = makeRedis();
+    const onStatusChange = vi.fn().mockResolvedValue(undefined);
+    const prisma = makePrisma({
+      position: {
+        findUnique: vi.fn().mockResolvedValue({
+          size: "50",
+          currentPrice: "1.5",
+        }),
+        findMany: vi.fn().mockResolvedValue([]),
+      },
+      order: {
+        findMany: vi.fn().mockResolvedValue([]),
+      },
+    });
+
+    const runner = makeRunner({
+      execMode: "EVENT",
+      state,
+      redis,
+      prisma,
+      onStatusChange,
+      safety: [
+        {
+          id: "mp-safety",
+          type: "MAX_POSITION_SIZE",
+          params: { tokenId: "tok1", maxUsdc: "100" },
+        },
+      ],
+    });
+
+    await runner.onPriceEvent("tok1", 0.5);
+
+    expect(runner.status).toBe("RUNNING");
+    expect(onStatusChange).not.toHaveBeenCalledWith(
+      "STOPPED",
+      expect.anything(),
+    );
+  });
+
+  it("legacy alias max_position in safety passes when position is below max", async () => {
+    const state = makeState();
+    const redis = makeRedis();
+    const onStatusChange = vi.fn().mockResolvedValue(undefined);
+    const prisma = makePrisma({
+      position: {
+        findUnique: vi.fn().mockResolvedValue({
+          size: "50",
+          currentPrice: "1.5",
+        }),
+        findMany: vi.fn().mockResolvedValue([]),
+      },
+      order: {
+        findMany: vi.fn().mockResolvedValue([]),
+      },
+    });
+
+    const runner = makeRunner({
+      execMode: "EVENT",
+      state,
+      redis,
+      prisma,
+      onStatusChange,
+      safety: [
+        {
+          id: "mp-safety-lower",
+          type: "max_position",
+          params: { tokenId: "tok1", maxUsdc: "100" },
+        },
+      ],
+    });
+
+    await runner.onPriceEvent("tok1", 0.5);
+
+    expect(runner.status).toBe("RUNNING");
+    expect(onStatusChange).not.toHaveBeenCalledWith(
+      "STOPPED",
+      expect.anything(),
+    );
+  });
+
+  it("legacy alias MAX_POSITION_SIZE in safety stops when position exceeds max", async () => {
+    const state = makeState();
+    const redis = makeRedis();
+    const onStatusChange = vi.fn().mockResolvedValue(undefined);
+    const prisma = makePrisma({
+      position: {
+        findUnique: vi.fn().mockResolvedValue({
+          size: "200",
+          currentPrice: "0.6",
+        }),
+        findMany: vi.fn().mockResolvedValue([]),
+      },
+      order: {
+        findMany: vi.fn().mockResolvedValue([]),
+      },
+    });
+
+    const runner = makeRunner({
+      execMode: "EVENT",
+      state,
+      redis,
+      prisma,
+      onStatusChange,
+      safety: [
+        {
+          id: "mp-safety-stop",
+          type: "MAX_POSITION_SIZE",
+          params: { tokenId: "tok1", maxUsdc: "100" },
+        },
+      ],
+    });
+
+    await runner.onPriceEvent("tok1", 0.5);
+
+    expect(runner.status).toBe("STOPPED");
+    expect(onStatusChange).toHaveBeenCalledWith(
+      "STOPPED",
+      expect.stringContaining("position"),
+    );
+    expect(prisma.strategy.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { status: "IDLE" } }),
+    );
+    expect(redis.xadd).toHaveBeenCalledWith(
+      "stream:events",
+      expect.objectContaining({ type: "STRATEGY_STOPPED" }),
+    );
+  });
+
+  it("legacy alias max_position in safety stops when position exceeds max", async () => {
+    const state = makeState();
+    const redis = makeRedis();
+    const onStatusChange = vi.fn().mockResolvedValue(undefined);
+    const prisma = makePrisma({
+      position: {
+        findUnique: vi.fn().mockResolvedValue({
+          size: "200",
+          currentPrice: "0.6",
+        }),
+        findMany: vi.fn().mockResolvedValue([]),
+      },
+      order: {
+        findMany: vi.fn().mockResolvedValue([]),
+      },
+    });
+
+    const runner = makeRunner({
+      execMode: "EVENT",
+      state,
+      redis,
+      prisma,
+      onStatusChange,
+      safety: [
+        {
+          id: "mp-safety-stop-lower",
+          type: "max_position",
+          params: { tokenId: "tok1", maxUsdc: "100" },
+        },
+      ],
+    });
+
+    await runner.onPriceEvent("tok1", 0.5);
+
+    expect(runner.status).toBe("STOPPED");
+    expect(onStatusChange).toHaveBeenCalledWith(
+      "STOPPED",
+      expect.stringContaining("position"),
+    );
+    expect(prisma.strategy.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { status: "IDLE" } }),
+    );
+    expect(redis.xadd).toHaveBeenCalledWith(
+      "stream:events",
+      expect.objectContaining({ type: "STRATEGY_STOPPED" }),
+    );
+  });
+
+  it("fails closed on non-allowlist condition-only type in safety (VENUE_SELECT)", async () => {
+    const state = makeState();
+    const redis = makeRedis();
+    const prisma = makePrisma();
+    const onStatusChange = vi.fn().mockResolvedValue(undefined);
+
+    const runner = makeRunner({
+      execMode: "EVENT",
+      state,
+      redis,
+      prisma,
+      onStatusChange,
+      safety: [{ id: "vs-safety", type: "VENUE_SELECT" }],
+    });
+
+    await runner.onPriceEvent("tok1", 0.5);
+
+    expect(runner.status).toBe("STOPPED");
+    expect(onStatusChange).toHaveBeenCalledWith(
+      "STOPPED",
+      expect.stringContaining("safety_block_type_missing:VENUE_SELECT"),
+    );
+    expect(prisma.strategy.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { status: "IDLE" } }),
+    );
+    expect(redis.xadd).toHaveBeenCalledWith(
+      "stream:events",
+      expect.objectContaining({ type: "STRATEGY_STOPPED" }),
+    );
+  });
+
+  it("legacy alias MAX_POSITION_SIZE still stops when position exactly equals max", async () => {
+    const state = makeState();
+    const redis = makeRedis();
+    const onStatusChange = vi.fn().mockResolvedValue(undefined);
+    const prisma = makePrisma({
+      position: {
+        findUnique: vi.fn().mockResolvedValue({
+          size: "100",
+          currentPrice: "1.0",
+        }),
+        findMany: vi.fn().mockResolvedValue([]),
+      },
+      order: {
+        findMany: vi.fn().mockResolvedValue([]),
+      },
+    });
+
+    const runner = makeRunner({
+      execMode: "EVENT",
+      state,
+      redis,
+      prisma,
+      onStatusChange,
+      safety: [
+        {
+          id: "mp-safety-equal",
+          type: "MAX_POSITION_SIZE",
+          params: { tokenId: "tok1", maxUsdc: "100" },
+        },
+      ],
+    });
+
+    await runner.onPriceEvent("tok1", 0.5);
+
+    expect(runner.status).toBe("STOPPED");
+    expect(onStatusChange).toHaveBeenCalledWith(
+      "STOPPED",
+      expect.stringContaining("position"),
+    );
+  });
 });
 
 describe("StrategyRunner — TRIGGER evaluation", () => {
