@@ -26,6 +26,7 @@ from polyforge.errors import (
     ServerError,
 )
 from polyforge.models import (
+    AccuracyLeaderboardEntry,
     AccuracyScore,
     AiQueryResponse,
     Alert,
@@ -156,6 +157,7 @@ _FIELD_ALIASES: dict[str, dict[str, str]] = {
 }
 
 _MODEL_REGISTRY: dict[str, type] = {
+    "AccuracyLeaderboardEntry": AccuracyLeaderboardEntry,
     "Market": Market,
     "Token": Token,
     "Strategy": Strategy,
@@ -372,16 +374,16 @@ def _raise_for_status(response: httpx.Response) -> None:
         return
 
     try:
-        body = response.json()
+        body: dict[str, Any] = response.json()
     except Exception:
         body = {}
 
-    message = body.get("message") or body.get("error") or response.reason_phrase or "Unknown error"
-    code = body.get("code", "")
-    request_id = body.get("requestId", "")
-    suggestion = body.get("suggestion") or None
+    message: str = body.get("message", "") or body.get("error", "") or response.reason_phrase or "Unknown error"
+    code: str = str(body.get("code") or "")
+    request_id: str = str(body.get("requestId") or "")
+    suggestion: str | None = body.get("suggestion") or None
 
-    kwargs = dict(status_code=response.status_code, code=code, request_id=request_id, suggestion=suggestion)
+    kwargs: dict[str, Any] = dict(status_code=response.status_code, code=code, request_id=request_id, suggestion=suggestion)
 
     match response.status_code:
         case 401:
@@ -449,6 +451,7 @@ _VALID_SPORTS_EVENT_STATUSES = frozenset(
 _VALID_MARKET_ALERT_OUTCOMES = frozenset({"YES", "NO", "Yes", "No"})
 _VALID_MARKET_ALERT_CONDITIONS = frozenset({"above", "below"})
 _VALID_MARKET_HISTORY_PERIODS = frozenset({"1d", "7d", "30d", "90d"})
+_VALID_ACCURACY_LEADERBOARD_PERIODS = frozenset({"7d", "30d", "allTime"})
 _VALID_ORDER_MOODS = frozenset(
     {"CONFIDENT", "UNCERTAIN", "FOMO", "DISCIPLINED", "REVENGE"}
 )
@@ -667,7 +670,7 @@ def _resolve_and_validate_ips(hostname: str) -> list[str]:
 
     validated: list[str] = []
     for _family, _, _, _, sockaddr in addrinfos:
-        ip_str = sockaddr[0]
+        ip_str = str(sockaddr[0])
         try:
             addr = ipaddress.ip_address(ip_str)
         except ValueError:
@@ -1110,6 +1113,7 @@ class PolyforgeClient:
         safety: list[dict[str, Any]] | None = None,
         logic_blocks: list[dict[str, Any]] | None = None,
         calc_blocks: list[dict[str, Any]] | None = None,
+        kalshi_subaccount: str | None = None,
         tags: list[str] | None = None,
         variables: list[dict[str, Any]] | None = None,
         canvas: dict[str, Any] | None = None,
@@ -1129,6 +1133,7 @@ class PolyforgeClient:
             safety: Safety block definitions.
             logic_blocks: Logic block definitions.
             calc_blocks: Calc block definitions.
+            kalshi_subaccount: Kalshi subaccount identifier for P&L attribution.
             tags: Strategy tags.
             variables: Strategy variable definitions.
             canvas: Canvas layout metadata.
@@ -1156,6 +1161,8 @@ class PolyforgeClient:
             body["logicBlocks"] = logic_blocks
         if calc_blocks is not None:
             body["calcBlocks"] = calc_blocks
+        if kalshi_subaccount is not None:
+            body["kalshiSubaccount"] = kalshi_subaccount
         if tags is not None:
             body["tags"] = tags
         if variables is not None:
@@ -1206,6 +1213,7 @@ class PolyforgeClient:
         variables: list[dict[str, Any]] | None = None,
         canvas: dict[str, Any] | None = None,
         market_slots: list[dict[str, Any]] | None = None,
+        kalshi_subaccount: str | None = None,
     ) -> Strategy:
         body: dict[str, Any] = {}
         if name is not None:
@@ -1240,6 +1248,8 @@ class PolyforgeClient:
             body["canvas"] = canvas
         if market_slots is not None:
             body["marketSlots"] = market_slots
+        if kalshi_subaccount is not None:
+            body["kalshiSubaccount"] = kalshi_subaccount
         return _parse(Strategy, self._patch(f"/api/v1/strategies/{_encode_path(strategy_id)}", json=body))
 
     def delete_strategy(self, strategy_id: str) -> None:
@@ -1910,6 +1920,21 @@ class PolyforgeClient:
         """Trigger a manual cross-venue matching pass."""
         data = self._post("/api/v1/arbitrage/matches/sync")
         return _parse(MatchSyncResult, data)
+
+    def create_market_match(self, polymarket_id: str, kalshi_id: str) -> MarketMatch:
+        """Manually match two markets across venues."""
+        body: dict[str, Any] = {"polymarketId": polymarket_id, "kalshiId": kalshi_id}
+        data = self._post("/api/v1/arbitrage/matches", json=body)
+        return _parse(MarketMatch, data)
+
+    def verify_market_match(self, match_id: str) -> MarketMatch:
+        """Verify/confirm an auto-matched market pair."""
+        data = self._post(f"/api/v1/arbitrage/matches/{_encode_path(match_id)}/verify")
+        return _parse(MarketMatch, data)
+
+    def delete_market_match(self, match_id: str) -> None:
+        """Remove a market match (unmatch)."""
+        self._delete(f"/api/v1/arbitrage/matches/{_encode_path(match_id)}")
 
     def get_spread_comparison(self) -> list[SpreadSummary]:
         """Get bid/ask spread comparison across all matched venues."""
@@ -3100,6 +3125,72 @@ class PolyforgeClient:
             win_rate=data.get("winRate", ""),
             calibration=calibration,
             by_category=by_category,
+        )
+
+    def get_accuracy_leaderboard(
+        self,
+        *,
+        period: str | None = None,
+        limit: int | None = None,
+        page: int | None = None,
+        offset: int | None = None,
+    ) -> PaginatedResponse[AccuracyLeaderboardEntry]:
+        """Fetch the accuracy leaderboard ranked by win-rate.
+
+        ``GET /api/v1/accuracy/leaderboard`` — distinct from
+        :meth:`get_leaderboard` (ranked by P&L) and from the per-user
+        :meth:`get_accuracy` / :meth:`get_accuracy_overview` endpoints.
+
+        Args:
+            period: Time period — ``"7d"``, ``"30d"``, or ``"allTime"``.
+            limit: Page size (1--100). When *offset* is provided without
+                *limit*, the client sends ``limit=20`` to keep the
+                offset-to-page conversion deterministic.
+            page: 1-based page number.
+            offset: Zero-based row offset. When supplied without ``page``
+                the client converts it to the equivalent page. Must be
+                non-negative and a multiple of *limit* (defaults to 20
+                when *limit* is ``None``).
+
+        Raises:
+            ValueError: If *period* is not one of ``"7d"``, ``"30d"``,
+                ``"allTime"``; if *limit* < 1; if *offset* < 0; or if
+                *offset* is not a multiple of the resolved page size.
+
+        Returns:
+            A :class:`PaginatedResponse` of :class:`AccuracyLeaderboardEntry`
+            items sorted by win-rate (descending).
+        """
+        q: dict[str, Any] = {}
+        if period is not None:
+            _validate_enum("period", period, _VALID_ACCURACY_LEADERBOARD_PERIODS)
+            q["period"] = period
+        if limit is not None:
+            if limit < 1:
+                raise ValueError(f"limit must be >= 1, got {limit}")
+            q["limit"] = limit
+        if offset is not None and page is None:
+            if offset < 0:
+                raise ValueError(f"offset must be >= 0, got {offset}")
+            resolved_limit = limit or 20
+            if offset % resolved_limit != 0:
+                raise ValueError(
+                    f"offset ({offset}) must be a multiple of limit ({resolved_limit})"
+                )
+            q["page"] = (offset // resolved_limit) + 1
+            if limit is None:
+                q["limit"] = resolved_limit
+        elif page is not None:
+            q["page"] = page
+        raw = self._get("/api/v1/accuracy/leaderboard", params=_strip_none(q))
+        items = raw if isinstance(raw, list) else raw.get("data", [])
+        return PaginatedResponse(
+            data=[_parse(AccuracyLeaderboardEntry, e) for e in items],
+            total=raw.get("total", 0) if isinstance(raw, dict) else len(items),
+            page=raw.get("page", 1) if isinstance(raw, dict) else 1,
+            limit=raw.get("limit", len(items)) if isinstance(raw, dict) else len(items),
+            has_next=raw.get("hasNext", False) if isinstance(raw, dict) else False,
+            total_pages=raw.get("totalPages", 0) if isinstance(raw, dict) else 0,
         )
 
     def get_portfolio_review(self) -> PortfolioReview:
@@ -4622,6 +4713,7 @@ class AsyncPolyforgeClient:
         safety: list[dict[str, Any]] | None = None,
         logic_blocks: list[dict[str, Any]] | None = None,
         calc_blocks: list[dict[str, Any]] | None = None,
+        kalshi_subaccount: str | None = None,
         tags: list[str] | None = None,
         variables: list[dict[str, Any]] | None = None,
         canvas: dict[str, Any] | None = None,
@@ -4650,6 +4742,8 @@ class AsyncPolyforgeClient:
             body["logicBlocks"] = logic_blocks
         if calc_blocks is not None:
             body["calcBlocks"] = calc_blocks
+        if kalshi_subaccount is not None:
+            body["kalshiSubaccount"] = kalshi_subaccount
         if tags is not None:
             body["tags"] = tags
         if variables is not None:
@@ -4700,6 +4794,7 @@ class AsyncPolyforgeClient:
         variables: list[dict[str, Any]] | None = None,
         canvas: dict[str, Any] | None = None,
         market_slots: list[dict[str, Any]] | None = None,
+        kalshi_subaccount: str | None = None,
     ) -> Strategy:
         body: dict[str, Any] = {}
         if name is not None:
@@ -4734,6 +4829,8 @@ class AsyncPolyforgeClient:
             body["canvas"] = canvas
         if market_slots is not None:
             body["marketSlots"] = market_slots
+        if kalshi_subaccount is not None:
+            body["kalshiSubaccount"] = kalshi_subaccount
         return _parse(Strategy, await self._patch(f"/api/v1/strategies/{_encode_path(strategy_id)}", json=body))
 
     async def delete_strategy(self, strategy_id: str) -> None:
@@ -5364,6 +5461,21 @@ class AsyncPolyforgeClient:
         """Trigger a manual cross-venue matching pass."""
         data = await self._post("/api/v1/arbitrage/matches/sync")
         return _parse(MatchSyncResult, data)
+
+    async def create_market_match(self, polymarket_id: str, kalshi_id: str) -> MarketMatch:
+        """Manually match two markets across venues."""
+        body: dict[str, Any] = {"polymarketId": polymarket_id, "kalshiId": kalshi_id}
+        data = await self._post("/api/v1/arbitrage/matches", json=body)
+        return _parse(MarketMatch, data)
+
+    async def verify_market_match(self, match_id: str) -> MarketMatch:
+        """Verify/confirm an auto-matched market pair."""
+        data = await self._post(f"/api/v1/arbitrage/matches/{_encode_path(match_id)}/verify")
+        return _parse(MarketMatch, data)
+
+    async def delete_market_match(self, match_id: str) -> None:
+        """Remove a market match (unmatch)."""
+        await self._delete(f"/api/v1/arbitrage/matches/{_encode_path(match_id)}")
 
     async def get_spread_comparison(self) -> list[SpreadSummary]:
         """Get bid/ask spread comparison across all matched venues."""
@@ -6305,6 +6417,51 @@ class AsyncPolyforgeClient:
             win_rate=data.get("winRate", ""),
             calibration=calibration,
             by_category=by_category,
+        )
+
+    async def get_accuracy_leaderboard(
+        self,
+        *,
+        period: str | None = None,
+        limit: int | None = None,
+        page: int | None = None,
+        offset: int | None = None,
+    ) -> PaginatedResponse[AccuracyLeaderboardEntry]:
+        """Fetch the accuracy leaderboard ranked by win-rate (async).
+
+        ``GET /api/v1/accuracy/leaderboard`` — async variant of
+        :meth:`PolyforgeClient.get_accuracy_leaderboard`.
+        """
+        q: dict[str, Any] = {}
+        if period is not None:
+            _validate_enum("period", period, _VALID_ACCURACY_LEADERBOARD_PERIODS)
+            q["period"] = period
+        if limit is not None:
+            if limit < 1:
+                raise ValueError(f"limit must be >= 1, got {limit}")
+            q["limit"] = limit
+        if offset is not None and page is None:
+            if offset < 0:
+                raise ValueError(f"offset must be >= 0, got {offset}")
+            resolved_limit = limit or 20
+            if offset % resolved_limit != 0:
+                raise ValueError(
+                    f"offset ({offset}) must be a multiple of limit ({resolved_limit})"
+                )
+            q["page"] = (offset // resolved_limit) + 1
+            if limit is None:
+                q["limit"] = resolved_limit
+        elif page is not None:
+            q["page"] = page
+        raw = await self._get("/api/v1/accuracy/leaderboard", params=_strip_none(q))
+        items = raw if isinstance(raw, list) else raw.get("data", [])
+        return PaginatedResponse(
+            data=[_parse(AccuracyLeaderboardEntry, e) for e in items],
+            total=raw.get("total", 0) if isinstance(raw, dict) else len(items),
+            page=raw.get("page", 1) if isinstance(raw, dict) else 1,
+            limit=raw.get("limit", len(items)) if isinstance(raw, dict) else len(items),
+            has_next=raw.get("hasNext", False) if isinstance(raw, dict) else False,
+            total_pages=raw.get("totalPages", 0) if isinstance(raw, dict) else 0,
         )
 
     async def get_portfolio_review(self) -> PortfolioReview:

@@ -10,6 +10,7 @@ from polyforge.errors import (
     ServerError,
 )
 from polyforge.models import (
+    AccuracyLeaderboardEntry,
     ActionDefinition,
     ActionParameter,
     ActionsSchema,
@@ -140,6 +141,7 @@ __all__ = [
     "StrategyVisibility",
     "StrategyExecMode",
     # Models
+    "AccuracyLeaderboardEntry",
     "AiQueryResponse",
     "Alert",
     "ArbCloseResponse",

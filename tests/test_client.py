@@ -33,6 +33,7 @@ from polyforge.models import (
     KNOWN_STRATEGY_EVENTS,
     JournalEntry,
     Market,
+    MarketMatch,
     MatchSyncResult,
     SystemHealthPublic,
     SystemHealthAuthenticated,
@@ -1312,6 +1313,7 @@ class TestCreateStrategyParams:
         assert "tags" in params
         assert "variables" in params
         assert "canvas" in params
+        assert "kalshi_subaccount" in params
 
     def test_async_create_strategy_accepts_block_params(self):
         """Async create_strategy() must also accept the expanded params."""
@@ -1323,6 +1325,7 @@ class TestCreateStrategyParams:
         assert "triggers" in params
         assert "actions" in params
         assert "tags" in params
+        assert "kalshi_subaccount" in params
 
     def test_create_strategy_sends_camel_case_fields(self):
         """create_strategy() must send camelCase field names to the API."""
@@ -1336,6 +1339,7 @@ class TestCreateStrategyParams:
         assert '"actions"' in source
         assert '"safety"' in source
         assert '"tags"' in source
+        assert '"kalshiSubaccount"' in source
 
 
 class TestUpdateStrategyParams:
@@ -1350,7 +1354,7 @@ class TestUpdateStrategyParams:
             "name", "description", "market_id", "visibility", "exec_mode",
             "tick_ms", "triggers", "conditions", "actions", "safety",
             "logic_blocks", "calc_blocks", "tags", "variables", "canvas",
-            "market_slots",
+            "market_slots", "kalshi_subaccount",
         ):
             assert expected in params, f"missing param: {expected}"
 
@@ -1363,7 +1367,7 @@ class TestUpdateStrategyParams:
             "name", "description", "market_id", "visibility", "exec_mode",
             "tick_ms", "triggers", "conditions", "actions", "safety",
             "logic_blocks", "calc_blocks", "tags", "variables", "canvas",
-            "market_slots",
+            "market_slots", "kalshi_subaccount",
         ):
             assert expected in params, f"missing async param: {expected}"
 
@@ -1375,7 +1379,7 @@ class TestUpdateStrategyParams:
             '"visibility"', '"execMode"', '"tickMs"', '"triggers"',
             '"conditions"', '"actions"', '"safety"', '"logicBlocks"',
             '"calcBlocks"', '"tags"', '"variables"', '"canvas"',
-            '"marketSlots"',
+            '"marketSlots"', '"kalshiSubaccount"',
         ):
             assert camel in source, f"missing camelCase key: {camel}"
 
@@ -3742,6 +3746,7 @@ class TestNewModels:
         assert trade.pnl == ""
 
 
+
 class TestStrategySocialVersioningEventLog:
     """Tests for strategy social, versioning, event-log methods (#124)."""
 
@@ -4348,7 +4353,7 @@ class TestPolymarketPortfolioEndpoints:
         asyncio.run(_run())
 
 
-class TestNewModels:
+class TestNewModelsPOLA476:
     """Tests for new model classes (POLA-476)."""
 
     def test_news_article_model_fields(self):
@@ -4463,6 +4468,7 @@ class TestNewModels:
 
     def test_new_models_exported_from_package(self):
         from polyforge import (
+            AccuracyLeaderboardEntry,
             Badge,
             BatchOrderItem,
             BatchOrderResult,
@@ -4480,6 +4486,7 @@ class TestNewModels:
             TopTraderEntry,
         )
         assert all(m is not None for m in [
+            AccuracyLeaderboardEntry,
             Badge, BatchOrderItem, BatchOrderResult, BulkCancelError, BulkCancelResult,
             ClobBook, ClobPriceHistory, MidpointInfo, NewsArticle,
             PolymarketActivity, PolymarketEarningsEntry, PolymarketPortfolioEntry,
@@ -4539,6 +4546,18 @@ class TestNewModels:
         assert entry.username == "trader1"
         assert entry.display_name == "Trader One"
         assert entry.total_trades == 250
+
+    def test_accuracy_leaderboard_entry_defaults(self):
+        from polyforge.models import AccuracyLeaderboardEntry
+        entry = AccuracyLeaderboardEntry()
+        assert entry.rank == 0
+        assert entry.user_id == ""
+        assert entry.username == ""
+        assert entry.display_name is None
+        assert entry.avatar_url is None
+        assert entry.pnl == ""
+        assert entry.win_rate == ""
+        assert entry.trade_count == 0
 
 
 class TestRedeemPosition:
@@ -4814,6 +4833,7 @@ class TestRewardsMethods:
             "min_size": "100",
         })
         result = client.get_market_rewards_detail(market_id="some-market")
+        assert result is not None
         assert result.condition_id == "0xabc"
         assert result.rate_per_day == "50.0"
         client._get.assert_called_once_with("/api/v1/rewards/market/some-market")
@@ -4939,6 +4959,57 @@ class TestCrossVenueArbitrage:
 
         asyncio.run(_run())
 
+    def test_create_market_match(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._post = MagicMock(return_value={
+            "id": "match-1",
+            "polymarketId": "p1",
+            "kalshiId": "k1",
+            "verified": False,
+            "confidence": 0.92,
+            "matchMethod": "manual",
+            "createdAt": "2026-04-24T00:00:00Z",
+            "updatedAt": "2026-04-24T00:00:00Z",
+        })
+        result = client.create_market_match("p1", "k1")
+        assert isinstance(result, MarketMatch)
+        assert result.id == "match-1"
+        assert result.polymarket_id == "p1"
+        assert result.kalshi_id == "k1"
+        assert not result.verified
+        client._post.assert_called_once_with("/api/v1/arbitrage/matches", json={"polymarketId": "p1", "kalshiId": "k1"})
+        client.close()
+
+    def test_verify_market_match(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._post = MagicMock(return_value={
+            "id": "match-1",
+            "polymarketId": "p1",
+            "kalshiId": "k1",
+            "verified": True,
+            "confidence": 0.92,
+            "matchMethod": "auto",
+            "createdAt": "2026-04-24T00:00:00Z",
+            "updatedAt": "2026-04-24T00:00:00Z",
+        })
+        result = client.verify_market_match("match-1")
+        assert isinstance(result, MarketMatch)
+        assert result.id == "match-1"
+        assert result.verified
+        client._post.assert_called_once_with("/api/v1/arbitrage/matches/match-1/verify")
+        client.close()
+
+    def test_delete_market_match(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._delete = MagicMock(return_value=None)
+        result = client.delete_market_match("match-1")
+        assert result is None
+        client._delete.assert_called_once_with("/api/v1/arbitrage/matches/match-1")
+        client.close()
+
     def test_sync_get_spread_comparison(self):
         from unittest.mock import MagicMock
         client = PolyforgeClient(api_key="test-key")
@@ -4952,6 +5023,7 @@ class TestCrossVenueArbitrage:
         result = client.get_spread_comparison()
         assert len(result) == 1
         assert result[0].yes_spread_pct == 10.0
+        assert result[0].polymarket is not None
         assert result[0].polymarket.market_id == "p1"
         client.close()
 
@@ -5019,7 +5091,9 @@ class TestCrossVenueArbitrage:
         result = client.get_cross_venue_comparison("m1")
         assert result.match_id == "m1"
         assert result.spread_pct == 10.0
+        assert result.polymarket is not None
         assert result.polymarket.market_id == "p1"
+        assert result.kalshi is not None
         assert result.kalshi.yes_price == 0.5
         assert result.verified is True
         client._get.assert_called_once_with("/api/v1/arbitrage/cross-venue/m1/comparison")
@@ -5061,6 +5135,9 @@ class TestCrossVenueArbitrage:
             "get_market_matches",
             "get_market_match",
             "sync_market_matches",
+            "create_market_match",
+            "verify_market_match",
+            "delete_market_match",
             "get_spread_comparison",
             "get_arbitrage_history",
             "get_arbitrage_alerts",
@@ -5195,15 +5272,15 @@ class TestPublicHealthEndpoint:
         original_send = client._client.send
 
         captured_req = {}
-        def _fake_send(req, **kw):
-            captured_req["method"] = req.method
-            captured_req["url"] = str(req.url)
-            captured_req["headers"] = dict(req.headers)
+        def _fake_send(request, **kw):
+            captured_req["method"] = request.method
+            captured_req["url"] = str(request.url)
+            captured_req["headers"] = dict(request.headers)
             r = httpx.Response(200, json={"status": "ok"})
-            r.request = req
+            r.request = request
             return r
 
-        client._client.send = _fake_send
+        client._client.send = _fake_send  # type: ignore[assignment]
         try:
             result = client._get_no_auth("/health")
             assert result == {"status": "ok"}
@@ -5223,13 +5300,13 @@ class TestPublicHealthEndpoint:
         original_send = client._client.send
         stripped_headers = {}
 
-        def _fake_send(req, **kw):
-            stripped_headers.update({k.lower(): v for k, v in req.headers.items()})
+        def _fake_send(request, **kw):
+            stripped_headers.update({k.lower(): v for k, v in request.headers.items()})
             r = httpx.Response(200, json={"status": "ok"})
-            r.request = req
+            r.request = request
             return r
 
-        client._client.send = _fake_send
+        client._client.send = _fake_send  # type: ignore[assignment]
         try:
             client._get_no_auth("/health")
             assert "authorization" not in stripped_headers, \
@@ -5241,7 +5318,7 @@ class TestPublicHealthEndpoint:
     def test_get_health_preserves_zero_uptime(self):
         """Zero uptime must be preserved, not dropped by falsy-or parsing."""
         client = PolyforgeClient(api_key="test-key")
-        client._get_no_auth = lambda _path: {
+        client._get_no_auth = lambda path: {
             "status": "starting",
             "service": "api-service",
             "version": "2.0.0",
@@ -5255,7 +5332,7 @@ class TestPublicHealthEndpoint:
     def test_get_health_preserves_int_zero_uptime(self):
         """Integer zero uptime must be preserved, not dropped by falsy-or parsing."""
         client = PolyforgeClient(api_key="test-key")
-        client._get_no_auth = lambda _path: {
+        client._get_no_auth = lambda path: {
             "status": "starting",
             "uptime": 0,
         }
@@ -6556,7 +6633,7 @@ class TestTradingCopyNumericValidation:
     def test_update_copy_config_rejects_invalid_numeric_kwargs(self):
         client = PolyforgeClient(api_key="test")
         with pytest.raises(ValueError, match="Infinity"):
-            client.update_copy_config("copy-1", max_exposure="Infinity")
+            client.update_copy_config("copy-1", max_exposure="Infinity")  # type: ignore[arg-type]
         client.close()
 
     def test_update_copy_config_allows_negative_price_offset(self):
@@ -6740,7 +6817,7 @@ class TestTradingCopyNumericValidation:
                     max_daily_loss=0,
                 )
             with pytest.raises(ValueError, match="Infinity"):
-                await client.update_copy_config("copy-1", price_offset="Infinity")
+                await client.update_copy_config("copy-1", price_offset="Infinity")  # type: ignore[arg-type]
             await client.close()
 
         asyncio.run(_run())
@@ -7204,6 +7281,9 @@ class TestMiscUtilityEndpointPaths:
     def test_get_accuracy_overview_path(self):
         assert '"/api/v1/accuracy"' in self._src(PolyforgeClient.get_accuracy_overview)
 
+    def test_get_accuracy_leaderboard_path(self):
+        assert '"/api/v1/accuracy/leaderboard"' in self._src(PolyforgeClient.get_accuracy_leaderboard)
+
     def test_get_feed_path(self):
         assert '"/api/v1/feed"' in self._src(PolyforgeClient.get_feed)
 
@@ -7425,6 +7505,67 @@ class TestMiscUtilityEnumValidation:
                 client.vote_market_sentiment(
                     "m1", direction="SELL", confidence=101,
                 )
+        finally:
+            client.close()
+
+    def test_accuracy_leaderboard_invalid_period_rejected(self):
+        client = PolyforgeClient(api_key="test")
+        try:
+            with pytest.raises(ValueError, match="period"):
+                client.get_accuracy_leaderboard(period="1d")
+        finally:
+            client.close()
+
+    def test_accuracy_leaderboard_negative_offset_rejected(self):
+        client = PolyforgeClient(api_key="test")
+        try:
+            with pytest.raises(ValueError, match="offset must be >= 0"):
+                client.get_accuracy_leaderboard(offset=-5)
+        finally:
+            client.close()
+
+    def test_accuracy_leaderboard_non_aligned_offset_rejected(self):
+        client = PolyforgeClient(api_key="test")
+        try:
+            with pytest.raises(ValueError, match="must be a multiple of limit"):
+                client.get_accuracy_leaderboard(offset=7, limit=10)
+        finally:
+            client.close()
+
+    def test_accuracy_leaderboard_non_positive_limit_with_offset_rejected(self):
+        client = PolyforgeClient(api_key="test")
+        try:
+            with pytest.raises(ValueError, match="limit must be >= 1"):
+                client.get_accuracy_leaderboard(offset=0, limit=0)
+        finally:
+            client.close()
+
+    def test_accuracy_leaderboard_non_positive_limit_without_offset_rejected(self):
+        client = PolyforgeClient(api_key="test")
+        try:
+            with pytest.raises(ValueError, match="limit must be >= 1"):
+                client.get_accuracy_leaderboard(limit=0)
+        finally:
+            client.close()
+
+    def test_accuracy_leaderboard_offset_without_limit_uses_default_limit(self):
+        def handler(request):
+            assert request.url.path == "/api/v1/accuracy/leaderboard"
+            assert request.url.params.get("page") == "2"
+            assert request.url.params.get("limit") == "20"
+            return httpx.Response(200, json={"data": [], "total": 0, "page": 2, "limit": 20})
+
+        transport = httpx.MockTransport(handler)
+        client = PolyforgeClient(api_key="test", api_url="http://localhost:9999")
+        client._client = httpx.Client(
+            base_url="http://localhost:9999",
+            headers={"Authorization": "Bearer test"},
+            transport=transport,
+        )
+        try:
+            result = client.get_accuracy_leaderboard(offset=20)
+            assert result.page == 2
+            assert result.limit == 20
         finally:
             client.close()
 
@@ -7828,6 +7969,43 @@ class TestMiscUtilityEndpointRoundtrips:
         finally:
             client.close()
 
+    def test_get_accuracy_leaderboard_parses_payload(self):
+        def handler(request):
+            assert request.url.path == "/api/v1/accuracy/leaderboard"
+            return httpx.Response(200, json={
+                "data": [
+                    {
+                        "rank": 1, "userId": "user-1", "username": "trader1",
+                        "displayName": "Trader One", "avatarUrl": "https://img/1.png",
+                        "pnl": "1500.42", "winRate": "0.85", "tradeCount": 340,
+                    },
+                    {
+                        "rank": 2, "userId": "user-2", "username": "trader2",
+                        "displayName": None, "avatarUrl": None,
+                        "pnl": "890.10", "winRate": "0.72", "tradeCount": 150,
+                    },
+                ],
+                "total": 2, "page": 1, "limit": 20,
+                "totalPages": 1, "hasNext": False,
+            })
+        client = self._client_with(handler)
+        try:
+            result = client.get_accuracy_leaderboard()
+            assert result.total == 2
+            assert len(result.data) == 2
+            assert result.data[0].rank == 1
+            assert result.data[0].user_id == "user-1"
+            assert result.data[0].username == "trader1"
+            assert result.data[0].display_name == "Trader One"
+            assert result.data[0].avatar_url == "https://img/1.png"
+            assert result.data[0].pnl == "1500.42"
+            assert result.data[0].win_rate == "0.85"
+            assert result.data[0].trade_count == 340
+            assert result.data[1].display_name is None
+            assert result.data[1].avatar_url is None
+        finally:
+            client.close()
+
 
 class TestMiscUtilityEndpointsAsync:
     """Smoke-check that the async client mirrors the sync surface end-to-end."""
@@ -7957,6 +8135,120 @@ class TestMiscUtilityEndpointsAsync:
                 assert res.data[0].mood == "DISCIPLINED"
                 assert res.data[0].id == "ord-1"
                 assert res.data[0].note == "plan"
+            finally:
+                await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_get_accuracy_leaderboard_parses_payload(self):
+        import asyncio
+
+        def handler(request):
+            assert request.url.path == "/api/v1/accuracy/leaderboard"
+            return httpx.Response(200, json={
+                "data": [
+                    {
+                        "rank": 1, "userId": "u1", "username": "t1",
+                        "displayName": "T1", "avatarUrl": None,
+                        "pnl": "500.00", "winRate": "0.75", "tradeCount": 100,
+                    },
+                ],
+                "total": 1, "page": 1, "limit": 20,
+                "totalPages": 1, "hasNext": False,
+            })
+
+        async def _run():
+            client = self._async_client_with(handler)
+            try:
+                result = await client.get_accuracy_leaderboard(period="7d", limit=10)
+                assert result.total == 1
+                assert result.data[0].rank == 1
+                assert result.data[0].pnl == "500.00"
+            finally:
+                await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_accuracy_leaderboard_invalid_period_rejected(self):
+        import asyncio
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test")
+            try:
+                with pytest.raises(ValueError, match="period"):
+                    await client.get_accuracy_leaderboard(period="1d")
+            finally:
+                await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_accuracy_leaderboard_negative_offset_rejected(self):
+        import asyncio
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test")
+            try:
+                with pytest.raises(ValueError, match="offset must be >= 0"):
+                    await client.get_accuracy_leaderboard(offset=-5)
+            finally:
+                await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_accuracy_leaderboard_non_aligned_offset_rejected(self):
+        import asyncio
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test")
+            try:
+                with pytest.raises(ValueError, match="must be a multiple of limit"):
+                    await client.get_accuracy_leaderboard(offset=7, limit=10)
+            finally:
+                await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_accuracy_leaderboard_non_positive_limit_with_offset_rejected(self):
+        import asyncio
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test")
+            try:
+                with pytest.raises(ValueError, match="limit must be >= 1"):
+                    await client.get_accuracy_leaderboard(offset=0, limit=0)
+            finally:
+                await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_accuracy_leaderboard_non_positive_limit_without_offset_rejected(self):
+        import asyncio
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test")
+            try:
+                with pytest.raises(ValueError, match="limit must be >= 1"):
+                    await client.get_accuracy_leaderboard(limit=0)
+            finally:
+                await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_accuracy_leaderboard_offset_without_limit_uses_default_limit(self):
+        import asyncio
+
+        def handler(request):
+            assert request.url.path == "/api/v1/accuracy/leaderboard"
+            assert request.url.params.get("page") == "2"
+            assert request.url.params.get("limit") == "20"
+            return httpx.Response(200, json={"data": [], "total": 0, "page": 2, "limit": 20})
+
+        async def _run():
+            client = self._async_client_with(handler)
+            try:
+                result = await client.get_accuracy_leaderboard(offset=20)
+                assert result.page == 2
+                assert result.limit == 20
             finally:
                 await client.close()
 
@@ -8549,13 +8841,15 @@ class TestArbExecutionAsync:
             assert result.arb_position_id == "pos-9"
             assert result.buy_leg is not None and result.buy_leg.price == 0.31
             client._post.assert_awaited_once()
-            assert client._post.await_args.args == ("/api/v1/arbitrage/execute",)
-            assert client._post.await_args.kwargs["json"] == {
+            call_args = client._post.await_args
+            assert call_args is not None
+            assert call_args.args == ("/api/v1/arbitrage/execute",)
+            assert call_args.kwargs["json"] == {
                 "matchId": VALID_ARB_MATCH_ID,
                 "size": 200.0,
                 "maxSlippagePct": 2.0,
             }
-            _assert_valid_idempotency_key(client._post.await_args.kwargs["idempotency_key"])
+            _assert_valid_idempotency_key(call_args.kwargs["idempotency_key"])
             await client.close()
 
         asyncio.run(_run())
@@ -8572,8 +8866,10 @@ class TestArbExecutionAsync:
             assert isinstance(result, ArbCloseResponse)
             assert result.status == "CLOSING"
             client._post.assert_awaited_once()
-            assert client._post.await_args.args == ("/api/v1/arbitrage/positions/pos-9/close",)
-            _assert_valid_idempotency_key(client._post.await_args.kwargs["idempotency_key"])
+            call_args = client._post.await_args
+            assert call_args is not None
+            assert call_args.args == ("/api/v1/arbitrage/positions/pos-9/close",)
+            _assert_valid_idempotency_key(call_args.kwargs["idempotency_key"])
             await client.close()
 
         asyncio.run(_run())

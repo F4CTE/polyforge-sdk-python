@@ -174,6 +174,7 @@ class Strategy:
     blocks: list[StrategyBlock] = field(default_factory=list)
     created_at: str = ""
     updated_at: str = ""
+    kalshi_subaccount: str | None = None
 
 
 @dataclass
@@ -906,6 +907,24 @@ class AccuracyScore:
     win_rate: str = ""
     calibration: List[CalibrationBucket] = field(default_factory=list)
     by_category: Dict[str, CategoryAccuracy] = field(default_factory=dict)
+
+
+@dataclass
+class AccuracyLeaderboardEntry:
+    """A single entry in the accuracy leaderboard, ranked by win-rate.
+
+    The platform returns ``pnl`` and ``winRate`` as decimal strings to
+    preserve precision.
+    """
+
+    rank: int = 0
+    user_id: str = ""
+    username: str = ""
+    display_name: Optional[str] = None
+    avatar_url: Optional[str] = None
+    pnl: str = ""
+    win_rate: str = ""
+    trade_count: int = 0
 
 
 @dataclass
