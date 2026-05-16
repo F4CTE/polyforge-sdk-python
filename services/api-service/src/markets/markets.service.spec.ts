@@ -1,8 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { mockDeep, DeepMockProxy } from "vitest-mock-extended";
 import { NotFoundException } from "@nestjs/common";
 import { MarketsService } from "./markets.service";
-import { createMockDb, MockDb } from "../../test/helpers/mock-db";
+import { createMockDb, MockDb, createDeepMock } from "../../test/helpers/mock-db";
 import { RedisService } from "@polyforge/shared-redis";
 import { ConfigService } from "@nestjs/config";
 import { ClobReadService } from "../common/services/clob-read.service";
@@ -98,11 +97,11 @@ function sqlText(call: unknown[]): string {
 describe("MarketsService", () => {
   let service: MarketsService;
   let db: MockDb;
-  let redis: DeepMockProxy<RedisService>;
+  let redis: ReturnType<typeof createDeepMock>;
 
   beforeEach(() => {
     db = createMockDb();
-    redis = mockDeep<RedisService>();
+    redis = createDeepMock();
     redis.get.mockResolvedValue(null);
     redis.set.mockResolvedValue(undefined);
     const config = {

@@ -92,5 +92,18 @@ describe("EventsService", () => {
       expect(payload.orderId).toBe("order-2");
       expect(payload.reason).toBe("timeout error");
     });
+
+    it("includes orderStatus when provided", async () => {
+      await svc.emitOrderFailed(
+        "user-1",
+        "order-2",
+        "timeout error",
+        undefined,
+        "copy-1",
+        "LIVE",
+      );
+      const payload = redis.xadd.mock.calls[0][1];
+      expect(payload.orderStatus).toBe("LIVE");
+    });
   });
 });

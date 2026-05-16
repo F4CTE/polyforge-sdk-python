@@ -65,12 +65,18 @@ export class EventsService {
     userId: string,
     orderId: string,
     reason: string,
+    closePositionId?: string,
+    copyTradeId?: string | null,
+    orderStatus?: string,
   ): Promise<void> {
     await this.redis.xadd(STREAM, {
       type: "ORDER_FAILED",
       userId,
       orderId,
       reason,
+      ...(closePositionId ? { closePositionId } : {}),
+      ...(copyTradeId ? { copyTradeId } : {}),
+      ...(orderStatus ? { orderStatus } : {}),
       ts: String(Date.now()),
     });
   }

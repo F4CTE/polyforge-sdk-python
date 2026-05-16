@@ -612,8 +612,11 @@ describe("OrdersService", () => {
       expect(events.emitOrderFailed).toHaveBeenCalledOnce();
       expect(events.emitOrderFailed).toHaveBeenCalledWith(
         "user-1",
-        expect.any(String),
-        expect.any(String),
+        "order-fail",
+        "sign error",
+        undefined,
+        undefined,
+        "FAILED",
       );
     });
 

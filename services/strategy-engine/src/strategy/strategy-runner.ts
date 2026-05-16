@@ -29,6 +29,7 @@ const dailyExecKey = (strategyId: string): string => {
 };
 
 const MIN_TICK_MS = 200;
+const TICK_LOCK_TTL_MS = 10_000;
 const STALE_PRICE_MS = 5_000;
 const MAX_STALE_CHECK_BACKOFF_MS = 60_000;
 
@@ -40,6 +41,15 @@ const MAX_STALE_CHECK_BACKOFF_MS = 60_000;
  *  would return fired=true and turn a fail-closed safety boundary into
  *  fail-open. */
 const LEGACY_SAFETY_ALIASES = new Set(["MAX_POSITION_SIZE", "max_position"]);
+
+function secondsUntilNextUtcMidnight(now = new Date()): number {
+  const next = Date.UTC(
+    now.getUTCFullYear(),
+    now.getUTCMonth(),
+    now.getUTCDate() + 1,
+  );
+  return Math.max(1, Math.ceil((next - now.getTime()) / 1000));
+}
 
 export type StrategyRunnerStatus = "RUNNING" | "PAUSED" | "STOPPED";
 
@@ -70,6 +80,17 @@ export interface LogicConnection {
  */
 export class StrategyRunner {
   private readonly logger: Logger;
+  private readonly strategyId: string;
+  private readonly userId: string;
+  private readonly execMode: string;
+  private readonly tickMs: number;
+  private readonly triggers: Block[];
+  private readonly conditions: Block[];
+  private readonly actions: Block[];
+  private readonly safety: Block[];
+  private readonly logicBlocks: LogicBlock[];
+  private readonly logicConnections: LogicConnection[];
+  private readonly calcBlocks: Block[];
   status: StrategyRunnerStatus = "RUNNING";
   private timer: NodeJS.Timeout | null = null;
   private _pauseReason: string | null = null;
@@ -117,14 +138,14 @@ export class StrategyRunner {
   private readonly childModes: Map<string, SubStrategyMode> = new Map();
 
   constructor(
-    private readonly strategyId: string,
-    private readonly userId: string,
-    private readonly execMode: string,
-    private readonly tickMs: number,
-    private readonly triggers: Block[],
-    private readonly conditions: Block[],
-    private readonly actions: Block[],
-    private readonly safety: Block[],
+    strategyId: string,
+    userId: string,
+    execMode: string,
+    tickMs: number,
+    triggers: Block[],
+    conditions: Block[],
+    actions: Block[],
+    safety: Block[],
     private readonly variables: StrategyVariable[],
     private readonly redis: RedisService,
     private readonly betaLimits: BetaLimitsConfigService,
@@ -135,9 +156,9 @@ export class StrategyRunner {
       status: StrategyRunnerStatus,
       reason?: string,
     ) => Promise<void>,
-    private readonly logicBlocks: LogicBlock[] = [],
-    private readonly logicConnections: LogicConnection[] = [],
-    private readonly calcBlocks: Block[] = [],
+    logicBlocks: LogicBlock[] = [],
+    logicConnections: LogicConnection[] = [],
+    calcBlocks: Block[] = [],
     private readonly onRunStrategy?: (
       childStrategyId: string,
       parentId: string,
@@ -147,7 +168,34 @@ export class StrategyRunner {
     private readonly venue?: VenueId | "best",
     private readonly kalshiSubaccount?: number,
   ) {
+    this.strategyId = strategyId;
+    this.userId = userId;
+    this.execMode = execMode;
+    this.tickMs = tickMs;
+    this.triggers = StrategyRunner.normalizeBlocks(triggers);
+    this.conditions = StrategyRunner.normalizeBlocks(conditions);
+    this.actions = StrategyRunner.normalizeBlocks(actions);
+    this.safety = StrategyRunner.normalizeBlocks(safety);
+    this.logicBlocks = StrategyRunner.normalizeBlocks(logicBlocks) as LogicBlock[];
+    this.logicConnections = logicConnections;
+    this.calcBlocks = StrategyRunner.normalizeBlocks(calcBlocks);
     this.logger = new Logger(`StrategyRunner:${strategyId}`);
+  }
+
+  /**
+   * Normalize blocks from the builder/DB format (which may use `config`) to
+   * the runner's internal format (which expects `params`).  Falls back to
+   * `config` when `params` is missing so strategies saved before the
+   * builder→runner field-name alignment are not silently dropped.
+   */
+  private static normalizeBlocks(blocks: Block[]): Block[] {
+    return blocks.map((b) => {
+      const raw = b as unknown as Record<string, unknown>;
+      return {
+        ...b,
+        params: b.params ?? (raw.config as Record<string, unknown>) ?? {},
+      };
+    });
   }
 
   /** Register a child strategy launched by this runner */
@@ -380,8 +428,7 @@ export class StrategyRunner {
       const key = dailyExecKey(this.strategyId);
       const count = await redisClient.incr(key);
       if (count === 1) {
-        // New key: set TTL to 25 hours so it expires safely after UTC midnight
-        await redisClient.expire(key, 90_000);
+        await redisClient.expire(key, secondsUntilNextUtcMidnight());
       }
       const maxDaily = await this.betaLimits.getLimit(
         "maxDailyStrategyExecutions",
