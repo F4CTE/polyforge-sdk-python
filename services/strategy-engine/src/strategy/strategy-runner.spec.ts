@@ -11,10 +11,15 @@ function makeRedis(overrides: Record<string, unknown> = {}) {
     del: vi.fn().mockResolvedValue(1),
     getJson: vi.fn().mockResolvedValue(null),
     getClient: vi.fn().mockReturnValue({
+      get: vi
+        .fn()
+        .mockImplementation(async () =>
+          JSON.stringify({ price: 0.5, timestamp: Date.now() }),
+        ),
       lrange: vi.fn().mockResolvedValue([]),
       mget: vi
         .fn()
-        .mockResolvedValue([
+        .mockImplementation(async () => [
           JSON.stringify({ price: 0.5, timestamp: Date.now() }),
         ]),
       // Beta daily execution counter
