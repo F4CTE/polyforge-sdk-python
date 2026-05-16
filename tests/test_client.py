@@ -1199,7 +1199,7 @@ class TestPlaceOrderValidation:
         with pytest.raises(TypeError, match="slices must be an integer"):
             client.place_smart_order(
                 type="TWAP", token_id="tok", side="BUY",
-                outcome="YES", total_size=10.0, slices=2.5, interval_minutes=10,
+                outcome="YES", total_size=10.0, slices=2.5, interval_minutes=10,  # type: ignore[arg-type]
             )
         client.close()
 
@@ -1208,7 +1208,7 @@ class TestPlaceOrderValidation:
         with pytest.raises(TypeError, match="interval_minutes must be an integer"):
             client.place_smart_order(
                 type="TWAP", token_id="tok", side="BUY",
-                outcome="YES", total_size=10.0, slices=5, interval_minutes=1.5,
+                outcome="YES", total_size=10.0, slices=5, interval_minutes=1.5,  # type: ignore[arg-type]
             )
         client.close()
 
