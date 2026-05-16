@@ -108,8 +108,6 @@ export class StrategyRunner {
   readonly childStrategies: Set<string> = new Set();
   /** Maps child strategy IDs to their sub-strategy mode */
   private readonly childModes: Map<string, SubStrategyMode> = new Map();
-  /** Tracks already-warned safety blocks to avoid per-tick log spam */
-  private _warnedSafetyFallbackIds?: Set<string>;
 
   constructor(
     private readonly strategyId: string,
@@ -804,47 +802,27 @@ export class StrategyRunner {
 
     // 2. SAFETY — any failure stops the strategy
     for (const block of this.safety) {
-      let evaluator = SAFETY_REGISTRY[block.type];
+      const evaluator = SAFETY_REGISTRY[block.type];
+      // Fail closed: unknown / unregistered safety block types must stop
+      // the strategy. Skipping an unknown guard could allow a strategy to
+      // keep trading without an intended safety stop.
       if (!evaluator) {
-        if (block.type === "MAX_POSITION_SIZE") {
-          // Runtime compatibility: MAX_POSITION_SIZE was moved from
-          // SAFETY_REGISTRY to CONDITION_REGISTRY.  Fall back to the
-          // condition registry so existing persisted strategies don't
-          // silently lose their safety guards.
-          const fallback = CONDITION_REGISTRY[block.type];
-          if (fallback) {
-            if (!this._warnedSafetyFallbackIds?.has(block.id)) {
-              (this._warnedSafetyFallbackIds ??= new Set()).add(block.id);
-              this.logger.warn(
-                `Safety block "${block.id}" (type=${block.type}) resolved from ` +
-                  `CONDITION_REGISTRY.  Move it to the conditions section in your ` +
-                  `strategy definition.`,
-              );
-            }
-            evaluator = fallback;
-          }
-        } else {
-          this.logger.error(
-            `Unknown safety block type: ${block.type} (blockId=${block.id}). ` +
-              `Stopping strategy to avoid silently disabling a safety guard.`,
-          );
-          this.stop();
-          await this.onStatusChange(
-            "STOPPED",
-            `unknown safety block: ${block.type}`,
-          );
-          await this.prisma.strategy
-            .update({
-              where: { id: this.strategyId },
-              data: { status: StrategyStatus.IDLE },
-            })
-            .catch(() => {});
-          await this.emitStrategyEvent(
-            "STRATEGY_STOPPED",
-            `unknown safety block: ${block.type}`,
-          );
-          return;
-        }
+        this.stop();
+        await this.onStatusChange(
+          "STOPPED",
+          `safety_block_type_missing:${block.type}`,
+        );
+        await this.prisma.strategy
+          .update({
+            where: { id: this.strategyId },
+            data: { status: StrategyStatus.IDLE },
+          })
+          .catch(() => {});
+        await this.emitStrategyEvent(
+          "STRATEGY_STOPPED",
+          `safety_block_type_missing:${block.type}`,
+        );
+        return;
       }
 
       const resolvedBlock = {
