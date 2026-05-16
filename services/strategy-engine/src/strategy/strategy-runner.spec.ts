@@ -3267,7 +3267,8 @@ describe("StrategyRunner — concurrent tick serialization", () => {
           // 3: Tick C acquires (new unlock generation while unlock A still pending)
           // 4: Tick D misses behind unlock C (must arm retry for unlock C too)
           // 5: Retry behind unlock C acquires
-          if (setCallCount === 2 || setCallCount === 4) return Promise.resolve(null);
+          if (setCallCount === 2 || setCallCount === 4)
+            return Promise.resolve(null);
           return Promise.resolve("OK");
         }),
         del: vi.fn().mockResolvedValue(1),
@@ -3396,7 +3397,7 @@ describe("StrategyRunner — concurrent tick serialization", () => {
     await runner.onPriceEvent("tok1", 0.5);
 
     // tickInFlight must NOT be leaked — finally always resets it
-    expect(runner['tickInFlight']).toBe(false);
+    expect(runner["tickInFlight"]).toBe(false);
     // Runner is not dead — another tick would succeed
     expect(runner.status).toBe("RUNNING");
   });
@@ -3438,7 +3439,7 @@ describe("StrategyRunner — concurrent tick serialization", () => {
     // First tick: Redis lock contested → evaluation skipped, tick gate released
     await runner.onPriceEvent("tok1", 0.5);
     expect(state.getStateAndPrices).not.toHaveBeenCalled();
-    expect(runner['tickInFlight']).toBe(false);
+    expect(runner["tickInFlight"]).toBe(false);
     expect(runner.status).toBe("RUNNING");
 
     // Advance past MIN_TICK_MS so the next tick passes debounce
