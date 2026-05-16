@@ -2804,6 +2804,120 @@ describe("StrategyRunner — concurrent tick serialization", () => {
     }
   });
 
+  it("chains only one retry when multiple EVENT-mode ticks fail lock acquisition behind the same pending Redis unlock (POLA-5150)", async () => {
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(300);
+
+      // Defer the Redis unlock eval so the unlock promise stays
+      // pending — this creates the race window where multiple ticks
+      // can fail SET NX behind the same in-flight unlock.
+      let resolveUnlock!: (value: number) => void;
+      let evalCallCount = 0;
+      const unlockPromise = new Promise<number>((resolve) => {
+        resolveUnlock = resolve;
+      });
+      let setCallCount = 0;
+      const client = {
+        lrange: vi.fn().mockResolvedValue([]),
+        mget: vi
+          .fn()
+          .mockResolvedValue([
+            JSON.stringify({ price: 0.5, timestamp: Date.now() }),
+          ]),
+        incr: vi.fn().mockResolvedValue(1),
+        expire: vi.fn().mockResolvedValue(1),
+        set: vi.fn().mockImplementation(() => {
+          setCallCount++;
+          // Call 1: Tick A acquires the lock → OK
+          // Calls 2 & 3: Tick B / Tick C fail SET NX behind the
+          // same pending unlock
+          // Call 4: Tick B's chained retry after unlock → OK
+          if (setCallCount === 2 || setCallCount === 3)
+            return Promise.resolve(null);
+          return Promise.resolve("OK");
+        }),
+        del: vi.fn().mockResolvedValue(1),
+        eval: vi.fn().mockImplementation((..._args: unknown[]) => {
+          evalCallCount++;
+          if (evalCallCount === 1) {
+            // Tick A's unlock — deferred so the key outlives
+            // tickInFlight release and forces SET NX failure.
+            return unlockPromise;
+          }
+          // Tick B's retry unlock (after the retry succeeds)
+          return Promise.resolve(1);
+        }),
+      };
+      const redis = makeRedis({ getClient: vi.fn().mockReturnValue(client) });
+      const state = makeState();
+      state.getStateAndPrices.mockResolvedValue({
+        state: { ...DEFAULT_STATE },
+        prices: new Map([["tok1", { price: 0.5, timestamp: Date.now() }]]),
+      });
+
+      const runner = makeRunner({ execMode: "EVENT", state, redis });
+
+      // Tick A: acquires lock, evaluates, enters finally —
+      // tickInFlight is released and the unlock eval is fire-and-forget
+      // (still pending).
+      const tickAPromise = runner.onPriceEvent("tok1", 0.5);
+      await vi.advanceTimersByTimeAsync(0);
+
+      // Tick A completed its evaluation.
+      expect(state.getStateAndPrices).toHaveBeenCalledTimes(1);
+
+      // Advance past the min-tick throttle so Tick B can enter.
+      vi.setSystemTime(550);
+      await vi.advanceTimersByTimeAsync(0);
+
+      // Tick B: price event arrives.  tickInFlight is false, but
+      // SET NX returns null because the lock key still exists.
+      // pendingRedisUnlock is non-null → chains a retry on unlock
+      // and sets pendingRedisUnlockRetry.
+      await runner.onPriceEvent("tok1", 0.55);
+
+      // Tick B did NOT evaluate — SET NX failed.
+      expect(state.getStateAndPrices).toHaveBeenCalledTimes(1);
+
+      // Advance past the min-tick throttle again so Tick C can enter.
+      vi.setSystemTime(800);
+      await vi.advanceTimersByTimeAsync(0);
+
+      // Tick C: another price event arrives.  tickInFlight is false,
+      // SET NX returns null (lock key still exists, unlock deferred).
+      // pendingRedisUnlock is non-null but equals pendingRedisUnlockRetry
+      // → the one-shot guard skips chaining another retry.
+      await runner.onPriceEvent("tok1", 0.56);
+
+      // Tick C also did NOT evaluate.
+      expect(state.getStateAndPrices).toHaveBeenCalledTimes(1);
+
+      // Resolve the deferred unlock → the ONE chained retry fires.
+      resolveUnlock(1);
+      await vi.advanceTimersByTimeAsync(0);
+
+      // Only Tick B's retry evaluated — not two retries.
+      expect(state.getStateAndPrices).toHaveBeenCalledTimes(2);
+
+      // Advance further to confirm Tick C's guard prevented any
+      // additional chained evaluation from firing.
+      await vi.advanceTimersByTimeAsync(500);
+      expect(state.getStateAndPrices).toHaveBeenCalledTimes(2);
+
+      // SET should have been called exactly 4 times:
+      //   Call 1: Tick A acquires (OK)
+      //   Call 2: Tick B fails (null)
+      //   Call 3: Tick C fails (null)
+      //   Call 4: Tick B's retry succeeds (OK)
+      expect(client.set).toHaveBeenCalledTimes(4);
+
+      await tickAPromise;
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("coalesces TICK mode ticks into a delayed follow-up after long evaluation", async () => {
     vi.useFakeTimers();
     try {
