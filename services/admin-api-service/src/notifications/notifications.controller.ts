@@ -1,4 +1,13 @@
-import { Controller, Post, Get, Body, UseGuards } from "@nestjs/common";
+import {
+  Controller,
+  Post,
+  Get,
+  Delete,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+} from "@nestjs/common";
 import { Throttle } from "@nestjs/throttler";
 import { NotificationsAdminService } from "./notifications.service";
 import { BroadcastDto } from "./dto/broadcast.dto";
@@ -34,9 +43,11 @@ export class NotificationsAdminController {
       action: "BROADCAST_NOTIFICATION",
       targetType: "notification",
       payload: {
+        channel: dto.channel,
         templateId: dto.templateId,
         subject: dto.subject,
-        channel: dto.channel,
+        userIds: dto.userIds,
+        recipientCount: dto.userIds?.length,
       },
       ip,
     } as const;
@@ -50,5 +61,64 @@ export class NotificationsAdminController {
   @Get("stats")
   getStats() {
     return this.notifications.getStats();
+  }
+
+  @Get("dlq")
+  @Roles(AdminRole.SUPER_ADMIN)
+  getDlqEntries(
+    @Query("limit") limit?: string,
+    @Query("cursor") cursor?: string,
+  ) {
+    const parsedLimit =
+      limit != null ? parseInt(limit, 10) : undefined;
+    const validLimit =
+      parsedLimit != null &&
+      Number.isFinite(parsedLimit) &&
+      parsedLimit > 0
+        ? parsedLimit
+        : undefined;
+    return this.notifications.getDlqEntries(validLimit, cursor);
+  }
+
+  @Post("dlq/:id/replay")
+  @Roles(AdminRole.SUPER_ADMIN)
+  async replayDlqEntry(
+    @Param("id") id: string,
+    @CurrentAdmin() admin: AdminJwtPayload,
+    @AdminIp() ip: string,
+  ) {
+    const auditMeta = {
+      adminId: admin.sub,
+      action: "REPLAY_DLQ_ENTRY",
+      targetType: "notification",
+      targetId: id,
+      ip,
+    } as const;
+
+    await this.audit.log({ ...auditMeta, status: "attempt" });
+    const result = await this.notifications.replayDlqEntry(id);
+    await this.audit.logSafe({ ...auditMeta, status: "success" });
+    return result;
+  }
+
+  @Delete("dlq/:id")
+  @Roles(AdminRole.SUPER_ADMIN)
+  async discardDlqEntry(
+    @Param("id") id: string,
+    @CurrentAdmin() admin: AdminJwtPayload,
+    @AdminIp() ip: string,
+  ) {
+    const auditMeta = {
+      adminId: admin.sub,
+      action: "DISCARD_DLQ_ENTRY",
+      targetType: "notification",
+      targetId: id,
+      ip,
+    } as const;
+
+    await this.audit.log({ ...auditMeta, status: "attempt" });
+    const result = await this.notifications.discardDlqEntry(id);
+    await this.audit.logSafe({ ...auditMeta, status: "success" });
+    return result;
   }
 }

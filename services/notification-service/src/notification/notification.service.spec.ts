@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import { mockDeep, MockProxy } from "vitest-mock-extended";
-import { NotificationService } from "./notification.service";
+import { NotificationService, LockContentionError } from "./notification.service";
 import { TemplatesService, NotificationContent } from "./templates.service";
 import { TelegramService } from "./telegram.service";
 import { DiscordService } from "./discord.service";
@@ -72,6 +72,7 @@ function buildMockRedisClient() {
     set: vi.fn().mockResolvedValue("OK"),
     get: vi.fn().mockResolvedValue(null),
     eval: vi.fn().mockResolvedValue(1),
+    exists: vi.fn().mockResolvedValue(0),
   };
 }
 
@@ -659,19 +660,22 @@ describe("NotificationService", () => {
       );
     });
 
-    it("serialises title and body into the queued item", async () => {
+    it("serialises eventType and raw data into the queued item", async () => {
+      const data = { fillPrice: "0.80", size: "100" };
       await service.enqueueDigest(
         "user-42",
         "DAILY",
         "ORDER_FILLED",
-        {},
+        data,
         STUB_CONTENT,
       );
 
       const [, jsonStr] = redisClient.rpush.mock.calls[0] as [string, string];
       const item = JSON.parse(jsonStr);
-      expect(item.title).toBe(STUB_CONTENT.title);
-      expect(item.body).toBe(STUB_CONTENT.body);
+      expect(item.eventType).toBe("ORDER_FILLED");
+      expect(item.data).toEqual(data);
+      expect(item.title).toBeUndefined();
+      expect(item.body).toBeUndefined();
     });
 
     it("includes a ts timestamp in the queued item", async () => {
@@ -698,8 +702,7 @@ describe("NotificationService", () => {
     function makeDigestItem(overrides: Record<string, unknown> = {}) {
       return JSON.stringify({
         eventType: "ORDER_FILLED",
-        title: "Order Filled",
-        body: "Your order was filled.",
+        data: { fillPrice: "0.80", size: "100" },
         ts: Date.now(),
         ...overrides,
       });
@@ -897,7 +900,7 @@ describe("NotificationService", () => {
       redisClient.scan.mockResolvedValueOnce(["0", ["digest:hourly:user-1"]]);
       redisClient.lrange.mockResolvedValueOnce([
         "not-valid-json",
-        makeDigestItem({ title: "Good item" }),
+        makeDigestItem({ data: { fillPrice: "0.80" } }),
       ]);
       (prisma.notificationPreference.findUnique as any).mockResolvedValue(
         prefs,
@@ -912,13 +915,16 @@ describe("NotificationService", () => {
       expect(mail.send).toHaveBeenCalledOnce();
     });
 
-    it("escapes stored digest title and body before building email HTML", async () => {
+    it("escapes digest content via templates.build before building email HTML", async () => {
       const prefs = makePrefs({ emailEnabled: true });
       redisClient.scan.mockResolvedValueOnce(["0", ["digest:hourly:user-1"]]);
+
+      // Store raw XSS data in the digest queue (simulating an attacker injecting into Redis)
+      const xssData = { fillPrice: '<img src=x onerror="alert(1)">' };
       redisClient.lrange.mockResolvedValueOnce([
         makeDigestItem({
-          title: '<img src=x onerror="alert(1)">',
-          body: '<script>alert("x")</script>',
+          data: xssData,
+          eventType: "ORDER_FILLED",
         }),
       ]);
       (prisma.notificationPreference.findUnique as any).mockResolvedValue(
@@ -928,17 +934,72 @@ describe("NotificationService", () => {
         email: "u@example.com",
       });
 
+      // build() escapes the raw data in its returned content
+      templates.build.mockReturnValueOnce({
+        title: "Order Filled",
+        body: `Your order was filled at &lt;img src=x onerror=&quot;alert(1)&quot;&gt;.`,
+        severity: "info",
+      });
+
       await service.flushDigest("HOURLY");
 
+      // build() was called with the raw data from the queue
+      expect(templates.build).toHaveBeenCalledWith(
+        "ORDER_FILLED",
+        xssData,
+      );
+
+      // The HTML body should contain the escaped content from build()
       expect(templates.toHtml).toHaveBeenCalledWith(
         expect.objectContaining({
           body: expect.stringContaining("&lt;img"),
         }),
       );
       const digestHtmlInput = templates.toHtml.mock.calls[0][0].body;
-      expect(digestHtmlInput).not.toContain("<img");
-      expect(digestHtmlInput).not.toContain("<script>");
-      expect(digestHtmlInput).toContain("&lt;script&gt;");
+      expect(digestHtmlInput).not.toContain("<img src=x onerror");
+      expect(digestHtmlInput).toContain("&lt;img src=x onerror=");
+    });
+
+    it("escapes legacy digest entries (title/body without data) in HTML output", async () => {
+      const prefs = makePrefs({ emailEnabled: true });
+      redisClient.scan.mockResolvedValueOnce(["0", ["digest:hourly:user-1"]]);
+
+      // Legacy entry: stored as {title, body} without a data field before the escaping change.
+      // These entries may contain attacker-controlled HTML that must be escaped.
+      const legacyItem = JSON.stringify({
+        eventType: "LEGACY_EVENT",
+        title: "<script>alert(\"xss\")</script>",
+        body: "<img src=x onerror=\"alert('xss')\">",
+        ts: Date.now(),
+      });
+      redisClient.lrange.mockResolvedValueOnce([legacyItem]);
+      (prisma.notificationPreference.findUnique as any).mockResolvedValue(
+        prefs,
+      );
+      (prisma.user.findUnique as any).mockResolvedValue({
+        email: "u@example.com",
+      });
+
+      await service.flushDigest("HOURLY");
+
+      // The HTML body must escape both legacy title and body
+      expect(templates.toHtml).toHaveBeenCalledWith(
+        expect.objectContaining({
+          body: expect.stringContaining("&lt;script&gt;"),
+        }),
+      );
+      const digestHtmlInput = templates.toHtml.mock.calls[0][0].body;
+      expect(digestHtmlInput).not.toContain("<script>alert");
+      expect(digestHtmlInput).not.toContain('<img src=x onerror');
+      expect(digestHtmlInput).toContain("&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;");
+      expect(digestHtmlInput).toContain("&lt;img src=x onerror=&quot;alert");
+
+      // Plaintext body for email/Telegram/Discord keeps the raw values intact
+      // mail.send(email, subject, text, html) — text is the 3rd positional arg
+      const emailText = mail.send.mock.calls[0][2];
+      expect(emailText).toContain('<script>alert("xss")</script>');
+      expect(emailText).toContain("<img src=x onerror=");
+      expect(emailText).not.toContain("&lt;script&gt;");
     });
   });
 
@@ -1169,9 +1230,9 @@ describe("NotificationService", () => {
       );
       vi.spyOn(service, "dispatch").mockResolvedValue(undefined);
 
-      // First handle: delivery dedup SET NX → OK, in-app dedup SET → OK,
-      // TTL extend SET → OK (default)
-      redisClient.set.mockResolvedValueOnce("OK").mockResolvedValueOnce("OK");
+      // First call: SET NX returns OK → xadd proceeds
+      // Second call: SET NX returns null (key already exists) → xadd skipped
+      redisClient.set.mockResolvedValueOnce("OK").mockResolvedValueOnce(null);
 
       await service.handle("ORDER_FILLED", {
         userId: "user-1",
@@ -1188,10 +1249,7 @@ describe("NotificationService", () => {
         }),
       );
 
-      // Second call with same content — delivery dedup SET NX returns null,
-      // GET returns "delivered" → early return (dedup)
-      redisClient.set.mockResolvedValueOnce(null);
-      redisClient.get.mockResolvedValueOnce("delivered");
+      // Second call with same content — same title+body → deduped
       await service.handle("ORDER_FILLED", {
         userId: "user-1",
         fillPrice: "0.80",
@@ -1253,9 +1311,7 @@ describe("NotificationService", () => {
         body: "Your order was filled.",
       });
 
-      redisClient.set
-        .mockResolvedValueOnce("OK") // in-app dedup
-        .mockResolvedValueOnce("OK"); // delivery dedup marker
+      redisClient.set.mockResolvedValueOnce("OK");
 
       await service.handle("ORDER_FILLED", {
         userId: "user-1",
@@ -1273,25 +1329,23 @@ describe("NotificationService", () => {
         "NX",
       );
 
-      // In-app dedup key is the second SET call (call 1, after delivery NX)
-      const dedupKey: string = redisClient.set.mock.calls[1][0];
+      // Key should include a content hash suffix after user-1
+      const dedupKey: string = redisClient.set.mock.calls[0][0];
       const parts = dedupKey.split(":");
       expect(parts.length).toBeGreaterThanOrEqual(5);
       // Last part is the content hash (alphanumeric)
       expect(parts[parts.length - 1]).toMatch(/^[a-z0-9]+$/);
     });
 
-    it("proceeds with in-app push when in-app dedup SET fails with a Redis error", async () => {
+    it("proceeds with in-app push when dedup SET fails with a Redis error", async () => {
       const prefs = makePrefs({ notificationFreq: "IMMEDIATE" });
       (prisma.notificationPreference.findUnique as any).mockResolvedValue(
         prefs,
       );
       vi.spyOn(service, "dispatch").mockResolvedValue(undefined);
 
-      // Delivery dedup NX OK, in-app dedup SET throws (Redis error) → caught → xadd proceeds
-      redisClient.set
-        .mockResolvedValueOnce("OK")
-        .mockRejectedValueOnce(new Error("Redis connection lost"));
+      // SET throws an error (e.g. Redis connection lost)
+      redisClient.set.mockRejectedValueOnce(new Error("Redis connection lost"));
 
       await service.handle("ORDER_FILLED", {
         userId: "user-1",
@@ -1316,8 +1370,8 @@ describe("NotificationService", () => {
       );
       vi.spyOn(service, "dispatch").mockResolvedValue(undefined);
 
-      // Delivery dedup NX succeeds, in-app dedup succeeds, then xadd fails
-      redisClient.set.mockResolvedValueOnce("OK").mockResolvedValueOnce("OK");
+      // SET succeeds
+      redisClient.set.mockResolvedValueOnce("OK");
       // But xadd fails
       redis.xadd.mockRejectedValueOnce(new Error("Stream write failed"));
 
@@ -1349,10 +1403,8 @@ describe("NotificationService", () => {
       });
       (prisma.notificationHistory.create as any).mockResolvedValue({});
 
-      // Delivery dedup NX → OK, in-app dedup SET NX → null → skip in-app
-      redisClient.set
-        .mockResolvedValueOnce("OK") // delivery dedup NX
-        .mockResolvedValueOnce(null); // in-app dedup SET NX → skip in-app
+      // SET NX returns null → in-app skipped
+      redisClient.set.mockResolvedValueOnce(null);
 
       const dispatchSpy = vi
         .spyOn(service, "dispatch")
@@ -1385,13 +1437,8 @@ describe("NotificationService", () => {
         body: "Your order was filled at $0.80.",
       });
 
-      // Two events with different data but same rendered output.
-      // Each handle() call: delivery NX → OK, in-app NX → OK
-      redisClient.set
-        .mockResolvedValueOnce("OK")
-        .mockResolvedValueOnce("OK")
-        .mockResolvedValueOnce("OK")
-        .mockResolvedValueOnce("OK");
+      // Two events with different data but same rendered output
+      redisClient.set.mockResolvedValueOnce("OK").mockResolvedValueOnce("OK");
 
       await service.handle("ORDER_FILLED", {
         userId: "user-1",
@@ -1421,7 +1468,7 @@ describe("NotificationService", () => {
       );
       vi.spyOn(service, "dispatch").mockResolvedValue(undefined);
 
-      redisClient.set.mockResolvedValueOnce("OK").mockResolvedValueOnce("OK");
+      redisClient.set.mockResolvedValueOnce("OK");
 
       await service.handle("ORDER_FILLED", {
         userId: "user-1",
@@ -1435,596 +1482,286 @@ describe("NotificationService", () => {
         /^ORDER_FILLED:user-1:\d+:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
       );
     });
-  });
 
-  // ─── Delivery deduplication ─────────────────────────────────────────────
-
-  describe("handle — delivery dedup", () => {
-    const ORDER_DATA = {
-      userId: "user-1",
-      fillPrice: "0.80",
-      size: "100",
-      tokenId: "tok-a",
-      _streamEntryId: "1715706456789-0",
-    };
-
-    beforeEach(() => {
+    it("distinguishes identical-payload events via streamMsgId in dedup key", async () => {
       const prefs = makePrefs({ notificationFreq: "IMMEDIATE" });
       (prisma.notificationPreference.findUnique as any).mockResolvedValue(
         prefs,
       );
-    });
+      vi.spyOn(service, "dispatch").mockResolvedValue(undefined);
 
-    it("skips delivery when the same event is replayed (SET NX finds existing marker)", async () => {
-      // First handle: delivery NX OK, in-app NX OK, TTL extend OK
-      redisClient.set
-        .mockResolvedValueOnce("OK") // delivery dedup NX
-        .mockResolvedValueOnce("OK"); // in-app dedup
-
-      const dispatchSpy = vi
-        .spyOn(service, "dispatch")
-        .mockResolvedValue(undefined);
-
-      await service.handle("ORDER_FILLED", { ...ORDER_DATA });
-      expect(dispatchSpy).toHaveBeenCalledOnce();
-      const buildCalls = templates.build.mock.calls.length;
-      const xaddCalls = redis.xadd.mock.calls.length;
-
-      // Second handle: delivery NX returns null → GET returns "delivered" → skip
-      dispatchSpy.mockRestore();
-      redisClient.set.mockResolvedValueOnce(null);
-      redisClient.get.mockResolvedValueOnce("delivered");
-
-      await service.handle("ORDER_FILLED", { ...ORDER_DATA });
-      expect(templates.build).toHaveBeenCalledTimes(buildCalls);
-      expect(redis.xadd).toHaveBeenCalledTimes(xaddCalls);
-    });
-
-    it("processes delivery when the same event type has different payload data", async () => {
-      // First order: delivery NX OK, in-app NX OK
-      redisClient.set
-        .mockResolvedValueOnce("OK") // delivery dedup NX
-        .mockResolvedValueOnce("OK"); // in-app dedup
-
-      const dispatchSpy = vi
-        .spyOn(service, "dispatch")
-        .mockResolvedValue(undefined);
-
-      await service.handle("ORDER_FILLED", { ...ORDER_DATA });
-      expect(dispatchSpy).toHaveBeenCalledOnce();
-
-      vi.clearAllMocks();
-
-      // Different tokenId → different dedup key → delivery NX OK → proceed
-      redisClient.set
-        .mockResolvedValueOnce("OK") // delivery dedup NX
-        .mockResolvedValueOnce("OK"); // in-app dedup
-
-      await service.handle("ORDER_FILLED", {
-        ...ORDER_DATA,
-        tokenId: "tok-b",
-        fillPrice: "1.20",
+      templates.build.mockReturnValue({
+        ...STUB_CONTENT,
+        title: "Order Filled",
+        body: "Your order was filled at $0.80.",
       });
-      expect(dispatchSpy).toHaveBeenCalledOnce();
-      expect(templates.build).toHaveBeenCalled();
-    });
 
-    it("processes delivery for the same payload on a different user", async () => {
-      // user-1: delivery NX OK, in-app NX OK
+      // Two events with same data but different stream entry IDs.
+      // Per handle(): idempotency SET NX → in-app dedup SET NX → extend TTL SET
       redisClient.set
-        .mockResolvedValueOnce("OK") // delivery dedup NX
-        .mockResolvedValueOnce("OK"); // in-app dedup
+        .mockResolvedValueOnce("OK") // idempotency SET NX msg-AAA
+        .mockResolvedValueOnce("OK") // in-app dedup msg-AAA
+        .mockResolvedValueOnce("OK") // extend TTL msg-AAA
+        .mockResolvedValueOnce("OK") // idempotency SET NX msg-BBB
+        .mockResolvedValueOnce("OK") // in-app dedup msg-BBB
+        .mockResolvedValueOnce("OK"); // extend TTL msg-BBB
 
-      const dispatchSpy = vi
-        .spyOn(service, "dispatch")
-        .mockResolvedValue(undefined);
+      await service.handle(
+        "ORDER_FILLED",
+        { userId: "user-1", fillPrice: "0.80", size: "100" },
+        "msg-AAA",
+      );
+      expect(redis.xadd).toHaveBeenCalledTimes(1);
 
-      await service.handle("ORDER_FILLED", { ...ORDER_DATA });
-      expect(dispatchSpy).toHaveBeenCalledOnce();
-
-      vi.clearAllMocks();
-
-      // user-2: different user → different dedup key → delivery NX OK → proceed
-      redisClient.set
-        .mockResolvedValueOnce("OK") // delivery dedup NX
-        .mockResolvedValueOnce("OK"); // in-app dedup
-
-      await service.handle("ORDER_FILLED", {
-        ...ORDER_DATA,
-        userId: "user-2",
-      });
-      expect(dispatchSpy).toHaveBeenCalledOnce();
+      // Same payload, different stream entry — must NOT be deduped
+      await service.handle(
+        "ORDER_FILLED",
+        { userId: "user-1", fillPrice: "0.80", size: "100" },
+        "msg-BBB",
+      );
+      expect(redis.xadd).toHaveBeenCalledTimes(2);
     });
+  });
 
-    it("does not reach the dedup check for events filtered out by opt-in", async () => {
-      const prefs = makePrefs({
-        onOrderFilled: false,
-        notificationFreq: "IMMEDIATE",
-      });
+  // ─── Durable idempotency guard (PEL reclaim safety) ─────────────────────
+
+  describe("handle — durable idempotency guard", () => {
+    it("throws LockContentionError when the idempotency key holds 'processing' (another worker is in-flight)", async () => {
+      const prefs = makePrefs({ notificationFreq: "IMMEDIATE" });
       (prisma.notificationPreference.findUnique as any).mockResolvedValue(
         prefs,
       );
-
-      await service.handle("ORDER_FILLED", { ...ORDER_DATA });
-
-      // Should have returned early on the opt-in check, never reaching SET
-      expect(redisClient.set).not.toHaveBeenCalled();
-    });
-
-    it("does not reach the dedup check when minFillNotifyUsdc threshold filters the event", async () => {
-      const prefs = makePrefs({
-        minFillNotifyUsdc: "10000",
-        notificationFreq: "IMMEDIATE",
-      });
-      (prisma.notificationPreference.findUnique as any).mockResolvedValue(
-        prefs,
-      );
-
-      await service.handle("ORDER_FILLED", {
-        ...ORDER_DATA,
-        fillPrice: "0.01",
-        size: "1",
-      });
-
-      // Should have returned early on the threshold check
-      expect(redisClient.set).not.toHaveBeenCalled();
-    });
-
-    it("deduplicates events with null pref field (always send)", async () => {
-      // First handle: delivery NX OK, in-app NX OK
-      redisClient.set
-        .mockResolvedValueOnce("OK") // delivery dedup NX
-        .mockResolvedValueOnce("OK"); // in-app dedup
-
       const dispatchSpy = vi
         .spyOn(service, "dispatch")
         .mockResolvedValue(undefined);
 
-      await service.handle("WHALE_TRADE", {
-        userId: "user-1",
-        wallet: "0xabc",
-        size: "50000",
-      });
-      expect(dispatchSpy).toHaveBeenCalledOnce();
-
-      vi.clearAllMocks();
-
-      // Second handle — delivery NX returns null, GET returns "delivered" → deduped
+      // SET NX fails — another worker holds the delivery lock
       redisClient.set.mockResolvedValueOnce(null);
-      redisClient.get.mockResolvedValueOnce("delivered");
+      // GET returns a value that is not "delivered" — confirms another worker is in-flight
+      redisClient.get.mockResolvedValueOnce("some-other-token");
 
-      await service.handle("WHALE_TRADE", {
-        userId: "user-1",
-        wallet: "0xabc",
-        size: "50000",
-      });
+      await expect(
+        service.handle(
+          "ORDER_FILLED",
+          { userId: "user-1", fillPrice: "0.80", size: "100" },
+          "msg-replay-1",
+        ),
+      ).rejects.toThrow(LockContentionError);
+
+      // External dispatch must be skipped
       expect(dispatchSpy).not.toHaveBeenCalled();
+      expect(redisClient.set).toHaveBeenCalledWith(
+        "notif:delivered:msg-replay-1",
+        expect.any(String),
+        "EX",
+        300,
+        "NX",
+      );
     });
 
-    it("sets the dedup marker after fanout with correct key format and TTL", async () => {
-      redisClient.set
-        .mockResolvedValueOnce("OK") // delivery dedup NX (owner token, EX 120, NX)
-        .mockResolvedValueOnce("OK") // in-app dedup SET NX (PX, NX)
-        .mockResolvedValueOnce(1); // TTL extend Lua script (finalize, returns 1)
-      vi.spyOn(service, "dispatch").mockResolvedValue(undefined);
-
-      await service.handle("ORDER_FILLED", { ...ORDER_DATA });
-
-      // Lock acquisition SET (call 0): verify owner token UUID and NX
-      const [lockKey, lockValue, ...lockOpts] = redisClient.set.mock
-        .calls[0] as [string, string, ...string[]];
-      expect(lockKey).toMatch(/^notif-dedup:ORDER_FILLED:user-1:[a-f0-9]{16}$/);
-      expect(lockValue).toMatch(
-        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
+    it("returns silently when the idempotency key already holds 'delivered' (successful prior delivery, stale PEL entry)", async () => {
+      const prefs = makePrefs({ notificationFreq: "IMMEDIATE" });
+      (prisma.notificationPreference.findUnique as any).mockResolvedValue(
+        prefs,
       );
-      expect(lockOpts).toContain("EX");
-      expect(lockOpts).toContain("NX");
+      const dispatchSpy = vi
+        .spyOn(service, "dispatch")
+        .mockResolvedValue(undefined);
 
-      // Finalize via Lua script (call 0): verify conditional "delivered" write
-      const FINALIZE_SCRIPT =
-        'if redis.call("GET", KEYS[1]) == ARGV[1] then return redis.call("SET", KEYS[1], ARGV[2], "EX", ARGV[3]) else return 0 end';
+      // SET NX fails — key exists from a prior successful delivery
+      redisClient.set.mockResolvedValueOnce(null);
+      // GET returns "delivered" — notification was already delivered
+      redisClient.get.mockResolvedValueOnce("delivered");
+
+      await service.handle(
+        "ORDER_FILLED",
+        { userId: "user-1", fillPrice: "0.80", size: "100" },
+        "msg-replay-1",
+      );
+
+      // No dispatch, no delivery re-attempted
+      expect(dispatchSpy).not.toHaveBeenCalled();
+      // Only the SET NX was attempted; no TTL extension
+      expect(redisClient.set).toHaveBeenCalledTimes(1);
+      expect(redisClient.set).toHaveBeenCalledWith(
+        "notif:delivered:msg-replay-1",
+        expect.any(String),
+        "EX",
+        300,
+        "NX",
+      );
+      expect(redisClient.get).toHaveBeenCalledWith(
+        "notif:delivered:msg-replay-1",
+      );
+    });
+
+    it("proceeds with external dispatch when idempotency key is absent (first delivery)", async () => {
+      const prefs = makePrefs({
+        notificationFreq: "IMMEDIATE",
+        emailEnabled: true,
+      });
+      (prisma.notificationPreference.findUnique as any).mockResolvedValue(
+        prefs,
+      );
+      (prisma.user.findUnique as any).mockResolvedValue({
+        email: "user@example.com",
+      });
+      (prisma.notificationHistory.create as any).mockResolvedValue({});
+      mail.send.mockResolvedValue(undefined);
+
+      // SET NX for idempotency guard succeeds (key not held) +
+      // SET NX for in-app dedup succeeds
+      redisClient.set.mockResolvedValueOnce("OK").mockResolvedValueOnce("OK");
+
+      await service.handle(
+        "ORDER_FILLED",
+        { userId: "user-1", fillPrice: "0.80", size: "100" },
+        "msg-first-1",
+      );
+
+      // Must atomically claim with SET NX before delivery
+      expect(redisClient.set).toHaveBeenCalledWith(
+        "notif:delivered:msg-first-1",
+        expect.any(String),
+        "EX",
+        300,
+        "NX",
+      );
+      // After successful dispatch: atomically verify ownership and extend TTL
       expect(redisClient.eval).toHaveBeenCalledWith(
-        FINALIZE_SCRIPT,
+        expect.stringContaining("redis.call"),
         1,
-        expect.stringMatching(/^notif-dedup:ORDER_FILLED:user-1:[a-f0-9]{16}$/),
-        expect.stringMatching(
-          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
-        ),
+        "notif:delivered:msg-first-1",
+        expect.any(String),
         "delivered",
-        "86400",
+        "604800",
       );
     });
 
-    it("does not enqueue digest items for deduped events", async () => {
-      const prefs = makePrefs({ notificationFreq: "DAILY" });
+    it("still sets delivered marker when individual channel sends fail (errors are handled internally)", async () => {
+      const prefs = makePrefs({
+        notificationFreq: "IMMEDIATE",
+        emailEnabled: true,
+      });
       (prisma.notificationPreference.findUnique as any).mockResolvedValue(
         prefs,
       );
+      (prisma.user.findUnique as any).mockResolvedValue({
+        email: "user@example.com",
+      });
+      (prisma.notificationHistory.create as any).mockResolvedValue({});
+      // SMTP failure — sendEmail catches it internally, dispatch resolves
+      mail.send.mockRejectedValue(new Error("SMTP timeout"));
 
-      // First handle: delivery NX OK, in-app NX OK
-      redisClient.set
-        .mockResolvedValueOnce("OK") // delivery dedup NX
-        .mockResolvedValueOnce("OK"); // in-app dedup
+      redisClient.set.mockResolvedValueOnce("OK").mockResolvedValueOnce("OK");
 
-      const enqueueSpy = vi
-        .spyOn(service, "enqueueDigest")
-        .mockResolvedValue(undefined);
+      await service.handle(
+        "ORDER_FILLED",
+        { userId: "user-1", fillPrice: "0.80", size: "100" },
+        "msg-fail-1",
+      );
 
-      await service.handle("ORDER_FILLED", { ...ORDER_DATA });
-      expect(enqueueSpy).toHaveBeenCalledOnce();
-
-      vi.clearAllMocks();
-
-      // Second handle — delivery NX returns null, GET returns "delivered" → deduped
-      redisClient.set.mockResolvedValueOnce(null);
-      redisClient.get.mockResolvedValueOnce("delivered");
-
-      await service.handle("ORDER_FILLED", { ...ORDER_DATA });
-      expect(enqueueSpy).not.toHaveBeenCalled();
+      // Dispatch still proceeds (Promise.allSettled catches per-channel errors)
+      // Delivered marker is atomically promoted after successful dispatch
+      expect(redisClient.eval).toHaveBeenCalledWith(
+        expect.stringContaining("redis.call"),
+        1,
+        "notif:delivered:msg-fail-1",
+        expect.any(String),
+        "delivered",
+        "604800",
+      );
     });
 
-    it("does not set the dedup marker when templates.build() throws", async () => {
-      // Delivery dedup NX succeeds, then templates.build throws — lock expires in DEDUP_LOCK_TTL
-      redisClient.set.mockResolvedValueOnce("OK");
-      const buildError = new Error("Missing template");
-      templates.build.mockImplementationOnce(() => {
-        throw buildError;
-      });
+    it("uses compare-and-delete ownership guard when clearing lock on handleImpl failure", async () => {
+      // Lock acquisition succeeds
+      redisClient.set.mockResolvedValueOnce("OK"); // idempotency SET NX
+      redisClient.set.mockResolvedValueOnce("OK"); // in-app dedup SET NX
+
+      // Cause handleImpl to fail (DB failure in loadPrefs)
+      (prisma.notificationPreference.findUnique as any).mockRejectedValue(
+        new Error("DB down"),
+      );
+
+      // Simulate: this worker still owns the key — DELETE_IF_OWNER_LUA returns 1
+      redisClient.eval.mockResolvedValueOnce(1);
 
       await expect(
-        service.handle("ORDER_FILLED", { ...ORDER_DATA }),
-      ).rejects.toThrow(buildError);
+        service.handle(
+          "ORDER_FILLED",
+          { userId: "user-1", fillPrice: "0.80", size: "100" },
+          "msg-crash-1",
+        ),
+      ).rejects.toThrow("DB down");
 
-      // Only the delivery NX SET was called (before templates.build).
-      // In-app dedup and TTL extend were never reached.
-      expect(redisClient.set).toHaveBeenCalledTimes(1);
+      // Must call compare-and-delete Lua, not unconditional DEL
+      expect(redisClient.eval).toHaveBeenCalledWith(
+        expect.stringContaining("redis.call"),
+        1,
+        "notif:delivered:msg-crash-1",
+        expect.any(String),
+      );
+      expect(redisClient.del).not.toHaveBeenCalledWith(
+        "notif:delivered:msg-crash-1",
+      );
     });
 
-    it("does not set the dedup marker when enqueueDigest throws", async () => {
-      const prefs = makePrefs({ notificationFreq: "DAILY" });
+    it("does not delete processing lock when another worker has reclaimed the key (stale-writer guard)", async () => {
+      // Worker A acquired lock, but TTL expired and Worker B reclaimed
+      redisClient.set.mockResolvedValueOnce("OK"); // idempotency SET NX
+      redisClient.set.mockResolvedValueOnce("OK"); // in-app dedup SET NX
+
+      // Cause handleImpl to fail
+      (prisma.notificationPreference.findUnique as any).mockRejectedValue(
+        new Error("DB down"),
+      );
+
+      // Simulate: DELETE_IF_OWNER_LUA returns 0 — Worker A's token no
+      // longer matches because Worker B has already claimed the key
+      redisClient.eval.mockResolvedValueOnce(0);
+
+      await expect(
+        service.handle(
+          "ORDER_FILLED",
+          { userId: "user-1", fillPrice: "0.80", size: "100" },
+          "msg-stale-1",
+        ),
+      ).rejects.toThrow("DB down");
+
+      // eval was called with the compare-and-delete Lua script
+      expect(redisClient.eval).toHaveBeenCalledWith(
+        expect.stringContaining("redis.call"),
+        1,
+        "notif:delivered:msg-stale-1",
+        expect.any(String),
+      );
+      // Never called unconditional del
+      expect(redisClient.del).not.toHaveBeenCalledWith(
+        "notif:delivered:msg-stale-1",
+      );
+    });
+
+    it("does not check idempotency when streamMsgId is absent", async () => {
+      const prefs = makePrefs({ notificationFreq: "IMMEDIATE" });
       (prisma.notificationPreference.findUnique as any).mockResolvedValue(
         prefs,
       );
-
-      // Delivery dedup NX OK, in-app dedup SET NX OK
-      redisClient.set.mockResolvedValueOnce("OK").mockResolvedValueOnce("OK");
-      // But rpush (used by enqueueDigest) fails
-      const redisError = new Error("Redis rpush failed");
-      redisClient.rpush.mockRejectedValueOnce(redisError);
-
-      await expect(
-        service.handle("ORDER_FILLED", { ...ORDER_DATA }),
-      ).rejects.toThrow(redisError);
-
-      // Delivery NX + in-app NX were called. The TTL extend was never reached
-      // because enqueueDigest threw.
-      expect(redisClient.set).toHaveBeenCalledTimes(2);
-    });
-
-    it("does not set the dedup marker when dispatch throws", async () => {
-      // Delivery dedup NX OK, in-app dedup SET NX OK
-      redisClient.set.mockResolvedValueOnce("OK").mockResolvedValueOnce("OK");
-      // But toHtml (used by dispatch) fails
-      const dispatchError = new Error("toHtml failed");
-      templates.toHtml.mockImplementationOnce(() => {
-        throw dispatchError;
-      });
-
-      await expect(
-        service.handle("ORDER_FILLED", { ...ORDER_DATA }),
-      ).rejects.toThrow(dispatchError);
-
-      // Delivery NX + in-app NX were called. The TTL extend was never reached
-      // because dispatch threw.
-      expect(redisClient.set).toHaveBeenCalledTimes(2);
-    });
-
-    it("sets the dedup marker on success and blocks replay", async () => {
-      redisClient.set
-        .mockResolvedValueOnce("OK") // delivery NX
-        .mockResolvedValueOnce("OK"); // in-app dedup
-
       const dispatchSpy = vi
         .spyOn(service, "dispatch")
         .mockResolvedValue(undefined);
 
-      await service.handle("ORDER_FILLED", { ...ORDER_DATA });
-      expect(dispatchSpy).toHaveBeenCalledOnce();
-
-      // Finalize eval call exists (conditional lock→delivered transition), not a release
-      const deliveryEvalCalls = redisClient.eval.mock.calls.filter(
-        ([_script, _keyCount, key]) =>
-          typeof key === "string" && key.startsWith("notif-dedup:"),
-      );
-      expect(deliveryEvalCalls).toHaveLength(1);
-
-      const buildCalls = templates.build.mock.calls.length;
-      const xaddCalls = redis.xadd.mock.calls.length;
-
-      // Second handle — delivery NX returns null, GET returns "delivered" → deduped
-      dispatchSpy.mockRestore();
-      redisClient.set.mockResolvedValueOnce(null);
-      redisClient.get.mockResolvedValueOnce("delivered");
-
-      await service.handle("ORDER_FILLED", { ...ORDER_DATA });
-      expect(templates.build).toHaveBeenCalledTimes(buildCalls);
-      expect(redis.xadd).toHaveBeenCalledTimes(xaddCalls);
-    });
-
-    it("retries successfully on replay after a prior failure did not set the marker", async () => {
-      // First attempt: delivery NX OK, then templates.build throws.
-      // The lock expires after DEDUP_LOCK_TTL (120s); in tests clearAllMocks
-      // resets the mock so the retry sees a fresh "OK" from the default mock.
+      // Only one SET for in-app dedup; no idempotency SET
       redisClient.set.mockResolvedValueOnce("OK");
-      const buildError = new Error("Missing template");
-      templates.build.mockImplementationOnce(() => {
-        throw buildError;
-      });
-
-      await expect(
-        service.handle("ORDER_FILLED", { ...ORDER_DATA }),
-      ).rejects.toThrow(buildError);
-
-      // Delivery NX was acquired before templates.build threw
-      expect(redisClient.set).toHaveBeenCalledTimes(1);
-
-      vi.clearAllMocks();
-
-      // Second attempt (replay): delivery NX OK, in-app OK
-      redisClient.set
-        .mockResolvedValueOnce("OK") // delivery dedup NX
-        .mockResolvedValueOnce("OK"); // in-app dedup
-
-      const dispatchSpy = vi
-        .spyOn(service, "dispatch")
-        .mockResolvedValue(undefined);
-
-      templates.build.mockReturnValue(STUB_CONTENT);
-
-      await service.handle("ORDER_FILLED", { ...ORDER_DATA });
-
-      expect(dispatchSpy).toHaveBeenCalledOnce();
-      expect(templates.build).toHaveBeenCalled();
-    });
-
-    it("skips delivery when SET NX finds an existing dedup marker", async () => {
-      // Delivery dedup SET NX returns null — marker already exists from prior delivery.
-      // GET returns "delivered" → safe to skip.
-      redisClient.set.mockResolvedValueOnce(null);
-      redisClient.get.mockResolvedValueOnce("delivered");
-
-      await service.handle("ORDER_FILLED", { ...ORDER_DATA });
-
-      // SET NX was called once; GET was called to check the value; no retry
-      expect(redisClient.set).toHaveBeenCalledTimes(1);
-      expect(redisClient.get).toHaveBeenCalledTimes(1);
-      expect(templates.build).not.toHaveBeenCalled();
-    });
-
-    it("does not throw when the final dedup marker finalization fails after successful fanout", async () => {
-      // Delivery dedup NX succeeds, in-app dedup SET succeeds, finalize eval throws
-      redisClient.set
-        .mockResolvedValueOnce("OK") // delivery dedup NX
-        .mockResolvedValueOnce("OK"); // in-app dedup
-      redisClient.eval.mockRejectedValueOnce(
-        new Error("Redis EVAL failed after fanout"),
-      );
-
-      const dispatchSpy = vi
-        .spyOn(service, "dispatch")
-        .mockResolvedValue(undefined);
-
-      // handle() must NOT throw — the notification was already delivered
-      await expect(
-        service.handle("ORDER_FILLED", { ...ORDER_DATA }),
-      ).resolves.toBeUndefined();
-
-      // Fanout completed successfully (dispatch was called)
-      expect(dispatchSpy).toHaveBeenCalledOnce();
-      // In-app notification was pushed (dedup SET succeeded)
-      expect(redis.xadd).toHaveBeenCalledOnce();
-      // Delivery NX + in-app NX (2 set calls); finalize eval was called
-      expect(redisClient.set).toHaveBeenCalledTimes(2);
-      expect(redisClient.eval).toHaveBeenCalled();
-    });
-
-    it("throws when SET NX finds an in-flight lock (prevents reclaim from ACKing a lost entry)", async () => {
-      // Another handler (e.g. normal consumer) acquired the lock first
-      // with its own owner token UUID.
-      // The reclaim handler must NOT return success — the original handler
-      // may still crash, and ACKing would lose the notification.
-      redisClient.set.mockResolvedValueOnce(null); // NX → key exists
-      redisClient.get.mockResolvedValueOnce(
-        "e1a2b3c4-d5e6-7890-abcd-ef1234567890",
-      ); // owner token UUID → in-flight
-
-      await expect(
-        service.handle("ORDER_FILLED", { ...ORDER_DATA }),
-      ).rejects.toThrow(/In-flight delivery lock/);
-
-      // SET NX was called (attempted lock) and GET was called (checked value)
-      expect(redisClient.set).toHaveBeenCalledTimes(1);
-      expect(redisClient.get).toHaveBeenCalledTimes(1);
-      // No fanout — templates.build was never called
-      expect(templates.build).not.toHaveBeenCalled();
-    });
-
-    it("returns normally when SET NX finds a delivered marker (dedup, safe to ACK)", async () => {
-      // A prior handler already delivered this event.
-      // The reclaim handler should return normally so PEL can be cleaned up.
-      redisClient.set.mockResolvedValueOnce(null); // NX → key exists
-      redisClient.get.mockResolvedValueOnce("delivered"); // value is "delivered"
-
-      await service.handle("ORDER_FILLED", { ...ORDER_DATA });
-
-      // Only SET NX was called; GET was called to check the value
-      expect(redisClient.set).toHaveBeenCalledTimes(1);
-      expect(redisClient.get).toHaveBeenCalledTimes(1);
-      // No fanout — delivery was already completed
-      expect(templates.build).not.toHaveBeenCalled();
-    });
-
-    it("retries acquisition when the dedup key expired and retry succeeds", async () => {
-      // The original handler acquired the lock, then crashed.  The lock
-      // expired (120s TTL), so GET returns null.  Retry SET NX re-acquires
-      // the lock and processing proceeds normally.
-      redisClient.set
-        .mockResolvedValueOnce(null) // first SET NX → key exists (but about to expire)
-        .mockResolvedValueOnce("OK") // retry SET NX → acquired
-        .mockResolvedValueOnce("OK"); // in-app dedup SET
-
-      const dispatchSpy = vi
-        .spyOn(service, "dispatch")
-        .mockResolvedValue(undefined);
-
-      await service.handle("ORDER_FILLED", { ...ORDER_DATA });
-
-      // Two SET NX calls (first + retry) plus in-app = 3 total
-      expect(redisClient.set).toHaveBeenCalledTimes(3);
-      // Fanout proceeded after retry
-      expect(dispatchSpy).toHaveBeenCalledOnce();
-      expect(templates.build).toHaveBeenCalled();
-      expect(redis.xadd).toHaveBeenCalledOnce();
-    });
-
-    it("throws when the dedup key expired and retry also fails", async () => {
-      // First SET NX finds the key exists.  GET returns null (expired).
-      // Retry SET NX also returns null (another handler grabbed the lock
-      // in the micro-window).  Must throw so reclaim does NOT ACK.
-      redisClient.set
-        .mockResolvedValueOnce(null) // first SET NX → key exists
-        .mockResolvedValueOnce(null); // retry SET NX → still locked
-
-      await expect(
-        service.handle("ORDER_FILLED", { ...ORDER_DATA }),
-      ).rejects.toThrow(
-        /Delivery lock held for ORDER_FILLED user=user-1 after retry/,
-      );
-
-      expect(redisClient.set).toHaveBeenCalledTimes(2);
-      expect(templates.build).not.toHaveBeenCalled();
-    });
-
-    it("renews the delivery lock TTL via value-checked EVAL during fanout", async () => {
-      vi.useFakeTimers();
-
-      // Lock NX OK, in-app dedup OK
-      redisClient.set
-        .mockResolvedValueOnce("OK") // delivery dedup NX
-        .mockResolvedValueOnce("OK"); // in-app dedup
-
-      // Hold dispatch open so we can advance timers while the lock is held
-      let finishDispatch: () => void;
-      const barrier = new Promise<void>((r) => {
-        finishDispatch = r;
-      });
-      vi.spyOn(service, "dispatch").mockReturnValue(barrier);
-
-      const done = service.handle("ORDER_FILLED", { ...ORDER_DATA });
-
-      // Flush microtasks: lock acquired, renewal started, pushInApp done, dispatch waiting
-      await vi.advanceTimersByTimeAsync(0);
-
-      const RENEW_LOCK_SCRIPT =
-        'if redis.call("GET", KEYS[1]) == ARGV[1] then return redis.call("EXPIRE", KEYS[1], ARGV[2]) else return 0 end';
-
-      // Advance past one renewal tick (DEDUP_LOCK_TTL / 3 ≈ 40s, tick at 40000 ms)
-      await vi.advanceTimersByTimeAsync(41000);
-
-      expect(redisClient.eval).toHaveBeenCalledWith(
-        RENEW_LOCK_SCRIPT,
-        1,
-        expect.stringMatching(/^notif-dedup:ORDER_FILLED:user-1:[a-f0-9]{16}$/),
-        expect.stringMatching(
-          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
-        ),
-        "120",
-      );
-
-      // Advance past a second renewal tick to confirm periodic renewal
-      vi.clearAllMocks();
-      await vi.advanceTimersByTimeAsync(41000);
-
-      expect(redisClient.eval).toHaveBeenCalledWith(
-        RENEW_LOCK_SCRIPT,
-        1,
-        expect.stringMatching(/^notif-dedup:ORDER_FILLED:user-1:[a-f0-9]{16}$/),
-        expect.stringMatching(
-          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
-        ),
-        "120",
-      );
-
-      // Unblock dispatch and let handle() finish
-      finishDispatch!();
-      await done;
-
-      vi.useRealTimers();
-    });
-
-    it("dispatches webhooks fire-and-forget — delivered marker written without waiting", async () => {
-      // Lock NX OK, in-app dedup OK
-      redisClient.set
-        .mockResolvedValueOnce("OK") // delivery dedup NX
-        .mockResolvedValueOnce("OK"); // in-app dedup
-      // Finalize eval returns 1 (delivered marker written)
-      redisClient.eval.mockResolvedValue(1);
-
-      // Hold webhook dispatch open so we can verify it is NOT awaited
-      let finishWebhook: () => void;
-      const webhookBarrier = new Promise<void>((r) => {
-        finishWebhook = r;
-      });
-      webhookDispatcher.dispatch.mockReturnValue(webhookBarrier);
-
-      vi.spyOn(service, "dispatch").mockResolvedValue(undefined);
-
-      // Start handle() — should NOT block on webhook barrier
-      const handlePromise = service.handle("ORDER_FILLED", { ...ORDER_DATA });
-
-      // Wait for microtasks to flush and handle() to complete
-      await handlePromise;
-
-      // handle() completed without waiting for webhooks — the delivered marker
-      // was written (eval called with "delivered" as ARGV[2])
-      const deliveredEvalCalls = redisClient.eval.mock.calls.filter(
-        ([_script, _keyCount, key, _arg1, arg2]) =>
-          typeof key === "string" &&
-          key.startsWith("notif-dedup:") &&
-          arg2 === "delivered",
-      );
-      expect(deliveredEvalCalls).toHaveLength(1);
-
-      // Cleanup: unblock the webhook barrier so the promise settles
-      finishWebhook!();
-      await webhookBarrier;
-    });
-
-    it("does NOT dedup identical payloads with different _streamEntryId (cross-entry uniqueness)", async () => {
-      // Two stream entries with identical business payload but different IDs
-      // must produce different dedup keys so the second is not suppressed.
-      redisClient.set
-        .mockResolvedValueOnce("OK") // entry-1: delivery NX → acquired
-        .mockResolvedValueOnce("OK") // in-app dedup
-        .mockResolvedValueOnce("OK") // entry-2: delivery NX → acquired (different key)
-        .mockResolvedValueOnce("OK"); // in-app dedup
-
-      const dispatchSpy = vi
-        .spyOn(service, "dispatch")
-        .mockResolvedValue(undefined);
 
       await service.handle("ORDER_FILLED", {
-        ...ORDER_DATA,
-        _streamEntryId: "1715706456789-0",
+        userId: "user-1",
+        fillPrice: "0.80",
+        size: "100",
       });
-      expect(dispatchSpy).toHaveBeenCalledOnce();
 
-      // Same payload, different stream entry ID — must NOT be deduped
-      await service.handle("ORDER_FILLED", {
-        ...ORDER_DATA,
-        _streamEntryId: "1715706456789-1",
-      });
-      expect(dispatchSpy).toHaveBeenCalledTimes(2);
+      expect(dispatchSpy).toHaveBeenCalledOnce();
+      // No idempotency key SET beyond the in-app dedup key
+      expect(redisClient.set).toHaveBeenCalledTimes(1);
     });
   });
 });

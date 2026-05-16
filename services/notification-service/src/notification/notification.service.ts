@@ -57,11 +57,59 @@ const IN_APP_DEDUP_MS = parsePositiveInt(
   process.env.NOTIF_IN_APP_DEDUP_MS,
   5000,
 );
-const IN_APP_DEDUP_KEY = (
+const DEDUP_KEY = (
   eventType: string,
   userId: string,
   data: Record<string, string>,
-) => `notif:inapp:${eventType}:${userId}:${hashEventData(data)}`;
+  streamMsgId?: string,
+) => {
+  const uniquePart = streamMsgId ?? hashEventData(data);
+  return `notif:inapp:${eventType}:${userId}:${uniquePart}`;
+};
+
+// PEL reclaim idempotency guard: use an atomic SET NX with a unique
+// owner token (UUID) to claim the message before delivery.  Two workers
+// reclaiming the same PEL entry concurrently will race on SET NX — only
+// one wins.
+//
+// Short TTL (5 min) bounds the crash-before-delivery window: if the
+// process crashes after claiming but before delivery finishes, the key
+// expires and the next reclaim cycle safely re-attempts.  After successful
+// delivery a Lua script atomically checks the owner token before writing
+// "delivered" so that a stale worker whose lock expired cannot overwrite
+// another worker's in-flight claim.
+//
+// Different values distinguish in-flight (UUID) from completed delivery
+// ("delivered") so that a reclaimed PEL entry whose marker already shows
+// "delivered" (successful delivery + failed XACK) is silently acknowledged
+// instead of stuck in PEL for the full 7-day TTL.
+const EXT_DELIVERED_KEY = (streamMsgId: string) =>
+  `notif:delivered:${streamMsgId}`;
+const EXT_DELIVERED_VAL_DELIVERED = "delivered";
+const EXT_DELIVERED_TTL_SHORT = 300; // 5 min — covers delivery window
+const EXT_DELIVERED_TTL_LONG = 604800; // 7 days — past reclaim window
+
+// Lua: atomically verify ownership before promoting to delivered.
+// Guards against stale-writer corruption: if the owner token was replaced
+// by another worker's claim (TTL expiry + re-acquire race), the SET is
+// skipped so the new owner's in-flight work is not falsely suppressed.
+const FINALIZE_DELIVERED_LUA = `
+if redis.call("GET", KEYS[1]) == ARGV[1] then
+  return redis.call("SET", KEYS[1], ARGV[2], "EX", ARGV[3])
+end
+return nil
+`;
+
+// Lua: atomically verify ownership before clearing the processing lock
+// on failure.  Guards against stale-writer deletion: if the owner token
+// was replaced by another worker's claim (TTL expiry + re-acquire race),
+// the DEL is skipped so the new owner's in-flight work is preserved.
+const DELETE_IF_OWNER_LUA = `
+if redis.call("GET", KEYS[1]) == ARGV[1] then
+  return redis.call("DEL", KEYS[1])
+end
+return 0
+`;
 
 function parsePositiveInt(value: string | undefined, fallback: number): number {
   if (!value) return fallback;
@@ -79,55 +127,6 @@ function hashEventData(data: Record<string, string>): string {
   return hash.slice(0, 16);
 }
 
-// Delivery deduplication — prevents duplicate sends on stream replays / PEL reclaim.
-// Lock TTL is short (2 min) so a crash during fanout does not permanently burn the key.
-// After successful fanout, the TTL is extended to the full dedup window.
-//
-// Lock vs delivered marker: each handler generates a unique owner token (UUID) and
-// acquires the lock with SET NX.  The renewal EVAL script checks ownership before
-// extending TTL.  The finalizer conditionally transitions the key to "delivered"
-// only if the owner token still matches — preventing a stale handler from
-// overwriting a lock acquired by another reclaim handler.
-//
-// When a PEL reclaim handler sees a non-null, non-"delivered" value it throws
-// so the reclaim service does NOT ACK the entry — the original handler may still
-// succeed.  When it sees the delivered marker it returns normally — the entry can
-// be safely ACKed because delivery was already completed.
-const DEDUP_KEY_PREFIX = "notif-dedup";
-const DEDUP_DELIVERED_VALUE = "delivered";
-const DEDUP_LOCK_TTL = 120; // 2 minutes — generous enough for fanout, short enough for crash recovery
-const DEDUP_TTL = 86400; // 24 hours — covers any replay window
-
-/**
- * Build a stable idempotency key from event type, user, and payload identity.
- * Uses SHA-256 of canonical JSON with sorted keys so replayed stream entries
- * produce the same key.  JSON.stringify delimits values with quotes, preventing
- * ambiguity when field values contain `=` or `&`.
- *
- * The caller is expected to include `_streamEntryId` (the Redis stream entry
- * ID) in `data` so that identical payloads from distinct stream entries
- * produce different keys, preventing false-positive dedup under bursty traffic.
- */
-function makeIdempotencyKey(
-  eventType: string,
-  userId: string,
-  data: Record<string, string>,
-): string {
-  const sorted = Object.keys(data)
-    .sort()
-    .reduce<Record<string, string>>((acc, k) => {
-      acc[k] = data[k];
-      return acc;
-    }, {});
-  const stablePayload = JSON.stringify(sorted);
-  const hash = crypto
-    .createHash("sha256")
-    .update(stablePayload)
-    .digest("hex")
-    .slice(0, 16);
-  return `${DEDUP_KEY_PREFIX}:${eventType}:${userId}:${hash}`;
-}
-
 function escapeHtml(value: unknown): string {
   return String(value ?? "")
     .replace(/&/g, "&amp;")
@@ -135,6 +134,22 @@ function escapeHtml(value: unknown): string {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
+}
+
+/**
+ * Thrown by NotificationService.handle() when the idempotency guard
+ * (SET NX) fails — another worker already holds the delivery lock.
+ * Consumers must NOT XACK, increment retries, or move to DLQ when
+ * this error is thrown; the message should stay in PEL until the
+ * lock-holding worker completes or the short TTL expires.
+ */
+export class LockContentionError extends Error {
+  constructor(streamMsgId: string) {
+    super(
+      `Delivery lock held for ${streamMsgId} — another worker is processing`,
+    );
+    this.name = "LockContentionError";
+  }
 }
 
 @Injectable()
@@ -153,10 +168,103 @@ export class NotificationService {
 
   // ─── Called by EventsConsumerService for each relevant stream:events message ─
 
-  async handle(eventType: string, data: Record<string, string>): Promise<void> {
+  async handle(
+    eventType: string,
+    data: Record<string, string>,
+    streamMsgId?: string,
+  ): Promise<void> {
     const userId = data.userId;
     if (!userId) return;
 
+    // ── PEL reclaim idempotency guard ───────────────────────────────────
+    // Atomically claim this stream entry with a unique owner token and
+    // short TTL so that two concurrent reclaimers cannot both pass the
+    // check-and-act barrier.  Ownership is verified before finalizing
+    // (promoting to "delivered" with long TTL) to prevent stale-writer
+    // corruption when the short TTL expires and another worker claims.
+    if (streamMsgId) {
+      const client = this.redis.getClient();
+      const idempotencyKey = EXT_DELIVERED_KEY(streamMsgId);
+      const ownerToken = crypto.randomUUID();
+
+      const acquired = await client.set(
+        idempotencyKey,
+        ownerToken,
+        "EX",
+        EXT_DELIVERED_TTL_SHORT,
+        "NX",
+      );
+      if (acquired !== "OK") {
+        // Key already exists.  Check whether a previous delivery already
+        // completed (marker value is "delivered") — if so, the notification
+        // was successfully delivered but XACK failed; return silently so
+        // PelReclaimService XACKs the stale PEL entry.
+        const existing = await client.get(idempotencyKey);
+        if (existing === EXT_DELIVERED_VAL_DELIVERED) {
+          return;
+        }
+        // Key exists with another worker's owner token: another worker
+        // holds the delivery lock.  Throw so callers (handleWithRetry,
+        // PelReclaim) do NOT XACK — the lock-holding worker will complete
+        // or the short TTL will expire and reclaim retries.
+        throw new LockContentionError(streamMsgId);
+      }
+
+      // Periodically refresh the short TTL while handleImpl runs so that
+      // long channel retries (e.g. Telegram retry_after) do not let the
+      // idempotency guard expire before delivery finishes.
+      const refreshMs = Math.max(
+        10_000,
+        Math.floor(EXT_DELIVERED_TTL_SHORT * 1000 * 0.6),
+      );
+      const refreshTimer = setInterval(() => {
+        client
+          .expire(idempotencyKey, EXT_DELIVERED_TTL_SHORT)
+          .catch(() => {});
+      }, refreshMs);
+
+      try {
+        await this.handleImpl(userId, eventType, data, streamMsgId);
+      } catch (err) {
+        // handleImpl failed — clear the processing lock if we still own
+        // it so reclaim retries are not blocked for the full 300s TTL.
+        // Compare-and-delete: only DELETE if the key still holds this
+        // worker's owner token.  A stale worker whose TTL expired and was
+        // replaced by a newer reclaim worker MUST NOT delete the new owner.
+        client
+          .eval(DELETE_IF_OWNER_LUA, 1, idempotencyKey, ownerToken)
+          .catch(() => {});
+        throw err;
+      } finally {
+        clearInterval(refreshTimer);
+      }
+
+      // Atomically verify ownership and extend TTL to long with
+      // "delivered" marker.  If the owner token was replaced (TTL
+      // expiry + concurrent re-acquire), the Lua script skips the
+      // SET so the new owner's in-flight work is not suppressed.
+      await client
+        .eval(
+          FINALIZE_DELIVERED_LUA,
+          1,
+          idempotencyKey,
+          ownerToken,
+          EXT_DELIVERED_VAL_DELIVERED,
+          String(EXT_DELIVERED_TTL_LONG),
+        )
+        .catch(() => {});
+      return;
+    }
+
+    await this.handleImpl(userId, eventType, data, streamMsgId);
+  }
+
+  private async handleImpl(
+    userId: string,
+    eventType: string,
+    data: Record<string, string>,
+    streamMsgId?: string,
+  ): Promise<void> {
     const prefField = EVENT_TO_PREF_FIELD[eventType];
     if (prefField === undefined) return; // event not notification-relevant
 
@@ -175,146 +283,27 @@ export class NotificationService {
       if (threshold > 0 && fillUsdc < threshold) return;
     }
 
-    // Dedup: atomically acquire a delivery lock so concurrent handlers
-    // (normal XREADGROUP + PEL reclaim) cannot both fan out the same event.
-    // SET NX EX is atomic — only one caller ever sees "OK".
-    //
-    // Each handler generates a unique owner token (UUID) so lock renewal and
-    // finalization can verify true ownership.  A reclaim handler treats any
-    // non-null, non-"delivered" value as an in-flight lock and throws to
-    // prevent premature PEL ACK.
-    const dedupKey = makeIdempotencyKey(eventType, userId, data);
-    const ownerToken = crypto.randomUUID();
-    let acquired = await this.redis
-      .getClient()
-      .set(dedupKey, ownerToken, "EX", DEDUP_LOCK_TTL, "NX");
-    if (acquired !== "OK") {
-      // The key exists — check whether it is in-flight lock, completed
-      // delivery, or expired.  Only an explicit "delivered" marker means
-      // the notification was already sent and it is safe to return success
-      // (allowing the caller to ACK the stream entry).  A missing/expired
-      // key means the lock from a crashed handler expired; retry acquisition
-      // instead of silently returning and losing the notification.
-      // Any non-null, non-"delivered" value (including a UUID owner token)
-      // means another handler holds the lock — throw so reclaim does not ACK.
-      const currentValue = await this.redis.getClient().get(dedupKey);
-      if (currentValue === DEDUP_DELIVERED_VALUE) {
-        this.logger.debug(
-          `Duplicate notification skipped: ${eventType} for user ${userId}`,
-        );
-        return;
-      }
-      if (currentValue !== null) {
-        throw new Error(
-          `In-flight delivery lock held for ${eventType} user=${userId}`,
-        );
-      }
-      // Key expired — retry acquisition
-      acquired = await this.redis
-        .getClient()
-        .set(dedupKey, ownerToken, "EX", DEDUP_LOCK_TTL, "NX");
-      if (acquired !== "OK") {
-        throw new Error(
-          `Delivery lock held for ${eventType} user=${userId} after retry`,
-        );
-      }
-      // Re-acquired — fall through to fanout
-    }
+    // Build notification content
+    const content = this.templates.build(eventType, data);
 
-    // Periodically renew the lock TTL while fanout is in progress.
-    // Downstream channels (email, telegram) include retry loops that
-    // can extend delivery beyond DEDUP_LOCK_TTL when providers are slow.
-    //
-    // Renewal uses a Lua script that only extends the TTL when the key
-    // value still matches the owner token, preventing a stale handler
-    // from renewing a lock acquired by another reclaim handler.
-    const lockRenewalMs = Math.ceil((DEDUP_LOCK_TTL / 3) * 1000);
-    const RENEW_LOCK_SCRIPT =
-      'if redis.call("GET", KEYS[1]) == ARGV[1] then return redis.call("EXPIRE", KEYS[1], ARGV[2]) else return 0 end';
-    const lockRenewal = setInterval(() => {
-      this.redis
-        .getClient()
-        .eval(
-          RENEW_LOCK_SCRIPT,
-          1,
-          dedupKey,
-          ownerToken,
-          String(DEDUP_LOCK_TTL),
-        )
-        .catch(() => {});
-    }, lockRenewalMs);
+    // In-app notification: always push to stream:events (no frequency gating)
+    await this.pushInApp(userId, eventType, data, content, streamMsgId);
 
-    try {
-      // Build notification content
-      const content = this.templates.build(eventType, data);
-
-      // In-app notification: always push to stream:events (no frequency gating)
-      await this.pushInApp(userId, eventType, data, content);
-
-      // Webhook dispatch: fire-and-forget so the stream consumer does
-      // NOT block on external HTTP calls.  Each webhook carries a 5s
-      // timeout with single retry; dispatch resolves even on failure.
-      // Webhooks are best-effort — if this handler crashes before they
-      // complete, the dedup marker prevents replay and the webhooks are
-      // lost.  This tradeoff keeps stream ACK bounded while ensuring
-      // primary channels (email/telegram/discord) are guaranteed.
-      this.webhookDispatcher
-        .dispatch(userId, eventType, data)
-        .catch((err: unknown) => {
-          this.logger.warn(
-            `Webhook dispatch background task failed for ${eventType} user=${userId}: ${String((err as Error)?.message ?? err)}`,
-          );
-        });
-
-      // Determine delivery mode
-      const freq = String(prefs.notificationFreq ?? "IMMEDIATE");
-
-      if (freq === "IMMEDIATE") {
-        await this.dispatch(userId, prefs, eventType, data, content);
-      } else {
-        // HOURLY / DAILY: push to digest queue in Redis
-        await this.enqueueDigest(userId, freq, eventType, data, content);
-      }
-    } finally {
-      clearInterval(lockRenewal);
-    }
-
-    // Transition the dedup marker from owner token to "delivered" so
-    // subsequent handlers (incl. PEL reclaim) can distinguish a completed
-    // delivery from an in-flight lock.
-    //
-    // Use a Lua script that only sets "delivered" if the key still holds
-    // the owner token.  If the lock was taken over by another handler
-    // (e.g. after this process stalled past DEDUP_LOCK_TTL), the script
-    // returns 0 and we skip the write — the notification was already
-    // delivered and the other handler owns the dedup lifecycle.
-    //
-    // Catch Redis errors: the notification was already sent; throwing would
-    // cause the stream consumer to retry without the marker and deliver a
-    // guaranteed duplicate.  The lock expires in DEDUP_LOCK_TTL seconds as
-    // an acceptable fallback.
-    const FINALIZE_SCRIPT =
-      'if redis.call("GET", KEYS[1]) == ARGV[1] then return redis.call("SET", KEYS[1], ARGV[2], "EX", ARGV[3]) else return 0 end';
-    try {
-      const finalized = await this.redis
-        .getClient()
-        .eval(
-          FINALIZE_SCRIPT,
-          1,
-          dedupKey,
-          ownerToken,
-          DEDUP_DELIVERED_VALUE,
-          String(DEDUP_TTL),
-        );
-      if (finalized === 0) {
-        this.logger.warn(
-          `Dedup marker not finalized for ${eventType} user=${userId}: lock overwritten`,
-        );
-      }
-    } catch (err: any) {
+    // Webhook dispatch: fire-and-forget to all matching webhooks
+    this.webhookDispatcher.dispatch(userId, eventType, data).catch((err) => {
       this.logger.warn(
-        `Dedup marker finalization failed for ${eventType} user=${userId}: ${err?.message}`,
+        `Webhook dispatch failed for ${eventType}: ${err?.message}`,
       );
+    });
+
+    // Determine delivery mode
+    const freq = String(prefs.notificationFreq ?? "IMMEDIATE");
+
+    if (freq === "IMMEDIATE") {
+      await this.dispatch(userId, prefs, eventType, data, content);
+    } else {
+      // HOURLY / DAILY: push to digest queue in Redis
+      await this.enqueueDigest(userId, freq, eventType, data, content);
     }
   }
 
@@ -351,14 +340,13 @@ export class NotificationService {
     userId: string,
     freq: string,
     eventType: string,
-    _data: Record<string, string>,
-    content: ReturnType<TemplatesService["build"]>,
+    data: Record<string, string>,
+    _content: ReturnType<TemplatesService["build"]>,
   ): Promise<void> {
     const key = `digest:${freq.toLowerCase()}:${userId}`;
     const item = JSON.stringify({
       eventType,
-      title: content.title,
-      body: content.body,
+      data,
       ts: Date.now(),
     });
     await this.redis.getClient().rpush(key, item);
@@ -416,9 +404,31 @@ export class NotificationService {
           ? `Polyforge — ${parsed.length} notification${parsed.length > 1 ? "s" : ""} (hourly digest)`
           : `Polyforge — Daily digest (${parsed.length} notification${parsed.length > 1 ? "s" : ""})`;
 
-      const lines = parsed.map((p: any) => `• ${p.title}: ${p.body}`);
-      const htmlLines = parsed.map(
-        (p: any) => `<p>&bull; ${escapeHtml(`${p.title}: ${p.body}`)}</p>`,
+      const rendered = parsed.map((p: any) => {
+        // Backward-compatible: legacy entries stored {title, body} before
+        // the switch to storing raw {data}.  Use stored title/body when
+        // data is absent so in-flight digest items don't degrade during rollout.
+        if (p.data) {
+          const content = this.templates.build(
+            p.eventType ?? "unknown",
+            p.data,
+          );
+          return { title: content.title, body: content.body };
+        }
+        // Legacy fallback: build() is not possible without raw data.
+        // These values pre-date the escaping change and may contain
+        // attacker-controlled HTML — escape before HTML interpolation.
+        return {
+          title: String(p.title ?? ""),
+          body: String(p.body ?? ""),
+          legacy: true,
+        };
+      });
+
+      const lines = rendered.map((r: any) => `• ${r.title}: ${r.body}`);
+      const htmlLines = rendered.map(
+        (r: any) =>
+          `<p>&bull; ${r.legacy ? escapeHtml(r.title) : r.title}: ${r.legacy ? escapeHtml(r.body) : r.body}</p>`,
       );
       const bodyText = lines.join("\n");
       const html = this.templates.toHtml({
@@ -580,10 +590,12 @@ export class NotificationService {
     eventType: string,
     data: Record<string, string>,
     content: ReturnType<TemplatesService["build"]>,
+    streamMsgId?: string,
   ): Promise<void> {
     // Dedup: prevent self-amplification — only one in-app notification per
-    // (eventType, userId, event-data) within the dedup window.
-    const dedupKey = IN_APP_DEDUP_KEY(eventType, userId, data);
+    // (eventType, userId, event-data, streamMsgId) within the dedup window.
+    // Including streamMsgId distinguishes distinct events with identical payload.
+    const dedupKey = DEDUP_KEY(eventType, userId, data, streamMsgId);
     // Use a unique lock value so we can verify ownership before deleting
     const lockValue = crypto.randomUUID();
     let dedupAcquired = false;
