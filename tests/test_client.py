@@ -5254,15 +5254,15 @@ class TestPublicHealthEndpoint:
         original_send = client._client.send
 
         captured_req = {}
-        def _fake_send(req, **kw):
-            captured_req["method"] = req.method
-            captured_req["url"] = str(req.url)
-            captured_req["headers"] = dict(req.headers)
+        def _fake_send(request, **kw):
+            captured_req["method"] = request.method
+            captured_req["url"] = str(request.url)
+            captured_req["headers"] = dict(request.headers)
             r = httpx.Response(200, json={"status": "ok"})
-            r.request = req
+            r.request = request
             return r
 
-        client._client.send = _fake_send
+        client._client.send = _fake_send  # type: ignore[assignment]
         try:
             result = client._get_no_auth("/health")
             assert result == {"status": "ok"}
@@ -5282,13 +5282,13 @@ class TestPublicHealthEndpoint:
         original_send = client._client.send
         stripped_headers = {}
 
-        def _fake_send(req, **kw):
-            stripped_headers.update({k.lower(): v for k, v in req.headers.items()})
+        def _fake_send(request, **kw):
+            stripped_headers.update({k.lower(): v for k, v in request.headers.items()})
             r = httpx.Response(200, json={"status": "ok"})
-            r.request = req
+            r.request = request
             return r
 
-        client._client.send = _fake_send
+        client._client.send = _fake_send  # type: ignore[assignment]
         try:
             client._get_no_auth("/health")
             assert "authorization" not in stripped_headers, \
@@ -5300,7 +5300,7 @@ class TestPublicHealthEndpoint:
     def test_get_health_preserves_zero_uptime(self):
         """Zero uptime must be preserved, not dropped by falsy-or parsing."""
         client = PolyforgeClient(api_key="test-key")
-        client._get_no_auth = lambda _path: {
+        client._get_no_auth = lambda path: {
             "status": "starting",
             "service": "api-service",
             "version": "2.0.0",
@@ -5314,7 +5314,7 @@ class TestPublicHealthEndpoint:
     def test_get_health_preserves_int_zero_uptime(self):
         """Integer zero uptime must be preserved, not dropped by falsy-or parsing."""
         client = PolyforgeClient(api_key="test-key")
-        client._get_no_auth = lambda _path: {
+        client._get_no_auth = lambda path: {
             "status": "starting",
             "uptime": 0,
         }
@@ -6615,7 +6615,7 @@ class TestTradingCopyNumericValidation:
     def test_update_copy_config_rejects_invalid_numeric_kwargs(self):
         client = PolyforgeClient(api_key="test")
         with pytest.raises(ValueError, match="Infinity"):
-            client.update_copy_config("copy-1", max_exposure="Infinity")
+            client.update_copy_config("copy-1", max_exposure="Infinity")  # type: ignore[arg-type]
         client.close()
 
     def test_update_copy_config_allows_negative_price_offset(self):
@@ -6799,7 +6799,7 @@ class TestTradingCopyNumericValidation:
                     max_daily_loss=0,
                 )
             with pytest.raises(ValueError, match="Infinity"):
-                await client.update_copy_config("copy-1", price_offset="Infinity")
+                await client.update_copy_config("copy-1", price_offset="Infinity")  # type: ignore[arg-type]
             await client.close()
 
         asyncio.run(_run())
