@@ -1,12 +1,14 @@
 {
   "compilerOptions": {
+    "types": ["node"],
     "target":      "ES2022",
     "module":      "commonjs",
     "lib":         ["ES2022", "DOM", "DOM.Iterable"],
     "strict":      true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "baseUrl":     "."
+    "baseUrl":     ".",
+    "ignoreDeprecations": "6.0"
   },
   "include": ["./**/*.ts"]
 }

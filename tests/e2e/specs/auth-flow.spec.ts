@@ -11,6 +11,7 @@ import {
     clearMessagesForRecipient,
     getVerificationUrl,
     getPasswordResetUrl,
+    waitForEmail,
 } from '../helpers/mailhog';
 
 /**
@@ -163,7 +164,7 @@ test.describe('Auth flow', () => {
         await apiRegister(email, username, 'Password123!');
 
         // Wait for the verification email to arrive, then clear all
-        await new Promise(r => setTimeout(r, 2000));
+        await waitForEmail(email, 15_000);
         await clearMessagesForRecipient(email);
 
         // Navigate to forgot-password page

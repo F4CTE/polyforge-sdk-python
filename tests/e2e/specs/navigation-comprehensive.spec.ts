@@ -196,7 +196,15 @@ test.describe('Navigation — Full Workflow Coverage', () => {
             const initialWidth = await sidebar.boundingBox().then(box => box?.width ?? 0);
 
             await collapseBtn.click();
-            await page.waitForTimeout(300);
+            // Wait for CSS collapse transition to settle before measuring width
+            await page.waitForFunction(
+                (selector) => {
+                    const el = document.querySelector(selector);
+                    return el && el.getBoundingClientRect().width < 100;
+                },
+                '[aria-label="Main navigation"]',
+                { timeout: 5000 },
+            ).catch(() => {});
 
             const collapsedWidth = await sidebar.boundingBox().then(box => box?.width ?? 0);
             expect(collapsedWidth).toBeLessThan(initialWidth);
@@ -209,12 +217,10 @@ test.describe('Navigation — Full Workflow Coverage', () => {
 
         if (await collapseBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
             await collapseBtn.click();
-            await page.waitForTimeout(300);
-
-            // Now expand
+            // Wait for the expand button to appear after collapse animation
             const expandBtn = page.locator('button[aria-label="Expand sidebar"]');
+            await expect(expandBtn).toBeVisible({ timeout: 5000 });
             await expandBtn.click();
-            await page.waitForTimeout(300);
 
             // Text labels should be visible again
             const sidebar = page.locator('[aria-label="Main navigation"]');
@@ -315,11 +321,10 @@ test.describe('Navigation — Full Workflow Coverage', () => {
 
         if (await notifButton.isVisible({ timeout: 2000 }).catch(() => false)) {
             await notifButton.click();
-            await page.waitForTimeout(300);
 
             // Notification dialog should open
             const dialog = page.locator('[role="dialog"][aria-label="Notifications"]');
-            await expect(dialog).toBeVisible({ timeout: 3000 });
+            await expect(dialog).toBeVisible({ timeout: 5000 });
         }
     });
 
@@ -329,13 +334,12 @@ test.describe('Navigation — Full Workflow Coverage', () => {
 
         if (await notifButton.isVisible({ timeout: 2000 }).catch(() => false)) {
             await notifButton.click();
-            await page.waitForTimeout(300);
 
             // Find and click "Mark all as read"
             const markAllBtn = page.locator('button', { hasText: /mark all as read/i });
             if (await markAllBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
                 await markAllBtn.click();
-                await page.waitForTimeout(300);
+                // Wait for the badge to clear or the notification list to update
 
                 // Badge should disappear or show 0
                 const badge = notifContainer.locator('[aria-label*="unread notifications"]');
@@ -414,9 +418,8 @@ test.describe('Navigation — Full Workflow Coverage', () => {
         const sidebar = page.locator('[aria-label="Main navigation"]');
         // On mobile, the sidebar is rendered as a dialog/overlay — it shouldn't be
         // visible by default (only when menu toggle is clicked)
-        await page.waitForTimeout(500); // Wait for layout reflow
-        const isHidden = !(await sidebar.isVisible({ timeout: 2000 }).catch(() => false));
-        expect(isHidden).toBe(true);
+        await expect(sidebar).toBeHidden({ timeout: 5000 });
+        // Verify the sidebar is truly hidden at mobile width (auto-retried assertion above).
     });
 
     test('mobile hamburger menu opens sidebar overlay', async ({ page }) => {
@@ -426,11 +429,10 @@ test.describe('Navigation — Full Workflow Coverage', () => {
         const hamburger = page.locator('button[aria-label="Open navigation menu"]');
         if (await hamburger.isVisible({ timeout: 2000 }).catch(() => false)) {
             await hamburger.click();
-            await page.waitForTimeout(300);
 
             // Sidebar overlay should be visible now (aria-label="Navigation menu")
             const overlay = page.locator('[aria-label="Navigation menu"]');
-            await expect(overlay).toBeVisible({ timeout: 3000 });
+            await expect(overlay).toBeVisible({ timeout: 5000 });
         }
     });
 
@@ -441,10 +443,9 @@ test.describe('Navigation — Full Workflow Coverage', () => {
         const hamburger = page.locator('button[aria-label="Open navigation menu"]');
         if (await hamburger.isVisible({ timeout: 2000 }).catch(() => false)) {
             await hamburger.click();
-            await page.waitForTimeout(300);
 
             const overlay = page.locator('[aria-label="Navigation menu"]');
-            await expect(overlay).toBeVisible();
+            await expect(overlay).toBeVisible({ timeout: 5000 });
 
             // Click the backdrop element (semi-transparent div behind the sidebar panel)
             // Uses bg-black/50 in app-layout.tsx (formerly bg-pf-backdrop-light)
@@ -463,10 +464,10 @@ test.describe('Navigation — Full Workflow Coverage', () => {
         const hamburger = page.locator('button[aria-label="Open navigation menu"]');
         if (await hamburger.isVisible({ timeout: 2000 }).catch(() => false)) {
             await hamburger.click();
-            await page.waitForTimeout(300);
 
             // Click a nav link inside the overlay
             const overlay = page.locator('[aria-label="Navigation menu"]');
+            await expect(overlay).toBeVisible({ timeout: 5000 });
             const stratLink = overlay.locator('a', { hasText: /^Strategies$/i });
             if (await stratLink.isVisible({ timeout: 2000 }).catch(() => false)) {
                 await stratLink.click();

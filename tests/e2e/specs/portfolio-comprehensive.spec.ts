@@ -426,9 +426,6 @@ test.describe('Portfolio — Full Workflow Coverage', () => {
 
             // Verify dialog closed and position still exists
             await expect(dialog).not.toBeVisible();
-
-            const finalCount = await page.locator('button:has-text("Close"), [data-testid*="close-position"]').count();
-            expect(finalCount).toBeGreaterThanOrEqual(0);
         }
     });
 

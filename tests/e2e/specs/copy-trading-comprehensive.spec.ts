@@ -53,7 +53,6 @@ test.describe('Copy Trading — Full Workflow Coverage', () => {
 
         // Get copy card count (could be 0 if empty)
         const copyCount = await copyListPage.getCopyCount();
-        expect(copyCount).toBeGreaterThanOrEqual(0);
 
         // If copies exist, verify cards display properly
         if (copyCount > 0) {
@@ -625,8 +624,7 @@ test.describe('Copy Trading — Full Workflow Coverage', () => {
 
                 if (isPauseVisible) {
                     await pauseButton.click();
-                    // Wait for status to update
-                    await page.waitForTimeout(1000);
+                    await expect(statusBadge).toContainText('PAUSED', { timeout: 10_000 });
                     const statusAfter = await statusBadge.textContent();
                     expect(statusAfter).toContain('PAUSED');
                 }
@@ -651,7 +649,7 @@ test.describe('Copy Trading — Full Workflow Coverage', () => {
 
                 if (isResumeVisible) {
                     await resumeButton.click();
-                    await page.waitForTimeout(1000);
+                    await expect(statusBadge).toContainText('ACTIVE', { timeout: 10_000 });
                     const statusAfter = await statusBadge.textContent();
                     expect(statusAfter).toContain('ACTIVE');
                 }
@@ -717,7 +715,7 @@ test.describe('Copy Trading — Full Workflow Coverage', () => {
                     await confirmButton.click();
                 }
 
-                await page.waitForTimeout(1000);
+                await expect(statusBadge).toContainText('STOPPED', { timeout: 10_000 });
 
                 const statusBadge = firstCard.locator('[data-testid="status-badge"]');
                 const statusAfter = await statusBadge.textContent();
@@ -805,9 +803,7 @@ test.describe('Copy Trading — Full Workflow Coverage', () => {
                 // Should show history/trades section
                 const historySection = page.locator('text=/history|trades|orders|activity/i');
                 const isVisible = await historySection.first().isVisible({ timeout: 5000 }).catch(() => false);
-
-                // History may be empty but the section should exist on the detail page
-                expect([true, false]).toContain(isVisible);
+                expect(isVisible).toBe(true);
             }
         }
     });

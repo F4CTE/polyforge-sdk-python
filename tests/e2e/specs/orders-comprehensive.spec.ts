@@ -276,7 +276,7 @@ test.describe('Orders — Full Workflow Coverage', () => {
         await ordersPage.createButton.click();
 
         // Wait for dialog to close or toast
-        await page.waitForTimeout(1000);
+        await expect(page.locator('[role="dialog"]')).not.toBeVisible({ timeout: 10_000 }).catch(() => {});
     });
 
     test('create stop_loss conditional order succeeds', async ({ page }) => {
@@ -299,7 +299,7 @@ test.describe('Orders — Full Workflow Coverage', () => {
         await ordersPage.triggerPriceInput.fill('0.30');
 
         await ordersPage.createButton.click();
-        await page.waitForTimeout(1000);
+        await expect(page.locator('[role="dialog"]')).not.toBeVisible({ timeout: 10_000 }).catch(() => {});
     });
 
     test('create trailing_stop conditional order succeeds', async ({ page }) => {
@@ -323,7 +323,7 @@ test.describe('Orders — Full Workflow Coverage', () => {
         await ordersPage.triggerPriceInput.fill('0.50');
 
         await ordersPage.createButton.click();
-        await page.waitForTimeout(1000);
+        await expect(page.locator('[role="dialog"]')).not.toBeVisible({ timeout: 10_000 }).catch(() => {});
     });
 
     test('create limit conditional order succeeds', async ({ page }) => {
@@ -347,7 +347,7 @@ test.describe('Orders — Full Workflow Coverage', () => {
         await ordersPage.triggerPriceInput.fill('0.50');
 
         await ordersPage.createButton.click();
-        await page.waitForTimeout(1000);
+        await expect(page.locator('[role="dialog"]')).not.toBeVisible({ timeout: 10_000 }).catch(() => {});
     });
 
     test('create pegged conditional order succeeds', async ({ page }) => {
@@ -370,7 +370,7 @@ test.describe('Orders — Full Workflow Coverage', () => {
         await ordersPage.triggerPriceInput.fill('0.60');
 
         await ordersPage.createButton.click();
-        await page.waitForTimeout(1000);
+        await expect(page.locator('[role="dialog"]')).not.toBeVisible({ timeout: 10_000 }).catch(() => {});
     });
 
     test('conditional order with expiration date is saved', async ({ page }) => {
@@ -397,7 +397,7 @@ test.describe('Orders — Full Workflow Coverage', () => {
         await ordersPage.expiresAtInput.fill(expiryDate);
 
         await ordersPage.createButton.click();
-        await page.waitForTimeout(1000);
+        await expect(page.locator('[role="dialog"]')).not.toBeVisible({ timeout: 10_000 }).catch(() => {});
     });
 
     test('conditional order without expiration is saved', async ({ page }) => {
@@ -420,7 +420,7 @@ test.describe('Orders — Full Workflow Coverage', () => {
         await ordersPage.triggerPriceInput.fill('0.25');
 
         await ordersPage.createButton.click();
-        await page.waitForTimeout(1000);
+        await expect(page.locator('[role="dialog"]')).not.toBeVisible({ timeout: 10_000 }).catch(() => {});
     });
 
     // ─── Conditional Order Validation ──────────────────────────────────────────
@@ -506,8 +506,11 @@ test.describe('Orders — Full Workflow Coverage', () => {
 
         await ordersPage.createButton.click();
 
-        // May submit (server-side validation) or stay in dialog
-        // Both are acceptable behaviors
+        // Zero size should trigger validation: either dialog stays open with client-side
+        // error, or server rejects with a toast.
+        const dialogVisible = await page.locator('[role="dialog"]').isVisible().catch(() => false);
+        const toastVisible = await page.locator('[data-sonner-toast]').isVisible().catch(() => false);
+        expect(dialogVisible || toastVisible).toBe(true);
     });
 
     test('submit conditional order with negative trigger price shows error', async ({ page }) => {
@@ -532,8 +535,11 @@ test.describe('Orders — Full Workflow Coverage', () => {
 
         await ordersPage.createButton.click();
 
-        // May stay in dialog (server/client validation) or close with error toast
-        // Both are acceptable behaviors
+        // Negative trigger price should show an error: either dialog stays open
+        // (client validation) or closes with error toast (server validation).
+        const dialogVisible = await page.locator('[role="dialog"]').isVisible().catch(() => false);
+        const toastVisible = await page.locator('[data-sonner-toast]').isVisible().catch(() => false);
+        expect(dialogVisible || toastVisible).toBe(true);
     });
 
     // ─── Conditional Order Actions ─────────────────────────────────────────────
@@ -681,7 +687,7 @@ test.describe('Orders — Full Workflow Coverage', () => {
         });
 
         const count = await ordersPage.getOrderCount();
-        expect(count).toBeGreaterThanOrEqual(0);
+        expect(count).toBeGreaterThan(0);
     });
 
     test('buy + no order creates correctly', async ({ page }) => {
@@ -699,7 +705,7 @@ test.describe('Orders — Full Workflow Coverage', () => {
         });
 
         const count = await ordersPage.getOrderCount();
-        expect(count).toBeGreaterThanOrEqual(0);
+        expect(count).toBeGreaterThan(0);
     });
 
     test('sell + yes order creates correctly', async ({ page }) => {
@@ -717,7 +723,7 @@ test.describe('Orders — Full Workflow Coverage', () => {
         });
 
         const count = await ordersPage.getOrderCount();
-        expect(count).toBeGreaterThanOrEqual(0);
+        expect(count).toBeGreaterThan(0);
     });
 
     test('sell + no order creates correctly', async ({ page }) => {
@@ -735,7 +741,7 @@ test.describe('Orders — Full Workflow Coverage', () => {
         });
 
         const count = await ordersPage.getOrderCount();
-        expect(count).toBeGreaterThanOrEqual(0);
+        expect(count).toBeGreaterThan(0);
     });
 
 });

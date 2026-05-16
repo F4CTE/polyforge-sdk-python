@@ -271,6 +271,21 @@ export class WebSocketManager {
     this.connectionListeners.clear();
   }
 
+  // ── Test-only hook ─────────────────────────────────────────────────
+  __testFireConnectionState(state: ConnectionState): void {
+    // Callers (E2E tests) already gate on window.__wsManager
+    // existence, which app.tsx only exposes on localhost/DEV.
+    // No guard here so the hook works in CI builds too.
+    this.connectionState = state;
+    for (const fn of this.connectionListeners) {
+      try {
+        fn(state);
+      } catch {
+        /* listener errors should not break the socket */
+      }
+    }
+  }
+
   // ── Static helpers for filtering by event type ──────────────────────
 
   static isStrategyEvent(msg: WsMessage): boolean {
