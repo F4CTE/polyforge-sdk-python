@@ -239,7 +239,7 @@ importable for the same window.
 **Copy Trading CRUD** (full lifecycle, closes #66)
 - `create_copy_config(target_wallet, mode, size_value, max_exposure, max_daily_loss, price_offset)` — `POST /api/v1/copy`
 - `get_copy_config(copy_id)` — `GET /api/v1/copy/:id`
-- `update_copy_config(copy_id, **kwargs)` — `PATCH /api/v1/copy/:id`
+- `update_copy_config(copy_id, *, mode, size_value, max_exposure, max_daily_loss, price_offset)` — `PATCH /api/v1/copy/:id`
 - `pause_copy_config(copy_id)` — `POST /api/v1/copy/:id/pause`
 - `resume_copy_config(copy_id)` — `POST /api/v1/copy/:id/resume`
 - `delete_copy_config(copy_id)` — `DELETE /api/v1/copy/:id`

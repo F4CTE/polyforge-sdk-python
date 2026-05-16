@@ -34,6 +34,7 @@ from polyforge.models import (
     JournalEntry,
     Market,
     MatchSyncResult,
+    SystemHealthPublic,
     SystemHealthAuthenticated,
     Token,
     MarketplaceListing,
@@ -65,6 +66,8 @@ from polyforge.models import (
     WebhookEvent,
     WebhookTestResult,
     WhaleTrade,
+    PersonalDataExport,
+    PersonalDataExportMeta,
 )
 
 
@@ -418,6 +421,108 @@ class TestModelParsing:
         assert market.description is None
         assert market.end_date is None
         assert market.resolved is False
+
+    def test_market_symbol_is_optional_with_default_none(self):
+        """symbol field is deprecated — default should be None not empty string."""
+        market = Market()
+        assert market.symbol is None
+
+    def test_market_updated_at_is_optional_with_default_none(self):
+        """updated_at field is deprecated — default should be None not empty string."""
+        market = Market()
+        assert market.updated_at is None
+
+    def test_market_import_available_from_package_root(self):
+        """Market must be importable from polyforge (not just polyforge.models)."""
+        from polyforge import Market as RootMarket  # noqa: F811
+        assert RootMarket is Market
+
+    def test_strategy_exec_mode_import_available_from_package_root(self):
+        """StrategyExecMode must be importable from polyforge package root."""
+        from polyforge import StrategyExecMode as RootExecMode  # noqa: F811
+        assert RootExecMode is StrategyExecMode
+
+    def test_support_ticket_import_available_from_package_root(self):
+        """SupportTicket must be importable from polyforge package root."""
+        from polyforge import SupportTicket  # noqa: F401
+        assert SupportTicket is not None
+
+    def test_market_parses_resolved_string_true(self):
+        """_parse must coerce \"true\" string to True for boolean fields."""
+        api_response = {
+            "id": "mkt-str-bool",
+            "title": "String bool test",
+            "category": "Crypto",
+            "resolved": "true",
+        }
+        market = _parse(Market, api_response)
+        assert market.resolved is True
+
+    def test_market_parses_resolved_string_false(self):
+        """_parse must coerce \"false\" string to False for boolean fields."""
+        api_response = {
+            "id": "mkt-str-bool",
+            "title": "String bool test",
+            "category": "Crypto",
+            "resolved": "false",
+        }
+        market = _parse(Market, api_response)
+        assert market.resolved is False
+
+    def test_market_parses_resolved_numeric_one(self):
+        """_parse must coerce numeric 1 to True for boolean fields."""
+        api_response = {
+            "id": "mkt-num-bool",
+            "title": "Numeric bool test",
+            "category": "Crypto",
+            "resolved": 1,
+        }
+        market = _parse(Market, api_response)
+        assert market.resolved is True
+
+    def test_market_parses_resolved_numeric_zero(self):
+        """_parse must coerce numeric 0 to False for boolean fields."""
+        api_response = {
+            "id": "mkt-num-bool",
+            "title": "Numeric bool test",
+            "category": "Crypto",
+            "resolved": 0,
+        }
+        market = _parse(Market, api_response)
+        assert market.resolved is False
+
+    def test_market_parses_rejects_unrecognized_bool_string(self):
+        """_parse must reject unrecognized boolean strings like \"on\"."""
+        api_response = {
+            "id": "mkt-bad-str",
+            "title": "Bad bool string",
+            "category": "Crypto",
+            "resolved": "on",
+        }
+        with pytest.raises(ValueError, match="Unrecognized boolean string"):
+            _parse(Market, api_response)
+
+    def test_market_parses_rejects_out_of_range_numeric_bool(self):
+        """_parse must reject numeric bool values other than 0/1 (e.g. 2)."""
+        api_response = {
+            "id": "mkt-bad-num",
+            "title": "Bad numeric bool",
+            "category": "Crypto",
+            "resolved": 2,
+        }
+        with pytest.raises(ValueError, match="Numeric value out of range"):
+            _parse(Market, api_response)
+
+    def test_market_parses_rejects_negative_numeric_bool(self):
+        """_parse must reject negative numeric bool values like -1."""
+        api_response = {
+            "id": "mkt-neg-num",
+            "title": "Negative bool",
+            "category": "Crypto",
+            "resolved": -1,
+        }
+        with pytest.raises(ValueError, match="Numeric value out of range"):
+            _parse(Market, api_response)
 
     def test_strategy_model_instantiation(self):
         """Should instantiate Strategy model."""
@@ -3937,10 +4042,10 @@ class TestBulkOrderEndpoints:
         source = inspect.getsource(PolyforgeClient.bulk_cancel_orders)
         assert "/api/v1/orders/bulk" in source
 
-    def test_bulk_cancel_orders_uses_delete_json(self):
+    def test_bulk_cancel_orders_uses_post_json(self):
         import inspect
         source = inspect.getsource(PolyforgeClient.bulk_cancel_orders)
-        assert "_delete_json" in source
+        assert "_post_json" in source
 
     def test_bulk_cancel_orders_sends_order_ids_key(self):
         import inspect
@@ -4816,6 +4921,7 @@ class TestCrossVenueArbitrage:
         )
         client.close()
 
+
     def test_async_sync_market_matches(self):
         import asyncio
         from unittest.mock import AsyncMock
@@ -5021,6 +5127,149 @@ class TestHealthEndpoint:
         assert SHA is SystemHealthAuthenticated
         assert MSR is MatchSyncResult
 
+
+class TestPublicHealthEndpoint:
+    """Tests for the unauthenticated public health-check endpoint (POLA-4153)."""
+
+    def test_sync_get_health(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._get_no_auth = MagicMock(return_value={
+            "status": "operational",
+            "service": "api-service",
+            "version": "2.0.0",
+            "uptime": 3600.0,
+        })
+        result = client.get_health()
+        assert isinstance(result, SystemHealthPublic)
+        assert result.status == "operational"
+        assert result.service == "api-service"
+        assert result.version == "2.0.0"
+        assert result.uptime == 3600.0
+        assert not hasattr(result, "db")
+        assert not hasattr(result, "redis")
+        assert not hasattr(result, "queue_depth")
+        assert not hasattr(result, "services")
+        client._get_no_auth.assert_called_once_with("/health")
+        client.close()
+
+    def test_async_get_health(self):
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            client._get_no_auth = AsyncMock(return_value={
+                "status": "operational",
+                "service": "api-service",
+                "version": "2.0.0",
+                "uptime": 3600.0,
+            })
+            result = await client.get_health()
+            assert isinstance(result, SystemHealthPublic)
+            assert result.status == "operational"
+            assert result.service == "api-service"
+            assert result.version == "2.0.0"
+            assert result.uptime == 3600.0
+            assert not hasattr(result, "db")
+            assert not hasattr(result, "redis")
+            assert not hasattr(result, "queue_depth")
+            assert not hasattr(result, "services")
+            client._get_no_auth.assert_called_once_with("/health")
+            await client.close()
+
+        asyncio.run(_run())
+
+    def test_new_public_model_exported_from_package_root(self):
+        from polyforge import SystemHealthPublic as SHP
+        assert SHP is SystemHealthPublic
+
+    def test_get_no_auth_reuses_client_env(self):
+        """_get_no_auth must reuse self._client so proxy/CA env is preserved.
+
+        Using build_request() on the existing client inherits proxy and CA
+        settings. The Authorization header is deleted so no auth header
+        is sent without discarding the rest of the env configuration.
+        """
+        client = PolyforgeClient(api_key="test-key")
+        original_send = client._client.send
+
+        captured_req = {}
+        def _fake_send(req, **kw):
+            captured_req["method"] = req.method
+            captured_req["url"] = str(req.url)
+            captured_req["headers"] = dict(req.headers)
+            r = httpx.Response(200, json={"status": "ok"})
+            r.request = req
+            return r
+
+        client._client.send = _fake_send
+        try:
+            result = client._get_no_auth("/health")
+            assert result == {"status": "ok"}
+            assert captured_req["method"] == "GET"
+            assert captured_req["url"].endswith("/health")
+            headers_lower = {k.lower(): v for k, v in captured_req.get("headers", {}).items()}
+            assert "authorization" not in headers_lower, \
+                f"Authorization header must be absent, got {captured_req['headers']!r}"
+        finally:
+            client._client.send = original_send
+            client.close()
+
+    def test_get_no_auth_strips_auth_header(self):
+        """_get_no_auth must strip Authorization even when client headers have it."""
+        client = PolyforgeClient(api_key="test-key")
+        assert "authorization" in {k.lower() for k in client._client.headers}
+        original_send = client._client.send
+        stripped_headers = {}
+
+        def _fake_send(req, **kw):
+            stripped_headers.update({k.lower(): v for k, v in req.headers.items()})
+            r = httpx.Response(200, json={"status": "ok"})
+            r.request = req
+            return r
+
+        client._client.send = _fake_send
+        try:
+            client._get_no_auth("/health")
+            assert "authorization" not in stripped_headers, \
+                f"Authorization header must be absent, got headers={stripped_headers!r}"
+        finally:
+            client._client.send = original_send
+            client.close()
+
+    def test_get_health_preserves_zero_uptime(self):
+        """Zero uptime must be preserved, not dropped by falsy-or parsing."""
+        client = PolyforgeClient(api_key="test-key")
+        client._get_no_auth = lambda _path: {
+            "status": "starting",
+            "service": "api-service",
+            "version": "2.0.0",
+            "uptime": 0.0,
+        }
+        result = client.get_health()
+        assert result.uptime == 0.0, \
+            f"Zero uptime should be preserved, got {result.uptime!r}"
+        client.close()
+
+    def test_get_health_preserves_int_zero_uptime(self):
+        """Integer zero uptime must be preserved, not dropped by falsy-or parsing."""
+        client = PolyforgeClient(api_key="test-key")
+        client._get_no_auth = lambda _path: {
+            "status": "starting",
+            "uptime": 0,
+        }
+        result = client.get_health()
+        assert result.uptime == 0, \
+            f"Integer zero uptime should be preserved, got {result.uptime!r}"
+        client.close()
+
+    def test_async_get_health_authenticated_is_coroutine(self):
+        import inspect
+        assert hasattr(AsyncPolyforgeClient, "get_health_authenticated"), \
+            "AsyncPolyforgeClient missing get_health_authenticated"
+        source = inspect.getsource(AsyncPolyforgeClient.get_health_authenticated)
+        assert "await" in source, "async get_health_authenticated not using await"
 
 
 class TestPositionPlatformContract:
@@ -6233,13 +6482,81 @@ class TestTradingCopyNumericValidation:
             price_offset=-0.5,
         )
         client._post.assert_called_once()
-        assert client._post.call_args.kwargs["json"]["priceOffset"] == -0.5
+        assert client._post.call_args.kwargs["json"]["priceOffset"] == "-0.5"
+
+        client.close()
+
+    def test_create_copy_config_sends_numeric_fields_as_strings(self):
+        from unittest.mock import MagicMock
+
+        client = PolyforgeClient(api_key="test")
+        client._post = MagicMock(return_value={
+            "id": "copy-1",
+            "userId": "user-1",
+            "targetWallet": "0x0000000000000000000000000000000000000001",
+            "mode": "PERCENTAGE",
+            "sizeValue": "10",
+            "maxExposure": "500",
+            "maxDailyLoss": "100",
+            "priceOffset": "-0.5",
+            "status": "ACTIVE",
+            "totalCopied": 0,
+            "totalPnl": "0",
+            "createdAt": "2026-04-29T00:00:00Z",
+            "updatedAt": "2026-04-29T00:00:00Z",
+        })
+        client.create_copy_config(
+            "0x0000000000000000000000000000000000000001",
+            mode="PERCENTAGE",
+            size_value=10.0,
+            max_exposure=500,
+            max_daily_loss=100.0,
+            price_offset=-0.5,
+        )
+        json_body = client._post.call_args.kwargs["json"]
+        assert json_body["sizeValue"] == "10.0"
+        assert json_body["maxExposure"] == "500"
+        assert json_body["maxDailyLoss"] == "100.0"
+        assert json_body["priceOffset"] == "-0.5"
+        client.close()
+
+    def test_update_copy_config_sends_numeric_fields_as_strings(self):
+        from unittest.mock import MagicMock
+
+        client = PolyforgeClient(api_key="test")
+        client._patch = MagicMock(return_value={
+            "id": "copy-1",
+            "userId": "user-1",
+            "targetWallet": "0x0000000000000000000000000000000000000001",
+            "mode": "PERCENTAGE",
+            "sizeValue": "10",
+            "maxExposure": "500",
+            "maxDailyLoss": "100",
+            "priceOffset": "-0.5",
+            "status": "ACTIVE",
+            "totalCopied": 0,
+            "totalPnl": "0",
+            "createdAt": "2026-04-29T00:00:00Z",
+            "updatedAt": "2026-04-29T00:00:00Z",
+        })
+        client.update_copy_config(
+            "copy-1",
+            sizeValue=10.0,
+            maxExposure=500,
+            maxDailyLoss=100.0,
+            priceOffset=-0.5,
+        )
+        json_body = client._patch.call_args.kwargs["json"]
+        assert json_body["sizeValue"] == "10.0"
+        assert json_body["maxExposure"] == "500"
+        assert json_body["maxDailyLoss"] == "100.0"
+        assert json_body["priceOffset"] == "-0.5"
         client.close()
 
     def test_update_copy_config_rejects_invalid_numeric_kwargs(self):
         client = PolyforgeClient(api_key="test")
         with pytest.raises(ValueError, match="Infinity"):
-            client.update_copy_config("copy-1", maxExposure="Infinity")
+            client.update_copy_config("copy-1", max_exposure="Infinity")
         client.close()
 
     def test_update_copy_config_allows_negative_price_offset(self):
@@ -6261,9 +6578,136 @@ class TestTradingCopyNumericValidation:
             "createdAt": "2026-04-29T00:00:00Z",
             "updatedAt": "2026-04-29T00:00:00Z",
         })
-        client.update_copy_config("copy-1", priceOffset=-0.5)
+        client.update_copy_config("copy-1", price_offset=-0.5)
         client._patch.assert_called_once()
-        assert client._patch.call_args.kwargs["json"]["priceOffset"] == -0.5
+        assert client._patch.call_args.kwargs["json"]["priceOffset"] == "-0.5"
+        client.close()
+
+    def test_update_copy_config_rejects_unknown_kwargs(self):
+        client = PolyforgeClient(api_key="test")
+        with pytest.raises(TypeError, match="unexpected keyword"):
+            client.update_copy_config("copy-1", typoField=5)
+        client.close()
+
+    def test_update_copy_config_accepts_camelcase_kwargs(self):
+        import warnings
+        from unittest.mock import MagicMock
+
+        client = PolyforgeClient(api_key="test")
+        client._patch = MagicMock(return_value={
+            "id": "copy-1",
+            "userId": "user-1",
+            "targetWallet": "0x0000000000000000000000000000000000000001",
+            "mode": "PERCENTAGE",
+            "sizeValue": "100",
+            "maxExposure": "500",
+            "maxDailyLoss": "50",
+            "priceOffset": "0",
+            "status": "ACTIVE",
+            "totalCopied": 0,
+            "totalPnl": "0",
+            "createdAt": "2026-04-29T00:00:00Z",
+            "updatedAt": "2026-04-29T00:00:00Z",
+        })
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            client.update_copy_config("copy-1", sizeValue=100, maxExposure=500)
+            assert len(w) == 1
+            assert issubclass(w[0].category, DeprecationWarning)
+            assert "camelCase" in str(w[0].message)
+
+        json_body = client._patch.call_args.kwargs["json"]
+        assert json_body["sizeValue"] == "100"
+        assert json_body["maxExposure"] == "500"
+        client.close()
+
+    def test_update_copy_config_camelcase_overrides_snake_case(self):
+        import warnings
+        from unittest.mock import MagicMock
+
+        client = PolyforgeClient(api_key="test")
+        client._patch = MagicMock(return_value={
+            "id": "copy-1",
+            "userId": "user-1",
+            "targetWallet": "0x0000000000000000000000000000000000000001",
+            "mode": "PERCENTAGE",
+            "sizeValue": "200",
+            "maxExposure": "500",
+            "maxDailyLoss": "50",
+            "priceOffset": "0",
+            "status": "ACTIVE",
+            "totalCopied": 0,
+            "totalPnl": "0",
+            "createdAt": "2026-04-29T00:00:00Z",
+            "updatedAt": "2026-04-29T00:00:00Z",
+        })
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            client.update_copy_config(
+                "copy-1",
+                size_value=100,    # snake_case → body["sizeValue"] = "100"
+                sizeValue=200,     # camelCase → overrides to "200"
+            )
+
+        json_body = client._patch.call_args.kwargs["json"]
+        assert json_body["sizeValue"] == "200"
+        client.close()
+
+    def test_update_copy_config_explicit_none_sends_null(self):
+        from unittest.mock import MagicMock
+
+        client = PolyforgeClient(api_key="test")
+        client._patch = MagicMock(return_value={
+            "id": "copy-1",
+            "userId": "user-1",
+            "targetWallet": "0x0000000000000000000000000000000000000001",
+            "mode": "MIRROR",
+            "sizeValue": "10",
+            "maxExposure": "0",
+            "maxDailyLoss": None,
+            "priceOffset": None,
+            "status": "ACTIVE",
+            "totalCopied": 0,
+            "totalPnl": "0",
+            "createdAt": "2026-04-29T00:00:00Z",
+            "updatedAt": "2026-04-29T00:00:00Z",
+        })
+
+        client.update_copy_config("copy-1", max_daily_loss=None, price_offset=None)
+        json_body = client._patch.call_args.kwargs["json"]
+        assert json_body["maxDailyLoss"] is None
+        assert json_body["priceOffset"] is None
+        client.close()
+
+    def test_update_copy_config_omits_unset_params(self):
+        from unittest.mock import MagicMock
+
+        client = PolyforgeClient(api_key="test")
+        client._patch = MagicMock(return_value={
+            "id": "copy-1",
+            "userId": "user-1",
+            "targetWallet": "0x0000000000000000000000000000000000000001",
+            "mode": "FIXED",
+            "sizeValue": "100",
+            "maxExposure": "500",
+            "maxDailyLoss": "50",
+            "priceOffset": "0",
+            "status": "ACTIVE",
+            "totalCopied": 0,
+            "totalPnl": "0",
+            "createdAt": "2026-04-29T00:00:00Z",
+            "updatedAt": "2026-04-29T00:00:00Z",
+        })
+
+        client.update_copy_config("copy-1", mode="FIXED")
+        json_body = client._patch.call_args.kwargs["json"]
+        assert "mode" in json_body
+        assert "sizeValue" not in json_body
+        assert "maxExposure" not in json_body
+        assert "maxDailyLoss" not in json_body
+        assert "priceOffset" not in json_body
         client.close()
 
     def test_async_batch_orders_rejects_infinite_order_price(self):
@@ -6296,81 +6740,75 @@ class TestTradingCopyNumericValidation:
                     max_daily_loss=0,
                 )
             with pytest.raises(ValueError, match="Infinity"):
-                await client.update_copy_config("copy-1", priceOffset="Infinity")
+                await client.update_copy_config("copy-1", price_offset="Infinity")
             await client.close()
 
         asyncio.run(_run())
 
-    def test_update_copy_config_filters_unknown_kwargs(self):
-        """update_copy_config silently drops keys not in the allowed set."""
-        from unittest.mock import MagicMock
+    def test_async_update_copy_config_explicit_none_sends_null(self):
+        import asyncio
+        from unittest.mock import AsyncMock
 
-        client = PolyforgeClient(api_key="test")
-        client._patch = MagicMock(return_value={
-            "id": "copy-1",
-            "userId": "user-1",
-            "targetWallet": "0x0000000000000000000000000000000000000001",
-            "mode": "PERCENTAGE",
-            "sizeValue": "10",
-            "maxExposure": "500",
-            "maxDailyLoss": "100",
-            "priceOffset": "-0.5",
-            "status": "ACTIVE",
-            "totalCopied": 0,
-            "totalPnl": "0",
-            "createdAt": "2026-04-29T00:00:00Z",
-            "updatedAt": "2026-04-29T00:00:00Z",
-        })
-        client.update_copy_config(
-            "copy-1",
-            mode="FIXED",
-            sizeValue=100,
-            badKey="should-be-dropped",
-            anotherBad=42,
-        )
-        sent = client._patch.call_args.kwargs["json"]
-        assert "mode" in sent
-        assert "sizeValue" in sent
-        assert "badKey" not in sent
-        assert "anotherBad" not in sent
-        client.close()
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test")
+            client._patch = AsyncMock(return_value={
+                "id": "copy-1",
+                "userId": "user-1",
+                "targetWallet": "0x0000000000000000000000000000000000000001",
+                "mode": "MIRROR",
+                "sizeValue": "10",
+                "maxExposure": "0",
+                "maxDailyLoss": None,
+                "priceOffset": None,
+                "status": "ACTIVE",
+                "totalCopied": 0,
+                "totalPnl": "0",
+                "createdAt": "2026-04-29T00:00:00Z",
+                "updatedAt": "2026-04-29T00:00:00Z",
+            })
 
-    def test_update_copy_config_allows_all_known_fields(self):
-        from unittest.mock import MagicMock
+            await client.update_copy_config(
+                "copy-1", max_daily_loss=None, price_offset=None,
+            )
+            json_body = client._patch.call_args.kwargs["json"]
+            assert json_body["maxDailyLoss"] is None
+            assert json_body["priceOffset"] is None
+            await client.close()
 
-        client = PolyforgeClient(api_key="test")
-        client._patch = MagicMock(return_value={
-            "id": "copy-1",
-            "userId": "user-1",
-            "targetWallet": "0x0000000000000000000000000000000000000001",
-            "mode": "PERCENTAGE",
-            "sizeValue": "10",
-            "maxExposure": "500",
-            "maxDailyLoss": "100",
-            "priceOffset": "-0.5",
-            "status": "ACTIVE",
-            "totalCopied": 0,
-            "totalPnl": "0",
-            "createdAt": "2026-04-29T00:00:00Z",
-            "updatedAt": "2026-04-29T00:00:00Z",
-        })
-        client.update_copy_config(
-            "copy-1",
-            mode="PERCENTAGE",
-            sizeValue=10,
-            maxExposure=500,
-            maxDailyLoss=100,
-            priceOffset=-0.5,
-        )
-        sent = client._patch.call_args.kwargs["json"]
-        assert sent == {
-            "mode": "PERCENTAGE",
-            "sizeValue": 10,
-            "maxExposure": 500,
-            "maxDailyLoss": 100,
-            "priceOffset": -0.5,
-        }
-        client.close()
+        asyncio.run(_run())
+
+    def test_async_update_copy_config_omits_unset_params(self):
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test")
+            client._patch = AsyncMock(return_value={
+                "id": "copy-1",
+                "userId": "user-1",
+                "targetWallet": "0x0000000000000000000000000000000000000001",
+                "mode": "FIXED",
+                "sizeValue": "100",
+                "maxExposure": "500",
+                "maxDailyLoss": "50",
+                "priceOffset": "0",
+                "status": "ACTIVE",
+                "totalCopied": 0,
+                "totalPnl": "0",
+                "createdAt": "2026-04-29T00:00:00Z",
+                "updatedAt": "2026-04-29T00:00:00Z",
+            })
+
+            await client.update_copy_config("copy-1", mode="FIXED")
+            json_body = client._patch.call_args.kwargs["json"]
+            assert "mode" in json_body
+            assert "sizeValue" not in json_body
+            assert "maxExposure" not in json_body
+            assert "maxDailyLoss" not in json_body
+            assert "priceOffset" not in json_body
+            await client.close()
+
+        asyncio.run(_run())
 
 
 # ── POLA-1847: 9 sports markets endpoints ────────────────────────────────────
@@ -7679,7 +8117,7 @@ class TestIdempotencyKeyHeaders:
             ("_post", {"results": []}, lambda c: c.batch_orders([{
                 "tokenId": "tok", "side": "BUY", "outcome": "YES", "size": 1.0, "price": 0.5,
             }])),
-            ("_delete_json", {"cancelled": [], "errors": []}, lambda c: c.bulk_cancel_orders(["ord-1"])),
+            ("_post_json", {"cancelled": [], "errors": []}, lambda c: c.bulk_cancel_orders(["ord-1"])),
             ("_post", place_order_payload, lambda c: c.close_position("tok")),
             ("_post", {"positionId": "pos-1", "intentId": "int-1", "status": "REDEEMED"}, lambda c: c.redeem_position(position_id="pos-1")),
             ("_post", place_order_payload, lambda c: c.split_position("tok", 1)),
@@ -7747,7 +8185,7 @@ class TestIdempotencyKeyHeaders:
                 ("_post", {"results": []}, lambda c: c.batch_orders([{
                     "tokenId": "tok", "side": "BUY", "outcome": "YES", "size": 1.0, "price": 0.5,
                 }])),
-                ("_delete_json", {"cancelled": [], "errors": []}, lambda c: c.bulk_cancel_orders(["ord-1"])),
+                ("_post_json", {"cancelled": [], "errors": []}, lambda c: c.bulk_cancel_orders(["ord-1"])),
                 ("_post", place_order_payload, lambda c: c.close_position("tok")),
                 ("_post", {"positionId": "pos-1", "intentId": "int-1", "status": "REDEEMED"}, lambda c: c.redeem_position(position_id="pos-1")),
                 ("_post", place_order_payload, lambda c: c.split_position("tok", 1)),
@@ -8548,3 +8986,354 @@ class TestRewardsEndpointRoundtrips:
             assert captured["raw_path"] == b"/api/v1/rewards/sponsor-url/market%2Fwith%2Fslashes"
         finally:
             client.close()
+
+
+# ── GDPR Personal Data Export (POLA-3611) ──────────────────────────────────
+
+
+class TestExportPersonalDataPresence:
+    """Surface check: export_personal_data exists on both clients (POLA-3611)."""
+
+    def test_method_present_on_sync_client(self):
+        assert callable(getattr(PolyforgeClient, "export_personal_data", None))
+
+    def test_method_present_on_async_client(self):
+        assert callable(getattr(AsyncPolyforgeClient, "export_personal_data", None))
+
+
+class TestExportPersonalDataSignature:
+    """Verify export_personal_data accepts the expected parameter (POLA-3611)."""
+
+    def test_sync_accepts_format_param(self):
+        import inspect
+        sig = inspect.signature(PolyforgeClient.export_personal_data)
+        assert "format" in sig.parameters
+        assert sig.parameters["format"].default == "json"
+
+    def test_async_accepts_format_param(self):
+        import inspect
+        sig = inspect.signature(AsyncPolyforgeClient.export_personal_data)
+        assert "format" in sig.parameters
+        assert sig.parameters["format"].default == "json"
+
+
+class TestExportPersonalDataPath:
+    """Verify export_personal_data targets the correct controller path (POLA-3611)."""
+
+    def test_sync_uses_correct_path(self):
+        import inspect
+        src = inspect.getsource(PolyforgeClient.export_personal_data)
+        assert '"/api/v1/me/export"' in src
+
+    def test_async_uses_correct_path(self):
+        import inspect
+        src = inspect.getsource(AsyncPolyforgeClient.export_personal_data)
+        assert '"/api/v1/me/export"' in src
+
+
+class TestExportPersonalDataValidation:
+    """Verify export_personal_data rejects invalid format values (POLA-3611)."""
+
+    def test_rejects_invalid_format(self):
+        client = PolyforgeClient(api_key="test")
+        try:
+            with pytest.raises(ValueError, match="format must be"):
+                client.export_personal_data(format="xml")
+        finally:
+            client.close()
+
+    def test_accepts_json_format(self):
+        import inspect
+        src = inspect.getsource(PolyforgeClient.export_personal_data)
+        assert "json" in src
+        assert "csv" in src
+
+    def test_async_rejects_invalid_format(self):
+        import pytest
+        client = AsyncPolyforgeClient(api_key="test")
+        try:
+            with pytest.raises(ValueError, match="format must be"):
+                import asyncio
+                asyncio.run(client.export_personal_data(format="xml"))
+        finally:
+            import asyncio
+            try:
+                asyncio.run(client.close())
+            except Exception:
+                pass
+
+
+class TestExportPersonalDataRoundtrips:
+    """Stub the HTTP layer and exercise export_personal_data (POLA-3611)."""
+
+    @staticmethod
+    def _client_with(handler):
+        transport = httpx.MockTransport(handler)
+        client = PolyforgeClient(api_key="test", api_url="http://localhost:9999")
+        client._client = httpx.Client(
+            base_url="http://localhost:9999",
+            headers={"Authorization": "Bearer test"},
+            transport=transport,
+        )
+        return client
+
+    @staticmethod
+    def _async_client_with(handler):
+        transport = httpx.MockTransport(handler)
+        client = AsyncPolyforgeClient(api_key="test", api_url="http://localhost:9999")
+        client._client = httpx.AsyncClient(
+            base_url="http://localhost:9999",
+            headers={"Authorization": "Bearer test"},
+            transport=transport,
+        )
+        return client
+
+    def test_json_export_returns_personal_data_export(self):
+        def handler(request):
+            assert request.method == "GET"
+            assert request.url.path == "/api/v1/me/export"
+            return httpx.Response(200, json={
+                "generatedAt": "2026-05-10T12:00:00Z",
+                "formatVersion": "1.0.0",
+                "_meta": {
+                    "maxRecordsPerCollection": 1000,
+                    "collectionsTruncated": {"orders": 5000},
+                },
+                "account": {"email": "user@example.com", "createdAt": "2025-01-01T00:00:00Z"},
+                "settings": {"notificationSettings": {}},
+                "security": {"logins": []},
+                "trading": {"strategies": [], "orders": []},
+                "communications": {"webhooks": [{"url": "example.com"}]},
+                "social": {"likes": []},
+            })
+
+        client = self._client_with(handler)
+        try:
+            result = client.export_personal_data(format="json")
+            assert isinstance(result, PersonalDataExport)
+            assert result.generated_at == "2026-05-10T12:00:00Z"
+            assert result.format_version == "1.0.0"
+            assert result.meta is not None
+            assert isinstance(result.meta, PersonalDataExportMeta)
+            assert result.meta.max_records_per_collection == 1000
+            assert result.meta.collections_truncated == {"orders": 5000}
+            assert result.account["email"] == "user@example.com"
+            assert result.communications["webhooks"] == [{"url": "example.com"}]
+        finally:
+            client.close()
+
+    def test_csv_export_returns_raw_text(self):
+        def handler(request):
+            assert request.method == "GET"
+            assert request.url.path == "/api/v1/me/export"
+            assert request.url.params.get("format") == "csv"
+            return httpx.Response(200, text="col1,col2\nval1,val2\n",
+                                  headers={"Content-Type": "text/csv"})
+
+        client = self._client_with(handler)
+        try:
+            result = client.export_personal_data(format="csv")
+            assert isinstance(result, str)
+            assert "col1,col2" in result
+            assert "val1,val2" in result
+        finally:
+            client.close()
+
+    def test_json_default_format_no_query_param(self):
+        def handler(request):
+            assert request.method == "GET"
+            assert request.url.path == "/api/v1/me/export"
+            assert "format" not in request.url.params
+            return httpx.Response(200, json={
+                "generatedAt": "2026-05-10T12:00:00Z",
+                "formatVersion": "1.0.0",
+                "_meta": {"maxRecordsPerCollection": 1000, "collectionsTruncated": {}},
+                "account": {},
+                "settings": {},
+                "security": {},
+                "trading": {},
+                "communications": {},
+                "social": {},
+            })
+
+        client = self._client_with(handler)
+        try:
+            result = client.export_personal_data()
+            assert isinstance(result, PersonalDataExport)
+        finally:
+            client.close()
+
+    def test_async_json_export(self):
+        def handler(request):
+            assert request.method == "GET"
+            assert request.url.path == "/api/v1/me/export"
+            return httpx.Response(200, json={
+                "generatedAt": "2026-05-10T12:00:00Z",
+                "formatVersion": "1.0.0",
+                "_meta": {"maxRecordsPerCollection": 1000, "collectionsTruncated": {}},
+                "account": {},
+                "settings": {},
+                "security": {},
+                "trading": {},
+                "communications": {},
+                "social": {},
+            })
+
+        async def _run():
+            client = self._async_client_with(handler)
+            try:
+                result = await client.export_personal_data(format="json")
+                assert isinstance(result, PersonalDataExport)
+                assert result.generated_at == "2026-05-10T12:00:00Z"
+            finally:
+                await client.close()
+
+        import asyncio
+        asyncio.run(_run())
+
+    def test_async_csv_export(self):
+        def handler(request):
+            assert request.method == "GET"
+            assert request.url.path == "/api/v1/me/export"
+            assert request.url.params.get("format") == "csv"
+            return httpx.Response(200, text="col1,col2\nval1,val2\n",
+                                  headers={"Content-Type": "text/csv"})
+
+        async def _run():
+            client = self._async_client_with(handler)
+            try:
+                result = await client.export_personal_data(format="csv")
+                assert isinstance(result, str)
+                assert "col1,col2" in result
+            finally:
+                await client.close()
+
+        import asyncio
+        asyncio.run(_run())
+
+    def test_error_propagated_from_server(self):
+        def handler(request):
+            return httpx.Response(401, json={"message": "Unauthorized", "code": "UNAUTHORIZED"})
+
+        client = self._client_with(handler)
+        try:
+            with pytest.raises(AuthenticationError):
+                client.export_personal_data()
+        finally:
+            client.close()
+
+
+class TestPersonalDataExportModelParsing:
+    """Verify _parse correctly maps the platform JSON shape to PersonalDataExport (POLA-3611)."""
+
+    def test_parse_full_json_payload(self):
+        raw = {
+            "generatedAt": "2026-05-10T12:00:00Z",
+            "formatVersion": "1.0.0",
+            "_meta": {
+                "maxRecordsPerCollection": 1000,
+                "collectionsTruncated": {"orders": 5000, "positions": 1200},
+            },
+            "account": {
+                "id": "u-abc",
+                "email": "user@example.com",
+                "username": "trader1",
+                "createdAt": "2025-01-01T00:00:00Z",
+                "totpEnabled": True,
+            },
+            "settings": {
+                "notificationSettings": {"emailEnabled": True},
+                "betaUsage": False,
+            },
+            "security": {
+                "logins": [
+                    {"ip": "1.2.3.4", "timestamp": "2026-01-01T00:00:00Z", "success": True},
+                ],
+                "apiKeyCount": 3,
+            },
+            "trading": {
+                "strategies": [{"id": "s-1", "name": "Momentum"}],
+                "orders": [
+                    {"id": "o-1", "side": "BUY", "outcome": "YES", "size": "10.00", "price": "0.55"},
+                ],
+            },
+            "communications": {
+                "webhooks": [
+                    {"id": "wh-1", "url": "example.com", "events": ["ORDER_FILLED"]},
+                ],
+            },
+            "social": {
+                "likes": [{"strategyId": "s-99", "likedAt": "2026-02-01T00:00:00Z"}],
+            },
+        }
+        result = _parse(PersonalDataExport, raw)
+        assert isinstance(result, PersonalDataExport)
+        assert result.generated_at == "2026-05-10T12:00:00Z"
+        assert result.format_version == "1.0.0"
+
+        assert result.meta is not None
+        assert isinstance(result.meta, PersonalDataExportMeta)
+        assert result.meta.max_records_per_collection == 1000
+        assert result.meta.collections_truncated == {"orders": 5000, "positions": 1200}
+
+        assert result.account["email"] == "user@example.com"
+        assert result.account["totpEnabled"] is True
+        assert result.security["logins"][0]["ip"] == "1.2.3.4"
+        assert result.trading["strategies"][0]["name"] == "Momentum"
+        assert result.communications["webhooks"][0]["url"] == "example.com"
+        assert result.social["likes"][0]["strategyId"] == "s-99"
+
+    def test_parse_minimal_json_payload_no_meta(self):
+        raw = {
+            "generatedAt": "2026-05-10T12:00:00Z",
+            "formatVersion": "1.0.0",
+            "account": {},
+            "settings": {},
+            "security": {},
+            "trading": {},
+            "communications": {},
+            "social": {},
+        }
+        result = _parse(PersonalDataExport, raw)
+        assert isinstance(result, PersonalDataExport)
+        assert result.meta is None
+
+    def test_model_defaults(self):
+        export = PersonalDataExport()
+        assert export.generated_at == ""
+        assert export.format_version == ""
+        assert export.meta is None
+        assert export.account == {}
+        assert export.settings == {}
+        assert export.security == {}
+        assert export.trading == {}
+        assert export.communications == {}
+        assert export.social == {}
+
+    def test_meta_defaults(self):
+        meta = PersonalDataExportMeta()
+        assert meta.max_records_per_collection == 1000
+        assert meta.collections_truncated == {}
+
+    def test_model_exports_from_package(self):
+        from polyforge import PersonalDataExport, PersonalDataExportMeta
+        assert PersonalDataExport is not None
+        assert PersonalDataExportMeta is not None
+
+
+class TestRootExports:
+    """Verify every name listed in polyforge.__all__ is accessible at the package root."""
+
+    def test_root_export_smoke(self):
+        import polyforge
+
+        missing = []
+        for name in polyforge.__all__:
+            try:
+                getattr(polyforge, name)
+            except AttributeError:
+                missing.append(name)
+
+        assert not missing, (
+            f"Names in __all__ but not accessible as polyforge.<name>: {', '.join(missing)}"
+        )

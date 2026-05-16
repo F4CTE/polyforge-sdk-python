@@ -111,6 +111,7 @@ from polyforge.models import (
     StrategyEvent,
     StrategyStatusResponse,
     StrategyTemplate,
+    SystemHealthPublic,
     SystemHealthAuthenticated,
     TickSizeInfo,
     Token,
@@ -314,7 +315,9 @@ def _parse(cls: type[T], data: dict[str, Any]) -> T:
     kwargs: dict[str, Any] = {}
 
     for f in fields(cls):  # type: ignore[arg-type]
-        raw = aliased.get(f.name) or snake_data.get(f.name)
+        raw = aliased.get(f.name)
+        if raw is None:
+            raw = snake_data.get(f.name)
         if raw is None:
             continue
 
@@ -339,6 +342,24 @@ def _parse(cls: type[T], data: dict[str, Any]) -> T:
                     f"Non-finite float value for {f.name}: {raw!r}"
                 )
             kwargs[f.name] = val
+        elif hint is bool and isinstance(raw, str):
+            val = raw.lower()
+            if val in ("true", "1", "yes"):
+                kwargs[f.name] = True
+            elif val in ("false", "0", "no"):
+                kwargs[f.name] = False
+            else:
+                raise ValueError(
+                    f"Unrecognized boolean string for {f.name}: {raw!r}"
+                )
+        elif hint is bool and isinstance(raw, (int, float)):
+            if raw in (0, 1):
+                kwargs[f.name] = bool(raw)
+            else:
+                raise ValueError(
+                    f"Numeric value out of range for boolean field "
+                    f"{f.name}: {raw!r}"
+                )
         else:
             kwargs[f.name] = raw
 
@@ -570,19 +591,17 @@ def _validate_copy_config_numeric_fields(fields: dict[str, Any]) -> None:
     for name in ("sizeValue", "maxExposure", "maxDailyLoss"):
         if name in fields and fields[name] is not None:
             _validate_positive_numberish_param(name, fields[name])
+            fields[name] = str(fields[name])
     if "priceOffset" in fields and fields["priceOffset"] is not None:
         _validate_finite_numberish_param("priceOffset", fields["priceOffset"])
+        fields["priceOffset"] = str(fields["priceOffset"])
 
 
-_KNOWN_COPY_CONFIG_UPDATE_FIELDS: frozenset[str] = frozenset(
-    {
-        "mode",
-        "sizeValue",
-        "maxExposure",
-        "maxDailyLoss",
-        "priceOffset",
-    }
-)
+_UNSET: Any = object()
+
+_COPY_CONFIG_KNOWN_KWARGS: frozenset[str] = frozenset({
+    "mode", "sizeValue", "maxExposure", "maxDailyLoss", "priceOffset",
+})
 
 
 _BLOCKED_HOSTNAMES: set[str] = {
@@ -785,7 +804,7 @@ class PolyforgeClient:
             return None
         return resp.json()
 
-    def _delete_json(
+    def _post_json(
         self,
         path: str,
         *,
@@ -793,7 +812,7 @@ class PolyforgeClient:
         idempotency_key: str | None = None,
     ) -> Any:
         resp = self._client.request(
-            "DELETE",
+            "POST",
             path,
             json=json,
             headers=_idempotency_headers(idempotency_key),
@@ -808,7 +827,27 @@ class PolyforgeClient:
         _raise_for_status(resp)
         return resp.text
 
+    def _get_no_auth(self, path: str) -> Any:
+        # Build a request from the existing client so we inherit proxy/CA
+        # environment, then strip credentials. Using trust_env=False on a
+        # fresh client would suppress proxy/CA config alongside NetRCAuth.
+        req = self._client.build_request("GET", path)
+        req.headers.pop("authorization", None)
+        resp = self._client.send(req, auth=None)
+        _raise_for_status(resp)
+        return resp.json()
+
     # -- Health --
+
+    def get_health(self) -> SystemHealthPublic:
+        """Get the public API health payload.
+
+        Calls ``GET /health`` (unauthenticated) and returns public status
+        information. Operational internals (DB, Redis, queue, services)
+        are not exposed on this endpoint.
+        """
+        data = self._get_no_auth("/health")
+        return _parse(SystemHealthPublic, data)
 
     def get_health_authenticated(self) -> SystemHealthAuthenticated:
         """Get authenticated health/status data with full operational metrics.
@@ -1692,7 +1731,7 @@ class PolyforgeClient:
             raise ValueError("bulk_cancel_orders requires at least 1 order ID")
         if len(order_ids) > 3000:
             raise ValueError("bulk_cancel_orders accepts at most 3000 order IDs")
-        data = self._delete_json(
+        data = self._post_json(
             "/api/v1/orders/bulk",
             json={"orderIds": order_ids},
             idempotency_key=_new_idempotency_key(idempotency_key),
@@ -2829,6 +2868,9 @@ class PolyforgeClient:
         if price_offset is not None:
             body["priceOffset"] = price_offset
         _validate_copy_config_numeric_fields(body)
+        for key in ("sizeValue", "maxExposure", "maxDailyLoss", "priceOffset"):
+            if key in body and body[key] is not None:
+                body[key] = str(body[key])
         return _parse(CopyConfig, self._post("/api/v1/copy", json=body))
 
     def get_copy_config(self, copy_id: str) -> CopyConfig:
@@ -2843,21 +2885,70 @@ class PolyforgeClient:
         data = self._get(f"/api/v1/copy/{_encode_path(copy_id)}")
         return _parse(CopyConfig, data)
 
-    def update_copy_config(self, copy_id: str, **kwargs: Any) -> CopyConfig:
+    def update_copy_config(
+        self,
+        copy_id: str,
+        *,
+        mode: str | None = _UNSET,
+        size_value: float | None = _UNSET,
+        max_exposure: float | None = _UNSET,
+        max_daily_loss: float | None = _UNSET,
+        price_offset: float | None = _UNSET,
+        **kwargs: Any,
+    ) -> CopyConfig:
         """Update an existing copy-trading configuration.
 
-        Pass API field names as keyword arguments (e.g. ``mode="FIXED"``,
-        ``sizeValue=100``).
+        Prefer the keyword-only ``snake_case`` parameters for new code.
+        The ``camelCase`` keyword arguments (``sizeValue``, ``maxExposure``,
+        ``maxDailyLoss``, ``priceOffset``) are still accepted for backward
+        compatibility but will emit a :exc:`DeprecationWarning`.
+
+        Explicit ``None`` values are sent to the server as JSON ``null``
+        (useful for clearing optional fields such as ``maxDailyLoss``).
 
         Args:
             copy_id: The copy config ID to update.
-            **kwargs: Fields to update. Only known fields are forwarded;
-                unknown keys are silently dropped.
+            mode: Copy mode (``"PERCENTAGE"``, ``"FIXED"``, or ``"MIRROR"``).
+            size_value: Trade size value (percentage or fixed USDC amount).
+            max_exposure: Maximum USDC exposure per copied wallet.
+            max_daily_loss: Maximum daily loss limit in USDC.
+            price_offset: Price offset applied to copied orders.
 
         Returns:
             The updated :class:`CopyConfig`.
+
+        Raises:
+            TypeError: If unknown keyword arguments are passed.
         """
-        body = {k: v for k, v in kwargs.items() if k in _KNOWN_COPY_CONFIG_UPDATE_FIELDS}
+        body: dict[str, Any] = {}
+        if mode is not _UNSET:
+            body["mode"] = mode
+        if size_value is not _UNSET:
+            body["sizeValue"] = size_value
+        if max_exposure is not _UNSET:
+            body["maxExposure"] = max_exposure
+        if max_daily_loss is not _UNSET:
+            body["maxDailyLoss"] = max_daily_loss
+        if price_offset is not _UNSET:
+            body["priceOffset"] = price_offset
+
+        if kwargs:
+            unknown = {k for k in kwargs if k not in _COPY_CONFIG_KNOWN_KWARGS}
+            if unknown:
+                raise TypeError(
+                    f"update_copy_config got unexpected keyword arguments: "
+                    f"{', '.join(sorted(unknown))}"
+                )
+            body.update(kwargs)
+            import warnings
+            warnings.warn(
+                "Passing camelCase keyword arguments to update_copy_config is "
+                "deprecated. Use snake_case parameters (e.g. size_value, "
+                "max_exposure) instead.",
+                DeprecationWarning,
+                stacklevel=3,
+            )
+
         _validate_copy_config_numeric_fields(body)
         return _parse(
             CopyConfig,
@@ -3308,6 +3399,9 @@ class PolyforgeClient:
         Args:
             format: ``"json"`` (default) returns a :class:`PersonalDataExport` object.
                     ``"csv"`` returns the raw CSV text.
+
+        Raises:
+            ValueError: If *format* is not ``"json"`` or ``"csv"``.
         """
         if format not in ("json", "csv"):
             raise ValueError(f"format must be 'json' or 'csv', got {format!r}")
@@ -4194,7 +4288,7 @@ class AsyncPolyforgeClient:
             return None
         return resp.json()
 
-    async def _delete_json(
+    async def _post_json(
         self,
         path: str,
         *,
@@ -4202,7 +4296,7 @@ class AsyncPolyforgeClient:
         idempotency_key: str | None = None,
     ) -> Any:
         resp = await self._client.request(
-            "DELETE",
+            "POST",
             path,
             json=json,
             headers=_idempotency_headers(idempotency_key),
@@ -4217,7 +4311,27 @@ class AsyncPolyforgeClient:
         _raise_for_status(resp)
         return resp.text
 
+    async def _get_no_auth(self, path: str) -> Any:
+        # Build a request from the existing client so we inherit proxy/CA
+        # environment, then strip credentials. Using trust_env=False on a
+        # fresh client would suppress proxy/CA config alongside NetRCAuth.
+        req = self._client.build_request("GET", path)
+        req.headers.pop("authorization", None)
+        resp = await self._client.send(req, auth=None)
+        _raise_for_status(resp)
+        return resp.json()
+
     # -- Health --
+
+    async def get_health(self) -> SystemHealthPublic:
+        """Get the public API health payload.
+
+        Calls ``GET /health`` (unauthenticated) and returns public status
+        information. Operational internals (DB, Redis, queue, services)
+        are not exposed on this endpoint.
+        """
+        data = await self._get_no_auth("/health")
+        return _parse(SystemHealthPublic, data)
 
     async def get_health_authenticated(self) -> SystemHealthAuthenticated:
         """Get authenticated health/status data with full operational metrics.
@@ -5063,7 +5177,7 @@ class AsyncPolyforgeClient:
             raise ValueError("bulk_cancel_orders requires at least 1 order ID")
         if len(order_ids) > 3000:
             raise ValueError("bulk_cancel_orders accepts at most 3000 order IDs")
-        data = await self._delete_json(
+        data = await self._post_json(
             "/api/v1/orders/bulk",
             json={"orderIds": order_ids},
             idempotency_key=_new_idempotency_key(idempotency_key),
@@ -5974,6 +6088,9 @@ class AsyncPolyforgeClient:
         if price_offset is not None:
             body["priceOffset"] = price_offset
         _validate_copy_config_numeric_fields(body)
+        for key in ("sizeValue", "maxExposure", "maxDailyLoss", "priceOffset"):
+            if key in body and body[key] is not None:
+                body[key] = str(body[key])
         return _parse(CopyConfig, await self._post("/api/v1/copy", json=body))
 
     async def get_copy_config(self, copy_id: str) -> CopyConfig:
@@ -5981,18 +6098,59 @@ class AsyncPolyforgeClient:
         data = await self._get(f"/api/v1/copy/{_encode_path(copy_id)}")
         return _parse(CopyConfig, data)
 
-    async def update_copy_config(self, copy_id: str, **kwargs: Any) -> CopyConfig:
+    async def update_copy_config(
+        self,
+        copy_id: str,
+        *,
+        mode: str | None = _UNSET,
+        size_value: float | None = _UNSET,
+        max_exposure: float | None = _UNSET,
+        max_daily_loss: float | None = _UNSET,
+        price_offset: float | None = _UNSET,
+        **kwargs: Any,
+    ) -> CopyConfig:
         """Update an existing copy-trading configuration.
 
-        Args:
-            copy_id: The copy config ID to update.
-            **kwargs: Fields to update. Only known fields are forwarded;
-                unknown keys are silently dropped.
+        Prefer the keyword-only ``snake_case`` parameters for new code.
+        The ``camelCase`` keyword arguments (``sizeValue``, ``maxExposure``,
+        ``maxDailyLoss``, ``priceOffset``) are still accepted for backward
+        compatibility but will emit a :exc:`DeprecationWarning`.
 
-        Returns:
-            The updated :class:`CopyConfig`.
+        Explicit ``None`` values are sent to the server as JSON ``null``
+        (useful for clearing optional fields such as ``maxDailyLoss``).
+
+        Raises:
+            TypeError: If unknown keyword arguments are passed.
         """
-        body = {k: v for k, v in kwargs.items() if k in _KNOWN_COPY_CONFIG_UPDATE_FIELDS}
+        body: dict[str, Any] = {}
+        if mode is not _UNSET:
+            body["mode"] = mode
+        if size_value is not _UNSET:
+            body["sizeValue"] = size_value
+        if max_exposure is not _UNSET:
+            body["maxExposure"] = max_exposure
+        if max_daily_loss is not _UNSET:
+            body["maxDailyLoss"] = max_daily_loss
+        if price_offset is not _UNSET:
+            body["priceOffset"] = price_offset
+
+        if kwargs:
+            unknown = {k for k in kwargs if k not in _COPY_CONFIG_KNOWN_KWARGS}
+            if unknown:
+                raise TypeError(
+                    f"update_copy_config got unexpected keyword arguments: "
+                    f"{', '.join(sorted(unknown))}"
+                )
+            body.update(kwargs)
+            import warnings
+            warnings.warn(
+                "Passing camelCase keyword arguments to update_copy_config is "
+                "deprecated. Use snake_case parameters (e.g. size_value, "
+                "max_exposure) instead.",
+                DeprecationWarning,
+                stacklevel=3,
+            )
+
         _validate_copy_config_numeric_fields(body)
         return _parse(
             CopyConfig,
@@ -6414,6 +6572,9 @@ class AsyncPolyforgeClient:
         Args:
             format: ``"json"`` (default) returns a :class:`PersonalDataExport` object.
                     ``"csv"`` returns the raw CSV text.
+
+        Raises:
+            ValueError: If *format* is not ``"json"`` or ``"csv"``.
         """
         if format not in ("json", "csv"):
             raise ValueError(f"format must be 'json' or 'csv', got {format!r}")
