@@ -33,9 +33,10 @@ from polyforge.models import (
     KNOWN_STRATEGY_EVENTS,
     JournalEntry,
     Market,
+    MarketMatch,
     MatchSyncResult,
-    SystemHealthAuthenticated,
     SystemHealthPublic,
+    SystemHealthAuthenticated,
     Token,
     MarketplaceListing,
     Order,
@@ -4349,7 +4350,7 @@ class TestPolymarketPortfolioEndpoints:
         asyncio.run(_run())
 
 
-class TestNewModels:
+class TestNewModelsPOLA476:
     """Tests for new model classes (POLA-476)."""
 
     def test_news_article_model_fields(self):
@@ -4829,6 +4830,7 @@ class TestRewardsMethods:
             "min_size": "100",
         })
         result = client.get_market_rewards_detail(market_id="some-market")
+        assert result is not None
         assert result.condition_id == "0xabc"
         assert result.rate_per_day == "50.0"
         client._get.assert_called_once_with("/api/v1/rewards/market/some-market")
@@ -4936,6 +4938,7 @@ class TestCrossVenueArbitrage:
         )
         client.close()
 
+
     def test_async_sync_market_matches(self):
         import asyncio
         from unittest.mock import AsyncMock
@@ -4953,6 +4956,57 @@ class TestCrossVenueArbitrage:
 
         asyncio.run(_run())
 
+    def test_create_market_match(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._post = MagicMock(return_value={
+            "id": "match-1",
+            "polymarketId": "p1",
+            "kalshiId": "k1",
+            "verified": False,
+            "confidence": 0.92,
+            "matchMethod": "manual",
+            "createdAt": "2026-04-24T00:00:00Z",
+            "updatedAt": "2026-04-24T00:00:00Z",
+        })
+        result = client.create_market_match("p1", "k1")
+        assert isinstance(result, MarketMatch)
+        assert result.id == "match-1"
+        assert result.polymarket_id == "p1"
+        assert result.kalshi_id == "k1"
+        assert not result.verified
+        client._post.assert_called_once_with("/api/v1/arbitrage/matches", json={"polymarketId": "p1", "kalshiId": "k1"})
+        client.close()
+
+    def test_verify_market_match(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._post = MagicMock(return_value={
+            "id": "match-1",
+            "polymarketId": "p1",
+            "kalshiId": "k1",
+            "verified": True,
+            "confidence": 0.92,
+            "matchMethod": "auto",
+            "createdAt": "2026-04-24T00:00:00Z",
+            "updatedAt": "2026-04-24T00:00:00Z",
+        })
+        result = client.verify_market_match("match-1")
+        assert isinstance(result, MarketMatch)
+        assert result.id == "match-1"
+        assert result.verified
+        client._post.assert_called_once_with("/api/v1/arbitrage/matches/match-1/verify")
+        client.close()
+
+    def test_delete_market_match(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._delete = MagicMock(return_value=None)
+        result = client.delete_market_match("match-1")
+        assert result is None
+        client._delete.assert_called_once_with("/api/v1/arbitrage/matches/match-1")
+        client.close()
+
     def test_sync_get_spread_comparison(self):
         from unittest.mock import MagicMock
         client = PolyforgeClient(api_key="test-key")
@@ -4966,6 +5020,7 @@ class TestCrossVenueArbitrage:
         result = client.get_spread_comparison()
         assert len(result) == 1
         assert result[0].yes_spread_pct == 10.0
+        assert result[0].polymarket is not None
         assert result[0].polymarket.market_id == "p1"
         client.close()
 
@@ -5033,7 +5088,9 @@ class TestCrossVenueArbitrage:
         result = client.get_cross_venue_comparison("m1")
         assert result.match_id == "m1"
         assert result.spread_pct == 10.0
+        assert result.polymarket is not None
         assert result.polymarket.market_id == "p1"
+        assert result.kalshi is not None
         assert result.kalshi.yes_price == 0.5
         assert result.verified is True
         client._get.assert_called_once_with("/api/v1/arbitrage/cross-venue/m1/comparison")
@@ -5075,6 +5132,9 @@ class TestCrossVenueArbitrage:
             "get_market_matches",
             "get_market_match",
             "sync_market_matches",
+            "create_market_match",
+            "verify_market_match",
+            "delete_market_match",
             "get_spread_comparison",
             "get_arbitrage_history",
             "get_arbitrage_alerts",
@@ -5142,61 +5202,148 @@ class TestHealthEndpoint:
         assert MSR is MatchSyncResult
 
 
+class TestPublicHealthEndpoint:
+    """Tests for the unauthenticated public health-check endpoint (POLA-4153)."""
+
     def test_sync_get_health(self):
         from unittest.mock import MagicMock
         client = PolyforgeClient(api_key="test-key")
-        client._client.send = MagicMock()
-        client._client.send.return_value.status_code = 200
-        client._client.send.return_value.is_success = True
-        client._client.send.return_value.json.return_value = {
-            "status": "ok",
+        client._get_no_auth = MagicMock(return_value={
+            "status": "operational",
             "service": "api-service",
-            "version": "1.0.0",
+            "version": "2.0.0",
             "uptime": 3600.0,
-        }
-        # Also mock build_request to return a mock request with headers
-        mock_request = MagicMock()
-        mock_request.headers = {"Authorization": "Bearer test-key"}
-        client._client.build_request = MagicMock(return_value=mock_request)
-
+        })
         result = client.get_health()
         assert isinstance(result, SystemHealthPublic)
-        assert result.status == "ok"
+        assert result.status == "operational"
         assert result.service == "api-service"
-        assert result.version == "1.0.0"
+        assert result.version == "2.0.0"
         assert result.uptime == 3600.0
-        client._client.build_request.assert_called_once_with("GET", "/health")
-        # Verify Authorization was stripped from the request headers
-        assert "Authorization" not in mock_request.headers
+        assert not hasattr(result, "db")
+        assert not hasattr(result, "redis")
+        assert not hasattr(result, "queue_depth")
+        assert not hasattr(result, "services")
+        client._get_no_auth.assert_called_once_with("/health")
         client.close()
 
-    def test_sync_get_health_no_optional_fields(self):
-        from unittest.mock import MagicMock
+    def test_async_get_health(self):
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            client._get_no_auth = AsyncMock(return_value={
+                "status": "operational",
+                "service": "api-service",
+                "version": "2.0.0",
+                "uptime": 3600.0,
+            })
+            result = await client.get_health()
+            assert isinstance(result, SystemHealthPublic)
+            assert result.status == "operational"
+            assert result.service == "api-service"
+            assert result.version == "2.0.0"
+            assert result.uptime == 3600.0
+            assert not hasattr(result, "db")
+            assert not hasattr(result, "redis")
+            assert not hasattr(result, "queue_depth")
+            assert not hasattr(result, "services")
+            client._get_no_auth.assert_called_once_with("/health")
+            await client.close()
+
+        asyncio.run(_run())
+
+    def test_new_public_model_exported_from_package_root(self):
+        from polyforge import SystemHealthPublic as SHP
+        assert SHP is SystemHealthPublic
+
+    def test_get_no_auth_reuses_client_env(self):
+        """_get_no_auth must reuse self._client so proxy/CA env is preserved.
+
+        Using build_request() on the existing client inherits proxy and CA
+        settings. The Authorization header is deleted so no auth header
+        is sent without discarding the rest of the env configuration.
+        """
         client = PolyforgeClient(api_key="test-key")
-        client._client.send = MagicMock()
-        client._client.send.return_value.status_code = 200
-        client._client.send.return_value.is_success = True
-        client._client.send.return_value.json.return_value = {
-            "status": "ok",
-        }
-        mock_request = MagicMock()
-        mock_request.headers = {"Authorization": "Bearer test-key"}
-        client._client.build_request = MagicMock(return_value=mock_request)
+        original_send = client._client.send
 
+        captured_req = {}
+        def _fake_send(request, **kw):
+            captured_req["method"] = request.method
+            captured_req["url"] = str(request.url)
+            captured_req["headers"] = dict(request.headers)
+            r = httpx.Response(200, json={"status": "ok"})
+            r.request = request
+            return r
+
+        client._client.send = _fake_send  # type: ignore[assignment]
+        try:
+            result = client._get_no_auth("/health")
+            assert result == {"status": "ok"}
+            assert captured_req["method"] == "GET"
+            assert captured_req["url"].endswith("/health")
+            headers_lower = {k.lower(): v for k, v in captured_req.get("headers", {}).items()}
+            assert "authorization" not in headers_lower, \
+                f"Authorization header must be absent, got {captured_req['headers']!r}"
+        finally:
+            client._client.send = original_send
+            client.close()
+
+    def test_get_no_auth_strips_auth_header(self):
+        """_get_no_auth must strip Authorization even when client headers have it."""
+        client = PolyforgeClient(api_key="test-key")
+        assert "authorization" in {k.lower() for k in client._client.headers}
+        original_send = client._client.send
+        stripped_headers = {}
+
+        def _fake_send(request, **kw):
+            stripped_headers.update({k.lower(): v for k, v in request.headers.items()})
+            r = httpx.Response(200, json={"status": "ok"})
+            r.request = request
+            return r
+
+        client._client.send = _fake_send  # type: ignore[assignment]
+        try:
+            client._get_no_auth("/health")
+            assert "authorization" not in stripped_headers, \
+                f"Authorization header must be absent, got headers={stripped_headers!r}"
+        finally:
+            client._client.send = original_send
+            client.close()
+
+    def test_get_health_preserves_zero_uptime(self):
+        """Zero uptime must be preserved, not dropped by falsy-or parsing."""
+        client = PolyforgeClient(api_key="test-key")
+        client._get_no_auth = lambda path: {
+            "status": "starting",
+            "service": "api-service",
+            "version": "2.0.0",
+            "uptime": 0.0,
+        }
         result = client.get_health()
-        assert isinstance(result, SystemHealthPublic)
-        assert result.status == "ok"
-        assert result.service is None
-        assert result.version is None
-        assert result.uptime is None
+        assert result.uptime == 0.0, \
+            f"Zero uptime should be preserved, got {result.uptime!r}"
         client.close()
 
-    def test_async_get_health_is_coroutine(self):
+    def test_get_health_preserves_int_zero_uptime(self):
+        """Integer zero uptime must be preserved, not dropped by falsy-or parsing."""
+        client = PolyforgeClient(api_key="test-key")
+        client._get_no_auth = lambda path: {
+            "status": "starting",
+            "uptime": 0,
+        }
+        result = client.get_health()
+        assert result.uptime == 0, \
+            f"Integer zero uptime should be preserved, got {result.uptime!r}"
+        client.close()
+
+    def test_async_get_health_authenticated_is_coroutine(self):
         import inspect
-        assert hasattr(AsyncPolyforgeClient, "get_health"), \
-            "AsyncPolyforgeClient missing get_health"
-        source = inspect.getsource(AsyncPolyforgeClient.get_health)
-        assert "await" in source, "async get_health not using await"
+        assert hasattr(AsyncPolyforgeClient, "get_health_authenticated"), \
+            "AsyncPolyforgeClient missing get_health_authenticated"
+        source = inspect.getsource(AsyncPolyforgeClient.get_health_authenticated)
+        assert "await" in source, "async get_health_authenticated not using await"
 
 
 class TestPositionPlatformContract:
@@ -6409,13 +6556,81 @@ class TestTradingCopyNumericValidation:
             price_offset=-0.5,
         )
         client._post.assert_called_once()
-        assert client._post.call_args.kwargs["json"]["priceOffset"] == -0.5
+        assert client._post.call_args.kwargs["json"]["priceOffset"] == "-0.5"
+
+        client.close()
+
+    def test_create_copy_config_sends_numeric_fields_as_strings(self):
+        from unittest.mock import MagicMock
+
+        client = PolyforgeClient(api_key="test")
+        client._post = MagicMock(return_value={
+            "id": "copy-1",
+            "userId": "user-1",
+            "targetWallet": "0x0000000000000000000000000000000000000001",
+            "mode": "PERCENTAGE",
+            "sizeValue": "10",
+            "maxExposure": "500",
+            "maxDailyLoss": "100",
+            "priceOffset": "-0.5",
+            "status": "ACTIVE",
+            "totalCopied": 0,
+            "totalPnl": "0",
+            "createdAt": "2026-04-29T00:00:00Z",
+            "updatedAt": "2026-04-29T00:00:00Z",
+        })
+        client.create_copy_config(
+            "0x0000000000000000000000000000000000000001",
+            mode="PERCENTAGE",
+            size_value=10.0,
+            max_exposure=500,
+            max_daily_loss=100.0,
+            price_offset=-0.5,
+        )
+        json_body = client._post.call_args.kwargs["json"]
+        assert json_body["sizeValue"] == "10.0"
+        assert json_body["maxExposure"] == "500"
+        assert json_body["maxDailyLoss"] == "100.0"
+        assert json_body["priceOffset"] == "-0.5"
+        client.close()
+
+    def test_update_copy_config_sends_numeric_fields_as_strings(self):
+        from unittest.mock import MagicMock
+
+        client = PolyforgeClient(api_key="test")
+        client._patch = MagicMock(return_value={
+            "id": "copy-1",
+            "userId": "user-1",
+            "targetWallet": "0x0000000000000000000000000000000000000001",
+            "mode": "PERCENTAGE",
+            "sizeValue": "10",
+            "maxExposure": "500",
+            "maxDailyLoss": "100",
+            "priceOffset": "-0.5",
+            "status": "ACTIVE",
+            "totalCopied": 0,
+            "totalPnl": "0",
+            "createdAt": "2026-04-29T00:00:00Z",
+            "updatedAt": "2026-04-29T00:00:00Z",
+        })
+        client.update_copy_config(
+            "copy-1",
+            sizeValue=10.0,
+            maxExposure=500,
+            maxDailyLoss=100.0,
+            priceOffset=-0.5,
+        )
+        json_body = client._patch.call_args.kwargs["json"]
+        assert json_body["sizeValue"] == "10.0"
+        assert json_body["maxExposure"] == "500"
+        assert json_body["maxDailyLoss"] == "100.0"
+        assert json_body["priceOffset"] == "-0.5"
         client.close()
 
     def test_update_copy_config_rejects_invalid_numeric_kwargs(self):
         client = PolyforgeClient(api_key="test")
         with pytest.raises(ValueError, match="Infinity"):
-            client.update_copy_config("copy-1", max_exposure="Infinity")
+            client.update_copy_config("copy-1", max_exposure="Infinity")  # type: ignore[arg-type]
         client.close()
 
     def test_update_copy_config_allows_negative_price_offset(self):
@@ -6439,7 +6654,7 @@ class TestTradingCopyNumericValidation:
         })
         client.update_copy_config("copy-1", price_offset=-0.5)
         client._patch.assert_called_once()
-        assert client._patch.call_args.kwargs["json"]["priceOffset"] == -0.5
+        assert client._patch.call_args.kwargs["json"]["priceOffset"] == "-0.5"
         client.close()
 
     def test_update_copy_config_rejects_unknown_kwargs(self):
@@ -6477,8 +6692,8 @@ class TestTradingCopyNumericValidation:
             assert "camelCase" in str(w[0].message)
 
         json_body = client._patch.call_args.kwargs["json"]
-        assert json_body["sizeValue"] == 100
-        assert json_body["maxExposure"] == 500
+        assert json_body["sizeValue"] == "100"
+        assert json_body["maxExposure"] == "500"
         client.close()
 
     def test_update_copy_config_camelcase_overrides_snake_case(self):
@@ -6506,12 +6721,12 @@ class TestTradingCopyNumericValidation:
             warnings.simplefilter("always")
             client.update_copy_config(
                 "copy-1",
-                size_value=100,    # snake_case → body["sizeValue"] = 100
-                sizeValue=200,     # camelCase → overrides to 200
+                size_value=100,    # snake_case → body["sizeValue"] = "100"
+                sizeValue=200,     # camelCase → overrides to "200"
             )
 
         json_body = client._patch.call_args.kwargs["json"]
-        assert json_body["sizeValue"] == 200
+        assert json_body["sizeValue"] == "200"
         client.close()
 
     def test_update_copy_config_explicit_none_sends_null(self):
@@ -6599,7 +6814,7 @@ class TestTradingCopyNumericValidation:
                     max_daily_loss=0,
                 )
             with pytest.raises(ValueError, match="Infinity"):
-                await client.update_copy_config("copy-1", price_offset="Infinity")
+                await client.update_copy_config("copy-1", price_offset="Infinity")  # type: ignore[arg-type]
             await client.close()
 
         asyncio.run(_run())
@@ -8512,13 +8727,15 @@ class TestArbExecutionAsync:
             assert result.arb_position_id == "pos-9"
             assert result.buy_leg is not None and result.buy_leg.price == 0.31
             client._post.assert_awaited_once()
-            assert client._post.await_args.args == ("/api/v1/arbitrage/execute",)
-            assert client._post.await_args.kwargs["json"] == {
+            call_args = client._post.await_args
+            assert call_args is not None
+            assert call_args.args == ("/api/v1/arbitrage/execute",)
+            assert call_args.kwargs["json"] == {
                 "matchId": VALID_ARB_MATCH_ID,
                 "size": 200.0,
                 "maxSlippagePct": 2.0,
             }
-            _assert_valid_idempotency_key(client._post.await_args.kwargs["idempotency_key"])
+            _assert_valid_idempotency_key(call_args.kwargs["idempotency_key"])
             await client.close()
 
         asyncio.run(_run())
@@ -8535,8 +8752,10 @@ class TestArbExecutionAsync:
             assert isinstance(result, ArbCloseResponse)
             assert result.status == "CLOSING"
             client._post.assert_awaited_once()
-            assert client._post.await_args.args == ("/api/v1/arbitrage/positions/pos-9/close",)
-            _assert_valid_idempotency_key(client._post.await_args.kwargs["idempotency_key"])
+            call_args = client._post.await_args
+            assert call_args is not None
+            assert call_args.args == ("/api/v1/arbitrage/positions/pos-9/close",)
+            _assert_valid_idempotency_key(call_args.kwargs["idempotency_key"])
             await client.close()
 
         asyncio.run(_run())
@@ -9352,3 +9571,21 @@ class TestPersonalDataExportModelParsing:
         from polyforge import PersonalDataExport, PersonalDataExportMeta
         assert PersonalDataExport is not None
         assert PersonalDataExportMeta is not None
+
+
+class TestRootExports:
+    """Verify every name listed in polyforge.__all__ is accessible at the package root."""
+
+    def test_root_export_smoke(self):
+        import polyforge
+
+        missing = []
+        for name in polyforge.__all__:
+            try:
+                getattr(polyforge, name)
+            except AttributeError:
+                missing.append(name)
+
+        assert not missing, (
+            f"Names in __all__ but not accessible as polyforge.<name>: {', '.join(missing)}"
+        )

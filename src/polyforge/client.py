@@ -112,8 +112,8 @@ from polyforge.models import (
     StrategyEvent,
     StrategyStatusResponse,
     StrategyTemplate,
-    SystemHealthAuthenticated,
     SystemHealthPublic,
+    SystemHealthAuthenticated,
     TickSizeInfo,
     Token,
     TopTraderEntry,
@@ -317,7 +317,9 @@ def _parse(cls: type[T], data: dict[str, Any]) -> T:
     kwargs: dict[str, Any] = {}
 
     for f in fields(cls):  # type: ignore[arg-type]
-        raw = aliased.get(f.name) or snake_data.get(f.name)
+        raw = aliased.get(f.name)
+        if raw is None:
+            raw = snake_data.get(f.name)
         if raw is None:
             continue
 
@@ -372,16 +374,16 @@ def _raise_for_status(response: httpx.Response) -> None:
         return
 
     try:
-        body = response.json()
+        body: dict[str, Any] = response.json()
     except Exception:
         body = {}
 
-    message = body.get("message") or body.get("error") or response.reason_phrase or "Unknown error"
-    code = body.get("code", "")
-    request_id = body.get("requestId", "")
-    suggestion = body.get("suggestion") or None
+    message: str = body.get("message", "") or body.get("error", "") or response.reason_phrase or "Unknown error"
+    code: str = str(body.get("code") or "")
+    request_id: str = str(body.get("requestId") or "")
+    suggestion: str | None = body.get("suggestion") or None
 
-    kwargs = dict(status_code=response.status_code, code=code, request_id=request_id, suggestion=suggestion)
+    kwargs: dict[str, Any] = dict(status_code=response.status_code, code=code, request_id=request_id, suggestion=suggestion)
 
     match response.status_code:
         case 401:
@@ -592,8 +594,10 @@ def _validate_copy_config_numeric_fields(fields: dict[str, Any]) -> None:
     for name in ("sizeValue", "maxExposure", "maxDailyLoss"):
         if name in fields and fields[name] is not None:
             _validate_positive_numberish_param(name, fields[name])
+            fields[name] = str(fields[name])
     if "priceOffset" in fields and fields["priceOffset"] is not None:
         _validate_finite_numberish_param("priceOffset", fields["priceOffset"])
+        fields["priceOffset"] = str(fields["priceOffset"])
 
 
 _UNSET: Any = object()
@@ -665,7 +669,7 @@ def _resolve_and_validate_ips(hostname: str) -> list[str]:
 
     validated: list[str] = []
     for _family, _, _, _, sockaddr in addrinfos:
-        ip_str = sockaddr[0]
+        ip_str = str(sockaddr[0])
         try:
             addr = ipaddress.ip_address(ip_str)
         except ValueError:
@@ -826,21 +830,27 @@ class PolyforgeClient:
         _raise_for_status(resp)
         return resp.text
 
+    def _get_no_auth(self, path: str) -> Any:
+        # Build a request from the existing client so we inherit proxy/CA
+        # environment, then strip credentials. Using trust_env=False on a
+        # fresh client would suppress proxy/CA config alongside NetRCAuth.
+        req = self._client.build_request("GET", path)
+        req.headers.pop("authorization", None)
+        resp = self._client.send(req, auth=None)
+        _raise_for_status(resp)
+        return resp.json()
+
     # -- Health --
 
     def get_health(self) -> SystemHealthPublic:
-        """Get the public API health payload (unauthenticated).
+        """Get the public API health payload.
 
-        Calls ``GET /health`` and returns only public status information.
-        No API key is required; operational internals are not exposed.
-
-        .. versionadded:: 1.0.0
+        Calls ``GET /health`` (unauthenticated) and returns public status
+        information. Operational internals (DB, Redis, queue, services)
+        are not exposed on this endpoint.
         """
-        request = self._client.build_request("GET", "/health")
-        request.headers.pop("Authorization", None)
-        resp = self._client.send(request)
-        _raise_for_status(resp)
-        return _parse(SystemHealthPublic, resp.json())
+        data = self._get_no_auth("/health")
+        return _parse(SystemHealthPublic, data)
 
     def get_health_authenticated(self) -> SystemHealthAuthenticated:
         """Get authenticated health/status data with full operational metrics.
@@ -1903,6 +1913,21 @@ class PolyforgeClient:
         data = self._post("/api/v1/arbitrage/matches/sync")
         return _parse(MatchSyncResult, data)
 
+    def create_market_match(self, polymarket_id: str, kalshi_id: str) -> MarketMatch:
+        """Manually match two markets across venues."""
+        body: dict[str, Any] = {"polymarketId": polymarket_id, "kalshiId": kalshi_id}
+        data = self._post("/api/v1/arbitrage/matches", json=body)
+        return _parse(MarketMatch, data)
+
+    def verify_market_match(self, match_id: str) -> MarketMatch:
+        """Verify/confirm an auto-matched market pair."""
+        data = self._post(f"/api/v1/arbitrage/matches/{_encode_path(match_id)}/verify")
+        return _parse(MarketMatch, data)
+
+    def delete_market_match(self, match_id: str) -> None:
+        """Remove a market match (unmatch)."""
+        self._delete(f"/api/v1/arbitrage/matches/{_encode_path(match_id)}")
+
     def get_spread_comparison(self) -> list[SpreadSummary]:
         """Get bid/ask spread comparison across all matched venues."""
         data = self._get("/api/v1/arbitrage/spread")
@@ -2861,6 +2886,9 @@ class PolyforgeClient:
         if price_offset is not None:
             body["priceOffset"] = price_offset
         _validate_copy_config_numeric_fields(body)
+        for key in ("sizeValue", "maxExposure", "maxDailyLoss", "priceOffset"):
+            if key in body and body[key] is not None:
+                body[key] = str(body[key])
         return _parse(CopyConfig, self._post("/api/v1/copy", json=body))
 
     def get_copy_config(self, copy_id: str) -> CopyConfig:
@@ -4367,21 +4395,27 @@ class AsyncPolyforgeClient:
         _raise_for_status(resp)
         return resp.text
 
+    async def _get_no_auth(self, path: str) -> Any:
+        # Build a request from the existing client so we inherit proxy/CA
+        # environment, then strip credentials. Using trust_env=False on a
+        # fresh client would suppress proxy/CA config alongside NetRCAuth.
+        req = self._client.build_request("GET", path)
+        req.headers.pop("authorization", None)
+        resp = await self._client.send(req, auth=None)
+        _raise_for_status(resp)
+        return resp.json()
+
     # -- Health --
 
     async def get_health(self) -> SystemHealthPublic:
-        """Get the public API health payload (unauthenticated).
+        """Get the public API health payload.
 
-        Calls ``GET /health`` and returns only public status information.
-        No API key is required; operational internals are not exposed.
-
-        .. versionadded:: 1.0.0
+        Calls ``GET /health`` (unauthenticated) and returns public status
+        information. Operational internals (DB, Redis, queue, services)
+        are not exposed on this endpoint.
         """
-        request = self._client.build_request("GET", "/health")
-        request.headers.pop("Authorization", None)
-        resp = await self._client.send(request)
-        _raise_for_status(resp)
-        return _parse(SystemHealthPublic, resp.json())
+        data = await self._get_no_auth("/health")
+        return _parse(SystemHealthPublic, data)
 
     async def get_health_authenticated(self) -> SystemHealthAuthenticated:
         """Get authenticated health/status data with full operational metrics.
@@ -5386,6 +5420,21 @@ class AsyncPolyforgeClient:
         data = await self._post("/api/v1/arbitrage/matches/sync")
         return _parse(MatchSyncResult, data)
 
+    async def create_market_match(self, polymarket_id: str, kalshi_id: str) -> MarketMatch:
+        """Manually match two markets across venues."""
+        body: dict[str, Any] = {"polymarketId": polymarket_id, "kalshiId": kalshi_id}
+        data = await self._post("/api/v1/arbitrage/matches", json=body)
+        return _parse(MarketMatch, data)
+
+    async def verify_market_match(self, match_id: str) -> MarketMatch:
+        """Verify/confirm an auto-matched market pair."""
+        data = await self._post(f"/api/v1/arbitrage/matches/{_encode_path(match_id)}/verify")
+        return _parse(MarketMatch, data)
+
+    async def delete_market_match(self, match_id: str) -> None:
+        """Remove a market match (unmatch)."""
+        await self._delete(f"/api/v1/arbitrage/matches/{_encode_path(match_id)}")
+
     async def get_spread_comparison(self) -> list[SpreadSummary]:
         """Get bid/ask spread comparison across all matched venues."""
         data = await self._get("/api/v1/arbitrage/spread")
@@ -6138,6 +6187,9 @@ class AsyncPolyforgeClient:
         if price_offset is not None:
             body["priceOffset"] = price_offset
         _validate_copy_config_numeric_fields(body)
+        for key in ("sizeValue", "maxExposure", "maxDailyLoss", "priceOffset"):
+            if key in body and body[key] is not None:
+                body[key] = str(body[key])
         return _parse(CopyConfig, await self._post("/api/v1/copy", json=body))
 
     async def get_copy_config(self, copy_id: str) -> CopyConfig:
