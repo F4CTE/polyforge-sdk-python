@@ -13,6 +13,7 @@ import {
 import { randomUUID } from "node:crypto";
 import {
   type CopyConfig,
+  type CopyTrade,
   Prisma,
   OrderSide,
   OrderOutcome,
@@ -134,7 +135,12 @@ export class CopyEngineService implements OnModuleInit, OnModuleDestroy {
     } else if (event.type === "ORDER_FILLED" && event.copyTradeId) {
       await this.reconcileCopyTrade(event);
     } else if (event.type === "ORDER_CANCELLED" && event.copyTradeId) {
-      await this.handleCopyTradeCancelled(event);
+      await this.handleCopyTradeTerminal(event, "CANCELLED");
+    } else if (event.type === "ORDER_FAILED" && event.copyTradeId) {
+      const orderStatus = event.orderStatus?.toUpperCase();
+      if (orderStatus === "FAILED" || orderStatus === "CANCELLED") {
+        await this.handleCopyTradeTerminal(event, orderStatus);
+      }
     }
   }
 
@@ -204,7 +210,7 @@ export class CopyEngineService implements OnModuleInit, OnModuleDestroy {
     // sourceWallet and stream-published targetWallet fields are always
     // EIP-55 checksummed (or at least lowercase on failure).
     const walletAddress =
-      (await tryChecksumEthereumAddress(event.walletAddress)) ?? event.walletAddress;
+      await tryChecksumEthereumAddress(event.walletAddress) ?? event.walletAddress;
 
     // 1. Check daily loss limit (H-02: use Redis atomic operations to prevent race condition)
     const notional = sourceSize * sourcePrice;
@@ -276,26 +282,28 @@ export class CopyEngineService implements OnModuleInit, OnModuleDestroy {
     }
 
     // 5. Create CopyTrade record
-    const trade = await this.prisma.copyTrade.create({
-      data: {
-        configId: config.id,
-        sourceWallet: walletAddress,
-        sourceTxHash: event.txHash ?? null,
-        marketId: event.marketId ?? "",
-        tokenId: event.tokenId ?? "",
-        side: event.side as OrderSide,
-        outcome: event.outcome as OrderOutcome,
-
-        sourceSize: new Prisma.Decimal(sourceSize),
-
-        sourcePrice: new Prisma.Decimal(sourcePrice),
-
-        copiedSize: new Prisma.Decimal(copiedSize),
-
-        copiedPrice: new Prisma.Decimal(copiedPrice),
-        status: "PENDING",
-      },
-    });
+    let trade: CopyTrade;
+    try {
+      trade = await this.prisma.copyTrade.create({
+        data: {
+          configId: config.id,
+          sourceWallet: walletAddress,
+          sourceTxHash: event.txHash ?? null,
+          marketId: event.marketId ?? "",
+          tokenId: event.tokenId ?? "",
+          side: event.side as OrderSide,
+          outcome: event.outcome as OrderOutcome,
+          sourceSize: new Prisma.Decimal(sourceSize),
+          sourcePrice: new Prisma.Decimal(sourcePrice),
+          copiedSize: new Prisma.Decimal(copiedSize),
+          copiedPrice: new Prisma.Decimal(copiedPrice),
+          status: "PENDING",
+        },
+      });
+    } catch (err) {
+      await reserveDailyLoss(-notional);
+      throw err;
+    }
 
     const intentId = randomUUID();
     try {
@@ -454,6 +462,10 @@ export class CopyEngineService implements OnModuleInit, OnModuleDestroy {
 
       if (!trade) return;
 
+      if (trade.status === "CONFIRMED") {
+        return;
+      }
+
       const entryPrice = parseFloat(
         String(trade.copiedPrice ?? trade.sourcePrice),
       );
@@ -494,7 +506,10 @@ export class CopyEngineService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  async handleCopyTradeCancelled(event: Record<string, string>) {
+  async handleCopyTradeTerminal(
+    event: Record<string, string>,
+    targetStatus: "CANCELLED" | "FAILED" = "CANCELLED",
+  ) {
     const copyTradeId = event.copyTradeId;
     if (!copyTradeId) return;
 
@@ -503,19 +518,29 @@ export class CopyEngineService implements OnModuleInit, OnModuleDestroy {
         where: { id: copyTradeId },
       });
 
-      if (!trade || trade.status === "CONFIRMED") return;
+      if (!trade) return;
 
-      await this.prisma.copyTrade.update({
-        where: { id: copyTradeId },
-        data: { status: "CANCELLED" },
-      });
+      if (trade.status === "CONFIRMED") {
+        return;
+      }
+
+      if (trade.status !== targetStatus) {
+        await this.prisma.copyTrade.update({
+          where: { id: copyTradeId },
+          data: { status: targetStatus },
+        });
+      }
 
       await this.redis.del(`copy:${trade.configId}:exposure`);
 
-      this.logger.log(`Copy trade ${copyTradeId} cancelled`);
+      this.logger.log(
+        `Copy trade ${copyTradeId} ${targetStatus.toLowerCase()}`,
+      );
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
-      this.logger.error(`Failed to cancel copy trade ${copyTradeId}: ${msg}`);
+      this.logger.error(
+        `Failed to mark copy trade ${copyTradeId} as ${targetStatus}: ${msg}`,
+      );
     }
   }
 }

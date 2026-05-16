@@ -484,7 +484,14 @@ export class OrdersService {
           );
         });
 
-      await this.events.emitOrderFailed(intent.userId, orderId, errMsg);
+      await this.events.emitOrderFailed(
+        intent.userId,
+        orderId,
+        errMsg,
+        undefined,
+        intent.copyTradeId,
+        OrderStatus.FAILED,
+      );
       await this.moveToDlq(intent, errMsg);
       return;
     }
@@ -649,7 +656,14 @@ export class OrdersService {
           );
         });
 
-      await this.events.emitOrderFailed(intent.userId, orderId, errMsg);
+      await this.events.emitOrderFailed(
+        intent.userId,
+        orderId,
+        errMsg,
+        undefined,
+        intent.copyTradeId,
+        finalStatus,
+      );
     }
   }
 
@@ -870,7 +884,14 @@ export class OrdersService {
         },
         "All persistence retries exhausted after venue accepted",
       );
-      await this.events.emitOrderFailed(intent.userId, orderId, errMsg);
+      await this.events.emitOrderFailed(
+        intent.userId,
+        orderId,
+        errMsg,
+        undefined,
+        intent.copyTradeId,
+        finalStatus,
+      );
     }
   }
 

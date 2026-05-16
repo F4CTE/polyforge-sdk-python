@@ -166,5 +166,43 @@ describe("TradeReconcilerService", () => {
 
       expect(clob.fetchTrades).not.toHaveBeenCalled();
     });
+
+    it("discovers users with only DELAYED/MINED orders (no LIVE)", async () => {
+      prisma.order.findMany
+        .mockResolvedValueOnce([{ userId: "user-1" }])
+        .mockResolvedValueOnce([
+          {
+            id: "order-1",
+            userId: "user-1",
+            clobOrderId: "clob-1",
+            status: "DELAYED",
+          },
+        ]);
+
+      prisma.user.findMany.mockResolvedValue([
+        { id: "user-1", polymarketAddress: "0xwallet" },
+      ]);
+
+      clob.fetchTrades.mockResolvedValue([
+        {
+          id: "trade-1",
+          order_id: "clob-1",
+          status: "FILLED",
+          price: "0.61",
+          size: "10",
+          match_time: "2026-05-06T00:00:00.000Z",
+        },
+      ]);
+
+      await svc.reconcile();
+
+      expect(prisma.order.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: "order-1" },
+          data: expect.objectContaining({ status: "CONFIRMED" }),
+        }),
+      );
+      expect(clob.fetchTrades).toHaveBeenCalledWith("0xwallet");
+    });
   });
 });

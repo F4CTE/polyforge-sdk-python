@@ -1713,4 +1713,162 @@ describe("StrategyRunner — concurrent tick serialization", () => {
     // Mutex not entered because status check returns early (PAUSED !== RUNNING)
     expect(runner.tickMutex.isLocked).toBe(false);
   });
+
+  it("releases TickMutex when Redis distributed lock acquisition throws", async () => {
+    // Regression: if getClient() or set(... NX ...) throws, the in-process
+    // TickMutex must still be released.  Prior to the fix, the try/finally
+    // started after the lock-acquisition block, so an exception in set()
+    // permanently leaked the in-process lock — the strategy stopped ticking.
+    const redis = makeRedis({
+      getClient: vi.fn().mockReturnValue({
+        lrange: vi.fn().mockResolvedValue([]),
+        mget: vi
+          .fn()
+          .mockResolvedValue([
+            JSON.stringify({ price: 0.5, timestamp: Date.now() }),
+          ]),
+        incr: vi.fn().mockResolvedValue(1),
+        expire: vi.fn().mockResolvedValue(1),
+        set: vi.fn().mockRejectedValue(new Error("Redis connection lost")),
+        del: vi.fn().mockResolvedValue(1),
+        pexpire: vi.fn().mockResolvedValue(1),
+        eval: vi.fn().mockResolvedValue(6),
+      }),
+    });
+    const state = makeState();
+    const runner = makeRunner({ execMode: "EVENT", state, redis });
+
+    await runner.onPriceEvent("tok1", 0.5);
+
+    // TickMutex must NOT be leaked — exit() is called in finally
+    expect(runner.tickMutex.isLocked).toBe(false);
+    // Runner is not dead — another tick would succeed
+    expect(runner.status).toBe("RUNNING");
+  });
+
+  it("does NOT permanently block after distributed lock contention", async () => {
+    // Regression: when the Redis distributed lock is held by another
+    // instance, the in-process TickMutex must be released and the strategy
+    // must be able to evaluate on the next tick once the lock is available.
+    // Prior to the fix, an exception in the lock-acquisition path leaked
+    // the in-process lock and the strategy stopped ticking permanently.
+    vi.useFakeTimers();
+    vi.setSystemTime(0);
+
+    const state = makeState();
+    // First call to set() returns null (lock held by another instance),
+    // second returns "OK" (lock released).
+    let setCallCount = 0;
+    const redis = makeRedis({
+      getClient: vi.fn().mockReturnValue({
+        lrange: vi.fn().mockResolvedValue([]),
+        mget: vi
+          .fn()
+          .mockResolvedValue([
+            JSON.stringify({ price: 0.5, timestamp: Date.now() }),
+          ]),
+        incr: vi.fn().mockResolvedValue(1),
+        expire: vi.fn().mockResolvedValue(1),
+        set: vi.fn().mockImplementation(() => {
+          setCallCount++;
+          return Promise.resolve(setCallCount === 1 ? null : "OK");
+        }),
+        del: vi.fn().mockResolvedValue(1),
+        pexpire: vi.fn().mockResolvedValue(1),
+        eval: vi.fn().mockResolvedValue(6),
+      }),
+    });
+    const runner = makeRunner({ execMode: "EVENT", state, redis });
+
+    // First tick: Redis lock contested → evaluation skipped, mutex released
+    await runner.onPriceEvent("tok1", 0.5);
+    expect(state.getStateAndPrices).not.toHaveBeenCalled();
+    expect(runner.tickMutex.isLocked).toBe(false);
+    expect(runner.status).toBe("RUNNING");
+
+    // Advance past MIN_TICK_MS so the next tick passes debounce
+    vi.setSystemTime(250);
+    // Fire second tick — Redis lock now available → evaluation proceeds
+    await runner.onPriceEvent("tok1", 0.6);
+    expect(state.getStateAndPrices).toHaveBeenCalledTimes(1);
+
+    vi.useRealTimers();
+  });
+});
+
+describe("StrategyRunner — config→params normalization", () => {
+  it("reads block parameters from config when params is absent (builder compat)", async () => {
+    const state = makeState();
+    const redis = makeRedis();
+    const onStatusChange = vi.fn().mockResolvedValue(undefined);
+    const prisma = makePrisma();
+
+    const runner = makeRunner({
+      execMode: "EVENT",
+      state,
+      redis,
+      prisma,
+      onStatusChange,
+      safety: [
+        {
+          id: "safety-1",
+          type: "stop_if_daily_loss",
+          // Builder writes `config` — runner must normalize to `params`
+          config: { maxLossUsdc: "10" },
+        } as any,
+      ],
+    });
+
+    state.getStateAndPrices.mockResolvedValue({
+      state: { ...DEFAULT_STATE, dailyPnl: -15 },
+      prices: new Map(),
+    });
+
+    await runner.onPriceEvent("tok1", 0.5);
+
+    // Normalization worked — safety block saw maxLossUsdc=10 and stopped
+    expect(runner.status).toBe("STOPPED");
+    expect(onStatusChange).toHaveBeenCalledWith(
+      "STOPPED",
+      expect.stringContaining("SAFETY STOP"),
+    );
+  });
+
+  it("prefers params over config when both are present", async () => {
+    const state = makeState();
+    const redis = makeRedis();
+    const onStatusChange = vi.fn().mockResolvedValue(undefined);
+    const prisma = makePrisma();
+
+    const runner = makeRunner({
+      execMode: "EVENT",
+      state,
+      redis,
+      prisma,
+      onStatusChange,
+      safety: [
+        {
+          id: "safety-1",
+          type: "stop_if_daily_loss",
+          params: { maxLossUsdc: "5" },
+          config: { maxLossUsdc: "999" },
+        } as any,
+      ],
+    });
+
+    // dailyPnl=-10 exceeds params.maxLossUsdc=5 but NOT config.maxLossUsdc=999
+    state.getStateAndPrices.mockResolvedValue({
+      state: { ...DEFAULT_STATE, dailyPnl: -10 },
+      prices: new Map(),
+    });
+
+    await runner.onPriceEvent("tok1", 0.5);
+
+    // params takes priority → sees maxLossUsdc=5 → stops
+    expect(runner.status).toBe("STOPPED");
+    expect(onStatusChange).toHaveBeenCalledWith(
+      "STOPPED",
+      expect.stringContaining("SAFETY STOP"),
+    );
+  });
 });

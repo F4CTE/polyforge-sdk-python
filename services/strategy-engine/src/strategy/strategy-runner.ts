@@ -28,8 +28,46 @@ const dailyExecKey = (strategyId: string): string => {
 };
 
 const MIN_TICK_MS = 200;
+const TICK_LOCK_TTL_MS = 10_000;
 const STALE_PRICE_MS = 5_000;
 const MAX_STALE_CHECK_BACKOFF_MS = 60_000;
+
+function secondsUntilNextUtcMidnight(now = new Date()): number {
+  const next = Date.UTC(
+    now.getUTCFullYear(),
+    now.getUTCMonth(),
+    now.getUTCDate() + 1,
+  );
+  return Math.max(1, Math.ceil((next - now.getTime()) / 1000));
+}
+
+/**
+ * Atomic compare-and-delete: releases the lock only when the stored token
+ * matches the token this instance acquired. Avoids the TOCTOU race that
+ * exists with separate GET → compare → DEL calls, where a stale owner
+ * could delete a lock acquired by a new instance after TTL expiry.
+ */
+const LOCK_RELEASE_SCRIPT = `
+if redis.call("GET", KEYS[1]) == ARGV[1] then
+  return redis.call("DEL", KEYS[1])
+else
+  return 0
+end
+`;
+
+/**
+ * Atomic compare-and-extend: renews the lock TTL only when the stored token
+ * matches the token this instance acquired. Prevents a stale runner from
+ * extending a lock that already belongs to a different instance after TTL
+ * expiry.
+ */
+const LOCK_RENEW_SCRIPT = `
+if redis.call("GET", KEYS[1]) == ARGV[1] then
+  return redis.call("PEXPIRE", KEYS[1], ARGV[2])
+else
+  return 0
+end
+`;
 
 export type StrategyRunnerStatus = "RUNNING" | "PAUSED" | "STOPPED";
 
@@ -60,6 +98,17 @@ export interface LogicConnection {
  */
 export class StrategyRunner {
   private readonly logger: Logger;
+  private readonly strategyId: string;
+  private readonly userId: string;
+  private readonly execMode: string;
+  private readonly tickMs: number;
+  private readonly triggers: Block[];
+  private readonly conditions: Block[];
+  private readonly actions: Block[];
+  private readonly safety: Block[];
+  private readonly logicBlocks: LogicBlock[];
+  private readonly logicConnections: LogicConnection[];
+  private readonly calcBlocks: Block[];
   status: StrategyRunnerStatus = "RUNNING";
   private timer: NodeJS.Timeout | null = null;
   private _pauseReason: string | null = null;
@@ -83,14 +132,14 @@ export class StrategyRunner {
   private _warnedSafetyFallbackIds?: Set<string>;
 
   constructor(
-    private readonly strategyId: string,
-    private readonly userId: string,
-    private readonly execMode: string,
-    private readonly tickMs: number,
-    private readonly triggers: Block[],
-    private readonly conditions: Block[],
-    private readonly actions: Block[],
-    private readonly safety: Block[],
+    strategyId: string,
+    userId: string,
+    execMode: string,
+    tickMs: number,
+    triggers: Block[],
+    conditions: Block[],
+    actions: Block[],
+    safety: Block[],
     private readonly variables: StrategyVariable[],
     private readonly redis: RedisService,
     private readonly betaLimits: BetaLimitsConfigService,
@@ -101,9 +150,9 @@ export class StrategyRunner {
       status: StrategyRunnerStatus,
       reason?: string,
     ) => Promise<void>,
-    private readonly logicBlocks: LogicBlock[] = [],
-    private readonly logicConnections: LogicConnection[] = [],
-    private readonly calcBlocks: Block[] = [],
+    logicBlocks: LogicBlock[] = [],
+    logicConnections: LogicConnection[] = [],
+    calcBlocks: Block[] = [],
     private readonly onRunStrategy?: (
       childStrategyId: string,
       parentId: string,
@@ -113,7 +162,34 @@ export class StrategyRunner {
     private readonly venue?: VenueId | "best",
     private readonly kalshiSubaccount?: number,
   ) {
+    this.strategyId = strategyId;
+    this.userId = userId;
+    this.execMode = execMode;
+    this.tickMs = tickMs;
+    this.triggers = StrategyRunner.normalizeBlocks(triggers);
+    this.conditions = StrategyRunner.normalizeBlocks(conditions);
+    this.actions = StrategyRunner.normalizeBlocks(actions);
+    this.safety = StrategyRunner.normalizeBlocks(safety);
+    this.logicBlocks = StrategyRunner.normalizeBlocks(logicBlocks) as LogicBlock[];
+    this.logicConnections = logicConnections;
+    this.calcBlocks = StrategyRunner.normalizeBlocks(calcBlocks);
     this.logger = new Logger(`StrategyRunner:${strategyId}`);
+  }
+
+  /**
+   * Normalize blocks from the builder/DB format (which may use `config`) to
+   * the runner's internal format (which expects `params`).  Falls back to
+   * `config` when `params` is missing so strategies saved before the
+   * builder→runner field-name alignment are not silently dropped.
+   */
+  private static normalizeBlocks(blocks: Block[]): Block[] {
+    return blocks.map((b) => {
+      const raw = b as unknown as Record<string, unknown>;
+      return {
+        ...b,
+        params: b.params ?? (raw.config as Record<string, unknown>) ?? {},
+      };
+    });
   }
 
   /** Register a child strategy launched by this runner */
@@ -246,14 +322,58 @@ export class StrategyRunner {
     }
 
     if (!this.tickMutex.tryEnter()) return;
+
+    // Track whether the Redis lock was successfully acquired so the
+    // finally block can decide whether to bypass the MIN_TICK_MS throttle.
+    // Distributed-lock contention retries must respect the normal throttle
+    // to prevent a hot-loop across process instances.
+    let redisLockAcquired = false;
+    let lockRenewal: NodeJS.Timeout | undefined;
+    let redisClient: ReturnType<typeof this.redis.getClient> | undefined;
+    let lockKey = "";
+    let lockToken = "";
+
     try {
+      // Distributed tick lock via Redis SET NX — prevents concurrent
+      // evaluation across multiple process instances.
+      redisClient = this.redis.getClient();
+      lockKey = `strategy:${this.strategyId}:tick:lock`;
+      lockToken = `${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+
+      const acquired = await redisClient.set(
+        lockKey,
+        lockToken,
+        "PX",
+        TICK_LOCK_TTL_MS,
+        "NX",
+      );
+      if (!acquired) {
+        return;
+      }
+      redisLockAcquired = true;
+
+      // Renew the tick lock periodically during long-running evaluations.
+      // Without renewal, a strategy that takes >TICK_LOCK_TTL_MS would allow
+      // a second instance to acquire the lock and execute concurrently.
+      const LOCK_RENEW_MS = 2_000;
+      lockRenewal = setInterval(() => {
+        redisClient!
+          .eval(
+            LOCK_RENEW_SCRIPT,
+            1,
+            lockKey,
+            lockToken,
+            String(TICK_LOCK_TTL_MS),
+          )
+          .catch(() => {});
+      }, LOCK_RENEW_MS);
+      if (lockRenewal.unref) lockRenewal.unref();
+
       // Enforce daily execution limit — auto-stop if exceeded
-      const redisClient = this.redis.getClient();
       const key = dailyExecKey(this.strategyId);
       const count = await redisClient.incr(key);
       if (count === 1) {
-        // New key: set TTL to 25 hours so it expires safely after UTC midnight
-        await redisClient.expire(key, 90_000);
+        await redisClient.expire(key, secondsUntilNextUtcMidnight());
       }
       const maxDaily = await this.betaLimits.getLimit(
         "maxDailyStrategyExecutions",
@@ -287,8 +407,21 @@ export class StrategyRunner {
         );
       }
     } finally {
+      if (lockRenewal) clearInterval(lockRenewal);
+      if (redisLockAcquired && redisClient) {
+        try {
+          await redisClient.eval(LOCK_RELEASE_SCRIPT, 1, lockKey, lockToken);
+        } catch {
+          /* lock cleanup is best-effort — no fallback needed */
+        }
+      }
       if (this.tickMutex.exit()) {
-        this._scheduledFollowUp = true;
+        // Only bypass the MIN_TICK_MS throttle when we successfully evaluated.
+        // Distributed-lock contention retries go through normal throttling to
+        // avoid a hot-loop across process instances.
+        if (redisLockAcquired) {
+          this._scheduledFollowUp = true;
+        }
         void this.tick();
       }
     }
@@ -475,6 +608,27 @@ export class StrategyRunner {
               );
             }
             evaluator = fallback;
+          } else {
+            this.logger.error(
+              `Unknown safety block type: ${block.type} (blockId=${block.id}). ` +
+                `Stopping strategy to avoid silently disabling a safety guard.`,
+            );
+            this.stop();
+            await this.onStatusChange(
+              "STOPPED",
+              `unknown safety block: ${block.type}`,
+            );
+            await this.prisma.strategy
+              .update({
+                where: { id: this.strategyId },
+                data: { status: StrategyStatus.IDLE },
+              })
+              .catch(() => {});
+            await this.emitStrategyEvent(
+              "STRATEGY_STOPPED",
+              `unknown safety block: ${block.type}`,
+            );
+            return;
           }
         } else {
           this.logger.error(

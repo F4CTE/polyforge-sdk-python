@@ -30,7 +30,8 @@ export class TradeReconcilerService {
 
   /**
    * Every 2 minutes, reconcile local order statuses against Polymarket CLOB trades.
-   * Finds orders with LIVE status whose fills were missed locally and updates them.
+   * Finds orders with active statuses (PENDING, SUBMITTED, MATCHED, LIVE,
+   * DELAYED, MINED) whose fills were missed locally and updates them.
    */
   @Cron("*/2 * * * *")
   async reconcile(): Promise<void> {
@@ -40,7 +41,7 @@ export class TradeReconcilerService {
       ttlMs: 100_000,
       job: async () => {
         try {
-          const users = await this.getConnectedUsersWithLiveOrders();
+          const users = await this.getConnectedUsersWithActiveOrders();
           const eligible = users.filter(
             (u): u is typeof u & { polymarketAddress: string } =>
               u.polymarketAddress != null,
@@ -78,7 +79,7 @@ export class TradeReconcilerService {
       const liveOrders = await this.prisma.order.findMany({
         where: {
           userId,
-          status: { in: ["PENDING", "SUBMITTED", "MATCHED", "LIVE"] },
+          status: { in: ["PENDING", "SUBMITTED", "MATCHED", "LIVE", "DELAYED", "MINED"] },
         },
       });
 
@@ -134,17 +135,17 @@ export class TradeReconcilerService {
     return updatedCount;
   }
 
-  private async getConnectedUsersWithLiveOrders() {
-    // Find users who have LIVE orders and are connected to Polymarket
-    const usersWithLiveOrders = await this.prisma.order.findMany({
-      where: { status: { in: ["PENDING", "SUBMITTED", "MATCHED", "LIVE"] } },
+  private async getConnectedUsersWithActiveOrders() {
+    // Find users who have active orders (PENDING, SUBMITTED, MATCHED, LIVE, DELAYED, MINED)
+    const usersWithActiveOrders = await this.prisma.order.findMany({
+      where: { status: { in: ["PENDING", "SUBMITTED", "MATCHED", "LIVE", "DELAYED", "MINED"] } },
       select: { userId: true },
       distinct: ["userId"],
     });
 
-    if (usersWithLiveOrders.length === 0) return [];
+    if (usersWithActiveOrders.length === 0) return [];
 
-    const userIds = usersWithLiveOrders.map((o) => o.userId);
+    const userIds = usersWithActiveOrders.map((o) => o.userId);
 
     return this.prisma.user.findMany({
       where: {

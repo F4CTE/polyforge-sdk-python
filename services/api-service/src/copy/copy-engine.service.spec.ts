@@ -654,6 +654,49 @@ describe("CopyEngineService", () => {
       expect(redis.del).toHaveBeenCalledWith("copy:cfg1:exposure");
       expect(prisma.copyConfig.update).not.toHaveBeenCalled();
     });
+
+    it("rolls back daily loss reservation when copyTrade.create fails", async () => {
+      const config = {
+        id: "cfg1",
+        userId: "user1",
+        mode: "FIXED",
+        sizeValue: "100",
+        maxDailyLoss: "10000",
+        maxExposure: "50000",
+        priceOffset: "0",
+      };
+      const err = new Error("DB create failed");
+
+      redis.getClient().eval.mockResolvedValue("50");
+      redis.get.mockResolvedValue("0");
+      prisma.copyTrade.findMany.mockResolvedValue([]);
+      prisma.copyTrade.create.mockRejectedValueOnce(err);
+
+      await expect(
+        service.processCopyForConfig(
+          config as any,
+          {
+            walletAddress: "0xabc",
+            marketId: "m1",
+            tokenId: "t1",
+            side: "BUY",
+            outcome: "YES",
+          },
+          1000,
+          0.5,
+        ),
+      ).rejects.toThrow("DB create failed");
+
+      // Verify daily loss rollback was called
+      const calls = redis.getClient().eval.mock.calls;
+      expect(calls.length).toBeGreaterThanOrEqual(2);
+      expect(calls.at(-1)?.[3]).toBe("-500");
+
+      // Verify no downstream side effects
+      expect(redis.xadd).not.toHaveBeenCalled();
+      expect(prisma.copyTrade.update).not.toHaveBeenCalled();
+      expect(prisma.copyConfig.update).not.toHaveBeenCalled();
+    });
   });
 
   // ── reconcileCopyTrade ─────────────────────────────────────────────────
@@ -720,12 +763,163 @@ describe("CopyEngineService", () => {
 
       expect(prisma.copyTrade.findUnique).not.toHaveBeenCalled();
     });
+
+    it("skips reconciliation when trade is already CONFIRMED", async () => {
+        prisma.copyTrade.findUnique.mockResolvedValue({
+          id: "ct-terminal",
+          configId: "cfg-terminal",
+          side: "BUY",
+          copiedPrice: new Prisma.Decimal("0.60"),
+          sourcePrice: new Prisma.Decimal("0.60"),
+          copiedSize: new Prisma.Decimal("100"),
+          config: { userId: "user-1" },
+          status: "CONFIRMED",
+        });
+
+        await service.reconcileCopyTrade({
+          type: "ORDER_FILLED",
+          copyTradeId: "ct-terminal",
+          fillPrice: "0.65",
+        });
+
+        expect(prisma.copyTrade.update).not.toHaveBeenCalled();
+        expect(redis.del).not.toHaveBeenCalled();
+      },
+    );
+
+    it("recovers FAILED copy trade to CONFIRMED on ORDER_FILLED reconciliation", async () => {
+      prisma.copyTrade.findUnique.mockResolvedValue({
+        id: "ct-failed",
+        configId: "cfg-recover",
+        side: "BUY",
+        status: "FAILED",
+        copiedPrice: new Prisma.Decimal("0.60"),
+        sourcePrice: new Prisma.Decimal("0.60"),
+        copiedSize: new Prisma.Decimal("100"),
+        config: { userId: "user-1" },
+      });
+      prisma.copyTrade.update.mockResolvedValue({});
+      prisma.copyConfig.update.mockResolvedValue({});
+
+      await service.reconcileCopyTrade({
+        type: "ORDER_FILLED",
+        copyTradeId: "ct-failed",
+        fillPrice: "0.65",
+        orderId: "order-rec",
+      });
+
+      expect(prisma.copyTrade.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: "ct-failed" },
+          data: expect.objectContaining({
+            status: "CONFIRMED",
+          }),
+        }),
+      );
+
+      const updateCall = prisma.copyTrade.update.mock.calls[0][0];
+      expect(parseFloat(updateCall.data.pnl.toString())).toBeCloseTo(5.0, 2);
+      expect(prisma.copyConfig.update).toHaveBeenCalled();
+      expect(redis.del).toHaveBeenCalledWith("copy:cfg-recover:exposure");
+    });
+
+    it("recovers CANCELLED copy trade to CONFIRMED on late ORDER_FILLED reconciliation", async () => {
+      prisma.copyTrade.findUnique.mockResolvedValue({
+        id: "ct-cancelled",
+        configId: "cfg-cancelled",
+        side: "SELL",
+        status: "CANCELLED",
+        copiedPrice: new Prisma.Decimal("0.80"),
+        sourcePrice: new Prisma.Decimal("0.80"),
+        copiedSize: new Prisma.Decimal("50"),
+        config: { userId: "user-1" },
+      });
+      prisma.copyTrade.update.mockResolvedValue({});
+      prisma.copyConfig.update.mockResolvedValue({});
+
+      await service.reconcileCopyTrade({
+        type: "ORDER_FILLED",
+        copyTradeId: "ct-cancelled",
+        fillPrice: "0.75",
+        orderId: "order-cancelled-fill",
+      });
+
+      expect(prisma.copyTrade.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: "ct-cancelled" },
+          data: expect.objectContaining({
+            status: "CONFIRMED",
+          }),
+        }),
+      );
+
+      const updateCall = prisma.copyTrade.update.mock.calls[0][0];
+      expect(parseFloat(updateCall.data.pnl.toString())).toBeCloseTo(2.5, 2);
+      expect(prisma.copyConfig.update).toHaveBeenCalled();
+      expect(redis.del).toHaveBeenCalledWith("copy:cfg-cancelled:exposure");
+    });
   });
 
-  // ── handleCopyTradeCancelled ───────────────────────────────────────────
+  describe("processStreamEvent ORDER_FAILED gating", () => {
+    it("marks copy trade failed for terminal orderStatus", async () => {
+      const terminalSpy = vi
+        .spyOn(service, "handleCopyTradeTerminal")
+        .mockResolvedValue(undefined);
 
-  describe("handleCopyTradeCancelled", () => {
-    it("marks copy trade as cancelled", async () => {
+      await (service as any).processStreamEvent({
+        type: "ORDER_FAILED",
+        copyTradeId: "ct-terminal-fail",
+        orderStatus: "FAILED",
+      });
+
+      expect(terminalSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: "ORDER_FAILED",
+          copyTradeId: "ct-terminal-fail",
+        }),
+        "FAILED",
+      );
+    });
+
+    it("does not mark copy trade failed for non-terminal orderStatus", async () => {
+      const terminalSpy = vi
+        .spyOn(service, "handleCopyTradeTerminal")
+        .mockResolvedValue(undefined);
+
+      await (service as any).processStreamEvent({
+        type: "ORDER_FAILED",
+        copyTradeId: "ct-non-terminal-fail",
+        orderStatus: "LIVE",
+      });
+
+      expect(terminalSpy).not.toHaveBeenCalled();
+    });
+
+    it("maps ORDER_FAILED with CANCELLED status to cancelled terminalization", async () => {
+      const terminalSpy = vi
+        .spyOn(service, "handleCopyTradeTerminal")
+        .mockResolvedValue(undefined);
+
+      await (service as any).processStreamEvent({
+        type: "ORDER_FAILED",
+        copyTradeId: "ct-cancelled-fail",
+        orderStatus: "CANCELLED",
+      });
+
+      expect(terminalSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: "ORDER_FAILED",
+          copyTradeId: "ct-cancelled-fail",
+        }),
+        "CANCELLED",
+      );
+    });
+  });
+
+  // ── handleCopyTradeTerminal ────────────────────────────────────────────
+
+  describe("handleCopyTradeTerminal", () => {
+    it("marks copy trade as cancelled on ORDER_CANCELLED", async () => {
       prisma.copyTrade.findUnique.mockResolvedValue({
         id: "ct-2",
         configId: "cfg-2",
@@ -733,7 +927,7 @@ describe("CopyEngineService", () => {
       });
       prisma.copyTrade.update.mockResolvedValue({});
 
-      await service.handleCopyTradeCancelled({
+      await service.handleCopyTradeTerminal({
         type: "ORDER_CANCELLED",
         copyTradeId: "ct-2",
       });
@@ -745,6 +939,29 @@ describe("CopyEngineService", () => {
       expect(redis.del).toHaveBeenCalledWith("copy:cfg-2:exposure");
     });
 
+    it("marks copy trade as failed on ORDER_FAILED", async () => {
+      prisma.copyTrade.findUnique.mockResolvedValue({
+        id: "ct-fail",
+        configId: "cfg-fail",
+        status: "PENDING",
+      });
+      prisma.copyTrade.update.mockResolvedValue({});
+
+      await service.handleCopyTradeTerminal(
+        {
+          type: "ORDER_FAILED",
+          copyTradeId: "ct-fail",
+        },
+        "FAILED",
+      );
+
+      expect(prisma.copyTrade.update).toHaveBeenCalledWith({
+        where: { id: "ct-fail" },
+        data: { status: "FAILED" },
+      });
+      expect(redis.del).toHaveBeenCalledWith("copy:cfg-fail:exposure");
+    });
+
     it("does not overwrite confirmed trades", async () => {
       prisma.copyTrade.findUnique.mockResolvedValue({
         id: "ct-3",
@@ -752,10 +969,43 @@ describe("CopyEngineService", () => {
         status: "CONFIRMED",
       });
 
-      await service.handleCopyTradeCancelled({
+      await service.handleCopyTradeTerminal({
         type: "ORDER_CANCELLED",
         copyTradeId: "ct-3",
       });
+
+      expect(prisma.copyTrade.update).not.toHaveBeenCalled();
+    });
+
+    it("does not overwrite already cancelled trades", async () => {
+      prisma.copyTrade.findUnique.mockResolvedValue({
+        id: "ct-4",
+        configId: "cfg-4",
+        status: "CANCELLED",
+      });
+
+      await service.handleCopyTradeTerminal({
+        type: "ORDER_CANCELLED",
+        copyTradeId: "ct-4",
+      });
+
+      expect(prisma.copyTrade.update).not.toHaveBeenCalled();
+    });
+
+    it("does not overwrite already failed trades", async () => {
+      prisma.copyTrade.findUnique.mockResolvedValue({
+        id: "ct-5",
+        configId: "cfg-5",
+        status: "FAILED",
+      });
+
+      await service.handleCopyTradeTerminal(
+        {
+          type: "ORDER_FAILED",
+          copyTradeId: "ct-5",
+        },
+        "FAILED",
+      );
 
       expect(prisma.copyTrade.update).not.toHaveBeenCalled();
     });

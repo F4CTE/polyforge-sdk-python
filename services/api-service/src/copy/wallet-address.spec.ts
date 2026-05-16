@@ -5,6 +5,7 @@ import {
 } from "./wallet-address";
 
 const LOWER_ADDRESS = "0x52908400098527886e0f7030069857d2e4169ee7";
+// Pre-computed EIP-55 checksum for the lowercased address above
 const EXPECTED_CHECKSUM = "0x52908400098527886E0F7030069857D2E4169EE7";
 
 describe("checksumEthereumAddress", () => {
@@ -30,9 +31,9 @@ describe("checksumEthereumAddress", () => {
       "e0f7030069857d2e4169ee7",
       "E0f7030069857d2e4169ee7",
     );
-    await expect(checksumEthereumAddress(badChecksum)).rejects.toThrow(
-      "Invalid Ethereum address checksum",
-    );
+    await expect(
+      checksumEthereumAddress(badChecksum),
+    ).rejects.toThrow("Invalid Ethereum address checksum");
   });
 
   it("rejects address with wrong length", async () => {
@@ -71,14 +72,17 @@ describe("tryChecksumEthereumAddress", () => {
       "e0f7030069857d2e4169ee7",
       "E0f7030069857d2e4169ee7",
     );
-    expect(await tryChecksumEthereumAddress(badChecksum)).toBeNull();
+    const result = await tryChecksumEthereumAddress(badChecksum);
+    expect(result).toBeNull();
   });
 
   it("returns null for invalid format", async () => {
-    expect(await tryChecksumEthereumAddress("not-an-address")).toBeNull();
+    const result = await tryChecksumEthereumAddress("not-an-address");
+    expect(result).toBeNull();
   });
 
   it("returns null for empty string", async () => {
-    expect(await tryChecksumEthereumAddress("")).toBeNull();
+    const result = await tryChecksumEthereumAddress("");
+    expect(result).toBeNull();
   });
 });

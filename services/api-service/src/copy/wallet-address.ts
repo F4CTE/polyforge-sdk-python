@@ -12,15 +12,18 @@ async function _loadKeccak256(): Promise<(msg: Uint8Array) => Uint8Array> {
   return _keccak_256;
 }
 
-export async function checksumEthereumAddress(address: string): Promise<string> {
+export async function checksumEthereumAddress(
+  address: string,
+): Promise<string> {
   if (!ETH_ADDRESS_RE.test(address)) {
     throw new BadRequestException("Invalid Ethereum address");
   }
 
-  const keccak = await _loadKeccak256();
+  const keccak256 = await _loadKeccak256();
+
   const hexPart = address.slice(2);
   const lower = hexPart.toLowerCase();
-  const hash = Buffer.from(keccak(Buffer.from(lower, "ascii"))).toString(
+  const hash = Buffer.from(keccak256(Buffer.from(lower, "ascii"))).toString(
     "hex",
   );
   let checksummed = "0x";
@@ -43,7 +46,9 @@ export async function checksumEthereumAddress(address: string): Promise<string> 
   return checksummed;
 }
 
-export async function tryChecksumEthereumAddress(address: string): Promise<string | null> {
+export async function tryChecksumEthereumAddress(
+  address: string,
+): Promise<string | null> {
   try {
     return await checksumEthereumAddress(address);
   } catch {
