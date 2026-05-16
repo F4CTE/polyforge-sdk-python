@@ -211,7 +211,6 @@ __all__ = [
     "SystemHealthAuthenticated",
     "SystemHealthPublic",
     "TickSizeInfo",
-    "SupportTicket",
     "TicketMessage",
     "Token",
     "TopTraderEntry",
