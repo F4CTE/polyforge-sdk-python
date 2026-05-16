@@ -16,12 +16,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       algorithms: ["HS256"],
       secretOrKey: (() => {
         const secret = process.env.USER_JWT_SECRET;
-        if (!secret)
+        if (!secret || secret.length < 32) {
           throw new Error("USER_JWT_SECRET environment variable is required");
-        if (secret.length < 32) {
-          throw new Error(
-            `USER_JWT_SECRET must be at least 32 characters long (current length: ${secret.length})`,
-          );
         }
         return secret;
       })(),

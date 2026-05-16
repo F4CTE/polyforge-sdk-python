@@ -75,7 +75,7 @@ describe("InternalJwtGuard", () => {
     const mod = await import("./internal-jwt.guard");
     expect(
       () => new mod.InternalJwtGuard(jwtService as any, redis as any),
-    ).toThrow("INTERNAL_JWT_SECRET must be at least 32 characters");
+    ).toThrow("INTERNAL_JWT_SECRET environment variable is required");
   });
 
   it("rejects requests without Authorization header", async () => {

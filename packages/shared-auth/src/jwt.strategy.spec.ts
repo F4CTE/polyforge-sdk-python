@@ -34,7 +34,7 @@ describe("JwtStrategy", () => {
     vi.resetModules();
     const mod = await import("./jwt.strategy");
     expect(() => new mod.JwtStrategy()).toThrow(
-      "USER_JWT_SECRET must be at least 32 characters",
+      "USER_JWT_SECRET environment variable is required",
     );
   });
 

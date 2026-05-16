@@ -46,11 +46,7 @@ function isAuthTagMismatchError(err: unknown): boolean {
 
 function assertDekLength(dek: unknown): asserts dek is Buffer {
   if (!Buffer.isBuffer(dek) || dek.length !== DEK_LEN) {
-    throw new Error(
-      `DEK must be exactly ${DEK_LEN} bytes, got ${
-        Buffer.isBuffer(dek) ? dek.length : typeof dek
-      }`,
-    );
+    throw new Error("Invalid DEK: incorrect length");
   }
 }
 
@@ -136,9 +132,7 @@ export class NativeEncryptionService {
   constructor(private readonly config: ConfigService) {
     const keyHex = this.config.get<string>("MASTER_ENCRYPTION_KEY");
     if (!keyHex || keyHex.length !== 64) {
-      throw new Error(
-        "MASTER_ENCRYPTION_KEY must be a 64-char hex string (32 bytes)",
-      );
+      throw new Error("MASTER_ENCRYPTION_KEY is not properly configured");
     }
 
     // Previous KEK is optional — only present during rotation grace period.
@@ -148,7 +142,7 @@ export class NativeEncryptionService {
     const prevHex = this.config.get<string>("MASTER_ENCRYPTION_KEY_PREVIOUS");
     if (prevHex && prevHex.length !== 64) {
       throw new Error(
-        "MASTER_ENCRYPTION_KEY_PREVIOUS must be a 64-char hex string (32 bytes) when present",
+        "MASTER_ENCRYPTION_KEY_PREVIOUS is not properly configured",
       );
     }
     const previousKekHex = prevHex || null;

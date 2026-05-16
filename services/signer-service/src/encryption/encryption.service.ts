@@ -29,7 +29,7 @@ function toBytes(buf: Buffer | Uint8Array): PrismaBytes {
 
 function parseKekHex(hex: string | undefined, label: string): Buffer {
   if (!hex || hex.length !== 64) {
-    throw new Error(`${label} must be a 64-char hex string (32 bytes)`);
+    throw new Error(`${label} is not properly configured`);
   }
   return Buffer.from(hex, "hex");
 }
