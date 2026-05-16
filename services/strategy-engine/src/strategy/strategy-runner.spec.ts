@@ -3369,9 +3369,9 @@ describe("StrategyRunner — concurrent tick serialization", () => {
     }
   });
 
-  it("releases TickMutex when Redis distributed lock acquisition throws", async () => {
+  it("releases in-process tick gate when Redis distributed lock acquisition throws", async () => {
     // Regression: if getClient() or set(... NX ...) throws, the in-process
-    // TickMutex must still be released.  Prior to the fix, the try/finally
+    // tick gate must still be released.  Prior to the fix, the try/finally
     // started after the lock-acquisition block, so an exception in set()
     // permanently leaked the in-process lock — the strategy stopped ticking.
     const redis = makeRedis({
@@ -3395,15 +3395,15 @@ describe("StrategyRunner — concurrent tick serialization", () => {
 
     await runner.onPriceEvent("tok1", 0.5);
 
-    // TickMutex must NOT be leaked — exit() is called in finally
-    expect(runner.tickMutex.isLocked).toBe(false);
+    // tickInFlight must NOT be leaked — finally always resets it
+    expect(runner.tickInFlight).toBe(false);
     // Runner is not dead — another tick would succeed
     expect(runner.status).toBe("RUNNING");
   });
 
   it("does NOT permanently block after distributed lock contention", async () => {
     // Regression: when the Redis distributed lock is held by another
-    // instance, the in-process TickMutex must be released and the strategy
+    // instance, the in-process tick gate must be released and the strategy
     // must be able to evaluate on the next tick once the lock is available.
     // Prior to the fix, an exception in the lock-acquisition path leaked
     // the in-process lock and the strategy stopped ticking permanently.
@@ -3435,10 +3435,10 @@ describe("StrategyRunner — concurrent tick serialization", () => {
     });
     const runner = makeRunner({ execMode: "EVENT", state, redis });
 
-    // First tick: Redis lock contested → evaluation skipped, mutex released
+    // First tick: Redis lock contested → evaluation skipped, tick gate released
     await runner.onPriceEvent("tok1", 0.5);
     expect(state.getStateAndPrices).not.toHaveBeenCalled();
-    expect(runner.tickMutex.isLocked).toBe(false);
+    expect(runner.tickInFlight).toBe(false);
     expect(runner.status).toBe("RUNNING");
 
     // Advance past MIN_TICK_MS so the next tick passes debounce
