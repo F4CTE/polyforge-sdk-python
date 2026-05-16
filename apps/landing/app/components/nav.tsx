@@ -10,7 +10,6 @@ const NAV_LINKS = [
   { href: "#whales", label: "whales" },
   { href: "/api-docs", label: "developers" },
   { href: "/pricing", label: "pricing" },
-  { href: "/docs", label: "docs" },
 ] as const;
 
 const MOBILE_NAV_LINKS = [

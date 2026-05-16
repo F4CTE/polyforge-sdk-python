@@ -7,6 +7,11 @@ function BracketOrderMock() {
       className="bg-surface border border-subtle rounded-xl overflow-hidden"
       aria-hidden="true"
     >
+      <div className="px-5 pt-4">
+        <span className="inline-flex items-center h-5 px-2 rounded bg-warning/10 border border-warning/20 text-[10px] font-mono font-medium text-warning uppercase tracking-wider">
+          Example — not real results
+        </span>
+      </div>
       <div className="flex items-center gap-2.5 px-5 py-4 border-b border-subtle">
         <span className="font-mono text-xs text-secondary">Bracket order</span>
         <span className="inline-flex px-2 py-0.5 rounded text-caption font-mono text-accent-text bg-[color-mix(in_srgb,var(--accent-default)_8%,transparent)] border border-[color-mix(in_srgb,var(--accent-default)_20%,transparent)]">

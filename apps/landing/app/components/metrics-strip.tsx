@@ -11,7 +11,7 @@ export function MetricsStrip() {
   return (
     <section
       className="border-t border-b border-subtle bg-surface"
-      aria-label="Platform statistics"
+      aria-label="Platform at a glance"
     >
       <div className="max-w-container-landing mx-auto px-6">
         <dl
@@ -39,6 +39,11 @@ export function MetricsStrip() {
                 <dd className="order-1 m-0 text-[22px] font-semibold font-mono text-accent-text tracking-tight tabular-nums">
                   {stat.value}
                 </dd>
+                {"note" in stat && (
+                  <span className="order-3 text-[10px] text-tertiary/50 font-mono uppercase tracking-wider mt-0.5">
+                    {stat.note}
+                  </span>
+                )}
               </div>
             </div>
           ))}

@@ -41,7 +41,7 @@ export function CtaBanner() {
 
           <div className="relative inline-flex gap-2.5 flex-wrap justify-center">
             <a
-              href="/signup"
+              href="/register"
               onClick={() =>
                 ph?.capture("cta_clicked", {
                   label: "start_free",
@@ -66,7 +66,7 @@ export function CtaBanner() {
               </svg>
             </a>
             <a
-              href="/demo"
+              href="mailto:hello@polyforge.app?subject=Demo%20Request"
               onClick={() =>
                 ph?.capture("cta_clicked", {
                   label: "book_walkthrough",
@@ -80,7 +80,7 @@ export function CtaBanner() {
           </div>
 
           <div className="relative font-mono text-caption text-tertiary mt-6 tracking-wider">
-            NO CARD · FREE FOREVER FOR PAPER · EU-WEST-2 · 99.97% UPTIME YTD
+            NO CARD · FREE FOREVER FOR PAPER · EU-WEST-2
           </div>
         </div>
       </div>

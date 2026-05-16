@@ -35,6 +35,11 @@ function DashboardMock() {
       </div>
 
       <div className="p-4">
+        <div className="text-center mb-2">
+          <span className="inline-flex items-center h-5 px-2 rounded bg-warning/10 border border-warning/20 text-[10px] font-mono font-medium text-warning uppercase tracking-wider">
+            simulated data — illustrative
+          </span>
+        </div>
         {/* Top stats row */}
         <div className="grid grid-cols-3 gap-2 mb-3">
           <div className="border border-subtle rounded-lg p-3">
