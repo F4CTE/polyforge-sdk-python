@@ -2699,7 +2699,7 @@ describe("StrategyRunner — concurrent tick serialization", () => {
       );
       expect(lockRefreshEvals.length).toBeGreaterThanOrEqual(1);
       // Verify the lock key and token are passed to the Lua script
-      expect(lockRefreshEvals[0][2]).toBe("lock:tick:strat-test"); // KEYS[1]
+      expect(lockRefreshEvals[0][2]).toBe("strategy:strat-test:tick:lock"); // KEYS[1]
       expect(typeof lockRefreshEvals[0][3]).toBe("string"); // ARGV[1] = lockToken
       expect(lockRefreshEvals[0][4]).toBe("10"); // ARGV[2] = TTL
     } finally {

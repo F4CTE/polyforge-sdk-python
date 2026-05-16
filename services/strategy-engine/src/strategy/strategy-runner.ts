@@ -364,7 +364,7 @@ export class StrategyRunner {
       // tick overruns the TTL and a subsequent tick reacquires the lock,
       // the older tick's finally block can no longer match and delete it.
       const redisClient = this.redis.getClient();
-      const lockKey = `lock:tick:${this.strategyId}`;
+      const lockKey = `strategy:${this.strategyId}:tick:lock`;
       const acquired = await redisClient.set(
         lockKey,
         lockToken,
@@ -478,7 +478,7 @@ export class StrategyRunner {
       // follow-up ticks can observe pendingRedisUnlock in local race windows.
       if (lockAcquired) {
         const redisClient = this.redis.getClient();
-        const lockKey = `lock:tick:${this.strategyId}`;
+        const lockKey = `strategy:${this.strategyId}:tick:lock`;
         const unlockPromise = redisClient.eval(
           "if redis.call('GET', KEYS[1]) == ARGV[1] then return redis.call('DEL', KEYS[1]) else return 0 end",
           1,
