@@ -3107,7 +3107,9 @@ class PolyforgeClient:
 
         Args:
             period: Time period — ``"7d"``, ``"30d"``, or ``"allTime"``.
-            limit: Page size (1--100, default server-side).
+            limit: Page size (1--100). When *offset* is provided without
+                *limit*, the client sends ``limit=20`` to keep the
+                offset-to-page conversion deterministic.
             page: 1-based page number.
             offset: Zero-based row offset. When supplied without ``page``
                 the client converts it to the equivalent page. Must be
@@ -3140,6 +3142,8 @@ class PolyforgeClient:
                     f"offset ({offset}) must be a multiple of limit ({resolved_limit})"
                 )
             q["page"] = (offset // resolved_limit) + 1
+            if limit is None:
+                q["limit"] = resolved_limit
         elif page is not None:
             q["page"] = page
         raw = self._get("/api/v1/accuracy/leaderboard", params=_strip_none(q))
@@ -6351,6 +6355,8 @@ class AsyncPolyforgeClient:
                     f"offset ({offset}) must be a multiple of limit ({resolved_limit})"
                 )
             q["page"] = (offset // resolved_limit) + 1
+            if limit is None:
+                q["limit"] = resolved_limit
         elif page is not None:
             q["page"] = page
         raw = await self._get("/api/v1/accuracy/leaderboard", params=_strip_none(q))
