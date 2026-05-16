@@ -502,19 +502,20 @@ export class StrategyRunner {
           // gates the lower retry branch.  Without this clause the
           // coalesced events would be silently dropped: no retry fires
           // and no fresh price event is guaranteed to arrive.
-          // One-shot guard: only chain one retry while waiting on our
-          // current pendingRedisUnlock.  Without this guard, multiple ticks that
-          // fail SET NX behind the same in-flight unlock would each
-          // attach a .finally() callback, firing duplicate tick() calls
-          // when the unlock finally completes.
-          if (!this.pendingRedisUnlockRetryArmed) {
-            this.pendingRedisUnlockRetryArmed = true;
-            const pendingUnlock = this.pendingRedisUnlock;
+          const pendingUnlock = this.pendingRedisUnlock;
+          // One-shot guard scoped to this exact unlock promise generation.
+          if (this.pendingRedisUnlockRetryFor !== pendingUnlock) {
+            this.pendingRedisUnlockRetryFor = pendingUnlock;
             if (this.followUpTimer) clearTimeout(this.followUpTimer);
             void pendingUnlock
               .finally(() => {
-                this.pendingRedisUnlockRetryArmed = false;
-                if (this.status === "RUNNING") {
+                if (this.pendingRedisUnlockRetryFor === pendingUnlock) {
+                  this.pendingRedisUnlockRetryFor = null;
+                }
+                if (
+                  this.status === "RUNNING" &&
+                  this.pendingRedisUnlock === pendingUnlock
+                ) {
                   this.scheduledFollowUp = true;
                   void this.tick();
                 }
