@@ -80,16 +80,22 @@ describe('ErrorBoundary Component', () => {
   });
 
   it('catches errors and displays error UI', () => {
-    const ThrowError = () => {
-      throw new Error('Test error');
-    };
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-    const { getByText } = render(
-      <ErrorBoundary>
-        <ThrowError />
-      </ErrorBoundary>
-    );
+    try {
+      const ThrowError = () => {
+        throw new Error('Test error');
+      };
 
-    expect(getByText('Something went wrong')).toBeTruthy();
+      const { getByText } = render(
+        <ErrorBoundary>
+          <ThrowError />
+        </ErrorBoundary>
+      );
+
+      expect(getByText('Something went wrong')).toBeTruthy();
+    } finally {
+      consoleSpy.mockRestore();
+    }
   });
 });
