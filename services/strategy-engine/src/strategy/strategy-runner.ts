@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { Logger } from "@nestjs/common";
 import { StrategyStatus } from ".prisma/client";
 import { PrismaService } from "@polyforge/shared-db";
@@ -16,9 +17,9 @@ import {
 import { resolveParams } from "../blocks/resolve-params";
 import { StateService } from "../state/state.service";
 import { safeEvaluate } from "../common/safe-evaluate";
+
 import { sma, ema, macd, bollingerBands, atr } from "../ta/indicators";
 import { readPriceWindow } from "../ta/price-window";
-import { TickMutex } from "./tick-mutex";
 
 /** Redis key for daily execution counter — resets at midnight UTC */
 const dailyExecKey = (strategyId: string): string => {
@@ -32,6 +33,15 @@ const TICK_LOCK_TTL_MS = 10_000;
 const STALE_PRICE_MS = 5_000;
 const MAX_STALE_CHECK_BACKOFF_MS = 60_000;
 
+/** Legacy safety block types that are handled via CONDITION_REGISTRY fallback.
+ *  These block types were historically placed under safety but are now
+ *  defined only in CONDITION_REGISTRY.  The explicit allowlist prevents
+ *  misconfigured condition-only types (e.g. VENUE_SELECT, minimize_fees)
+ *  from being accepted as safety guards via the fallback path — those
+ *  would return fired=true and turn a fail-closed safety boundary into
+ *  fail-open. */
+const LEGACY_SAFETY_ALIASES = new Set(["MAX_POSITION_SIZE", "max_position"]);
+
 function secondsUntilNextUtcMidnight(now = new Date()): number {
   const next = Date.UTC(
     now.getUTCFullYear(),
@@ -40,34 +50,6 @@ function secondsUntilNextUtcMidnight(now = new Date()): number {
   );
   return Math.max(1, Math.ceil((next - now.getTime()) / 1000));
 }
-
-/**
- * Atomic compare-and-delete: releases the lock only when the stored token
- * matches the token this instance acquired. Avoids the TOCTOU race that
- * exists with separate GET → compare → DEL calls, where a stale owner
- * could delete a lock acquired by a new instance after TTL expiry.
- */
-const LOCK_RELEASE_SCRIPT = `
-if redis.call("GET", KEYS[1]) == ARGV[1] then
-  return redis.call("DEL", KEYS[1])
-else
-  return 0
-end
-`;
-
-/**
- * Atomic compare-and-extend: renews the lock TTL only when the stored token
- * matches the token this instance acquired. Prevents a stale runner from
- * extending a lock that already belongs to a different instance after TTL
- * expiry.
- */
-const LOCK_RENEW_SCRIPT = `
-if redis.call("GET", KEYS[1]) == ARGV[1] then
-  return redis.call("PEXPIRE", KEYS[1], ARGV[2])
-else
-  return 0
-end
-`;
 
 export type StrategyRunnerStatus = "RUNNING" | "PAUSED" | "STOPPED";
 
@@ -112,24 +94,48 @@ export class StrategyRunner {
   status: StrategyRunnerStatus = "RUNNING";
   private timer: NodeJS.Timeout | null = null;
   private _pauseReason: string | null = null;
-  get pauseReason() {
-    return this._pauseReason;
-  }
   private delayedActions: Map<string, NodeJS.Timeout> = new Map();
-  /** Throttles EVENT-mode ticks to prevent bursty in-order evaluation */
   private lastTickMs = -MIN_TICK_MS;
   private lastStaleCheckMs = 0;
   private staleCheckBackoffMs = STALE_PRICE_MS;
-  readonly tickMutex = new TickMutex();
+  private tickInFlight = false;
+  private pendingTick = false;
   /** True when a follow-up tick is scheduled — bypasses the min-tick throttle */
-  private _scheduledFollowUp = false;
+  private scheduledFollowUp = false;
+
+  /** Delayed follow-up timeout for TICK/HYBRID modes — cleared on stop() */
+  private followUpTimer: NodeJS.Timeout | null = null;
+
+  /** Tracks the active lock token for the currently in-flight tick.
+   *  Set to the per-acquisition `randomUUID()` after lock acquisition.
+   *  Cleared to `null` by the lock-refresh handler when ownership is lost
+   *  mid-tick.  `evaluate()` checks this before emitting order intents to
+   *  prevent duplicate orders if another instance re-acquires the lock.
+   *
+   *  Scope is per-tick: a stale refresh callback from a prior tick is
+   *  ignored because its captured `lockToken` no longer matches.  This
+   *  prevents a late rejection / ownership-loss from incorrectly aborting
+   *  a newer valid tick. */
+  private activeLockToken: string | null = null;
+
+  /** Pending Redis unlock promise from the most recent tick.
+   *  Set in the finally block when a tick acquired the lock and the
+   *  fire-and-forget unlock is in flight.  Cleared to null on completion.
+   *
+   *  EVENT-mode lock-miss paths check this so they know whether a failed
+   *  SET NX is because our own unlock hasn't completed yet (race window)
+   *  vs. another instance holding the lock (multi-instance dedup). */
+  private pendingRedisUnlock: Promise<unknown> | null = null;
+
+  /** Unlock promise generation that already has a chained EVENT retry.
+   *  Guard is scoped per unlock promise, not globally, so a newer unlock
+   *  generation can still arm exactly one retry. */
+  private pendingRedisUnlockRetryFor: Promise<unknown> | null = null;
 
   /** Tracks child strategy IDs launched by RUN_STRATEGY action blocks */
   readonly childStrategies: Set<string> = new Set();
   /** Maps child strategy IDs to their sub-strategy mode */
   private readonly childModes: Map<string, SubStrategyMode> = new Map();
-  /** Tracks already-warned safety blocks to avoid per-tick log spam */
-  private _warnedSafetyFallbackIds?: Set<string>;
 
   constructor(
     strategyId: string,
@@ -204,6 +210,11 @@ export class StrategyRunner {
     this.childModes.delete(childId);
   }
 
+  /** Returns the reason the runner was paused, or null if not paused */
+  get pauseReason(): string | null {
+    return this._pauseReason;
+  }
+
   /** Get the mode for a child strategy */
 
   getChildMode(childId: string): SubStrategyMode | undefined {
@@ -227,6 +238,8 @@ export class StrategyRunner {
   resume() {
     this.status = "RUNNING";
     this._pauseReason = null;
+    this.staleCheckBackoffMs = STALE_PRICE_MS;
+    this.lastStaleCheckMs = 0;
     this.logger.log("Resumed");
   }
 
@@ -241,6 +254,11 @@ export class StrategyRunner {
       clearTimeout(timer);
     }
     this.delayedActions.clear();
+    // Clear the follow-up timer for TICK/HYBRID coalesced ticks
+    if (this.followUpTimer) {
+      clearTimeout(this.followUpTimer);
+      this.followUpTimer = null;
+    }
     // Note: cascade stop of managed/scoped children is handled by StrategyRegistryService
     if (this.childStrategies.size > 0) {
       this.logger.log(
@@ -309,65 +327,102 @@ export class StrategyRunner {
 
     if (this.status !== "RUNNING") return;
 
-    // Throttle EVENT/HYBRID event-driven ticks to prevent bursty
-    // every_tick triggers from firing on every incoming price event.
+    // Min-tick throttle for EVENT/HYBRID mode to prevent bursty
+    // every-tick triggers from firing on every incoming price event.
     // Bypassed for internally-scheduled follow-up ticks (deferred work
-    // that was coalesced while the mutex was held).
-    const followUp = this._scheduledFollowUp;
-    this._scheduledFollowUp = false;
-    if (!followUp) {
-      const now = Date.now();
-      if (now - this.lastTickMs < MIN_TICK_MS) return;
-      this.lastTickMs = now;
+    // that was coalesced while the lock was held).
+    if (this.execMode === "EVENT" || this.execMode === "HYBRID") {
+      const followUp = this.scheduledFollowUp;
+      this.scheduledFollowUp = false;
+      if (!followUp) {
+        const now = Date.now();
+        if (now - this.lastTickMs < MIN_TICK_MS) return;
+        this.lastTickMs = now;
+      } else {
+        // Advance lastTickMs when consuming a coalesced follow-up tick
+        // so that events arriving during this evaluation still respect
+        // MIN_TICK_MS spacing and cannot start an immediate back-to-back
+        // follow-up chain that defeats the throttle.
+        this.lastTickMs = Date.now();
+      }
     }
 
-    if (!this.tickMutex.tryEnter()) return;
+    // In-process coalescing: only one tick evaluates at a time.
+    if (this.tickInFlight) {
+      this.pendingTick = true;
+      return;
+    }
 
-    // Track whether the Redis lock was successfully acquired so the
-    // finally block can decide whether to bypass the MIN_TICK_MS throttle.
-    // Distributed-lock contention retries must respect the normal throttle
-    // to prevent a hot-loop across process instances.
-    let redisLockAcquired = false;
-    let lockRenewal: NodeJS.Timeout | undefined;
-    let redisClient: ReturnType<typeof this.redis.getClient> | undefined;
-    let lockKey = "";
-    let lockToken = "";
-
+    this.tickInFlight = true;
+    let lockAcquired = false;
+    let lockRefresh: NodeJS.Timeout | null = null;
+    const lockToken = randomUUID();
     try {
-      // Distributed tick lock via Redis SET NX — prevents concurrent
-      // evaluation across multiple process instances.
-      redisClient = this.redis.getClient();
-      lockKey = `strategy:${this.strategyId}:tick:lock`;
-      lockToken = `${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
-
+      // Distributed lock: prevent concurrent evaluation across multiple
+      // strategy-engine instances via Redis SET NX with a 10s TTL.
+      // A per-acquisition token (lockToken) prevents stale unlocks: if a
+      // tick overruns the TTL and a subsequent tick reacquires the lock,
+      // the older tick's finally block can no longer match and delete it.
+      const redisClient = this.redis.getClient();
+      const lockKey = `strategy:${this.strategyId}:tick:lock`;
       const acquired = await redisClient.set(
         lockKey,
         lockToken,
-        "PX",
-        TICK_LOCK_TTL_MS,
+        "EX",
+        10,
         "NX",
       );
-      if (!acquired) {
-        return;
-      }
-      redisLockAcquired = true;
+      if (!acquired) return;
+      lockAcquired = true;
 
-      // Renew the tick lock periodically during long-running evaluations.
-      // Without renewal, a strategy that takes >TICK_LOCK_TTL_MS would allow
-      // a second instance to acquire the lock and execute concurrently.
-      const LOCK_RENEW_MS = 2_000;
-      lockRenewal = setInterval(() => {
-        redisClient!
+      // Cancel any pending delayed follow-up timer now that a real
+      // evaluation is starting.  Only cleared after SET NX succeeds:
+      // clearing before lock acquisition can drop the only scheduled
+      // retry when the lock is held by another instance, leaving the
+      // strategy idle until a fresh market event arrives.
+      if (this.followUpTimer) {
+        clearTimeout(this.followUpTimer);
+        this.followUpTimer = null;
+      }
+      this.activeLockToken = lockToken;
+
+      // Periodically refresh the lock TTL during long-running evaluations.
+      // Uses an atomic Lua check-and-extend script that verifies this runner
+      // still owns the lock (GET == lockToken) before extending the TTL.
+      // - If ownership is lost (key expired or re-acquired by another instance),
+      //   the interval self-cancels and stops extending the foreign lock.
+      // - If Redis is unreachable during refresh, the interval self-cancels
+      //   rather than silently continuing without protection.
+      lockRefresh = setInterval(() => {
+        redisClient
           .eval(
-            LOCK_RENEW_SCRIPT,
+            "if redis.call('GET', KEYS[1]) == ARGV[1] then return redis.call('EXPIRE', KEYS[1], tonumber(ARGV[2])) else return 0 end",
             1,
             lockKey,
             lockToken,
-            String(TICK_LOCK_TTL_MS),
+            "10",
           )
-          .catch(() => {});
-      }, LOCK_RENEW_MS);
-      if (lockRenewal.unref) lockRenewal.unref();
+          .then((result) => {
+            // Ignore if this callback is from a previous tick whose lock
+            // token no longer matches the active acquisition.
+            if (this.activeLockToken !== lockToken) return;
+            if (result !== 1 && lockRefresh) {
+              clearInterval(lockRefresh);
+              lockRefresh = null;
+              this.activeLockToken = null;
+            }
+          })
+          .catch(() => {
+            // Ignore if this callback is from a previous tick whose lock
+            // token no longer matches the active acquisition.
+            if (this.activeLockToken !== lockToken) return;
+            if (lockRefresh) {
+              clearInterval(lockRefresh);
+              lockRefresh = null;
+            }
+            this.activeLockToken = null;
+          });
+      }, 5_000).unref();
 
       // Enforce daily execution limit — auto-stop if exceeded
       const key = dailyExecKey(this.strategyId);
@@ -393,10 +448,6 @@ export class StrategyRunner {
       await this.evaluate();
     } catch (err) {
       this.logger.error("Tick evaluation failed", err);
-      // Pause on counter increment failures — orders may have been
-      // published but the accounting state (order counters, orders-per-min
-      // sliding window) is inconsistent. Continuing would risk overtrading
-      // and safety-block bypass.
       if (
         err instanceof Error &&
         err.message.includes("Counter increment failed")
@@ -407,22 +458,210 @@ export class StrategyRunner {
         );
       }
     } finally {
-      if (lockRenewal) clearInterval(lockRenewal);
-      if (redisLockAcquired && redisClient) {
-        try {
-          await redisClient.eval(LOCK_RELEASE_SCRIPT, 1, lockKey, lockToken);
-        } catch {
-          /* lock cleanup is best-effort — no fallback needed */
-        }
+      // Stop the lock-refresh interval and nullify the handle so any
+      // already-queued Promise callbacks from this tick's interval catch
+      // the nulled reference and cannot mutate activeLockToken during
+      // a subsequent tick.
+      if (lockRefresh) {
+        clearInterval(lockRefresh);
+        lockRefresh = null;
       }
-      if (this.tickMutex.exit()) {
-        // Only bypass the MIN_TICK_MS throttle when we successfully evaluated.
-        // Distributed-lock contention retries go through normal throttling to
-        // avoid a hot-loop across process instances.
-        if (redisLockAcquired) {
-          this._scheduledFollowUp = true;
+
+      // Release the lock token so stale refresh callbacks from a prior
+      // tick can never match and spuriously clear the active token during
+      // a later evaluation.
+      if (this.activeLockToken === lockToken) {
+        this.activeLockToken = null;
+      }
+
+      // Start Redis distributed unlock before releasing tickInFlight so
+      // follow-up ticks can observe pendingRedisUnlock in local race windows.
+      if (lockAcquired) {
+        const redisClient = this.redis.getClient();
+        const lockKey = `strategy:${this.strategyId}:tick:lock`;
+        const unlockPromise = redisClient.eval(
+          "if redis.call('GET', KEYS[1]) == ARGV[1] then return redis.call('DEL', KEYS[1]) else return 0 end",
+          1,
+          lockKey,
+          lockToken,
+        );
+        const thisUnlock = unlockPromise;
+        this.pendingRedisUnlock = thisUnlock;
+        thisUnlock
+          .then((result) => {
+            if (result !== 1) {
+              this.logger.warn(
+                `Lock release for ${this.strategyId} did not delete the key (already expired or taken by another instance)`,
+              );
+            }
+          })
+          .catch((err) => {
+            this.logger.warn(
+              `Failed to release lock for ${this.strategyId}: ${String(err)} — lock will expire naturally in 10s`,
+            );
+          })
+          .finally(() => {
+            if (this.pendingRedisUnlock === thisUnlock) {
+              this.pendingRedisUnlock = null;
+            }
+          });
+      }
+
+      // Release the local in-flight gate immediately — do NOT block on
+      // Redis unlock.  A slow or stuck Redis eval() would otherwise hold
+      // tickInFlight=true and stall all tick processing, turning a
+      // transient Redis hiccup into a full strategy outage.
+      //
+      // The Redis distributed lock has a 10s TTL and will expire
+      // naturally if the fire-and-forget unlock below fails.  Releasing
+      // tickInFlight early means a subsequent tick may race the unlock,
+      // but SET NX correctly handles that: if the lock TTL is still
+      // active, the new tick fails SET NX and retries via the normal
+      // pendingTick retry path.
+      this.tickInFlight = false;
+      if (this.pendingTick) {
+        this.pendingTick = false;
+        if (lockAcquired) {
+          // Fire a coalesced follow-up tick after release.
+          // This catches ticks/events that arrived while the in-flight
+          // evaluation was running (they set pendingTick and returned).
+          //
+          // - EVENT mode: immediate self-schedule, bypassing min-tick
+          //   throttle via scheduledFollowUp flag (price-driven; real-time
+          //   matters).
+          // - TICK/HYBRID mode: delayed follow-up that respects the
+          //   configured tick cadence. Without this delay, a long
+          //   evaluation that overlaps with multiple interval ticks
+          //   would trigger an immediate catch-up chain that can
+          //   overshoot the tick period and exhaust the daily execution
+          //   limit early.
+          if (this.execMode === "EVENT") {
+            this.scheduledFollowUp = true;
+            void this.tick();
+          } else {
+            if (this.followUpTimer) clearTimeout(this.followUpTimer);
+            const delay = Math.max(this.tickMs, MIN_TICK_MS);
+            this.followUpTimer = setTimeout(() => {
+              this.followUpTimer = null;
+              void this.tick();
+            }, delay);
+          }
+        } else if (this.execMode !== "EVENT") {
+          // Lock acquisition failed (SET NX returned null), but one or
+          // more ticks/events arrived while this attempt was waiting.
+          // Schedule a delayed retry instead of silently dropping the
+          // pending events.  A short backoff prevents retry storms
+          // under sustained contention while ensuring that safety /
+          // action side effects are not missed when the lock is
+          // temporarily stale (e.g. TTL still active after a crash of
+          // the previous holder and no new price event arrives to
+          // trigger a natural re-evaluation).
+          //
+          // EVENT mode is excluded: in a multi-instance deployment
+          // where every instance receives the same price event, the
+          // winning instance's finally block already processes the
+          // coalesced pending events.  A losing-instance retry here
+          // would re-evaluate the same latest state and produce
+          // duplicate order intents / sub-strategy launches.
+          if (this.followUpTimer) clearTimeout(this.followUpTimer);
+          const RETRY_BACKOFF_MS = 200;
+          this.followUpTimer = setTimeout(() => {
+            this.followUpTimer = null;
+            this.scheduledFollowUp = true;
+            void this.tick();
+          }, RETRY_BACKOFF_MS);
+        } else if (this.pendingRedisUnlock) {
+          // EVENT mode: one or more price events were coalesced
+          // (pendingTick) while this tick's SET NX was awaiting a
+          // Redis response, and lock acquisition failed because our
+          // own previous tick's Redis unlock is still pending.
+          //
+          // This is the same local-race-window scenario handled below
+          // for the no-pendingTick case (POLA-5150), but it is missed
+          // when pendingTick was true because the pendingTick flag
+          // gates the lower retry branch.  Without this clause the
+          // coalesced events would be silently dropped: no retry fires
+          // and no fresh price event is guaranteed to arrive.
+          const pendingUnlock = this.pendingRedisUnlock;
+          // One-shot guard scoped to this exact unlock promise generation.
+          if (this.pendingRedisUnlockRetryFor !== pendingUnlock) {
+            this.pendingRedisUnlockRetryFor = pendingUnlock;
+            if (this.followUpTimer) clearTimeout(this.followUpTimer);
+            void pendingUnlock
+              .finally(() => {
+                const wasCurrent =
+                  this.pendingRedisUnlockRetryFor === pendingUnlock;
+                if (wasCurrent) {
+                  this.pendingRedisUnlockRetryFor = null;
+                }
+                if (wasCurrent && this.status === "RUNNING") {
+                  this.scheduledFollowUp = true;
+                  void this.tick();
+                }
+              })
+              .catch(() => {});
+          }
         }
-        void this.tick();
+        // EVENT mode with pendingTick=true and no pendingRedisUnlock:
+        // the lock is held by another instance.  Do NOT schedule a
+        // crash-recovery retry — in a multi-instance deployment where
+        // every instance receives the same price events, the winning
+        // instance already handles the event (and any coalesced
+        // pendingTick it may have).  A retry here would re-evaluate
+        // the same data after the winner releases the lock, producing
+        // duplicate order intents and sub-strategy launches.
+        //
+        // If the lock holder crashes, the lock expires after the TTL
+        // and the next incoming price event naturally re-acquires it.
+      } else if (!lockAcquired && this.status === "RUNNING") {
+        // Lock acquisition failed without any pending coalesced tick.
+        //
+        // HYBRID mode schedules a 200 ms retry so the strategy can
+        // re-evaluate before the next interval tick fires.
+        //
+        // EVENT mode is deliberately NOT given a blanket retry: in a
+        // multi-instance deployment where every instance receives the
+        // same price event, the instance that won the lock is already
+        // evaluating the event.  A losing-instance retry would
+        // re-evaluate the same data after the winner releases the lock,
+        // producing duplicate order intents and sub-strategy launches.
+        //
+        // However, the early tickInFlight release before the Redis
+        // unlock creates a local race window: tickInFlight is false, a
+        // new EVENT tick enters, but SET NX fails because the previous
+        // tick's lock key hasn't been deleted yet.  In that case our own
+        // pendingRedisUnlock is non-null and we MUST retry once the
+        // unlock completes — otherwise the event is silently dropped.
+        if (this.pendingRedisUnlock) {
+          const pendingUnlock = this.pendingRedisUnlock;
+          // One-shot guard scoped to this exact unlock promise generation.
+          if (this.pendingRedisUnlockRetryFor !== pendingUnlock) {
+            this.pendingRedisUnlockRetryFor = pendingUnlock;
+            // Bypass the min-tick throttle when the retry fires so the
+            // evaluation is not blocked by lastTickMs having been advanced
+            // by the failed tick itself.
+            if (this.followUpTimer) clearTimeout(this.followUpTimer);
+            void pendingUnlock
+              .finally(() => {
+                const wasCurrent =
+                  this.pendingRedisUnlockRetryFor === pendingUnlock;
+                if (wasCurrent) {
+                  this.pendingRedisUnlockRetryFor = null;
+                }
+                if (wasCurrent && this.status === "RUNNING") {
+                  this.scheduledFollowUp = true;
+                  void this.tick();
+                }
+              })
+              .catch(() => {});
+          }
+        } else if (this.execMode === "HYBRID" && this.followUpTimer === null) {
+          this.followUpTimer = setTimeout(() => {
+            this.followUpTimer = null;
+            this.scheduledFollowUp = true;
+            void this.tick();
+          }, 200);
+        }
       }
     }
   }
@@ -590,68 +829,73 @@ export class StrategyRunner {
 
     // 2. SAFETY — any failure stops the strategy
     for (const block of this.safety) {
-      let evaluator = SAFETY_REGISTRY[block.type];
+      const evaluator = SAFETY_REGISTRY[block.type];
+      // Fail closed: unknown / unregistered safety block types must stop
+      // the strategy. Skipping an unknown guard could allow a strategy to
+      // keep trading without an intended safety stop.
+      //
+      // Backward compat: MAX_POSITION_SIZE was historically a dual-purpose
+      // block placed under both safety and conditions.  It was moved to
+      // CONDITION_REGISTRY-only, but legacy persisted strategies may still
+      // carry it under safety.  The explicit LEGACY_SAFETY_ALIASES allowlist
+      // evaluates it via CONDITION_REGISTRY as a safety guard: if the
+      // condition passes (fired=true), safety passes; if it fails
+      // (fired=false), the strategy is stopped.
+      //
+      // Restricting the fallback to an explicit allowlist prevents
+      // misconfigured condition-only types (e.g. VENUE_SELECT,
+      // minimize_fees) from being accepted as safety guards via the
+      // fallback path — those would return fired=true and turn a
+      // fail-closed safety boundary into fail-open.
       if (!evaluator) {
-        if (block.type === "MAX_POSITION_SIZE") {
-          // Runtime compatibility: MAX_POSITION_SIZE was moved from
-          // SAFETY_REGISTRY to CONDITION_REGISTRY.  Fall back to the
-          // condition registry so existing persisted strategies don't
-          // silently lose their safety guards.
-          const fallback = CONDITION_REGISTRY[block.type];
-          if (fallback) {
-            if (!this._warnedSafetyFallbackIds?.has(block.id)) {
-              (this._warnedSafetyFallbackIds ??= new Set()).add(block.id);
-              this.logger.warn(
-                `Safety block "${block.id}" (type=${block.type}) resolved from ` +
-                  `CONDITION_REGISTRY.  Move it to the conditions section in your ` +
-                  `strategy definition.`,
-              );
+        if (LEGACY_SAFETY_ALIASES.has(block.type)) {
+          const fallbackEvaluator = CONDITION_REGISTRY[block.type];
+          if (fallbackEvaluator) {
+            const resolvedBlock = {
+              ...block,
+              params: resolveParams(
+                { ...(block.config ?? {}), ...(block.params ?? {}) },
+                ctx.variables ?? {},
+              ),
+            };
+            const result = await fallbackEvaluator.evaluate(
+              resolvedBlock,
+              ctx,
+              this.redis,
+              this.prisma,
+            );
+            if (!result.fired) {
+              this.stop();
+              await this.onStatusChange("STOPPED", result.reason);
+              await this.prisma.strategy
+                .update({
+                  where: { id: this.strategyId },
+                  data: { status: StrategyStatus.IDLE },
+                })
+                .catch(() => {});
+              await this.emitStrategyEvent("STRATEGY_STOPPED", result.reason);
+              return;
             }
-            evaluator = fallback;
-          } else {
-            this.logger.error(
-              `Unknown safety block type: ${block.type} (blockId=${block.id}). ` +
-                `Stopping strategy to avoid silently disabling a safety guard.`,
-            );
-            this.stop();
-            await this.onStatusChange(
-              "STOPPED",
-              `unknown safety block: ${block.type}`,
-            );
-            await this.prisma.strategy
-              .update({
-                where: { id: this.strategyId },
-                data: { status: StrategyStatus.IDLE },
-              })
-              .catch(() => {});
-            await this.emitStrategyEvent(
-              "STRATEGY_STOPPED",
-              `unknown safety block: ${block.type}`,
-            );
-            return;
+            continue;
           }
-        } else {
-          this.logger.error(
-            `Unknown safety block type: ${block.type} (blockId=${block.id}). ` +
-              `Stopping strategy to avoid silently disabling a safety guard.`,
-          );
-          this.stop();
-          await this.onStatusChange(
-            "STOPPED",
-            `unknown safety block: ${block.type}`,
-          );
-          await this.prisma.strategy
-            .update({
-              where: { id: this.strategyId },
-              data: { status: StrategyStatus.IDLE },
-            })
-            .catch(() => {});
-          await this.emitStrategyEvent(
-            "STRATEGY_STOPPED",
-            `unknown safety block: ${block.type}`,
-          );
-          return;
         }
+
+        this.stop();
+        await this.onStatusChange(
+          "STOPPED",
+          `safety_block_type_missing:${block.type}`,
+        );
+        await this.prisma.strategy
+          .update({
+            where: { id: this.strategyId },
+            data: { status: StrategyStatus.IDLE },
+          })
+          .catch(() => {});
+        await this.emitStrategyEvent(
+          "STRATEGY_STOPPED",
+          `safety_block_type_missing:${block.type}`,
+        );
+        return;
       }
 
       const resolvedBlock = {
@@ -710,12 +954,14 @@ export class StrategyRunner {
     // 4. CONDITIONS — ALL conditions must pass
     for (const block of this.conditions) {
       const evaluator = CONDITION_REGISTRY[block.type];
+      // Fail closed: unknown / unregistered condition block types must
+      // abort the tick. Skipping an unknown condition could allow actions
+      // to fire when a condition type is missing or unsupported.
       if (!evaluator) {
-        // Unknown condition — fail closed
         this.logger.warn(
           `Unknown condition block type: ${block.type}. Failing closed.`,
         );
-        return; // condition failed, skip tick
+        return;
       }
 
       const resolvedBlock = {
@@ -780,8 +1026,33 @@ export class StrategyRunner {
         i.marketId !== "__run_strategy__" && i.tokenId !== "__cancel_all__",
     );
 
-    // Handle sub-strategy launches
+    // Abort tick if lock ownership was lost mid-evaluation.
+    // The lock-refresh handler (setInterval in tick()) clears activeLockToken
+    // when the Lua GET==lockToken check returns non-1 — meaning the key
+    // expired or was re-acquired by another instance. Continuing through
+    // evaluate() after ownership loss can emit duplicate order intents and
+    // launch duplicate sub-strategies across instances.
+    if (this.activeLockToken === null) {
+      this.logger.warn(
+        `Tick ownership lost for ${this.strategyId} — discarding ${orderIntents.length} order intent(s) and ${runStrategyIntents.length} sub-strategy launch(es)`,
+      );
+      return;
+    }
+
+    // Handle sub-strategy launches.
+    // Re-check lock ownership before every onRunStrategy() call: a long
+    // sub-strategy launch can outlive the Redis lock-refresh interval.
+    // If the activeLockToken was cleared mid-loop by a stale callback or
+    // ownership-loss event, continuing to launch additional sub-strategies
+    // would violate the cross-instance mutual-exclusion guarantee.
     for (const intent of runStrategyIntents) {
+      if (this.activeLockToken === null) {
+        this.logger.warn(
+          `Tick ownership lost for ${this.strategyId} during sub-strategy launch loop — ${runStrategyIntents.length - runStrategyIntents.indexOf(intent)} remaining launch(es) discarded`,
+        );
+        break;
+      }
+
       const childStrategyId = intent.tokenId;
       const mode = intent.size as SubStrategyMode;
 
@@ -814,8 +1085,29 @@ export class StrategyRunner {
           this.logger.error(
             `Failed to launch sub-strategy ${childStrategyId}: ${String(err)}`,
           );
+          continue;
+        }
+        // Ownership may have been lost during the awaited launch call.
+        // Stop launching further sub-strategies to preserve the
+        // cross-instance mutual-exclusion guarantee.
+        if (this.activeLockToken === null) {
+          this.logger.warn(
+            `Tick ownership lost for ${this.strategyId} after launching ${childStrategyId} — discarding remaining sub-strategy launches`,
+          );
+          break;
         }
       }
+    }
+
+    // Re-check lock ownership after sub-strategy launches — those await
+    // onRunStrategy() calls may have taken long enough for ownership to
+    // flip mid-tick.  Emitting orders after ownership loss reintroduces
+    // the duplicate-side-effect race the lock is meant to prevent.
+    if (this.activeLockToken === null) {
+      this.logger.warn(
+        `Tick ownership lost for ${this.strategyId} before emitting ${orderIntents.length} order intent(s) — discarding`,
+      );
+      return;
     }
 
     if (orderIntents.length > 0) {
