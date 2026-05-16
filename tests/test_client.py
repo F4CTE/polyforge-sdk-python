@@ -3705,7 +3705,7 @@ class TestCopyTradingCrud:
         assert "/trades" in source
 
 
-class TestNewModels:
+class TestNewModelsPOLA96:
     """Tests for the new model dataclasses added in POLA-96."""
 
     def test_leaderboard_entry_defaults(self):
