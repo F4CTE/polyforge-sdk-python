@@ -568,28 +568,6 @@ export class StrategyRunner {
             this.scheduledFollowUp = true;
             void this.tick();
           }, 200);
-        } else if (this.execMode === "EVENT" && this.followUpTimer === null) {
-          // Crash-recovery retry: another instance holds the lock
-          // (pendingRedisUnlock is null, so this is not a local race).
-          // Wait for the lock TTL to expire, then re-attempt evaluation.
-          //
-          // In a multi-instance deployment, if the lock holder crashes
-          // mid-evaluation, losing instances would permanently drop the
-          // event without this retry — leaving the strategy stale until a
-          // new external price event arrives.  The retry fires after 10s
-          // (lock TTL) plus a 1-2s jittered grace period to avoid
-          // thundering-herd on multi-instance crash detection.
-          //
-          // scheduledFollowUp is set inside the callback (not at
-          // scheduling time) so unrelated ticks cannot consume the
-          // throttle-bypass flag before this retry fires.
-          const LOCK_TTL_MS = 10_000;
-          const CRASH_GRACE_MS = 1_000 + Math.floor(Math.random() * 1_000);
-          this.followUpTimer = setTimeout(() => {
-            this.followUpTimer = null;
-            this.scheduledFollowUp = true;
-            void this.tick();
-          }, LOCK_TTL_MS + CRASH_GRACE_MS);
         }
       }
 

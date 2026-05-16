@@ -99,11 +99,8 @@ export const SAFETY_REGISTRY: Record<string, BlockEvaluator> = {
   stop_if_exposure_exceeds: StopIfExposureExceedsBlock,
   PAUSE_AFTER_FILL: PauseAfterFillBlock,
   pause_after_fill: PauseAfterFillBlock,
-  // MAX_POSITION_SIZE registered here for backward compatibility with legacy
-  // strategy configs that still carry it under the safety section.  The
-  // canonical registration remains in CONDITION_REGISTRY.
-  MAX_POSITION_SIZE: MaxPositionBlock,
-  max_position: MaxPositionBlock,
+  // MAX_POSITION_SIZE intentionally removed — canonical entry is in CONDITION_REGISTRY.
+  // Runtime backward compat is handled by strategy-runner.ts condition fallback.
   max_orders_total: MaxOrdersTotalBlock,
 };
 
