@@ -7770,6 +7770,8 @@ class TestMiscUtilityEndpointRoundtrips:
 
         def handler(request):
             captured["method"] = request.method
+            if request.content:
+                captured["body"] = json.loads(request.content)
             return httpx.Response(200, json={
                 "yesPercent": 60, "noPercent": 40, "totalVotes": 5,
                 "userVote": {"direction": "BUY", "confidence": 0.8},
@@ -7781,11 +7783,43 @@ class TestMiscUtilityEndpointRoundtrips:
             assert report.user_vote is not None
             assert report.user_vote.direction == "BUY"
 
-            voted = client.vote_market_sentiment("m1")
+            voted = client.vote_market_sentiment("m1", direction="BUY", confidence=80)
             assert captured["method"] == "POST"
+            assert captured["body"] == {"direction": "BUY", "confidence": 80}
             assert voted.total_votes == 5
         finally:
             client.close()
+
+    def test_async_vote_market_sentiment_sends_body(self):
+        """AsyncPolyforgeClient.vote_market_sentiment sends direction/confidence JSON body."""
+        import asyncio
+
+        captured = {}
+
+        class _AsyncCaptureTransport(httpx.AsyncBaseTransport):
+            async def handle_async_request(self, request):
+                captured["method"] = request.method
+                captured["body"] = json.loads(request.content)
+                return httpx.Response(200, json={
+                    "yesPercent": 60, "noPercent": 40, "totalVotes": 5,
+                    "userVote": {"direction": "BUY", "confidence": 0.8},
+                })
+
+        async def _run():
+            async with AsyncPolyforgeClient(api_key="test", api_url="http://localhost:9999") as client:
+                client._client = httpx.AsyncClient(
+                    base_url="http://localhost:9999",
+                    headers={"Authorization": "Bearer test"},
+                    transport=_AsyncCaptureTransport(),
+                )
+                report = await client.vote_market_sentiment(
+                    "m1", direction="SELL", confidence=50,
+                )
+                assert captured["method"] == "POST"
+                assert captured["body"] == {"direction": "SELL", "confidence": 50}
+                assert report.total_votes == 5
+
+        asyncio.run(_run())
 
     def test_update_order_journal_patches_with_optional_note(self):
         captured = {}
@@ -8065,6 +8099,34 @@ class TestMiscUtilityEndpointsAsync:
                 assert res.data[0].mood == "DISCIPLINED"
                 assert res.data[0].id == "ord-1"
                 assert res.data[0].note == "plan"
+            finally:
+                await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_vote_market_sentiment_post_body(self):
+        import asyncio
+
+        captured = {}
+
+        def handler(request):
+            captured["method"] = request.method
+            if request.content:
+                captured["body"] = json.loads(request.content)
+            return httpx.Response(200, json={
+                "yesPercent": 60, "noPercent": 40, "totalVotes": 5,
+                "userVote": {"direction": "BUY", "confidence": 0.8},
+            })
+
+        async def _run():
+            client = self._async_client_with(handler)
+            try:
+                voted = await client.vote_market_sentiment(
+                    "m1", direction="BUY", confidence=80,
+                )
+                assert captured["method"] == "POST"
+                assert captured["body"] == {"direction": "BUY", "confidence": 80}
+                assert voted.total_votes == 5
             finally:
                 await client.close()
 
