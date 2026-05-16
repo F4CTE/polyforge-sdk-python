@@ -174,6 +174,7 @@ class Strategy:
     blocks: list[StrategyBlock] = field(default_factory=list)
     created_at: str = ""
     updated_at: str = ""
+    kalshi_subaccount: str | None = None
 
 
 @dataclass
@@ -906,6 +907,24 @@ class AccuracyScore:
     win_rate: str = ""
     calibration: List[CalibrationBucket] = field(default_factory=list)
     by_category: Dict[str, CategoryAccuracy] = field(default_factory=dict)
+
+
+@dataclass
+class AccuracyLeaderboardEntry:
+    """A single entry in the accuracy leaderboard, ranked by win-rate.
+
+    The platform returns ``pnl`` and ``winRate`` as decimal strings to
+    preserve precision.
+    """
+
+    rank: int = 0
+    user_id: str = ""
+    username: str = ""
+    display_name: Optional[str] = None
+    avatar_url: Optional[str] = None
+    pnl: str = ""
+    win_rate: str = ""
+    trade_count: int = 0
 
 
 @dataclass
@@ -1782,10 +1801,10 @@ class JournalEntry:
 
 @dataclass
 class SystemHealthPublic:
-    """Public health response for GET /health (unauthenticated).
+    """Public health/status response for GET /health (unauthenticated).
 
-    Returns only public status information; operational internals
-    (DB, Redis, queue depth, internal services) are not exposed.
+    Returns only public-facing status fields. Operational internals
+    (DB, Redis, queue, services) are not exposed on this endpoint.
     """
 
     status: str = ""

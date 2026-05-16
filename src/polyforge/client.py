@@ -26,6 +26,7 @@ from polyforge.errors import (
     ServerError,
 )
 from polyforge.models import (
+    AccuracyLeaderboardEntry,
     AccuracyScore,
     AiQueryResponse,
     Alert,
@@ -111,8 +112,8 @@ from polyforge.models import (
     StrategyEvent,
     StrategyStatusResponse,
     StrategyTemplate,
-    SystemHealthAuthenticated,
     SystemHealthPublic,
+    SystemHealthAuthenticated,
     TickSizeInfo,
     Token,
     TopTraderEntry,
@@ -156,6 +157,7 @@ _FIELD_ALIASES: dict[str, dict[str, str]] = {
 }
 
 _MODEL_REGISTRY: dict[str, type] = {
+    "AccuracyLeaderboardEntry": AccuracyLeaderboardEntry,
     "Market": Market,
     "Token": Token,
     "Strategy": Strategy,
@@ -315,7 +317,9 @@ def _parse(cls: type[T], data: dict[str, Any]) -> T:
     kwargs: dict[str, Any] = {}
 
     for f in fields(cls):  # type: ignore[arg-type]
-        raw = aliased.get(f.name) or snake_data.get(f.name)
+        raw = aliased.get(f.name)
+        if raw is None:
+            raw = snake_data.get(f.name)
         if raw is None:
             continue
 
@@ -370,16 +374,16 @@ def _raise_for_status(response: httpx.Response) -> None:
         return
 
     try:
-        body = response.json()
+        body: dict[str, Any] = response.json()
     except Exception:
         body = {}
 
-    message = body.get("message") or body.get("error") or response.reason_phrase or "Unknown error"
-    code = body.get("code", "")
-    request_id = body.get("requestId", "")
-    suggestion = body.get("suggestion") or None
+    message: str = body.get("message", "") or body.get("error", "") or response.reason_phrase or "Unknown error"
+    code: str = str(body.get("code") or "")
+    request_id: str = str(body.get("requestId") or "")
+    suggestion: str | None = body.get("suggestion") or None
 
-    kwargs = dict(status_code=response.status_code, code=code, request_id=request_id, suggestion=suggestion)
+    kwargs: dict[str, Any] = dict(status_code=response.status_code, code=code, request_id=request_id, suggestion=suggestion)
 
     match response.status_code:
         case 401:
@@ -447,6 +451,7 @@ _VALID_SPORTS_EVENT_STATUSES = frozenset(
 _VALID_MARKET_ALERT_OUTCOMES = frozenset({"YES", "NO", "Yes", "No"})
 _VALID_MARKET_ALERT_CONDITIONS = frozenset({"above", "below"})
 _VALID_MARKET_HISTORY_PERIODS = frozenset({"1d", "7d", "30d", "90d"})
+_VALID_ACCURACY_LEADERBOARD_PERIODS = frozenset({"7d", "30d", "allTime"})
 _VALID_ORDER_MOODS = frozenset(
     {"CONFIDENT", "UNCERTAIN", "FOMO", "DISCIPLINED", "REVENGE"}
 )
@@ -590,8 +595,17 @@ def _validate_copy_config_numeric_fields(fields: dict[str, Any]) -> None:
     for name in ("sizeValue", "maxExposure", "maxDailyLoss"):
         if name in fields and fields[name] is not None:
             _validate_positive_numberish_param(name, fields[name])
+            fields[name] = str(fields[name])
     if "priceOffset" in fields and fields["priceOffset"] is not None:
         _validate_finite_numberish_param("priceOffset", fields["priceOffset"])
+        fields["priceOffset"] = str(fields["priceOffset"])
+
+
+_UNSET: Any = object()
+
+_COPY_CONFIG_KNOWN_KWARGS: frozenset[str] = frozenset({
+    "mode", "sizeValue", "maxExposure", "maxDailyLoss", "priceOffset",
+})
 
 
 _BLOCKED_HOSTNAMES: set[str] = {
@@ -656,7 +670,7 @@ def _resolve_and_validate_ips(hostname: str) -> list[str]:
 
     validated: list[str] = []
     for _family, _, _, _, sockaddr in addrinfos:
-        ip_str = sockaddr[0]
+        ip_str = str(sockaddr[0])
         try:
             addr = ipaddress.ip_address(ip_str)
         except ValueError:
@@ -817,21 +831,27 @@ class PolyforgeClient:
         _raise_for_status(resp)
         return resp.text
 
+    def _get_no_auth(self, path: str) -> Any:
+        # Build a request from the existing client so we inherit proxy/CA
+        # environment, then strip credentials. Using trust_env=False on a
+        # fresh client would suppress proxy/CA config alongside NetRCAuth.
+        req = self._client.build_request("GET", path)
+        req.headers.pop("authorization", None)
+        resp = self._client.send(req, auth=None)
+        _raise_for_status(resp)
+        return resp.json()
+
     # -- Health --
 
     def get_health(self) -> SystemHealthPublic:
-        """Get the public API health payload (unauthenticated).
+        """Get the public API health payload.
 
-        Calls ``GET /health`` and returns only public status information.
-        No API key is required; operational internals are not exposed.
-
-        .. versionadded:: 1.0.0
+        Calls ``GET /health`` (unauthenticated) and returns public status
+        information. Operational internals (DB, Redis, queue, services)
+        are not exposed on this endpoint.
         """
-        request = self._client.build_request("GET", "/health")
-        request.headers.pop("Authorization", None)
-        resp = self._client.send(request)
-        _raise_for_status(resp)
-        return _parse(SystemHealthPublic, resp.json())
+        data = self._get_no_auth("/health")
+        return _parse(SystemHealthPublic, data)
 
     def get_health_authenticated(self) -> SystemHealthAuthenticated:
         """Get authenticated health/status data with full operational metrics.
@@ -1093,6 +1113,7 @@ class PolyforgeClient:
         safety: list[dict[str, Any]] | None = None,
         logic_blocks: list[dict[str, Any]] | None = None,
         calc_blocks: list[dict[str, Any]] | None = None,
+        kalshi_subaccount: str | None = None,
         tags: list[str] | None = None,
         variables: list[dict[str, Any]] | None = None,
         canvas: dict[str, Any] | None = None,
@@ -1112,6 +1133,7 @@ class PolyforgeClient:
             safety: Safety block definitions.
             logic_blocks: Logic block definitions.
             calc_blocks: Calc block definitions.
+            kalshi_subaccount: Kalshi subaccount identifier for P&L attribution.
             tags: Strategy tags.
             variables: Strategy variable definitions.
             canvas: Canvas layout metadata.
@@ -1139,6 +1161,8 @@ class PolyforgeClient:
             body["logicBlocks"] = logic_blocks
         if calc_blocks is not None:
             body["calcBlocks"] = calc_blocks
+        if kalshi_subaccount is not None:
+            body["kalshiSubaccount"] = kalshi_subaccount
         if tags is not None:
             body["tags"] = tags
         if variables is not None:
@@ -1189,6 +1213,7 @@ class PolyforgeClient:
         variables: list[dict[str, Any]] | None = None,
         canvas: dict[str, Any] | None = None,
         market_slots: list[dict[str, Any]] | None = None,
+        kalshi_subaccount: str | None = None,
     ) -> Strategy:
         body: dict[str, Any] = {}
         if name is not None:
@@ -1223,6 +1248,8 @@ class PolyforgeClient:
             body["canvas"] = canvas
         if market_slots is not None:
             body["marketSlots"] = market_slots
+        if kalshi_subaccount is not None:
+            body["kalshiSubaccount"] = kalshi_subaccount
         return _parse(Strategy, self._patch(f"/api/v1/strategies/{_encode_path(strategy_id)}", json=body))
 
     def delete_strategy(self, strategy_id: str) -> None:
@@ -1893,6 +1920,21 @@ class PolyforgeClient:
         """Trigger a manual cross-venue matching pass."""
         data = self._post("/api/v1/arbitrage/matches/sync")
         return _parse(MatchSyncResult, data)
+
+    def create_market_match(self, polymarket_id: str, kalshi_id: str) -> MarketMatch:
+        """Manually match two markets across venues."""
+        body: dict[str, Any] = {"polymarketId": polymarket_id, "kalshiId": kalshi_id}
+        data = self._post("/api/v1/arbitrage/matches", json=body)
+        return _parse(MarketMatch, data)
+
+    def verify_market_match(self, match_id: str) -> MarketMatch:
+        """Verify/confirm an auto-matched market pair."""
+        data = self._post(f"/api/v1/arbitrage/matches/{_encode_path(match_id)}/verify")
+        return _parse(MarketMatch, data)
+
+    def delete_market_match(self, match_id: str) -> None:
+        """Remove a market match (unmatch)."""
+        self._delete(f"/api/v1/arbitrage/matches/{_encode_path(match_id)}")
 
     def get_spread_comparison(self) -> list[SpreadSummary]:
         """Get bid/ask spread comparison across all matched venues."""
@@ -2852,6 +2894,9 @@ class PolyforgeClient:
         if price_offset is not None:
             body["priceOffset"] = price_offset
         _validate_copy_config_numeric_fields(body)
+        for key in ("sizeValue", "maxExposure", "maxDailyLoss", "priceOffset"):
+            if key in body and body[key] is not None:
+                body[key] = str(body[key])
         return _parse(CopyConfig, self._post("/api/v1/copy", json=body))
 
     def get_copy_config(self, copy_id: str) -> CopyConfig:
@@ -2866,23 +2911,74 @@ class PolyforgeClient:
         data = self._get(f"/api/v1/copy/{_encode_path(copy_id)}")
         return _parse(CopyConfig, data)
 
-    def update_copy_config(self, copy_id: str, **kwargs: Any) -> CopyConfig:
+    def update_copy_config(
+        self,
+        copy_id: str,
+        *,
+        mode: str | None = _UNSET,
+        size_value: float | None = _UNSET,
+        max_exposure: float | None = _UNSET,
+        max_daily_loss: float | None = _UNSET,
+        price_offset: float | None = _UNSET,
+        **kwargs: Any,
+    ) -> CopyConfig:
         """Update an existing copy-trading configuration.
 
-        Pass API field names as keyword arguments (e.g. ``mode="FIXED"``,
-        ``sizeValue=100``).
+        Prefer the keyword-only ``snake_case`` parameters for new code.
+        The ``camelCase`` keyword arguments (``sizeValue``, ``maxExposure``,
+        ``maxDailyLoss``, ``priceOffset``) are still accepted for backward
+        compatibility but will emit a :exc:`DeprecationWarning`.
+
+        Explicit ``None`` values are sent to the server as JSON ``null``
+        (useful for clearing optional fields such as ``maxDailyLoss``).
 
         Args:
             copy_id: The copy config ID to update.
-            **kwargs: Fields to update (passed directly to the API).
+            mode: Copy mode (``"PERCENTAGE"``, ``"FIXED"``, or ``"MIRROR"``).
+            size_value: Trade size value (percentage or fixed USDC amount).
+            max_exposure: Maximum USDC exposure per copied wallet.
+            max_daily_loss: Maximum daily loss limit in USDC.
+            price_offset: Price offset applied to copied orders.
 
         Returns:
             The updated :class:`CopyConfig`.
+
+        Raises:
+            TypeError: If unknown keyword arguments are passed.
         """
-        _validate_copy_config_numeric_fields(kwargs)
+        body: dict[str, Any] = {}
+        if mode is not _UNSET:
+            body["mode"] = mode
+        if size_value is not _UNSET:
+            body["sizeValue"] = size_value
+        if max_exposure is not _UNSET:
+            body["maxExposure"] = max_exposure
+        if max_daily_loss is not _UNSET:
+            body["maxDailyLoss"] = max_daily_loss
+        if price_offset is not _UNSET:
+            body["priceOffset"] = price_offset
+
+        if kwargs:
+            unknown = {k for k in kwargs if k not in _COPY_CONFIG_KNOWN_KWARGS}
+            if unknown:
+                raise TypeError(
+                    f"update_copy_config got unexpected keyword arguments: "
+                    f"{', '.join(sorted(unknown))}"
+                )
+            body.update(kwargs)
+            import warnings
+            warnings.warn(
+                "Passing camelCase keyword arguments to update_copy_config is "
+                "deprecated. Use snake_case parameters (e.g. size_value, "
+                "max_exposure) instead.",
+                DeprecationWarning,
+                stacklevel=3,
+            )
+
+        _validate_copy_config_numeric_fields(body)
         return _parse(
             CopyConfig,
-            self._patch(f"/api/v1/copy/{_encode_path(copy_id)}", json=kwargs),
+            self._patch(f"/api/v1/copy/{_encode_path(copy_id)}", json=body),
         )
 
     def pause_copy_config(self, copy_id: str) -> CopyConfig:
@@ -3029,6 +3125,72 @@ class PolyforgeClient:
             win_rate=data.get("winRate", ""),
             calibration=calibration,
             by_category=by_category,
+        )
+
+    def get_accuracy_leaderboard(
+        self,
+        *,
+        period: str | None = None,
+        limit: int | None = None,
+        page: int | None = None,
+        offset: int | None = None,
+    ) -> PaginatedResponse[AccuracyLeaderboardEntry]:
+        """Fetch the accuracy leaderboard ranked by win-rate.
+
+        ``GET /api/v1/accuracy/leaderboard`` — distinct from
+        :meth:`get_leaderboard` (ranked by P&L) and from the per-user
+        :meth:`get_accuracy` / :meth:`get_accuracy_overview` endpoints.
+
+        Args:
+            period: Time period — ``"7d"``, ``"30d"``, or ``"allTime"``.
+            limit: Page size (1--100). When *offset* is provided without
+                *limit*, the client sends ``limit=20`` to keep the
+                offset-to-page conversion deterministic.
+            page: 1-based page number.
+            offset: Zero-based row offset. When supplied without ``page``
+                the client converts it to the equivalent page. Must be
+                non-negative and a multiple of *limit* (defaults to 20
+                when *limit* is ``None``).
+
+        Raises:
+            ValueError: If *period* is not one of ``"7d"``, ``"30d"``,
+                ``"allTime"``; if *limit* < 1; if *offset* < 0; or if
+                *offset* is not a multiple of the resolved page size.
+
+        Returns:
+            A :class:`PaginatedResponse` of :class:`AccuracyLeaderboardEntry`
+            items sorted by win-rate (descending).
+        """
+        q: dict[str, Any] = {}
+        if period is not None:
+            _validate_enum("period", period, _VALID_ACCURACY_LEADERBOARD_PERIODS)
+            q["period"] = period
+        if limit is not None:
+            if limit < 1:
+                raise ValueError(f"limit must be >= 1, got {limit}")
+            q["limit"] = limit
+        if offset is not None and page is None:
+            if offset < 0:
+                raise ValueError(f"offset must be >= 0, got {offset}")
+            resolved_limit = limit or 20
+            if offset % resolved_limit != 0:
+                raise ValueError(
+                    f"offset ({offset}) must be a multiple of limit ({resolved_limit})"
+                )
+            q["page"] = (offset // resolved_limit) + 1
+            if limit is None:
+                q["limit"] = resolved_limit
+        elif page is not None:
+            q["page"] = page
+        raw = self._get("/api/v1/accuracy/leaderboard", params=_strip_none(q))
+        items = raw if isinstance(raw, list) else raw.get("data", [])
+        return PaginatedResponse(
+            data=[_parse(AccuracyLeaderboardEntry, e) for e in items],
+            total=raw.get("total", 0) if isinstance(raw, dict) else len(items),
+            page=raw.get("page", 1) if isinstance(raw, dict) else 1,
+            limit=raw.get("limit", len(items)) if isinstance(raw, dict) else len(items),
+            has_next=raw.get("hasNext", False) if isinstance(raw, dict) else False,
+            total_pages=raw.get("totalPages", 0) if isinstance(raw, dict) else 0,
         )
 
     def get_portfolio_review(self) -> PortfolioReview:
@@ -4270,21 +4432,27 @@ class AsyncPolyforgeClient:
         _raise_for_status(resp)
         return resp.text
 
+    async def _get_no_auth(self, path: str) -> Any:
+        # Build a request from the existing client so we inherit proxy/CA
+        # environment, then strip credentials. Using trust_env=False on a
+        # fresh client would suppress proxy/CA config alongside NetRCAuth.
+        req = self._client.build_request("GET", path)
+        req.headers.pop("authorization", None)
+        resp = await self._client.send(req, auth=None)
+        _raise_for_status(resp)
+        return resp.json()
+
     # -- Health --
 
     async def get_health(self) -> SystemHealthPublic:
-        """Get the public API health payload (unauthenticated).
+        """Get the public API health payload.
 
-        Calls ``GET /health`` and returns only public status information.
-        No API key is required; operational internals are not exposed.
-
-        .. versionadded:: 1.0.0
+        Calls ``GET /health`` (unauthenticated) and returns public status
+        information. Operational internals (DB, Redis, queue, services)
+        are not exposed on this endpoint.
         """
-        request = self._client.build_request("GET", "/health")
-        request.headers.pop("Authorization", None)
-        resp = await self._client.send(request)
-        _raise_for_status(resp)
-        return _parse(SystemHealthPublic, resp.json())
+        data = await self._get_no_auth("/health")
+        return _parse(SystemHealthPublic, data)
 
     async def get_health_authenticated(self) -> SystemHealthAuthenticated:
         """Get authenticated health/status data with full operational metrics.
@@ -4546,6 +4714,7 @@ class AsyncPolyforgeClient:
         safety: list[dict[str, Any]] | None = None,
         logic_blocks: list[dict[str, Any]] | None = None,
         calc_blocks: list[dict[str, Any]] | None = None,
+        kalshi_subaccount: str | None = None,
         tags: list[str] | None = None,
         variables: list[dict[str, Any]] | None = None,
         canvas: dict[str, Any] | None = None,
@@ -4574,6 +4743,8 @@ class AsyncPolyforgeClient:
             body["logicBlocks"] = logic_blocks
         if calc_blocks is not None:
             body["calcBlocks"] = calc_blocks
+        if kalshi_subaccount is not None:
+            body["kalshiSubaccount"] = kalshi_subaccount
         if tags is not None:
             body["tags"] = tags
         if variables is not None:
@@ -4624,6 +4795,7 @@ class AsyncPolyforgeClient:
         variables: list[dict[str, Any]] | None = None,
         canvas: dict[str, Any] | None = None,
         market_slots: list[dict[str, Any]] | None = None,
+        kalshi_subaccount: str | None = None,
     ) -> Strategy:
         body: dict[str, Any] = {}
         if name is not None:
@@ -4658,6 +4830,8 @@ class AsyncPolyforgeClient:
             body["canvas"] = canvas
         if market_slots is not None:
             body["marketSlots"] = market_slots
+        if kalshi_subaccount is not None:
+            body["kalshiSubaccount"] = kalshi_subaccount
         return _parse(Strategy, await self._patch(f"/api/v1/strategies/{_encode_path(strategy_id)}", json=body))
 
     async def delete_strategy(self, strategy_id: str) -> None:
@@ -5288,6 +5462,21 @@ class AsyncPolyforgeClient:
         """Trigger a manual cross-venue matching pass."""
         data = await self._post("/api/v1/arbitrage/matches/sync")
         return _parse(MatchSyncResult, data)
+
+    async def create_market_match(self, polymarket_id: str, kalshi_id: str) -> MarketMatch:
+        """Manually match two markets across venues."""
+        body: dict[str, Any] = {"polymarketId": polymarket_id, "kalshiId": kalshi_id}
+        data = await self._post("/api/v1/arbitrage/matches", json=body)
+        return _parse(MarketMatch, data)
+
+    async def verify_market_match(self, match_id: str) -> MarketMatch:
+        """Verify/confirm an auto-matched market pair."""
+        data = await self._post(f"/api/v1/arbitrage/matches/{_encode_path(match_id)}/verify")
+        return _parse(MarketMatch, data)
+
+    async def delete_market_match(self, match_id: str) -> None:
+        """Remove a market match (unmatch)."""
+        await self._delete(f"/api/v1/arbitrage/matches/{_encode_path(match_id)}")
 
     async def get_spread_comparison(self) -> list[SpreadSummary]:
         """Get bid/ask spread comparison across all matched venues."""
@@ -6041,6 +6230,9 @@ class AsyncPolyforgeClient:
         if price_offset is not None:
             body["priceOffset"] = price_offset
         _validate_copy_config_numeric_fields(body)
+        for key in ("sizeValue", "maxExposure", "maxDailyLoss", "priceOffset"):
+            if key in body and body[key] is not None:
+                body[key] = str(body[key])
         return _parse(CopyConfig, await self._post("/api/v1/copy", json=body))
 
     async def get_copy_config(self, copy_id: str) -> CopyConfig:
@@ -6048,12 +6240,63 @@ class AsyncPolyforgeClient:
         data = await self._get(f"/api/v1/copy/{_encode_path(copy_id)}")
         return _parse(CopyConfig, data)
 
-    async def update_copy_config(self, copy_id: str, **kwargs: Any) -> CopyConfig:
-        """Update an existing copy-trading configuration."""
-        _validate_copy_config_numeric_fields(kwargs)
+    async def update_copy_config(
+        self,
+        copy_id: str,
+        *,
+        mode: str | None = _UNSET,
+        size_value: float | None = _UNSET,
+        max_exposure: float | None = _UNSET,
+        max_daily_loss: float | None = _UNSET,
+        price_offset: float | None = _UNSET,
+        **kwargs: Any,
+    ) -> CopyConfig:
+        """Update an existing copy-trading configuration.
+
+        Prefer the keyword-only ``snake_case`` parameters for new code.
+        The ``camelCase`` keyword arguments (``sizeValue``, ``maxExposure``,
+        ``maxDailyLoss``, ``priceOffset``) are still accepted for backward
+        compatibility but will emit a :exc:`DeprecationWarning`.
+
+        Explicit ``None`` values are sent to the server as JSON ``null``
+        (useful for clearing optional fields such as ``maxDailyLoss``).
+
+        Raises:
+            TypeError: If unknown keyword arguments are passed.
+        """
+        body: dict[str, Any] = {}
+        if mode is not _UNSET:
+            body["mode"] = mode
+        if size_value is not _UNSET:
+            body["sizeValue"] = size_value
+        if max_exposure is not _UNSET:
+            body["maxExposure"] = max_exposure
+        if max_daily_loss is not _UNSET:
+            body["maxDailyLoss"] = max_daily_loss
+        if price_offset is not _UNSET:
+            body["priceOffset"] = price_offset
+
+        if kwargs:
+            unknown = {k for k in kwargs if k not in _COPY_CONFIG_KNOWN_KWARGS}
+            if unknown:
+                raise TypeError(
+                    f"update_copy_config got unexpected keyword arguments: "
+                    f"{', '.join(sorted(unknown))}"
+                )
+            body.update(kwargs)
+            import warnings
+            warnings.warn(
+                "Passing camelCase keyword arguments to update_copy_config is "
+                "deprecated. Use snake_case parameters (e.g. size_value, "
+                "max_exposure) instead.",
+                DeprecationWarning,
+                stacklevel=3,
+            )
+
+        _validate_copy_config_numeric_fields(body)
         return _parse(
             CopyConfig,
-            await self._patch(f"/api/v1/copy/{_encode_path(copy_id)}", json=kwargs),
+            await self._patch(f"/api/v1/copy/{_encode_path(copy_id)}", json=body),
         )
 
     async def pause_copy_config(self, copy_id: str) -> CopyConfig:
@@ -6175,6 +6418,51 @@ class AsyncPolyforgeClient:
             win_rate=data.get("winRate", ""),
             calibration=calibration,
             by_category=by_category,
+        )
+
+    async def get_accuracy_leaderboard(
+        self,
+        *,
+        period: str | None = None,
+        limit: int | None = None,
+        page: int | None = None,
+        offset: int | None = None,
+    ) -> PaginatedResponse[AccuracyLeaderboardEntry]:
+        """Fetch the accuracy leaderboard ranked by win-rate (async).
+
+        ``GET /api/v1/accuracy/leaderboard`` — async variant of
+        :meth:`PolyforgeClient.get_accuracy_leaderboard`.
+        """
+        q: dict[str, Any] = {}
+        if period is not None:
+            _validate_enum("period", period, _VALID_ACCURACY_LEADERBOARD_PERIODS)
+            q["period"] = period
+        if limit is not None:
+            if limit < 1:
+                raise ValueError(f"limit must be >= 1, got {limit}")
+            q["limit"] = limit
+        if offset is not None and page is None:
+            if offset < 0:
+                raise ValueError(f"offset must be >= 0, got {offset}")
+            resolved_limit = limit or 20
+            if offset % resolved_limit != 0:
+                raise ValueError(
+                    f"offset ({offset}) must be a multiple of limit ({resolved_limit})"
+                )
+            q["page"] = (offset // resolved_limit) + 1
+            if limit is None:
+                q["limit"] = resolved_limit
+        elif page is not None:
+            q["page"] = page
+        raw = await self._get("/api/v1/accuracy/leaderboard", params=_strip_none(q))
+        items = raw if isinstance(raw, list) else raw.get("data", [])
+        return PaginatedResponse(
+            data=[_parse(AccuracyLeaderboardEntry, e) for e in items],
+            total=raw.get("total", 0) if isinstance(raw, dict) else len(items),
+            page=raw.get("page", 1) if isinstance(raw, dict) else 1,
+            limit=raw.get("limit", len(items)) if isinstance(raw, dict) else len(items),
+            has_next=raw.get("hasNext", False) if isinstance(raw, dict) else False,
+            total_pages=raw.get("totalPages", 0) if isinstance(raw, dict) else 0,
         )
 
     async def get_portfolio_review(self) -> PortfolioReview:
