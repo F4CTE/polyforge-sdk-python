@@ -225,6 +225,7 @@ jobs:
         run: |
           echo "Checking build artifacts..."
           test -d packages/shared-types/dist
+          test -d packages/venue-ws/dist
           test -d packages/shared-db/dist
           test -d packages/shared-redis/dist
           test -d packages/shared-auth/dist

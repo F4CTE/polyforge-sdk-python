@@ -1,6 +1,6 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
-import { BaseVenueWsService } from "@polyforge/shared-types";
+import { BaseVenueWsService } from "@polyforge/venue-ws";
 
 const SUBSCRIBE_BATCH_SIZE = 200;
 

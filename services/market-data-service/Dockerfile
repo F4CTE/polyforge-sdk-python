@@ -14,6 +14,7 @@ COPY packages/shared-db/package.json      ./packages/shared-db/
 COPY packages/shared-redis/package.json   ./packages/shared-redis/
 COPY packages/logger/package.json         ./packages/logger/
 COPY packages/shared-types/package.json   ./packages/shared-types/
+COPY packages/venue-ws/package.json       ./packages/venue-ws/
 COPY packages/shared-auth/package.json     ./packages/shared-auth/
 COPY packages/shared-filters/package.json   ./packages/shared-filters/
 COPY services/market-data-service/package.json ./services/market-data-service/
@@ -24,6 +25,7 @@ RUN echo "shamefully-hoist=true" > .npmrc && \
     --filter @polyforge/shared-db \
     --filter @polyforge/shared-redis \
     --filter @polyforge/shared-types \
+    --filter @polyforge/venue-ws \
     --filter @polyforge/shared-auth \
     --filter @polyforge/shared-filters \
     --filter @polyforge/logger \
@@ -35,6 +37,7 @@ COPY packages/shared-db/       ./packages/shared-db/
 COPY packages/shared-redis/    ./packages/shared-redis/
 COPY packages/logger/          ./packages/logger/
 COPY packages/shared-types/    ./packages/shared-types/
+COPY packages/venue-ws/        ./packages/venue-ws/
 COPY packages/shared-auth/     ./packages/shared-auth/
 COPY packages/shared-filters/ ./packages/shared-filters/
 COPY services/market-data-service/ ./services/market-data-service/
@@ -46,6 +49,7 @@ RUN DIRECT_DATABASE_URL=placeholder ADMIN_DIRECT_DATABASE_URL=placeholder \
     DIRECT_DATABASE_URL=placeholder ADMIN_DIRECT_DATABASE_URL=placeholder \
     npx prisma generate --schema ./prisma/schema.admin.prisma --config ./prisma/prisma.admin.config.ts && \
     (cd packages/shared-types  && /usr/local/bin/tsc -p tsconfig.json) && \
+    (cd packages/venue-ws      && /usr/local/bin/tsc -p tsconfig.json) && \
     (cd packages/shared-db     && /usr/local/bin/tsc -p tsconfig.json) && \
     (cd packages/shared-redis  && /usr/local/bin/tsc -p tsconfig.json) && \
     (cd packages/logger        && /usr/local/bin/tsc -p tsconfig.json) && \
@@ -66,6 +70,7 @@ COPY packages/shared-db/package.json      ./packages/shared-db/
 COPY packages/shared-redis/package.json   ./packages/shared-redis/
 COPY packages/logger/package.json         ./packages/logger/
 COPY packages/shared-types/package.json   ./packages/shared-types/
+COPY packages/venue-ws/package.json       ./packages/venue-ws/
 COPY packages/shared-auth/package.json     ./packages/shared-auth/
 COPY packages/shared-filters/package.json   ./packages/shared-filters/
 COPY services/market-data-service/package.json ./services/market-data-service/
@@ -78,6 +83,7 @@ COPY --from=builder /app/packages/shared-db/dist/         ./packages/shared-db/d
 COPY --from=builder /app/packages/shared-redis/dist/      ./packages/shared-redis/dist/
 COPY --from=builder /app/packages/logger/dist/            ./packages/logger/dist/
 COPY --from=builder /app/packages/shared-types/dist/      ./packages/shared-types/dist/
+COPY --from=builder /app/packages/venue-ws/dist/          ./packages/venue-ws/dist/
 COPY --from=builder /app/packages/shared-auth/dist/      ./packages/shared-auth/dist/
 COPY --from=builder /app/packages/shared-filters/dist/   ./packages/shared-filters/dist/
 COPY --from=builder /app/services/market-data-service/dist ./services/market-data-service/dist

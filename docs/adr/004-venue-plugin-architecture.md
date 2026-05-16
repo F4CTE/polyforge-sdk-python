@@ -11,8 +11,8 @@ Adding a new prediction market venue (e.g., Opinion) requires touching 10+ files
 ### 1. VenueConfig Registry (shared-types/venue-config.ts)
 Central registry where each venue declares its config (URLs, auth type, capabilities, enabled flag). Replaces hardcoded if-chains in module factories.
 
-### 2. BaseVenueWsService (shared-types/base-venue-ws.ts)
-Abstract base class providing connection lifecycle, reconnect with exponential backoff, ping/pong, and subscription management. Venue WS services extend this and only implement `handleMessage()` and `sendSubscriptions()`.
+### 2. BaseVenueWsService (packages/venue-ws)
+Abstract base class providing connection lifecycle, reconnect with exponential backoff, ping/pong, and subscription management. Venue WS services extend this and only implement `handleMessage()` and `sendSubscriptions()`. This class lives in `@polyforge/venue-ws` (not shared-types) to avoid leaking NestJS framework concerns into the shared types package.
 
 ### 3. Typed Auth Context
 Discriminated union `VenueAuthContext` with `venue` field as discriminant. Replaces `Record<string, unknown>` casts.
@@ -33,7 +33,7 @@ PostgreSQL enums require `ALTER TYPE ... ADD VALUE` for new entries. Prisma does
 3. **Prisma schema**: Add to `enum Venue { ... }`
 4. **Migration**: `ALTER TYPE "Venue" ADD VALUE IF NOT EXISTS '<VENUE_NAME>'`
 5. **Adapter**: Implement `VenueAdapter` interface in service
-6. **WS Service**: Extend `BaseVenueWsService` — implement `handleMessage()` + `sendSubscriptions()`
+6. **WS Service**: Extend `BaseVenueWsService` (from `@polyforge/venue-ws`) — implement `handleMessage()` + `sendSubscriptions()`
 7. **Price Feed**: Implement `VenuePriceFeed` interface
 8. **Module**: Import adapter + WS service — they auto-register via venue config
 9. **Tests**: Unit tests for adapter + WS message handling

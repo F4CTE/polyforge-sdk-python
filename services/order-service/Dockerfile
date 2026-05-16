@@ -12,6 +12,7 @@ COPY packages/shared-db/package.json      ./packages/shared-db/
 COPY packages/shared-redis/package.json   ./packages/shared-redis/
 COPY packages/logger/package.json         ./packages/logger/
 COPY packages/shared-types/package.json   ./packages/shared-types/
+COPY packages/venue-ws/package.json       ./packages/venue-ws/
 COPY packages/shared-auth/package.json    ./packages/shared-auth/
 COPY packages/shared-filters/package.json   ./packages/shared-filters/
 COPY services/order-service/package.json  ./services/order-service/
@@ -22,6 +23,7 @@ RUN echo "shamefully-hoist=true" > .npmrc && \
     --filter @polyforge/shared-db \
     --filter @polyforge/shared-redis \
     --filter @polyforge/shared-types \
+    --filter @polyforge/venue-ws \
     --filter @polyforge/logger \
     --filter @polyforge/shared-auth \
     --filter @polyforge/shared-filters \
@@ -32,6 +34,7 @@ COPY packages/shared-db/       ./packages/shared-db/
 COPY packages/shared-redis/    ./packages/shared-redis/
 COPY packages/logger/          ./packages/logger/
 COPY packages/shared-types/    ./packages/shared-types/
+COPY packages/venue-ws/        ./packages/venue-ws/
 COPY packages/shared-auth/     ./packages/shared-auth/
 COPY packages/shared-filters/ ./packages/shared-filters/
 COPY services/order-service/   ./services/order-service/
@@ -45,6 +48,7 @@ RUN DIRECT_DATABASE_URL=placeholder ADMIN_DIRECT_DATABASE_URL=placeholder \
     (cd packages/shared-redis  && /usr/local/bin/tsc -p tsconfig.json) && \
     (cd packages/logger        && /usr/local/bin/tsc -p tsconfig.json) && \
     (cd packages/shared-types  && /usr/local/bin/tsc -p tsconfig.json) && \
+    (cd packages/venue-ws      && /usr/local/bin/tsc -p tsconfig.json) && \
     (cd packages/shared-auth   && /usr/local/bin/tsc -p tsconfig.json) && \
     (cd packages/shared-filters && /usr/local/bin/tsc -p tsconfig.json) && \
     (cd services/order-service && /usr/local/bin/tsc -p tsconfig.build.json)
@@ -62,6 +66,7 @@ COPY packages/shared-db/package.json      ./packages/shared-db/
 COPY packages/shared-redis/package.json   ./packages/shared-redis/
 COPY packages/logger/package.json         ./packages/logger/
 COPY packages/shared-types/package.json   ./packages/shared-types/
+COPY packages/venue-ws/package.json       ./packages/venue-ws/
 COPY packages/shared-auth/package.json    ./packages/shared-auth/
 COPY packages/shared-filters/package.json   ./packages/shared-filters/
 COPY services/order-service/package.json  ./services/order-service/
@@ -74,6 +79,7 @@ COPY --from=builder /app/packages/shared-db/dist/        ./packages/shared-db/di
 COPY --from=builder /app/packages/shared-redis/dist/     ./packages/shared-redis/dist/
 COPY --from=builder /app/packages/logger/dist/           ./packages/logger/dist/
 COPY --from=builder /app/packages/shared-types/dist/     ./packages/shared-types/dist/
+COPY --from=builder /app/packages/venue-ws/dist/         ./packages/venue-ws/dist/
 COPY --from=builder /app/packages/shared-auth/dist/      ./packages/shared-auth/dist/
 COPY --from=builder /app/packages/shared-filters/dist/   ./packages/shared-filters/dist/
 COPY --from=builder /app/services/order-service/dist     ./services/order-service/dist
