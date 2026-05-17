@@ -38,8 +38,7 @@ test.describe('Mobile — Responsive Layout & Touch Targets (@mobile)', () => {
 
         test('@mobile bottom nav has 5 items: Markets, Portfolio, Strategies, Leaderboard, Profile', async ({ page }) => {
             const navLinks = page.locator('nav[aria-label="Mobile navigation"] a');
-            const count = await navLinks.count();
-            expect(count).toBe(5);
+            await expect(navLinks).toHaveCount(5, { timeout: 10_000 });
 
             const labels = await navLinks.allTextContents();
             expect(labels.map(l => l.trim())).toEqual([
