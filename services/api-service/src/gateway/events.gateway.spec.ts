@@ -247,7 +247,7 @@ describe("EventsGateway", () => {
       expect(client.terminate).toHaveBeenCalled();
     });
 
-    it("closes the oldest socket when a user exceeds the configured limit", () => {
+    it("rejects the new socket when a user exceeds the configured limit", () => {
       vi.mocked(jwtService.verify).mockReturnValue({
         sub: "user-A",
         email: "a@b.com",
@@ -266,15 +266,12 @@ describe("EventsGateway", () => {
       gateway.handleConnection(socket1, makeRequest("?token=t1"));
       gateway.handleConnection(socket2, makeRequest("?token=t2"));
 
-      expect(socket1.close).toHaveBeenCalledWith(
-        4008,
-        "Connection limit exceeded",
-      );
-      expect(socket1.terminate).toHaveBeenCalled();
-      expect(socket2.send).toHaveBeenCalledWith(
+      expect(socket1.send).toHaveBeenCalledWith(
         expect.stringContaining('"type":"AUTH_OK"'),
       );
-      expect(socket2.close).not.toHaveBeenCalled();
+      expect(socket1.close).not.toHaveBeenCalled();
+      expect(socket2.close).toHaveBeenCalledWith(4008, "Too many connections");
+      expect(socket2.terminate).toHaveBeenCalled();
     });
 
     it("closes connection when JWT verification fails", () => {
@@ -697,7 +694,7 @@ describe("EventsGateway", () => {
       });
     });
 
-    it("closes the oldest socket and accepts the next connection past the limit", () => {
+    it("rejects the next connection past the limit", () => {
       const sockets: ReturnType<typeof makeSocket>[] = [];
       for (let i = 0; i < 3; i++) {
         authAs("user-A");
@@ -710,15 +707,11 @@ describe("EventsGateway", () => {
       const replacement = makeSocket();
       gateway.handleConnection(replacement, makeRequest("?token=t4"));
 
-      expect(sockets[0].close).toHaveBeenCalledWith(
-        4008,
-        "Connection limit exceeded",
-      );
-      expect(sockets[0].terminate).toHaveBeenCalled();
-      expect(replacement.send).toHaveBeenCalledWith(
-        expect.stringContaining('"type":"AUTH_OK"'),
-      );
-      expect(replacement.close).not.toHaveBeenCalled();
+      expect(sockets[0].close).not.toHaveBeenCalled();
+      expect(sockets[0].terminate).not.toHaveBeenCalled();
+      expect(replacement.close).toHaveBeenCalledWith(4008, "Too many connections");
+      expect(replacement.terminate).toHaveBeenCalled();
+      expect(replacement.send).not.toHaveBeenCalled();
     });
 
     it("frees a slot on disconnect so a new connection is accepted", () => {
@@ -799,14 +792,11 @@ describe("EventsGateway", () => {
       const replacement = makeSocket();
       localGateway.handleConnection(replacement, makeRequest("?token=t6"));
 
-      expect(sockets[0].close).toHaveBeenCalledWith(
-        4008,
-        "Connection limit exceeded",
-      );
-      expect(sockets[0].terminate).toHaveBeenCalled();
-      expect(replacement.send).toHaveBeenCalledWith(
-        expect.stringContaining('"type":"AUTH_OK"'),
-      );
+      expect(sockets[0].close).not.toHaveBeenCalled();
+      expect(sockets[0].terminate).not.toHaveBeenCalled();
+      expect(replacement.close).toHaveBeenCalledWith(4008, "Too many connections");
+      expect(replacement.terminate).toHaveBeenCalled();
+      expect(replacement.send).not.toHaveBeenCalled();
     });
   });
 
