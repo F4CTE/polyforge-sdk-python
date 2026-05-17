@@ -19,11 +19,8 @@ export class SentryContextInterceptor implements NestInterceptor {
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
 
     if (request.user) {
-      // Email intentionally excluded — JWT payloads no longer carry email
-      // (GDPR). `id` + `username` is sufficient for support correlation.
       Sentry.setUser({
         id: request.user.sub,
-        username: request.user.username,
       });
     }
 
