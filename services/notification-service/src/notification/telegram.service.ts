@@ -127,7 +127,7 @@ export class TelegramService {
             const seconds = Number(retryAfterRaw);
             delay =
               Number.isFinite(seconds) && seconds > 0
-                ? seconds * 1000
+                ? Math.min(seconds * 1000, MAX_DELAY_MS)
                 : computeDelay(attempt);
           } else {
             delay = computeDelay(attempt);

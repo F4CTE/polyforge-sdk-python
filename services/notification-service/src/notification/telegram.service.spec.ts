@@ -230,7 +230,7 @@ describe("TelegramService", () => {
       expect(sleepSpy.mock.calls[0][0]).toBe(15_000);
     });
 
-    it("honors full Telegram retry_after delay without capping at MAX_DELAY_MS", async () => {
+    it("caps Telegram retry_after delay at MAX_DELAY_MS", async () => {
       const fetchMock = vi
         .fn()
         .mockResolvedValueOnce({
@@ -253,8 +253,8 @@ describe("TelegramService", () => {
 
       expect(fetchMock).toHaveBeenCalledTimes(2);
       expect(sleepSpy).toHaveBeenCalledTimes(1);
-      // 120s → 120000ms — honors full server hint
-      expect(sleepSpy.mock.calls[0][0]).toBe(120_000);
+      // 120s hint is capped to MAX_DELAY_MS (30000ms)
+      expect(sleepSpy.mock.calls[0][0]).toBe(30_000);
     });
 
     it("falls back to exponential backoff when retry_after is non-numeric", async () => {
