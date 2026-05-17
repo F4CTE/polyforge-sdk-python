@@ -610,13 +610,15 @@ describe.runIf(HAS_TEST_DB && HAS_TEST_REDIS)('Auth Real Integration', () => {
       });
       expect(regRes.statusCode).toBe(201);
 
-      // Fire-and-forget: wait for async verification email send
-      await new Promise((r) => setTimeout(r, 50));
-
-      // Get token from mail capture
-      const verifyToken = fakeMail.sentEmails.find(
-        (e) => e.type === 'verification',
-      )?.token;
+      // Fire-and-forget: poll for async verification email under CI load.
+      let verifyToken: string | undefined;
+      for (let i = 0; i < 20; i++) {
+        verifyToken = fakeMail.sentEmails.find(
+          (e) => e.type === 'verification',
+        )?.token;
+        if (verifyToken) break;
+        await new Promise((r) => setTimeout(r, 25));
+      }
       expect(verifyToken).toBeDefined();
 
       // Verify email
@@ -696,12 +698,15 @@ describe.runIf(HAS_TEST_DB && HAS_TEST_REDIS)('Auth Real Integration', () => {
         payload: { email },
       });
 
-      // Fire-and-forget: wait for async password reset email
-      await new Promise((r) => setTimeout(r, 50));
-
-      const resetToken = fakeMail.sentEmails.find(
-        (e) => e.type === 'password-reset',
-      )?.token;
+      // Fire-and-forget: poll for async password reset email under CI load.
+      let resetToken: string | undefined;
+      for (let i = 0; i < 20; i++) {
+        resetToken = fakeMail.sentEmails.find(
+          (e) => e.type === 'password-reset',
+        )?.token;
+        if (resetToken) break;
+        await new Promise((r) => setTimeout(r, 25));
+      }
       expect(resetToken).toBeDefined();
 
       const newPassword = 'NewPassw0rd!';

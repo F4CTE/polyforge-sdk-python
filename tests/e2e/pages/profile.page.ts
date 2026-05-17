@@ -1,4 +1,4 @@
-import { type Page, type Locator, expect } from '@playwright/test';
+import { type Page, type Locator, expect } from "@playwright/test";
 
 /**
  * Page Object for the Profile page (/profile/:username).
@@ -7,77 +7,82 @@ import { type Page, type Locator, expect } from '@playwright/test';
  * to related pages like settings and trading account.
  */
 export class ProfilePage {
-    readonly page: Page;
-    readonly editProfileButton: Locator;
-    readonly displayName: Locator;
-    readonly username: Locator;
-    readonly bio: Locator;
-    readonly statusChips: Locator;
-    readonly edgeRating: Locator;
-    readonly badges: Locator;
-    readonly settingsLink: Locator;
-    readonly tradingAccountLink: Locator;
-    readonly myStrategiesLink: Locator;
+  readonly page: Page;
+  readonly editProfileButton: Locator;
+  readonly displayName: Locator;
+  readonly username: Locator;
+  readonly bio: Locator;
+  readonly statusChips: Locator;
+  readonly edgeRating: Locator;
+  readonly badges: Locator;
+  readonly settingsLink: Locator;
+  readonly tradingAccountLink: Locator;
+  readonly myStrategiesLink: Locator;
 
-    constructor(page: Page) {
-        this.page = page;
-        this.editProfileButton = page.locator('a, button', { hasText: 'Edit Profile' });
-        this.displayName = page.locator('[data-testid="profile-display-name"]');
-        this.username = page.locator('[data-testid="profile-username"]');
-        this.bio = page.locator('[data-testid="profile-bio"]');
-        this.statusChips = page.locator('[data-testid="status-chip"]');
-        this.edgeRating = page.locator('[data-testid="edge-rating"]');
-        this.badges = page.locator('[data-testid="badge"]');
-        this.settingsLink = page.locator('a', { hasText: 'Settings' });
-        this.tradingAccountLink = page.locator('a', { hasText: 'Trading Account' });
-        this.myStrategiesLink = page.locator('a', { hasText: 'My Strategies' });
-    }
+  constructor(page: Page) {
+    this.page = page;
+    this.editProfileButton = page.locator("a, button", {
+      hasText: "Edit Profile",
+    });
+    this.displayName = page.locator('[data-testid="profile-display-name"]');
+    this.username = page.locator('[data-testid="profile-username"]');
+    this.bio = page.locator('[data-testid="profile-bio"]');
+    this.statusChips = page.locator('[data-testid="status-chip"]');
+    this.edgeRating = page.locator('[data-testid="edge-rating"]');
+    this.badges = page.locator('[data-testid="badge"]');
+    this.settingsLink = page.locator("a", { hasText: "Settings" });
+    this.tradingAccountLink = page.locator("a", { hasText: "Trading Account" });
+    this.myStrategiesLink = page.locator("a", { hasText: "My Strategies" });
+  }
 
-    async gotoProfile(username: string): Promise<void> {
-        await this.page.goto(`/profile/${username}`);
-        await expect(this.displayName).toBeVisible({ timeout: 30_000 });
-    }
+  async gotoProfile(username: string): Promise<void> {
+    await this.page.goto(`/profile/${username}`);
+    await expect(this.displayName).toBeVisible({ timeout: 30_000 });
+  }
 
-    async goToEditProfile(): Promise<void> {
-        await this.editProfileButton.click();
-        await this.page.waitForURL('**/settings**', { timeout: 15_000 });
-    }
+  async goToEditProfile(): Promise<void> {
+    await this.editProfileButton.click();
+    await this.page.waitForURL("**/settings**", { timeout: 15_000 });
+  }
 
-    async getDisplayName(): Promise<string> {
-        return (await this.displayName.textContent()) ?? '';
-    }
+  async getDisplayName(): Promise<string> {
+    return (await this.displayName.textContent()) ?? "";
+  }
 
-    async getUsername(): Promise<string> {
-        return (await this.username.textContent()) ?? '';
-    }
+  async getUsername(): Promise<string> {
+    return (await this.username.textContent()) ?? "";
+  }
 
-    async getBio(): Promise<string> {
-        // Bio element only renders when user.bio is truthy — return '' if absent.
-        const visible = await this.bio.isVisible().catch(() => false);
-        if (!visible) return '';
-        return (await this.bio.textContent()) ?? '';
-    }
+  async getBio(): Promise<string> {
+    // Bio element only renders when user.bio is truthy — return '' if absent.
+    const visible = await this.bio.isVisible().catch(() => false);
+    if (!visible) return "";
+    return (await this.bio.textContent()) ?? "";
+  }
 
-    async getEdgeRating(): Promise<string> {
-        // Edge rating section only renders when the user has trading stats.
-        const visible = await this.edgeRating.isVisible().catch(() => false);
-        if (!visible) return '';
-        return (await this.edgeRating.textContent()) ?? '';
-    }
+  async getEdgeRating(): Promise<string> {
+    // Edge rating section only renders when the user has trading stats.
+    const visible = await this.edgeRating.isVisible().catch(() => false);
+    if (!visible) return "";
+    const text = (await this.edgeRating.textContent()) ?? "";
+    // The card includes labels and metric text; return only the headline score
+    // so tests do not parse "Edge Rating 72 Win Rate 60% ..." as a number.
+    return text.match(/-?\d+(?:\.\d+)?/)?.[0] ?? "";
+  }
 
-    async getBadgeCount(): Promise<number> {
-        return await this.badges.count();
-    }
+  async getBadgeCount(): Promise<number> {
+    return await this.badges.count();
+  }
 
-    async goToSettings(): Promise<void> {
-        await this.settingsLink.click();
-    }
+  async goToSettings(): Promise<void> {
+    await this.settingsLink.click();
+  }
 
-    async goToTradingAccount(): Promise<void> {
-        await this.tradingAccountLink.click();
-    }
+  async goToTradingAccount(): Promise<void> {
+    await this.tradingAccountLink.click();
+  }
 
-    async goToMyStrategies(): Promise<void> {
-        await this.myStrategiesLink.click();
-    }
+  async goToMyStrategies(): Promise<void> {
+    await this.myStrategiesLink.click();
+  }
 }

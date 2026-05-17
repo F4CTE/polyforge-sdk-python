@@ -279,22 +279,71 @@ test.describe.serial("Settings — Full Workflow Coverage", () => {
     page,
   }) => {
     await settingsPage.goToProfileTab();
-    const originalValue = await settingsPage.displayNameInput.inputValue();
+    let originalValue = await settingsPage.displayNameInput.inputValue();
+
+    if (!originalValue) {
+      originalValue = `BaselineUser${Date.now()}`;
+      await settingsPage.displayNameInput.fill(originalValue);
+      const [baselineResp] = await Promise.all([
+        page.waitForResponse(
+          (resp) =>
+            resp.url().includes("/api/v1/profile/me") &&
+            resp.request().method() === "PATCH",
+          { timeout: 10_000 },
+        ),
+        settingsPage.saveProfileButton.click(),
+      ]);
+      expect(baselineResp.ok()).toBe(true);
+      await page.reload();
+      await settingsPage.goToProfileTab();
+      await expect(settingsPage.displayNameInput).toHaveValue(originalValue);
+    }
 
     await settingsPage.displayNameInput.clear();
-    await settingsPage.saveProfileButton.click();
+    const profileSaveToast = page
+      .locator("[data-sonner-toast]", {
+        hasText: /profile|display name|name|required/i,
+      })
+      .first();
+    const saveOutcome = Promise.race([
+      page
+        .waitForResponse(
+          (resp) =>
+            resp.url().includes("/api/v1/profile/me") &&
+            resp.request().method() === "PATCH",
+          { timeout: 10_000 },
+        )
+        .then((resp) => ({ kind: "patch" as const, response: resp })),
+      profileSaveToast
+        .waitFor({ state: "visible", timeout: 10_000 })
+        .then(() => ({ kind: "toast" as const })),
+    ]).catch(() => ({ kind: "timeout" as const, ok: false }));
 
-    // Either a validation toast appears (name required) or the save PATCH completes.
-    // Verify the UI handled the empty-name edge case without crashing.
-    const hasToast = await page
-      .locator("[data-sonner-toast]")
-      .isVisible()
-      .catch(() => false);
-    const newValue = await settingsPage.displayNameInput.inputValue();
-    // UI must not be stuck or broken: either reverted to original OR empty with error toast.
-    const reverted = newValue === originalValue;
-    const emptyWithError = newValue === "" && hasToast;
-    expect(reverted || emptyWithError).toBe(true);
+    await settingsPage.saveProfileButton.click();
+    const outcome = await saveOutcome;
+    expect(outcome.kind).not.toBe("timeout");
+
+    if (outcome.kind === "patch") {
+      expect(outcome.response.ok()).toBe(true);
+      const payload = outcome.response.request().postDataJSON() as {
+        displayName?: unknown;
+      };
+      expect(
+        payload.displayName === "" || payload.displayName === undefined,
+      ).toBe(true);
+
+      await page.reload();
+      await settingsPage.goToProfileTab();
+      await expect(settingsPage.displayNameInput).toHaveValue(
+        payload.displayName === "" ? "" : originalValue,
+      );
+      return;
+    }
+
+    await expect(profileSaveToast).toBeVisible();
+    await page.reload();
+    await settingsPage.goToProfileTab();
+    await expect(settingsPage.displayNameInput).toHaveValue(originalValue);
   });
 
   test("special characters in display name are handled properly", async ({
@@ -949,7 +998,10 @@ test.describe.serial("Settings — Full Workflow Coverage", () => {
       // Skip rather than submitting a hardcoded code that will always
       // be rejected by backend verification, which produces a misleading
       // error toast unrelated to the 2FA-enable flow under test.
-      test.skip(true, "TOTP setup API unavailable — cannot generate valid code");
+      test.skip(
+        true,
+        "TOTP setup API unavailable — cannot generate valid code",
+      );
       return;
     }
 

@@ -55,9 +55,7 @@ export async function cleanAuthDb(prisma: PrismaService): Promise<void> {
     'public.users',
   ];
 
-  for (const table of tables) {
-    await prisma.$executeRawUnsafe(
-      `TRUNCATE TABLE ${table} RESTART IDENTITY CASCADE`,
-    );
-  }
+  await prisma.$executeRawUnsafe(
+    `TRUNCATE TABLE ${tables.join(', ')} RESTART IDENTITY CASCADE`,
+  );
 }
