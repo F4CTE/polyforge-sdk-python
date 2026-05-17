@@ -47,17 +47,24 @@ export default defineConfig({
             grepInvert: /@mobile/,
             use: {
                 ...devices['Desktop Chrome'],
-                // CI Docker containers have limited /dev/shm (64 MB default).
-                // These flags prevent Chromium OOM crashes and reduce GPU overhead.
-                ...(process.env.CI ? {
-                    launchOptions: {
-                        args: [
+                launchOptions: {
+                    args: [
+                        // Bypass system DNS for localhost. On hosts where
+                        // systemd-resolved + avahi short-circuits and returns
+                        // NXDOMAIN before DNS (Chromium ERR_NAME_NOT_RESOLVED),
+                        // this maps localhost → 127.0.0.1 inside Chromium's
+                        // resolver, avoiding the broken nsswitch.conf path.
+                        '--host-resolver-rules=MAP localhost 127.0.0.1',
+                        ...(process.env.CI ? [
+                            // CI Docker containers have limited /dev/shm
+                            // (64 MB default). These flags prevent Chromium
+                            // OOM crashes and reduce GPU overhead.
                             '--disable-dev-shm-usage',
                             '--disable-gpu',
                             '--no-sandbox',
-                        ],
-                    },
-                } : {}),
+                        ] : []),
+                    ],
+                },
             },
         },
         // Mobile viewport project — tests tagged with @mobile run at iPhone SE size.
@@ -74,15 +81,17 @@ export default defineConfig({
                 ...devices['iPhone SE'],
                 viewport: { width: 375, height: 812 },
                 storageState: './storage-state.json',
-                ...(process.env.CI ? {
-                    launchOptions: {
-                        args: [
+                launchOptions: {
+                    args: [
+                        // Bypass system DNS for localhost (see chromium project).
+                        '--host-resolver-rules=MAP localhost 127.0.0.1',
+                        ...(process.env.CI ? [
                             '--disable-dev-shm-usage',
                             '--disable-gpu',
                             '--no-sandbox',
-                        ],
-                    },
-                } : {}),
+                        ] : []),
+                    ],
+                },
             },
         },
         // Firefox is slow on GitHub Actions runners causing flaky timeouts.
