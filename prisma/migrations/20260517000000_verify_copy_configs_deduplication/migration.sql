@@ -130,7 +130,7 @@ BEGIN
     -- Step 3: Delete any remaining duplicate configs.
     DELETE FROM "copy_configs"
      WHERE id IN (
-         SELECT duplicate_id
+         SELECT id
            FROM (
                SELECT
                    id,
