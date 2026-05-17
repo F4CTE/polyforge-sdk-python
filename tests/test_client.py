@@ -4338,9 +4338,9 @@ class TestBulkOrderEndpoints:
         source = inspect.getsource(PolyforgeClient.bulk_cancel_orders)
         assert '"orderIds"' in source
 
-    def test_bulk_cancel_orders_sends_delete_with_json_body(self):
-        """bulk_cancel_orders must send DELETE with Content-Type: application/json
-        and a JSON body — uses Client.request('DELETE', path, json=...)."""
+    def test_bulk_cancel_orders_sends_post_with_json_body(self):
+        """bulk_cancel_orders must send POST with Content-Type: application/json
+        and a JSON body containing orderIds."""
         captured = {}
 
         def handler(request):
@@ -4358,7 +4358,7 @@ class TestBulkOrderEndpoints:
         )
         try:
             client.bulk_cancel_orders(["ord-1", "ord-2"])
-            assert captured["method"] == "DELETE"
+            assert captured["method"] == "POST"
             assert "application/json" in captured["content_type"]
             body = json.loads(captured["body"])
             assert body == {"orderIds": ["ord-1", "ord-2"]}
