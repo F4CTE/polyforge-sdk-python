@@ -201,12 +201,67 @@ jobs:
         env:
           CI: true
 
-  # ── 2. Build ─────────────────────────────────────────────────────────────
+  # ── 2. Auth Integration Tests ───────────────────────────────────────────
+  auth-integration-test:
+    name: Auth Integration Test
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, linux]
+    needs: [test]
+    timeout-minutes: 10
+    services:
+      # Dedicated PostgreSQL for auth integration tests.
+      # DB name must contain 'test' for cleanAuthDb safety check.
+      test-db:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: citest
+          POSTGRES_PASSWORD: citest
+          POSTGRES_DB: auth_integration_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5433:5432
+      # Dedicated Redis for auth integration tests.
+      # Must use non-default port for cleanAuthRedis safety check.
+      test-redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6380:6379
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Build dependencies
+        run: pnpm turbo build --filter=@polyforge/auth-service...
+
+      - name: Run Auth Integration Tests
+        run: |
+          pnpm --filter=@polyforge/auth-service exec vitest run \
+            test/auth.infra.spec.ts test/auth.integration.spec.ts
+        env:
+          CI: true
+          TEST_DATABASE_URL: postgresql://citest:citest@localhost:5433/auth_integration_test
+          TEST_REDIS_URL: redis://localhost:6380
+
+  # ── 3. Build ─────────────────────────────────────────────────────────────
   build:
     name: Build
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: [self-hosted, linux]
-    needs: [secret-scan, semgrep, lint, typecheck, test, nginx-security, docker-compose-security]
+    needs: [secret-scan, semgrep, lint, typecheck, test, auth-integration-test, nginx-security, docker-compose-security]
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd

@@ -71,7 +71,7 @@ describe('UsersService', () => {
     db = createMockDb();
     redis = createMockRedis();
     posthog = createMockPosthog();
-    service = new UsersService(db as any, redis as any, posthog as any);
+    service = new UsersService(db, redis as any, posthog as any);
   });
 
   // ── findByEmail ───────────────────────────────────────────────────────────
@@ -251,12 +251,10 @@ describe('UsersService', () => {
       // detect the mixed-case sibling and return it.
       // The collision-path return refetches by exact.id to get the
       // full user row (not just the { id, email, deleted } select).
-      db.user.findUnique.mockImplementation(
-        ((args: any) => {
-          if (args?.where?.id) return Promise.resolve(mixed as any);
-          return Promise.resolve(lowercase as any);
-        }) as any,
-      );
+      db.user.findUnique.mockImplementation(((args: any) => {
+        if (args?.where?.id) return Promise.resolve(mixed as any);
+        return Promise.resolve(lowercase as any);
+      }) as any);
       db.user.findMany.mockResolvedValue([lowercase as any, mixed as any]);
 
       const result = await service.findByEmailCanonical('Alice@Example.com');
@@ -654,13 +652,13 @@ describe('UsersService', () => {
       const record = passwordResetTokenFactory({ tokenHash: sha256(token) });
       db.passwordResetToken.findUnique.mockResolvedValue(record);
 
-      (db.$transaction as any).mockImplementation(async (ops: any[]) => ops);
+      db.$transaction.mockImplementation(async (ops: any[]) => ops);
 
       await service.resetPassword(token, 'NewPassw0rd!');
 
       // The second operation in the transaction updates the user's passwordHash
 
-      const txOps = (db.$transaction as any).mock.calls[0][0] as any[];
+      const txOps = db.$transaction.mock.calls[0][0] as any[];
       // We can't inspect the deferred Prisma operations directly, but we verify
       // that $transaction was called with an array of operations.
       expect(Array.isArray(txOps)).toBe(true);

@@ -36,9 +36,7 @@ export class TotpService {
     const keyHex = this.config.getOrThrow<string>('TOTP_ENCRYPTION_KEY');
     this.encryptionKey = Buffer.from(keyHex, 'hex');
     if (this.encryptionKey.length !== 32) {
-      throw new Error(
-        'TOTP_ENCRYPTION_KEY is not properly configured',
-      );
+      throw new Error('TOTP_ENCRYPTION_KEY is not properly configured');
     }
   }
 
@@ -116,20 +114,17 @@ export class TotpService {
     try {
       consumed = await this.redis
         .getClient()
-        .set(
-          usedKey(userId, code),
-          '1',
-          'EX',
-          TOTP_REPLAY_WINDOW,
-          'NX',
-        );
+        .set(usedKey(userId, code), '1', 'EX', TOTP_REPLAY_WINDOW, 'NX');
     } catch (err) {
       this.logger.error(
         { event: 'TOTP_REPLAY_CHECK_FAILED', userId, error: String(err) },
         'Redis replay-key write failed during TOTP confirm',
       );
       throw new HttpException(
-        { code: 'TOTP_SETUP_FAILED', message: 'Unable to complete 2FA setup. Please try again.' },
+        {
+          code: 'TOTP_SETUP_FAILED',
+          message: 'Unable to complete 2FA setup. Please try again.',
+        },
         HttpStatus.SERVICE_UNAVAILABLE,
       );
     }
@@ -230,20 +225,17 @@ export class TotpService {
     try {
       consumed = await this.redis
         .getClient()
-        .set(
-          usedKey(userId, totpCode),
-          '1',
-          'EX',
-          TOTP_REPLAY_WINDOW,
-          'NX',
-        );
+        .set(usedKey(userId, totpCode), '1', 'EX', TOTP_REPLAY_WINDOW, 'NX');
     } catch (err) {
       this.logger.error(
         { event: 'TOTP_REPLAY_CHECK_FAILED', userId, error: String(err) },
         'Redis replay-key write failed during TOTP disable',
       );
       throw new HttpException(
-        { code: 'TOTP_DISABLE_FAILED', message: 'Unable to disable 2FA. Please try again.' },
+        {
+          code: 'TOTP_DISABLE_FAILED',
+          message: 'Unable to disable 2FA. Please try again.',
+        },
         HttpStatus.SERVICE_UNAVAILABLE,
       );
     }
@@ -354,14 +346,18 @@ export class TotpService {
           'Redis replay-key write failed during TOTP verify',
         );
         throw new HttpException(
-          { code: 'TOTP_VERIFY_FAILED', message: 'Unable to verify 2FA code. Please try again.' },
+          {
+            code: 'TOTP_VERIFY_FAILED',
+            message: 'Unable to verify 2FA code. Please try again.',
+          },
           HttpStatus.SERVICE_UNAVAILABLE,
         );
       }
       if (consumed !== 'OK') {
         // Count replay attempts toward the per-account TOTP lockout
         const newCount = await client.incr(failKey(userId));
-        if (newCount === 1) await client.expire(failKey(userId), TOTP_FAIL_WINDOW);
+        if (newCount === 1)
+          await client.expire(failKey(userId), TOTP_FAIL_WINDOW);
         return false;
       }
     }

@@ -45,7 +45,7 @@ describe('CredentialsService', () => {
     db = createMockDb();
     config = makeMockConfig();
     jwt = makeMockJwt();
-    service = new CredentialsService(db as any, config as any, jwt);
+    service = new CredentialsService(db, config as any, jwt);
 
     // Mock global fetch
     fetchSpy = vi.fn();

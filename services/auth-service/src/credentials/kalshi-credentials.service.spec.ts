@@ -10,7 +10,7 @@ describe('KalshiCredentialsService', () => {
 
   beforeEach(() => {
     db = createMockDb();
-    service = new KalshiCredentialsService(db as any);
+    service = new KalshiCredentialsService(db);
   });
 
   describe('import', () => {

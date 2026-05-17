@@ -51,7 +51,7 @@ describe('TotpService', () => {
     db = createMockDb();
     redis = makeMockRedis();
     config = makeMockConfig();
-    service = new TotpService(db as any, redis as any, config as any);
+    service = new TotpService(db, redis as any, config as any);
   });
 
   afterEach(() => {
@@ -63,9 +63,7 @@ describe('TotpService', () => {
   describe('constructor', () => {
     it('throws when TOTP_ENCRYPTION_KEY is not 32 bytes (64 hex chars)', () => {
       const badConfig = { getOrThrow: vi.fn().mockReturnValue('deadbeef') }; // 4 bytes
-      expect(
-        () => new TotpService(db as any, redis as any, badConfig as any),
-      ).toThrow(
+      expect(() => new TotpService(db, redis as any, badConfig as any)).toThrow(
         'TOTP_ENCRYPTION_KEY is not properly configured',
       );
     });
@@ -136,7 +134,7 @@ describe('TotpService', () => {
       // We're testing backup code generation + DB commit, not otplib itself.
       mockedVerifySync.mockReturnValueOnce({ valid: true } as any);
       redis.get.mockResolvedValue('JBSWY3DPEHPK3PXP');
-      (db.$transaction as any).mockResolvedValue([]);
+      db.$transaction.mockResolvedValue([]);
 
       const result = await service.confirm('user-id', '123456');
 
@@ -148,11 +146,11 @@ describe('TotpService', () => {
     it('stores SHA-256 hashed codes in DB, returns plain codes to caller', async () => {
       mockedVerifySync.mockReturnValueOnce({ valid: true } as any);
       redis.get.mockResolvedValue('JBSWY3DPEHPK3PXP');
-      (db.$transaction as any).mockResolvedValue([]);
+      db.$transaction.mockResolvedValue([]);
 
       const result = await service.confirm('user-id', '123456');
       const updateCall = db.user.update.mock.calls[0][0];
-      const updateData = updateCall.data as any;
+      const updateData = updateCall.data;
 
       // Plain codes are plain hex — no $2b$ bcrypt prefix
       expect(result.backupCodes[0]).not.toMatch(/^\$2b\$/);
@@ -163,7 +161,7 @@ describe('TotpService', () => {
     it('deletes the pending Redis key on success', async () => {
       mockedVerifySync.mockReturnValueOnce({ valid: true } as any);
       redis.get.mockResolvedValue('JBSWY3DPEHPK3PXP');
-      (db.$transaction as any).mockResolvedValue([]);
+      db.$transaction.mockResolvedValue([]);
 
       await service.confirm('user-id', '123456');
 
@@ -182,9 +180,7 @@ describe('TotpService', () => {
       redis.get.mockResolvedValue('JBSWY3DPEHPK3PXP');
       redis._ioClient.set.mockResolvedValue(null); // already consumed
 
-      await expect(
-        service.confirm('user-id', '123456'),
-      ).rejects.toMatchObject({
+      await expect(service.confirm('user-id', '123456')).rejects.toMatchObject({
         response: { code: 'TOTP_INVALID' },
         status: HttpStatus.BAD_REQUEST,
       });
@@ -209,9 +205,7 @@ describe('TotpService', () => {
         .spyOn((service as any).logger, 'error')
         .mockImplementation(() => undefined);
 
-      await expect(
-        service.confirm('user-id', '123456'),
-      ).rejects.toMatchObject({
+      await expect(service.confirm('user-id', '123456')).rejects.toMatchObject({
         response: { code: 'TOTP_SETUP_FAILED' },
         status: HttpStatus.SERVICE_UNAVAILABLE,
       });
@@ -612,9 +606,7 @@ describe('TotpService', () => {
         .spyOn((service as any).logger, 'error')
         .mockImplementation(() => undefined);
 
-      await expect(
-        service.verify(user.id, validCode),
-      ).rejects.toMatchObject({
+      await expect(service.verify(user.id, validCode)).rejects.toMatchObject({
         response: { code: 'TOTP_VERIFY_FAILED' },
         status: HttpStatus.SERVICE_UNAVAILABLE,
       });

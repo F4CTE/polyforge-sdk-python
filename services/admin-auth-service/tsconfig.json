@@ -6,11 +6,11 @@
     "allowSyntheticDefaultImports": true,
     "target": "ES2023",
     "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDir": ".",
     "noImplicitAny": true,
     "strictBindCallApply": true,
     "noFallthroughCasesInSwitch": false
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "test/**/*"],
   "exclude": ["node_modules", "dist"]
 }

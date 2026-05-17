@@ -40,7 +40,7 @@ describe('PolymarketUsCredentialsService', () => {
     db = createMockDb();
     const config = makeMockConfig();
     const jwt = makeMockJwt();
-    service = new PolymarketUsCredentialsService(db as any, config as any, jwt);
+    service = new PolymarketUsCredentialsService(db, config as any, jwt);
 
     fetchSpy = vi.fn();
     vi.stubGlobal('fetch', fetchSpy);

@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { RedisService } from '@polyforge/shared-redis';
 import { PrismaService } from '@polyforge/shared-db';
+import { Prisma } from '@prisma/client';
 import { UsersService } from '../users/users.service';
 import { MailService } from '../mail/mail.service';
 import { TotpService } from '../totp/totp.service';
@@ -12,7 +13,7 @@ import { VerifyEmailDto } from './dto/verify-email.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ResendVerificationDto } from './dto/resend-verification.dto';
-import { JwtPayload } from '@polyforge/shared-types';
+import { JwtPayload, StrategyStatus } from '@polyforge/shared-types';
 import { randomUUID, createHash } from 'crypto';
 
 const INVITE_KEY = (code: string) => `invite:${code.toUpperCase()}`;
@@ -624,8 +625,8 @@ export class AuthService {
 
     // 1. Stop all running strategies
     await this.prisma.strategy.updateMany({
-      where: { userId, status: 'RUNNING' as any },
-      data: { status: 'STOPPED' as any },
+      where: { userId, status: StrategyStatus.RUNNING },
+      data: { status: StrategyStatus.PAUSED },
     });
 
     // 2. Revoke all API keys
@@ -643,11 +644,27 @@ export class AuthService {
     );
 
     // 4. Deactivate webhooks and bot connections
+    // webhooks table may not exist (no migration yet) — only suppress the
+    // missing-table error (P2021) so the rest of the deletion flow proceeds
+    // normally on fresh databases. Unexpected failures still fail deletion.
     await Promise.all([
-      this.prisma.webhook.updateMany({
-        where: { userId, active: true },
-        data: { active: false },
-      }),
+      this.prisma.webhook
+        .updateMany({
+          where: { userId, active: true },
+          data: { active: false },
+        })
+        .catch((err) => {
+          if (
+            err instanceof Prisma.PrismaClientKnownRequestError &&
+            err.code === 'P2021'
+          ) {
+            this.logger.warn(
+              'Webhooks table not found during account deletion — skipping webhook deactivation',
+            );
+            return;
+          }
+          throw err;
+        }),
       this.prisma.botConnection.updateMany({
         where: { userId, active: true },
         data: { active: false },

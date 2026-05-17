@@ -16,7 +16,7 @@ describe('ApiKeysService', () => {
 
   beforeEach(() => {
     db = createMockDb();
-    service = new ApiKeysService(db as any, makeRedis() as any);
+    service = new ApiKeysService(db, makeRedis() as any);
   });
 
   afterEach(() => {
@@ -35,7 +35,7 @@ describe('ApiKeysService', () => {
 
     it('generates a key with pf_ prefix and returns plaintext key', async () => {
       db.apiKey.count.mockResolvedValue(0);
-      (db.apiKey.create as any).mockImplementation(({ data }: any) =>
+      db.apiKey.create.mockImplementation(({ data }: any) =>
         Promise.resolve({
           id: 'key-1',
           name: data.name,
@@ -58,7 +58,7 @@ describe('ApiKeysService', () => {
       const { createHash } = await import('crypto');
 
       db.apiKey.count.mockResolvedValue(0);
-      (db.apiKey.create as any).mockImplementation(({ data }: any) =>
+      db.apiKey.create.mockImplementation(({ data }: any) =>
         Promise.resolve({
           id: 'key-1',
           name: data.name,
@@ -72,7 +72,7 @@ describe('ApiKeysService', () => {
 
       const result = await service.create(userId, dto as any);
 
-      const createCall = db.apiKey.create.mock.calls[0][0] as any;
+      const createCall = db.apiKey.create.mock.calls[0][0];
       const expectedHash = createHash('sha256')
         .update(result.key)
         .digest('hex');
@@ -81,7 +81,7 @@ describe('ApiKeysService', () => {
 
     it('stores the first 7 characters as prefix (pf_ + 4 hex chars)', async () => {
       db.apiKey.count.mockResolvedValue(0);
-      (db.apiKey.create as any).mockImplementation(({ data }: any) =>
+      db.apiKey.create.mockImplementation(({ data }: any) =>
         Promise.resolve({
           id: 'key-1',
           name: data.name,
@@ -95,14 +95,14 @@ describe('ApiKeysService', () => {
 
       const result = await service.create(userId, dto as any);
 
-      const createCall = db.apiKey.create.mock.calls[0][0] as any;
+      const createCall = db.apiKey.create.mock.calls[0][0];
       expect(createCall.data.prefix).toBe(result.key.slice(0, 7));
       expect(createCall.data.prefix).toMatch(/^pf_[a-f0-9]{4}$/);
     });
 
     it('stores correct scopes, name, and expiration', async () => {
       db.apiKey.count.mockResolvedValue(0);
-      (db.apiKey.create as any).mockImplementation(({ data }: any) =>
+      db.apiKey.create.mockImplementation(({ data }: any) =>
         Promise.resolve({
           id: 'key-1',
           name: data.name,
@@ -116,7 +116,7 @@ describe('ApiKeysService', () => {
 
       await service.create(userId, dto as any);
 
-      const createCall = db.apiKey.create.mock.calls[0][0] as any;
+      const createCall = db.apiKey.create.mock.calls[0][0];
       expect(createCall.data.userId).toBe(userId);
       expect(createCall.data.name).toBe('My Bot Key');
       expect(createCall.data.scopes).toEqual(['READ', 'TRADE']);
@@ -127,7 +127,7 @@ describe('ApiKeysService', () => {
 
     it('defaults scopes to empty array when not provided', async () => {
       db.apiKey.count.mockResolvedValue(0);
-      (db.apiKey.create as any).mockImplementation(({ data }: any) =>
+      db.apiKey.create.mockImplementation(({ data }: any) =>
         Promise.resolve({
           id: 'key-1',
           name: data.name,
@@ -141,13 +141,13 @@ describe('ApiKeysService', () => {
 
       await service.create(userId, { name: 'No scopes' });
 
-      const createCall = db.apiKey.create.mock.calls[0][0] as any;
+      const createCall = db.apiKey.create.mock.calls[0][0];
       expect(createCall.data.scopes).toEqual([]);
     });
 
     it('sets expiresAt to null when not provided', async () => {
       db.apiKey.count.mockResolvedValue(0);
-      (db.apiKey.create as any).mockImplementation(({ data }: any) =>
+      db.apiKey.create.mockImplementation(({ data }: any) =>
         Promise.resolve({
           id: 'key-1',
           name: data.name,
@@ -161,7 +161,7 @@ describe('ApiKeysService', () => {
 
       await service.create(userId, { name: 'No expiry' });
 
-      const createCall = db.apiKey.create.mock.calls[0][0] as any;
+      const createCall = db.apiKey.create.mock.calls[0][0];
       expect(createCall.data.expiresAt).toBeNull();
     });
 
@@ -178,7 +178,7 @@ describe('ApiKeysService', () => {
 
     it('allows creation when user has 9 active keys', async () => {
       db.apiKey.count.mockResolvedValue(9);
-      (db.apiKey.create as any).mockImplementation(({ data }: any) =>
+      db.apiKey.create.mockImplementation(({ data }: any) =>
         Promise.resolve({
           id: 'key-1',
           name: data.name,
@@ -197,7 +197,7 @@ describe('ApiKeysService', () => {
 
     it('counts only non-revoked keys for the given user', async () => {
       db.apiKey.count.mockResolvedValue(0);
-      (db.apiKey.create as any).mockImplementation(({ data }: any) =>
+      db.apiKey.create.mockImplementation(({ data }: any) =>
         Promise.resolve({
           id: 'key-1',
           name: data.name,
@@ -260,7 +260,7 @@ describe('ApiKeysService', () => {
 
       await service.list('user-1');
 
-      const call = db.apiKey.findMany.mock.calls[0][0] as any;
+      const call = db.apiKey.findMany.mock.calls[0][0];
       expect(call.where.userId).toBe('user-1');
       expect(call.orderBy.createdAt).toBe('desc');
     });
@@ -270,7 +270,7 @@ describe('ApiKeysService', () => {
 
       await service.list('user-1');
 
-      const call = db.apiKey.findMany.mock.calls[0][0] as any;
+      const call = db.apiKey.findMany.mock.calls[0][0];
       expect(call.select.tokenHash).toBeUndefined();
       expect(call.select.id).toBe(true);
       expect(call.select.name).toBe(true);
@@ -358,7 +358,7 @@ describe('ApiKeysService', () => {
     it('creates a new key and marks old key as deprecated', async () => {
       db.apiKey.findUnique.mockResolvedValue(oldKey as any);
       db.apiKey.count.mockResolvedValue(1);
-      (db.apiKey.create as any).mockImplementation(({ data }: any) =>
+      db.apiKey.create.mockImplementation(({ data }: any) =>
         Promise.resolve({
           id: 'new-key-1',
           name: data.name,
@@ -395,7 +395,7 @@ describe('ApiKeysService', () => {
 
       db.apiKey.findUnique.mockResolvedValue(oldKey as any);
       db.apiKey.count.mockResolvedValue(1);
-      (db.apiKey.create as any).mockImplementation(({ data }: any) =>
+      db.apiKey.create.mockImplementation(({ data }: any) =>
         Promise.resolve({
           id: 'new-key-1',
           name: data.name,
@@ -443,7 +443,7 @@ describe('ApiKeysService', () => {
     it('names the new key with (rotated) suffix', async () => {
       db.apiKey.findUnique.mockResolvedValue(oldKey as any);
       db.apiKey.count.mockResolvedValue(1);
-      (db.apiKey.create as any).mockImplementation(({ data }: any) =>
+      db.apiKey.create.mockImplementation(({ data }: any) =>
         Promise.resolve({
           id: 'new-key-1',
           name: data.name,
