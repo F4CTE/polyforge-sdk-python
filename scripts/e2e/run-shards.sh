@@ -11,8 +11,17 @@ mobile_timeout_seconds="${E2E_MOBILE_TIMEOUT_SECONDS:-600}"
 output_dir="${PLAYWRIGHT_OUTPUT_DIR:-test-results}"
 
 pids=()
+playwright_filters=()
 
 mkdir -p "$output_dir"
+
+if [ -n "${E2E_GREP:-}" ]; then
+  playwright_filters+=(--grep "$E2E_GREP")
+fi
+
+if [ -n "${E2E_GREP_INVERT:-}" ]; then
+  playwright_filters+=(--grep-invert "$E2E_GREP_INVERT")
+fi
 
 terminate_shards() {
   local pid
@@ -36,6 +45,7 @@ run_shard() {
     PLAYWRIGHT_SKIP_GLOBAL_SETUP=true \
     E2E_SHARED_MAILBOX=true \
     timeout --kill-after=10s "$shard_timeout_seconds" npx playwright test \
+      "${playwright_filters[@]}" \
       --project="$project" \
       --reporter=list \
       --shard="${shard}/${shard_count}" \
@@ -94,6 +104,7 @@ if [ "${run_mobile}" = "true" ] && [ "${project}" != "mobile-chromium" ]; then
     PLAYWRIGHT_SKIP_GLOBAL_SETUP=true \
     E2E_SHARED_MAILBOX=true \
     timeout --kill-after=10s "$mobile_timeout_seconds" npx playwright test \
+      "${playwright_filters[@]}" \
       --project=mobile-chromium \
       --reporter=list \
       --output="${output_dir}/mobile" \

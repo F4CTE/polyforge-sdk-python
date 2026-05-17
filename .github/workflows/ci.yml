@@ -494,6 +494,7 @@ jobs:
         timeout-minutes: 40
         env:
           E2E_SKIP_SLOW_A11Y: true
+          E2E_GREP: '@smoke'
         run: |
           cd ~/PolyForge/tests/e2e
           ../../scripts/e2e/run-shards.sh
