@@ -120,18 +120,18 @@ describe.runIf(HAS_TEST_DB && HAS_TEST_REDIS)('Auth Real Integration', () => {
 
     await app.init();
     await app.getHttpAdapter().getInstance().ready();
-  });
+  }, 30_000);
 
   afterAll(async () => {
     vi.unstubAllEnvs();
     await app.close();
-  });
+  }, 30_000);
 
   beforeEach(async () => {
     fakeMail.sentEmails = [];
     await cleanAuthDb(prisma);
     await cleanAuthRedis(redisService.getClient(), TEST_REDIS_URL);
-  });
+  }, 30_000);
 
   // ─── Helpers ─────────────────────────────────────────────────────────────────
 

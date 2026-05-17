@@ -252,7 +252,7 @@ export function computeMaxLookback(triggers: Block[]): number {
           10,
         );
         const slowPeriod = parseInt(
-          String(cfg.slowPeriod ?? cfg.longPeriod ?? 20),
+          String(cfg.slowPeriod ?? cfg.longPeriod ?? 50),
           10,
         );
         const period = Math.max(
