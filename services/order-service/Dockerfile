@@ -15,6 +15,7 @@ COPY packages/shared-types/package.json   ./packages/shared-types/
 COPY packages/venue-ws/package.json       ./packages/venue-ws/
 COPY packages/shared-auth/package.json    ./packages/shared-auth/
 COPY packages/shared-filters/package.json   ./packages/shared-filters/
+COPY packages/shared-schemas/package.json ./packages/shared-schemas/
 COPY services/order-service/package.json  ./services/order-service/
 
 RUN echo "shamefully-hoist=true" > .npmrc && \
@@ -27,6 +28,7 @@ RUN echo "shamefully-hoist=true" > .npmrc && \
     --filter @polyforge/logger \
     --filter @polyforge/shared-auth \
     --filter @polyforge/shared-filters \
+    --filter @polyforge/shared-schemas \
     --filter @polyforge/order-service... \
     --frozen-lockfile
 
@@ -37,6 +39,7 @@ COPY packages/shared-types/    ./packages/shared-types/
 COPY packages/venue-ws/        ./packages/venue-ws/
 COPY packages/shared-auth/     ./packages/shared-auth/
 COPY packages/shared-filters/ ./packages/shared-filters/
+COPY packages/shared-schemas/  ./packages/shared-schemas/
 COPY services/order-service/   ./services/order-service/
 COPY prisma/                   ./prisma/
 
@@ -51,6 +54,7 @@ RUN DIRECT_DATABASE_URL=placeholder ADMIN_DIRECT_DATABASE_URL=placeholder \
     (cd packages/venue-ws      && /usr/local/bin/tsc -p tsconfig.json) && \
     (cd packages/shared-auth   && /usr/local/bin/tsc -p tsconfig.json) && \
     (cd packages/shared-filters && /usr/local/bin/tsc -p tsconfig.json) && \
+    (cd packages/shared-schemas && /usr/local/bin/tsc -p tsconfig.json) && \
     (cd services/order-service && /usr/local/bin/tsc -p tsconfig.build.json)
 
 # ── Runtime ──────────────────────────────────────────────────────────────────
@@ -69,6 +73,7 @@ COPY packages/shared-types/package.json   ./packages/shared-types/
 COPY packages/venue-ws/package.json       ./packages/venue-ws/
 COPY packages/shared-auth/package.json    ./packages/shared-auth/
 COPY packages/shared-filters/package.json   ./packages/shared-filters/
+COPY packages/shared-schemas/package.json ./packages/shared-schemas/
 COPY services/order-service/package.json  ./services/order-service/
 
 RUN echo "shamefully-hoist=true" > .npmrc && \
@@ -82,6 +87,7 @@ COPY --from=builder /app/packages/shared-types/dist/     ./packages/shared-types
 COPY --from=builder /app/packages/venue-ws/dist/         ./packages/venue-ws/dist/
 COPY --from=builder /app/packages/shared-auth/dist/      ./packages/shared-auth/dist/
 COPY --from=builder /app/packages/shared-filters/dist/   ./packages/shared-filters/dist/
+COPY --from=builder /app/packages/shared-schemas/dist/   ./packages/shared-schemas/dist/
 COPY --from=builder /app/services/order-service/dist     ./services/order-service/dist
 
 COPY --from=builder /app/node_modules/.prisma          ./node_modules/.prisma
