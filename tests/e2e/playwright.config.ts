@@ -79,6 +79,7 @@ export default defineConfig({
                 // viewport sized for iPhone SE (375×812). Falls back to Desktop Chrome
                 // launch args on CI to avoid GPU/shm issues.
                 ...devices['iPhone SE'],
+                browserName: 'chromium',
                 viewport: { width: 375, height: 812 },
                 storageState: './storage-state.json',
                 launchOptions: {
