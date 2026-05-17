@@ -441,10 +441,10 @@ export function StrategyCanvas() {
       aria-label="Strategy canvas editor"
       tabIndex={0}
       onKeyDown={onCanvasKeyDown}
-      onPointerDown={(event) => {
+      onPointerDownCapture={(event) => {
         if (
           event.target instanceof HTMLElement &&
-          event.target.classList.contains("react-flow__pane")
+          event.target.closest(".react-flow__pane")
         ) {
           reactFlowWrapper.current?.focus();
         }
