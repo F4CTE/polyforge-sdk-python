@@ -29,18 +29,22 @@ export async function getMonthlyConfirmedVolume(
   prisma: PrismaService,
   redis: RedisService,
   userId: string,
+  options?: { bypassCache?: boolean },
 ): Promise<number> {
   const now = new Date();
   const cacheKey = monthlyVolumeCacheKey(userId, now);
+  const bypassCache = options?.bypassCache === true;
 
-  try {
-    const cached = await redis.get(cacheKey);
-    if (cached !== null) {
-      const parsed = Number(cached);
-      if (Number.isFinite(parsed)) return parsed;
+  if (!bypassCache) {
+    try {
+      const cached = await redis.get(cacheKey);
+      if (cached !== null) {
+        const parsed = Number(cached);
+        if (Number.isFinite(parsed)) return parsed;
+      }
+    } catch {
+      // Redis unavailable — fall through to DB
     }
-  } catch {
-    // Redis unavailable — fall through to DB
   }
 
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);

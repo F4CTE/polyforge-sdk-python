@@ -379,6 +379,7 @@ export class OrdersService {
       this.prisma,
       this.redis,
       userId,
+      { bypassCache: true },
     );
     const maxMonthly = await this.betaLimits.getLimit("maxMonthlyVolumeUsdc");
     if (currentMonthlyVolume + totalSize > maxMonthly) {
@@ -606,6 +607,7 @@ export class OrdersService {
       this.prisma,
       this.redis,
       userId,
+      { bypassCache: true },
     );
     const maxMonthly = await this.betaLimits.getLimit("maxMonthlyVolumeUsdc");
     if (currentMonthlyVolume + orderSize > maxMonthly) {

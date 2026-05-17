@@ -658,20 +658,19 @@ describe("OrdersService", () => {
       expect(result.status).toBe("PENDING");
     });
 
-    it("uses cached monthly volume from Redis and skips DB aggregate on hit", async () => {
+    it("bypasses monthly volume cache for cap enforcement and uses DB aggregate", async () => {
       db.user.findUniqueOrThrow.mockResolvedValue(
         makeUser({ polymarketConnected: true }) as any,
       );
       db.token.findUniqueOrThrow.mockResolvedValue(makeToken() as any);
-      // Redis cache HIT returns "1234" — DB aggregate should NOT be called
-      (redis.get as any).mockResolvedValue("1234");
+      db.order.aggregate.mockResolvedValue({ _sum: { size: 100 } } as any);
 
       await service.placeOrder("user-uuid-1", makePlaceOrderDto() as any);
 
-      expect(redis.get).toHaveBeenCalledWith(
-        expect.stringContaining("beta:monthly_volume:user-uuid-1:"),
-      );
-      expect(db.order.aggregate).not.toHaveBeenCalled();
+      // Cache is bypassed for cap enforcement — redis.get should NOT be called
+      expect(redis.get).not.toHaveBeenCalled();
+      // DB aggregate IS always called to get real volume
+      expect(db.order.aggregate).toHaveBeenCalledTimes(1);
     });
 
     it("falls through to DB aggregate and populates cache on miss", async () => {
@@ -709,12 +708,12 @@ describe("OrdersService", () => {
       expect(db.order.aggregate).toHaveBeenCalledTimes(1);
     });
 
-    it("enforces monthly cap using cached value", async () => {
+    it("enforces monthly cap using DB aggregate (bypasses cache)", async () => {
       db.user.findUniqueOrThrow.mockResolvedValue(
         makeUser({ polymarketConnected: true }) as any,
       );
-      // Cached value already at the cap minus a tiny remainder
-      (redis.get as any).mockResolvedValue("4990");
+      // DB aggregate returns volume near the cap — bypasses cache
+      db.order.aggregate.mockResolvedValue({ _sum: { size: 4990 } } as any);
 
       await expect(
         service.placeOrder(
@@ -724,7 +723,7 @@ describe("OrdersService", () => {
       ).rejects.toMatchObject({
         response: { code: "MONTHLY_VOLUME_EXCEEDED" },
       });
-      expect(db.order.aggregate).not.toHaveBeenCalled();
+      expect(db.order.aggregate).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -969,7 +968,7 @@ describe("OrdersService", () => {
       db.user.findUniqueOrThrow.mockResolvedValue(
         makeUser({ polymarketConnected: true }) as any,
       );
-      (redis.get as any).mockResolvedValue("4990");
+      db.order.aggregate.mockResolvedValue({ _sum: { size: 4990 } } as any);
 
       await expect(
         service.placeBatch(
