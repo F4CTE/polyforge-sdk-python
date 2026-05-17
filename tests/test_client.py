@@ -1365,33 +1365,77 @@ class TestAsyncPlaceOrderValidation:
         source = inspect.getsource(AsyncPolyforgeClient.split_position)
         assert '"amount"' in source or "'amount'" in source
 
-    def test_async_place_smart_order_calls_validate(self):
-        """Async place_smart_order must call validation helpers for type, side, outcome,
-        slices, interval_minutes, total_size, price params, and per-type required fields."""
-        import inspect
-        source = inspect.getsource(AsyncPolyforgeClient.place_smart_order)
-        assert '_validate_enum("type"' in source
-        assert '_validate_enum("side"' in source
-        assert '_validate_enum("outcome"' in source
-        assert "slices is required for TWAP/DCA orders" in source
-        assert "interval_minutes is required for TWAP/DCA orders" in source
-        assert "entry_price is required for BRACKET orders" in source
-        assert "take_profit_price is required for BRACKET orders" in source
-        assert "stop_loss_price is required for BRACKET orders" in source
-        assert "price_a is required for OCO orders" in source
-        assert "price_b is required for OCO orders" in source
-        assert "slices must be an integer" in source
-        assert "slices must be between 2 and 100" in source
-        assert "interval_minutes must be an integer" in source
-        assert "interval_minutes must be between 1 and 10080" in source
-        assert '_validate_financial_param("total_size"' in source
-        assert "total_size must be at least 1" in source
-        assert '_validate_price_param("limit_price"' in source
-        assert '_validate_price_param("entry_price"' in source
-        assert '_validate_price_param("take_profit_price"' in source
-        assert '_validate_price_param("stop_loss_price"' in source
-        assert '_validate_price_param("price_a"' in source
-        assert '_validate_price_param("price_b"' in source
+    def test_async_place_smart_order_rejects_invalid_type(self):
+        """Async place_smart_order should reject unknown smart-order types."""
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            client._post = AsyncMock()
+            try:
+                with pytest.raises(ValueError, match='type must be one of'):
+                    await client.place_smart_order(
+                        type="INVALID",
+                        token_id="tok",
+                        side="BUY",
+                        outcome="YES",
+                        total_size=10.0,
+                    )
+                client._post.assert_not_called()
+            finally:
+                await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_place_smart_order_twap_requires_slices(self):
+        """Async place_smart_order should enforce TWAP/DCA slices requirements."""
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            client._post = AsyncMock()
+            try:
+                with pytest.raises(ValueError, match="slices is required for TWAP/DCA orders"):
+                    await client.place_smart_order(
+                        type="TWAP",
+                        token_id="tok",
+                        side="BUY",
+                        outcome="YES",
+                        total_size=10.0,
+                        interval_minutes=5,
+                    )
+                client._post.assert_not_called()
+            finally:
+                await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_place_smart_order_rejects_invalid_slices_below_range(self):
+        """Async place_smart_order should enforce the slices min/max range."""
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            client._post = AsyncMock()
+            try:
+                with pytest.raises(ValueError, match="slices must be between 2 and 100"):
+                    await client.place_smart_order(
+                        type="TWAP",
+                        token_id="tok",
+                        side="BUY",
+                        outcome="YES",
+                        total_size=10.0,
+                        slices=1,
+                        interval_minutes=1,
+                    )
+                client._post.assert_not_called()
+            finally:
+                await client.close()
+
+        asyncio.run(_run())
 
     def test_async_provide_liquidity_calls_validate(self):
         """Async provide_liquidity must call _validate_financial_param for amount_usdc (#26)."""
