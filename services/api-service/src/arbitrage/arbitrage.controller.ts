@@ -27,6 +27,7 @@ import {
 } from "@nestjs/swagger";
 import { Throttle } from "@nestjs/throttler";
 import { IdempotencyInterceptor } from "../common/interceptors/idempotency.interceptor";
+import { GeoBlockGuard } from "../common/guards/geo.guard";
 import {
   JwtAuthGuard,
   AdminJwtGuard,
@@ -255,8 +256,8 @@ export class ArbitrageController {
       ttl: 60_000,
     },
   })
-  @UseGuards(JwtAuthGuard, ApiKeyScopeGuard)
-  @RequireScopes("WRITE")
+  @UseGuards(JwtAuthGuard, ApiKeyScopeGuard, GeoBlockGuard)
+  @RequireScopes("TRADE")
   @ApiHeader({
     name: "Idempotency-Key",
     required: true,
@@ -315,8 +316,8 @@ export class ArbitrageController {
       ttl: 60_000,
     },
   })
-  @UseGuards(JwtAuthGuard, ApiKeyScopeGuard)
-  @RequireScopes("WRITE")
+  @UseGuards(JwtAuthGuard, ApiKeyScopeGuard, GeoBlockGuard)
+  @RequireScopes("TRADE")
   @ApiHeader({
     name: "Idempotency-Key",
     required: true,
