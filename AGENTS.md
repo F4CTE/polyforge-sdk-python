@@ -115,3 +115,5 @@ These rules are mandatory for all agents working in this repository. Violations 
 4. **Rebase, never merge.** Keep your branch up to date with `git rebase origin/<default-branch>`, not `git merge`. Merge commits pollute history and make bisecting harder.
 
 5. **One fix, one PR.** Each PR addresses exactly one issue. Do not bundle unrelated fixes — it makes review harder, reverts riskier, and CI failures ambiguous.
+
+6. **PR creation rate limits (hard cap).** No agent may create more than 10 PRs in any rolling 60-minute window, and no more than 3 PRs per session or heartbeat. When ≥2 fixes touch the same files or functional area, batch them into a single PR. If a task requires 4+ PRs, request CEO/board approval first. Respect the `ci-pr-queue` concurrency group — opening many PRs simultaneously queues them, it does not speed up CI.

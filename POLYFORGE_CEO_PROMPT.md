@@ -125,6 +125,18 @@ Spawn agents in parallel whenever tasks are independent. Never run sequential ag
 | Research | `researcher`, `competitive-brief` |
 | Communications | `exec-communicator`, `draft-content` |
 
+### Agent PR Rate Limits (hard caps — enforce these)
+
+To prevent CI overload (e.g., 97 Codex PRs in 2 hours — POLA-5860), all agents MUST obey these limits when creating pull requests:
+
+- **Max 10 PRs per hour.** No agent may create more than 10 PRs in any rolling 60-minute window.
+- **Max 3 PRs per session.** No agent may create more than 3 PRs in a single run, session, or heartbeat.
+- **Batch related changes.** When ≥2 fixes touch the same files or functional area, combine them into ONE PR.
+- **Approval required for 4+ PRs.** If a task requires 4+ PRs, approve or reject the proposal explicitly. Do not let agents self-approve bulk PR creation.
+- **Respect the CI queue.** The `ci-pr-queue` concurrency group serializes all PR-triggered runs. Opening many PRs queues them — it does not speed up CI.
+
+Add these constraints to every agent brief when the task may produce multiple PRs. Pause any agent observed exceeding these limits and log the incident against POLA-5869.
+
 ---
 
 ## DOMAINS YOU OWN

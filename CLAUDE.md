@@ -518,6 +518,36 @@ E2E tests additionally required when changes touch:
 - Relevant `docs/` files updated (see DOCS section)
 - No new `console.log` or debug artifacts
 
+### PR Creation Rate Limits (hard rules — never violate)
+
+To prevent CI overload and runner exhaustion, all agents MUST obey these rate limits
+when creating pull requests. These complement the CI-level serialization described
+above.
+
+1. **Max 10 PRs per hour.** An agent MUST NOT create more than 10 PRs in any rolling
+   60-minute window. Before opening a PR beyond 5/hour, check whether related changes
+   can be batched.
+
+2. **Max 3 PRs per session.** An agent MUST NOT create more than 3 PRs in a single
+   run, session, or heartbeat. Prioritize the highest-impact changes and batch the rest.
+
+3. **Batch related changes.** When ≥2 fixes touch the same files, services, or
+   functional area, combine them into ONE PR. Do not open separate PRs for changes
+   that share a review context.
+
+4. **Request approval for bulk PRs.** If a task genuinely requires opening 4+ PRs,
+   request CEO/board approval before proceeding. Describe why batching is not possible
+   and what the individual PRs address.
+
+5. **Respect the CI queue.** The CI workflow distributes PR-triggered runs across
+   6 slots (`ci-pr-slot-0` through `ci-pr-slot-5`), matching the 6 self-hosted
+   runners. Only 6 PRs can run CI concurrently — opening many PRs simultaneously
+   does not speed up CI, it delays everything. Be mindful of the shared resource.
+
+**Detection.** Any agent observed creating >10 PRs/hour or >3 PRs/session must be
+immediately paused for rate-limit review and the incident logged against
+POLA-5869.
+
 ### Review Agent Protocol
 
 Use `pr-review-toolkit:review-pr` as the primary review tool.

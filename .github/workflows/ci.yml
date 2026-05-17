@@ -12,13 +12,19 @@ on:
 permissions:
   contents: read
 
-# Per-branch concurrency: a new push to the SAME branch cancels its previous run,
-# but different branches queue independently instead of killing each other.
+# PR-triggered workflows are distributed across 6 slots (ci-pr-slot-0 through
+# ci-pr-slot-5), matching the 6 self-hosted runners. Each slot serializes its
+# share of PRs with queuing (cancel-in-progress: false) so three pushes to the
+# same PR branch queue sequentially instead of cancelling.  This caps total
+# concurrent PR CI at 6 and prevents runner exhaustion from floods (e.g. 185
+# Codex PRs in 3 hours).
+# Push and workflow_dispatch events retain per-ref grouping with cancellation so
+# pushing to main cancels stale runs as before.
 # The heavy jobs (deploy-dev + E2E) that share Docker services use a separate
-# job-level concurrency group to serialize access — see those jobs below.
+# job-level concurrency group — see those jobs below.
 concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  group: ${{ github.event_name == 'pull_request' && format('ci-pr-slot-{0}', github.event.pull_request.number % 6) || format('ci-{0}', github.ref) }}
+  cancel-in-progress: ${{ github.event_name != 'pull_request' }}
 
 env:
   NODE_VERSION: '26'
