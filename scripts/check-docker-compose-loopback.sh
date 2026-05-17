@@ -300,8 +300,16 @@ function process_flow_entries(buf) {
 # checks ports exit itself.
 in_ports && !in_block {
   cur = leadingspaces($0)
-  if ($0 !~ /^[[:space:]]*$/ && $0 !~ /^[[:space:]]*#/ && cur <= ports_indent && $0 !~ /^[[:space:]]+ports:/) {
-    in_ports = 0
+  if ($0 !~ /^[[:space:]]*$/ && $0 !~ /^[[:space:]]*#/) {
+    # YAML allows indentless sequences under a key, e.g.:
+    #   ports:
+    #   - "3000:3000"
+    # So a dash item at the same indentation as ports: must remain
+    # inside the ports section and be parsed by the rules below.
+    is_indentless_item = (cur == ports_indent && $0 ~ /^[[:space:]]*-[[:space:]]+/)
+    if (cur < ports_indent || (cur == ports_indent && !is_indentless_item && $0 !~ /^[[:space:]]+ports:/)) {
+      in_ports = 0
+    }
   }
 }
 
