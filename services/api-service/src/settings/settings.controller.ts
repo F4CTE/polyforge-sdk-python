@@ -1,4 +1,5 @@
 import {
+  ForbiddenException,
   Controller,
   Get,
   Patch,
@@ -6,6 +7,7 @@ import {
   Body,
   Query,
   Res,
+  Req,
   UseGuards,
   UseInterceptors,
 } from "@nestjs/common";
@@ -108,14 +110,19 @@ export class MeController {
   constructor(private readonly settings: SettingsService) {}
 
   @Get("export")
-  @UseGuards(ApiKeyScopeGuard)
-  @RequireScopes("READ")
   @UseInterceptors(NoCacheInterceptor)
   async exportPersonalData(
     @CurrentUser() user: JwtPayload,
     @Query("format") format: string | undefined,
+    @Req() req: { apiKeyMeta?: unknown },
     @Res({ passthrough: true }) res: FastifyReply,
   ) {
+    if (req.apiKeyMeta) {
+      throw new ForbiddenException(
+        "Personal data export requires an authenticated user session",
+      );
+    }
+
     const data = await this.settings.exportPersonalData(user.sub);
     const timestamp = new Date().toISOString().slice(0, 10);
 

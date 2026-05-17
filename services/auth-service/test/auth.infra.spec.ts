@@ -244,11 +244,14 @@ describe.runIf(HAS_TEST_DB && HAS_TEST_REDIS)('Auth Real Integration', () => {
         },
       });
 
-      // Fire-and-forget: wait for async email send to complete
+      // Fire-and-forget: wait for async email send to complete.
+      // Use find() by recipient instead of index [0] because a slow
+      // async email from a prior test can arrive after beforeEach
+      // clears the array and land before the current test's email.
       await new Promise((r) => setTimeout(r, 50));
-      expect(fakeMail.sentEmails.length).toBeGreaterThanOrEqual(1);
-      expect(fakeMail.sentEmails[0]?.type).toBe('verification');
-      expect(fakeMail.sentEmails[0]?.to).toBe('bob@test.com');
+      const bobMail = fakeMail.sentEmails.find((e) => e.to === 'bob@test.com');
+      expect(bobMail).toBeDefined();
+      expect(bobMail!.type).toBe('verification');
     });
 
     it('returns 400 on missing required fields', async () => {
