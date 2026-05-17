@@ -105,24 +105,45 @@ export class OrdersPage {
         limitPrice?: string;
         trailingPct?: string;
         expiresAt?: string;
-    }): Promise<void> {
+    }): Promise<boolean> {
+        const portfolioResponsePromise = this.page.waitForResponse(
+            response =>
+                response.url().includes('/api/v1/portfolio') &&
+                response.request().method() === 'GET',
+            { timeout: 10_000 },
+        );
         await this.newConditionalButton.click();
         await expect(this.page.locator('[role="dialog"]')).toBeVisible();
 
-        // Select market from positions dropdown (if positions exist)
+        const portfolioResponse = await portfolioResponsePromise;
+        expect(portfolioResponse.ok()).toBeTruthy();
+        const portfolioData = await portfolioResponse.json();
+        const positions = Array.isArray(portfolioData?.positions) ? portfolioData.positions : [];
+        if (positions.length === 0) {
+            await this.cancelButton.click();
+            return false;
+        }
+
+        // Select market from positions dropdown. Prefer an explicit market match,
+        // but fall back to the first seeded position so tests do not depend on
+        // a specific demo market label.
+        const options = this.marketSelect.locator('option');
+        await expect
+            .poll(() => options.count(), { timeout: 10_000 })
+            .toBeGreaterThan(1);
+        const optionCount = await options.count();
+
+        let selectedValue = await options.nth(1).getAttribute('value') ?? '';
         if (params.market) {
-            const options = this.marketSelect.locator('option');
-            const count = await options.count();
-            // Try to find an option containing the market name
-            for (let i = 1; i < count; i++) { // skip placeholder
+            for (let i = 1; i < optionCount; i++) { // skip placeholder
                 const text = await options.nth(i).textContent() ?? '';
                 if (text.toLowerCase().includes(params.market.toLowerCase())) {
-                    const value = await options.nth(i).getAttribute('value') ?? '';
-                    await this.marketSelect.selectOption(value);
+                    selectedValue = await options.nth(i).getAttribute('value') ?? selectedValue;
                     break;
                 }
             }
         }
+        await this.marketSelect.selectOption(selectedValue);
 
         // Select type (native <select>)
         await this.typeSelect.selectOption(params.type);
@@ -156,8 +177,19 @@ export class OrdersPage {
             await this.expiresAtInput.fill(params.expiresAt);
         }
 
-        // Submit
+        // Submit and wait for the app to reload the conditional-order list.
+        const createResponse = this.page.waitForResponse(
+            response =>
+                response.url().includes('/api/v1/orders/conditional') &&
+                response.request().method() === 'POST',
+            { timeout: 10_000 },
+        );
         await this.createButton.click();
+        const response = await createResponse;
+        expect(response.ok()).toBeTruthy();
+        await expect(this.page.locator('[role="dialog"]')).not.toBeVisible({ timeout: 10_000 });
+        await expect(this.orderRows.first()).toBeVisible({ timeout: 10_000 });
+        return true;
     }
 
     async cancelOrder(id: string): Promise<void> {

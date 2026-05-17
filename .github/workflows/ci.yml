@@ -223,7 +223,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
         ports:
-          - 5433:5432
+          - 5432/tcp
       # Dedicated Redis for auth integration tests.
       # Must use non-default port for cleanAuthRedis safety check.
       test-redis:
@@ -234,7 +234,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
         ports:
-          - 6380:6379
+          - 6379/tcp
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
@@ -253,8 +253,8 @@ jobs:
             test/auth.infra.spec.ts test/auth.integration.spec.ts
         env:
           CI: true
-          TEST_DATABASE_URL: postgresql://citest:citest@localhost:5433/auth_integration_test
-          TEST_REDIS_URL: redis://localhost:6380
+          TEST_DATABASE_URL: postgresql://citest:citest@localhost:${{ job.services.test-db.ports[5432] }}/auth_integration_test
+          TEST_REDIS_URL: redis://localhost:${{ job.services.test-redis.ports[6379] }}
 
   # ── 3. Build ─────────────────────────────────────────────────────────────
   build:
