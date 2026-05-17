@@ -103,6 +103,8 @@ export class MarketsController {
   }
 
   @Get(":marketId/sentiment")
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes("READ")
   getMarketSentiment(
     @Param("marketId") marketId: string,
     @CurrentUser() user: JwtPayload,
