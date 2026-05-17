@@ -12,6 +12,8 @@ output_dir="${PLAYWRIGHT_OUTPUT_DIR:-test-results}"
 
 pids=()
 
+mkdir -p "$output_dir"
+
 terminate_shards() {
   local pid
   for pid in "${pids[@]}"; do
