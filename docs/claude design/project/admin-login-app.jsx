@@ -6,8 +6,8 @@ const { useState, useRef } = React;
 
 function AdminLogin() {
   const [stage, setStage] = useState('cred'); // cred | mfa
-  const [email, setEmail] = useState('priya@polyforge.app');
-  const [password, setPassword] = useState('hunter2hunter2');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
   const [code, setCode] = useState(['', '', '', '', '', '']);
   const refs = useRef([]);
