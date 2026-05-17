@@ -296,11 +296,10 @@ test.describe("Backtesting — Full Workflow Coverage", () => {
 
     // Future date range: the run button should either be disabled (client-side
     // validation blocks future dates) or remain enabled (server validates).
-    const runButton = page.locator(
-      'button:has-text("Run"), [data-testid="run-backtest"]',
-    );
-    const isDisabled = await runButton.isDisabled().catch(() => false);
-    const isVisible = await runButton.isVisible().catch(() => false);
+    const runButton = backtestPage.runButton;
+    await expect(runButton).toBeVisible();
+    const isDisabled = await runButton.isDisabled();
+    const isVisible = await runButton.isVisible();
     // At minimum the UI must still render and the button must exist.
     expect(isVisible || isDisabled).toBe(true);
   });

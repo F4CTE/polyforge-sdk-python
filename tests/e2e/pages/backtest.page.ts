@@ -36,7 +36,7 @@ export class BacktestPage {
         // Native <input type="date"> — use setNativeDate() helper instead of fill()
         this.startDateInput = page.locator('#backtest-start');
         this.endDateInput = page.locator('#backtest-end');
-        this.runButton = page.locator('button', { hasText: 'Run Backtest' });
+        this.runButton = page.getByTestId('run-backtest');
         // The table uses aria-label, not data-testid
         this.historyTable = page.locator('table[aria-label="Backtest history"]');
         this.historyRows = page.locator('[data-testid="backtest-history-row"]');
