@@ -1,5 +1,12 @@
 import { Injectable, Inject, Optional } from "@nestjs/common";
-import { ThrottlerGuard } from "@nestjs/throttler";
+import { Reflector } from "@nestjs/core";
+import {
+  InjectThrottlerOptions,
+  InjectThrottlerStorage,
+  ThrottlerGuard,
+  type ThrottlerModuleOptions,
+  type ThrottlerStorage,
+} from "@nestjs/throttler";
 import { RedisService } from "@polyforge/shared-redis";
 import { createHash } from "crypto";
 
@@ -8,8 +15,12 @@ const APIKEY_OWNER_TTL = 120; // seconds, > default throttler window
 
 @Injectable()
 export class ApiKeyThrottlerGuard extends ThrottlerGuard {
-  constructor(...args: ConstructorParameters<typeof ThrottlerGuard>) {
-    super(...args);
+  constructor(
+    @InjectThrottlerOptions() options: ThrottlerModuleOptions,
+    @InjectThrottlerStorage() storageService: ThrottlerStorage,
+    reflector: Reflector,
+  ) {
+    super(options, storageService, reflector);
   }
 
   @Optional()

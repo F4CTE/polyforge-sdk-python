@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { createHash } from "crypto";
+import { Test } from "@nestjs/testing";
+import { ThrottlerModule } from "@nestjs/throttler";
 import { ApiKeyThrottlerGuard } from "./api-key-throttler.guard";
 
 // Helper: build a minimal JWT with a given sub claim.
@@ -46,6 +48,21 @@ describe("ApiKeyThrottlerGuard", () => {
   function makeGuard() {
     return new TestApiKeyThrottlerGuard({} as any, {} as any, {} as any);
   }
+
+  it("receives base ThrottlerGuard dependencies through Nest DI", async () => {
+    const moduleRef = await Test.createTestingModule({
+      imports: [ThrottlerModule.forRoot([{ ttl: 60000, limit: 10 }])],
+      providers: [ApiKeyThrottlerGuard],
+    }).compile();
+
+    const guard = moduleRef.get(ApiKeyThrottlerGuard);
+
+    expect((guard as any).options).toBeDefined();
+    expect((guard as any).storageService).toBeDefined();
+    expect((guard as any).reflector).toBeDefined();
+
+    await moduleRef.close();
+  });
 
   // ── Identity tracking with pre-populated req.user / req.apiKeyMeta ─
 
