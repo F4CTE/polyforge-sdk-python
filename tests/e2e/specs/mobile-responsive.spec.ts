@@ -216,8 +216,8 @@ test.describe('Mobile — Responsive Layout & Touch Targets (@mobile)', () => {
             expect(bodyOverflow).not.toBe('scroll');
         });
 
-        test('@mobile /copy-trading page renders at 375px', async ({ page }) => {
-            await page.goto('/copy-trading');
+        test('@mobile /copy page renders at 375px', async ({ page }) => {
+            await page.goto('/copy');
             await expect(page.locator('h1', { hasText: /copy/i })).toBeVisible({ timeout: 10_000 });
 
             const bottomNav = page.getByRole('navigation', { name: 'Mobile navigation' });
