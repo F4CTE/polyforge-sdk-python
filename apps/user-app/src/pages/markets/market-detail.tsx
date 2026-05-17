@@ -839,7 +839,7 @@ export function Component() {
         }),
       });
       if (!res.ok) {
-        const formatted = await parseApiErrorResponse(res, 'Order failed');
+        const formatted = await parseApiErrorResponse(res, 'Failed to place order');
         notifyApiError(formatted);
         throw new Error(formatted.message);
       }
@@ -850,7 +850,7 @@ export function Component() {
       loadMyOrders();
     } catch (err: unknown) {
       const formatted = formatApiError({
-        fallbackMessage: 'Order failed',
+        fallbackMessage: 'Failed to place order',
         error: err,
       });
       setTradeError(formatted.message);

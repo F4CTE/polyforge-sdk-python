@@ -971,7 +971,7 @@ export function Component() {
           setCircuitBreakerTrippedAt(data.circuitBreakerTrippedAt ?? null);
         }
       })
-      .catch(err => { notifyApiError(err, "request"); });
+      .catch(err => { notifyApiError(err, "load risk settings"); });
   }, []);
 
   const [showResetConfirm, setShowResetConfirm] = useState(false);

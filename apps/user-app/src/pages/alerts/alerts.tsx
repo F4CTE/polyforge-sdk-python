@@ -184,7 +184,7 @@ export function Component() {
       fetch('/api/v1/alerts', { credentials: 'include' })
         .then(r => (r.ok ? r.json() : []))
         .then(setAlerts)
-        .catch(err => { notifyApiError(err, "refresh"); });
+        .catch(err => { notifyApiError(err, "refresh alerts"); });
     }
   }
 

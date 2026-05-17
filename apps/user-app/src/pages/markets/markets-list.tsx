@@ -976,7 +976,7 @@ export function Component() {
       .then((data: MarketsResponse | null) => {
         if (data?.data) setTrendingMarkets(data.data);
       })
-      .catch(err => { notifyApiError(err, "request"); })
+      .catch(err => { notifyApiError(err, "load trending markets"); })
       .finally(() => setTrendingLoading(false));
   }, []);
 
@@ -1052,7 +1052,7 @@ export function Component() {
         });
         setWatchedIds(prev => new Set([...prev, marketId]));
       }
-    } catch { notifyApiError(null, "watchlist toggle"); } finally {
+    } catch { notifyApiError(null, "toggle watchlist"); } finally {
       setWatchlistLoading(prev => { const next = new Set(prev); next.delete(marketId); return next; });
     }
   };
