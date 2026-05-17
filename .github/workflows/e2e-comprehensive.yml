@@ -1,0 +1,94 @@
+name: E2E Comprehensive
+
+on:
+  schedule:
+    # Nightly after normal main-branch CI has had time to deploy dev.
+    - cron: '30 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-polyforge-lab
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: '26'
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  TURBO_CACHE_DIR: .turbo
+  DIRECT_DATABASE_URL: 'postgresql://ci:ci@localhost:5432/ci'
+  ADMIN_DIRECT_DATABASE_URL: 'postgresql://ci:ci@localhost:5432/ci_admin'
+
+jobs:
+  comprehensive-e2e:
+    name: Comprehensive E2E
+    if: github.ref == 'refs/heads/main'
+    runs-on: [self-hosted, linux]
+    timeout-minutes: 180
+    steps:
+      - name: Show deployed revision
+        run: |
+          cd ~/PolyForge
+          git fetch origin main
+          echo "deployed=$(git rev-parse --short HEAD)"
+          echo "origin_main=$(git rev-parse --short origin/main)"
+
+      - name: Verify dev environment is healthy
+        timeout-minutes: 5
+        run: |
+          timeout 120 bash -c 'until curl -sf http://localhost:3001/health; do sleep 2; done'
+          timeout 120 bash -c 'until curl -sf http://localhost:3002/health; do sleep 2; done'
+          timeout 120 bash -c 'until curl -sf https://localhost/login; do sleep 2; done'
+
+      - name: Kill stale Playwright / Chromium processes
+        run: |
+          pkill -u f4cte -f 'playwright test' 2>/dev/null || true
+          pkill -u f4cte -f 'chrome-headless-shell' 2>/dev/null || true
+          sleep 1
+
+      - name: Install Playwright browsers
+        run: |
+          cd ~/PolyForge/tests/e2e
+          timeout --kill-after=10s 120 npx playwright install --with-deps chromium 2>/dev/null || true
+
+      - name: Run E2E global setup
+        timeout-minutes: 8
+        run: |
+          cd ~/PolyForge/tests/e2e
+          BASE_URL=https://localhost AUTH_URL=http://localhost:3001 MAILHOG_URL=http://localhost:8025 \
+            CI=true npx tsx global-setup.ts
+
+      - name: Clean stale test results
+        run: rm -rf ~/PolyForge/tests/e2e/test-results/comprehensive
+
+      - name: Run full desktop E2E shards
+        timeout-minutes: 120
+        env:
+          BASE_URL: https://localhost
+          CI: 'true'
+          E2E_SHARD_COUNT: 6
+          E2E_SHARD_TIMEOUT_SECONDS: 5400
+          E2E_MAX_FAILURES: 25
+          PLAYWRIGHT_GLOBAL_TIMEOUT_MS: 5400000
+          PLAYWRIGHT_OUTPUT_DIR: test-results/comprehensive/desktop
+          PLAYWRIGHT_RUN_MOBILE: false
+        run: |
+          cd ~/PolyForge/tests/e2e
+          ../../scripts/e2e/run-shards.sh
+
+      - name: Run full mobile E2E shard
+        timeout-minutes: 30
+        env:
+          BASE_URL: https://localhost
+          CI: 'true'
+          PLAYWRIGHT_PROJECT: mobile-chromium
+          PLAYWRIGHT_RUN_MOBILE: false
+          E2E_SHARD_COUNT: 1
+          E2E_SHARD_TIMEOUT_SECONDS: 1800
+          E2E_MAX_FAILURES: 10
+          PLAYWRIGHT_GLOBAL_TIMEOUT_MS: 1800000
+          PLAYWRIGHT_OUTPUT_DIR: test-results/comprehensive/mobile
+        run: |
+          cd ~/PolyForge/tests/e2e
+          ../../scripts/e2e/run-shards.sh
