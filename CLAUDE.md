@@ -539,9 +539,10 @@ above.
    request CEO/board approval before proceeding. Describe why batching is not possible
    and what the individual PRs address.
 
-5. **Respect the CI queue.** The CI workflow (`ci-pr-queue`) serializes all
-   PR-triggered runs into a single shared queue. Opening many PRs simultaneously does
-   not speed up CI — it delays everything. Be mindful of the shared resource.
+5. **Respect the CI queue.** The CI workflow distributes PR-triggered runs across
+   6 slots (`ci-pr-slot-0` through `ci-pr-slot-5`), matching the 6 self-hosted
+   runners. Only 6 PRs can run CI concurrently — opening many PRs simultaneously
+   does not speed up CI, it delays everything. Be mindful of the shared resource.
 
 **Detection.** Any agent observed creating >10 PRs/hour or >3 PRs/session must be
 immediately paused for rate-limit review and the incident logged against
