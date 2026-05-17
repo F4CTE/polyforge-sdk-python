@@ -79,6 +79,14 @@ function formatShortDate(d: string): string {
   return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
+function todayInputValue(): string {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 /* ─── Component ──────────────────────────────────────────────────────── */
 
 export function Component() {
@@ -202,9 +210,22 @@ export function Component() {
     }
   }
 
-  const canSubmit = selectedStratId && dateStart && dateEnd && !submitting;
+  const today = todayInputValue();
+  const hasDateRange = Boolean(dateStart && dateEnd);
+  const isReversedDateRange = hasDateRange && dateStart > dateEnd;
+  const isFutureDateRange = hasDateRange && (dateStart > today || dateEnd > today);
+  const dateValidationMessage = isReversedDateRange
+    ? 'End date must be after start date'
+    : isFutureDateRange
+      ? 'Backtest dates cannot be in the future'
+      : null;
+  const canSubmit = Boolean(selectedStratId && dateStart && dateEnd && !dateValidationMessage && !submitting);
 
   async function submit() {
+    if (dateValidationMessage) {
+      toast.error(dateValidationMessage);
+      return;
+    }
     if (!canSubmit) return;
     setSubmitting(true);
     try {
@@ -291,6 +312,8 @@ export function Component() {
                 type="date"
                 lang="en"
                 value={dateStart}
+                max={today}
+                aria-invalid={Boolean(dateValidationMessage)}
                 onChange={e => setDateStart(e.target.value)}
                 className="w-full h-9 px-3 rounded-pf bg-surface border border-default text-body-md text-primary focus-visible:outline-none focus-visible:border-accent/50"
               />
@@ -302,6 +325,8 @@ export function Component() {
                 type="date"
                 lang="en"
                 value={dateEnd}
+                max={today}
+                aria-invalid={Boolean(dateValidationMessage)}
                 onChange={e => setDateEnd(e.target.value)}
                 className="w-full h-9 px-3 rounded-pf bg-surface border border-default text-body-md text-primary focus-visible:outline-none focus-visible:border-accent/50"
               />
@@ -309,6 +334,7 @@ export function Component() {
             <div className="flex items-end">
               <Button
                 type="button"
+                data-testid="run-backtest"
                 onClick={submit}
                 disabled={!canSubmit}
                 className="w-full h-9 rounded-pf bg-accent text-inverse text-body-md font-medium hover:bg-accent-text disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
@@ -318,6 +344,11 @@ export function Component() {
               </Button>
             </div>
           </div>
+          {dateValidationMessage && (
+            <p className="text-body-sm text-loss" role="alert">
+              {dateValidationMessage}
+            </p>
+          )}
 
           {marketSlots.length > 0 && (
             <div className="space-y-3">
