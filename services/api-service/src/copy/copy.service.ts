@@ -41,7 +41,18 @@ export class CopyService {
       select: { polymarketConnected: true, polymarketAddress: true },
     });
     if (user?.polymarketConnected && user.polymarketAddress) {
-      const ownWallet = await tryChecksumEthereumAddress(user.polymarketAddress);
+      let ownWallet = await tryChecksumEthereumAddress(user.polymarketAddress);
+
+      // Backward compatibility: legacy stored addresses may have invalid
+      // mixed-case checksums while still being valid hex bytes. For the
+      // self-copy safety check, canonicalize those to checksum form instead of
+      // silently skipping the comparison.
+      if (!ownWallet) {
+        ownWallet = await tryChecksumEthereumAddress(
+          user.polymarketAddress.toLowerCase(),
+        );
+      }
+
       if (ownWallet && ownWallet === targetWallet) {
         throw new BadRequestException(
           "Cannot create a copy config for your own wallet",

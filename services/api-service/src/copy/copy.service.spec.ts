@@ -165,6 +165,20 @@ describe("CopyService", () => {
       expect(prisma.copyConfig.count).not.toHaveBeenCalled();
     });
 
+    it("rejects self-copy for legacy invalid mixed-case stored address with same bytes", async () => {
+      prisma.user.findUnique.mockResolvedValue({
+        polymarketConnected: true,
+        polymarketAddress: BAD_CHECKSUM_WALLET,
+      });
+
+      await expect(
+        service.create("user-1", { targetWallet: LOWER_TARGET_WALLET }),
+      ).rejects.toThrow("Cannot create a copy config for your own wallet");
+
+      expect(prisma.copyConfig.count).not.toHaveBeenCalled();
+    });
+
+
     it("allows copy when user has a different polymarketAddress", async () => {
       prisma.user.findUnique.mockResolvedValue({
         polymarketConnected: true,
