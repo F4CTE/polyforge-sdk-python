@@ -437,8 +437,18 @@ export function StrategyCanvas() {
     <div
       ref={reactFlowWrapper}
       className="w-full h-full relative"
+      role="region"
       aria-label="Strategy canvas editor"
+      tabIndex={0}
       onKeyDown={onCanvasKeyDown}
+      onPointerDown={(event) => {
+        if (
+          event.target instanceof HTMLElement &&
+          event.target.classList.contains("react-flow__pane")
+        ) {
+          reactFlowWrapper.current?.focus();
+        }
+      }}
     >
       {/* Screen reader status announcements */}
       <div

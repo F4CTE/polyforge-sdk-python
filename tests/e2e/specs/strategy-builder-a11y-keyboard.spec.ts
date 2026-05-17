@@ -116,8 +116,9 @@ test.describe("Strategy Builder — Keyboard A11y", () => {
     await expect(builder.blockCards()).toHaveCount(2, { timeout: 5_000 });
 
     // Click canvas pane to establish focus context, then Tab to first node
+    const canvas = page.getByLabel("Strategy canvas editor");
     await page.locator(".react-flow__pane").click();
-    await expect(page.locator(".react-flow__pane")).toBeFocused({
+    await expect(canvas).toBeFocused({
       timeout: 5_000,
     });
     const firstNode = builder.blockCards().first();
