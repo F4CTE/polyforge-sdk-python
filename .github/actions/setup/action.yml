@@ -45,7 +45,9 @@ runs:
       run: |
         pnpm install --frozen-lockfile || {
           echo "::warning::pnpm install failed, clearing corrupted store and retrying..."
-          rm -rf "$PNPM_STORE_PATH"/*
+          bad_store="${PNPM_STORE_PATH}.corrupt.$(date +%s).$$"
+          mv "$PNPM_STORE_PATH" "$bad_store" 2>/dev/null || true
+          mkdir -p "$PNPM_STORE_PATH"
           pnpm install --frozen-lockfile
         }
 
