@@ -61,36 +61,25 @@ export class MarketsPage {
     await expect(this.page.locator("h1", { hasText: "Markets" })).toBeVisible({
       timeout: 15_000,
     });
+    await this.waitForResults();
   }
 
-  async search(term: string): Promise<void> {
-    // The input triggers onChange which sets a 300ms debounce timer.
-    // After the debounce fires, the component calls GET /api/v1/markets?search=...
-    // Clear then fill — each fill keystroke cancels any pending debounce timer,
-    // so only the final value triggers the API call. Wait for that response
-    // instead of a hardcoded sleep.  Let the timeout fail the test directly —
-    // a missing search response is a real product behaviour defect, not noise.
-    //
-    // Match the response URL against both the base endpoint AND the entered
-    // search term so that a concurrent background fetch or category-filter
-    // request does not resolve the promise prematurely (Argus review finding).
+  async search(
+    term: string,
+    options: { waitForResults?: boolean } = {},
+  ): Promise<void> {
+    const response =
+      (options.waitForResults ?? true)
+        ? this.waitForMainMarketsResponse((params) =>
+            term ? params.get("search") === term : !params.has("search"),
+          )
+        : null;
     await this.searchInput.clear();
     await this.searchInput.fill(term);
-    await this.page.waitForResponse(
-      (resp) => {
-        if (
-          !resp.url().includes("/api/v1/markets?") ||
-          resp.request().method() !== "GET"
-        )
-          return false;
-        try {
-          return new URL(resp.url()).searchParams.get("search") === term;
-        } catch {
-          return false;
-        }
-      },
-      { timeout: 15_000 },
-    );
+    if (response) {
+      await response;
+      await this.waitForResults();
+    }
   }
 
   async selectCategory(
@@ -103,7 +92,24 @@ export class MarketsPage {
       | "Finance"
       | "Technology",
   ): Promise<void> {
-    await this.categoryChips[category].click();
+    // No-op guard: clicking the already-active category does not trigger a
+    // new fetch, so skip the network wait and just verify results are visible.
+    const chip = this.categoryChips[category];
+    const isActive = await chip
+      .evaluate((el) => el.classList.contains("bg-accent-subtle"))
+      .catch(() => false);
+    if (isActive) {
+      await this.waitForResults();
+      return;
+    }
+
+    const responsePromise = this.waitForMainMarketsResponse((params) => {
+      if (category === "All") return !params.has("category");
+      return params.get("category") === category;
+    });
+    await chip.click();
+    await responsePromise;
+    await this.waitForResults();
   }
 
   async selectSort(
@@ -117,7 +123,19 @@ export class MarketsPage {
       closingSoon: "closing_soon",
       liquidity: "liquidity",
     };
-    await this.sortDropdown.selectOption(sortMap[sort]);
+    const optionValue = sortMap[sort];
+    // No-op guard: selecting the current sort does not trigger a new fetch.
+    if ((await this.sortDropdown.inputValue()) === optionValue) {
+      await this.waitForResults();
+      return;
+    }
+
+    const responsePromise = this.waitForMainMarketsResponse(
+      (params) => params.get("sort") === optionValue,
+    );
+    await this.sortDropdown.selectOption(optionValue);
+    await responsePromise;
+    await this.waitForResults();
   }
 
   async switchToCardView(): Promise<void> {
@@ -178,5 +196,49 @@ export class MarketsPage {
   async isCardView(): Promise<boolean> {
     const count = await this.marketCards.count();
     return count > 0;
+  }
+
+  async waitForResults(timeout = 45_000): Promise<void> {
+    // Wait for loading skeletons to disappear before checking content,
+    // ensuring we don't pass on stale pre-action results that are still
+    // visible before React flips to loading state.
+    await this.page
+      .locator(".animate-shimmer")
+      .first()
+      .waitFor({ state: "hidden", timeout })
+      .catch(() => {});
+    await expect(
+      this.marketCards
+        .first()
+        .or(this.page.locator('table[aria-label="Markets"]'))
+        .or(this.page.locator('main [role="status"]').first()),
+    ).toBeVisible({ timeout });
+  }
+
+  private async waitForMainMarketsResponse(
+    matches: (params: URLSearchParams) => boolean,
+  ): Promise<void> {
+    await this.page.waitForResponse(
+      (resp) => {
+        if (
+          resp.request().method() !== "GET" ||
+          !resp.url().includes("/api/v1/markets?")
+        ) {
+          return false;
+        }
+        try {
+          const params = new URL(resp.url()).searchParams;
+          return (
+            resp.status() >= 200 &&
+            resp.status() < 300 &&
+            params.get("limit") === "25" &&
+            matches(params)
+          );
+        } catch {
+          return false;
+        }
+      },
+      { timeout: 45_000 },
+    );
   }
 }

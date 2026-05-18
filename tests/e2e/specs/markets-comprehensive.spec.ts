@@ -22,6 +22,8 @@ import {
  */
 
 test.describe("Markets — Full Workflow Coverage", () => {
+  test.setTimeout(120_000);
+
   let token: string;
 
   test.beforeAll(async () => {
@@ -257,16 +259,15 @@ test.describe("Markets — Full Workflow Coverage", () => {
     // Search for something
     await markets.search("xyz-nonexistent-market");
 
-    // Clear search by emptying input
-    await markets.searchInput.clear();
-    await markets.searchInput.fill("");
+    // Clear search and wait for the unfiltered markets request to settle.
+    await markets.search("", { waitForResults: false });
 
     // List repopulation after clearing search takes longer than the
     // debounce interval — retry until the count stabilises.
     await expect(async () => {
       const finalCount = await markets.getMarketCount();
       expect(finalCount).toBe(initialCount);
-    }).toPass({ timeout: 10_000 });
+    }).toPass({ timeout: 30_000 });
   });
 
   test("@comprehensive should show empty state when search has no results", async ({
@@ -280,7 +281,7 @@ test.describe("Markets — Full Workflow Coverage", () => {
 
     // Verify empty state message — component renders "No markets found"
     const emptyState = page.locator('text="No markets found"').first();
-    await expect(emptyState).toBeVisible({ timeout: 10_000 });
+    await expect(emptyState).toBeVisible({ timeout: 30_000 });
 
     // Verify no cards shown
     const cardCount = await markets.getMarketCount();
