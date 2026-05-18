@@ -50,6 +50,43 @@ function assertDekLength(dek: unknown): asserts dek is Buffer {
   }
 }
 
+function hexNibble(b: number): number {
+  if (b >= 0x30 && b <= 0x39) return b - 0x30;      // '0'-'9'
+  if (b >= 0x41 && b <= 0x46) return b - 0x41 + 10; // 'A'-'F'
+  return b - 0x61 + 10;                              // 'a'-'f'
+}
+
+function normalizeLegacyDekIfNeeded(dek: Buffer): Buffer {
+  if (dek.length !== 64) {
+    return dek;
+  }
+
+  // Validate byte-by-byte without creating a JS string.
+  // Avoids toString("ascii") which materializes key material as a
+  // non-zeroizable V8 string and is lossy (clears the high bit).
+  for (let i = 0; i < 64; i++) {
+    const b = dek[i];
+    if (
+      !((b >= 0x30 && b <= 0x39) || // '0'-'9'
+        (b >= 0x41 && b <= 0x46) || // 'A'-'F'
+        (b >= 0x61 && b <= 0x66))   // 'a'-'f'
+    ) {
+      return dek;
+    }
+  }
+
+  // Convert ASCII hex bytes to raw binary without a JS string.
+  const normalized = Buffer.alloc(32);
+  for (let i = 0; i < 32; i++) {
+    normalized[i] = (hexNibble(dek[i * 2]) << 4) | hexNibble(dek[i * 2 + 1]);
+  }
+
+  // Zero the original plaintext buffer so callers' key-zeroing
+  // guarantees are not weakened by an extra copy in JS memory.
+  dek.fill(0);
+  return normalized;
+}
+
 // AAD-aware native functions required by NativeEncryptionService.
 // If the loaded platform binary is stale (missing these exports),
 // the service must refuse to start rather than fail at runtime.
@@ -263,7 +300,13 @@ export class NativeEncryptionService {
       const usePrevious = this.shouldUsePreviousKek(
         kekVersion ?? this.currentKekVersion,
       );
-      return nativeCrypto.decryptDekWithStoredKek(ct, iv, tag, usePrevious);
+      const decryptedDek = nativeCrypto.decryptDekWithStoredKek(
+        ct,
+        iv,
+        tag,
+        usePrevious,
+      );
+      return normalizeLegacyDekIfNeeded(decryptedDek);
     }
 
     // AAD path: try AAD-aware unwrap, fall back to legacy if configured.
@@ -293,10 +336,21 @@ export class NativeEncryptionService {
     );
     const wrappedJson = JSON.stringify({ ciphertext: ct, iv, tag });
     try {
-      return nativeCrypto.unwrapDekWithAadRaw(wrappedJson, usePrevious, aadHex);
+      const decryptedDek = nativeCrypto.unwrapDekWithAadRaw(
+        wrappedJson,
+        usePrevious,
+        aadHex,
+      );
+      return normalizeLegacyDekIfNeeded(decryptedDek);
     } catch (err) {
       if (allowLegacyNoAadFallback && isAuthTagMismatchError(err)) {
-        return nativeCrypto.decryptDekWithStoredKek(ct, iv, tag, usePrevious);
+        const decryptedDek = nativeCrypto.decryptDekWithStoredKek(
+          ct,
+          iv,
+          tag,
+          usePrevious,
+        );
+        return normalizeLegacyDekIfNeeded(decryptedDek);
       }
       throw err;
     }

@@ -1,3 +1,4 @@
+import { createRequire } from "node:module";
 import { describe, it, expect, vi } from "vitest";
 import { EncryptionService } from "./encryption.service";
 import { NativeEncryptionService } from "./native-encryption.service";
@@ -5,6 +6,8 @@ import {
   credentialDekAad,
   credentialFieldAad,
 } from "../credentials/credential-aad";
+
+const _require = createRequire(__filename);
 
 // 64 hex chars = 32 bytes (valid KEK)
 const TEST_KEK = "a".repeat(64);
@@ -571,6 +574,24 @@ describe("NativeEncryptionService", () => {
         aad: credentialFieldAad("native-user", "apiKey"),
       }),
     ).toThrow();
+  });
+
+  it("converts legacy hex-string DEKs returned from unwrap into raw 32-byte keys", () => {
+    const svc = makeNativeService();
+    const nativeCrypto = _require("@polyforge/crypto-native");
+    const legacyDekHex = "11".repeat(32);
+    const wrappedJson = nativeCrypto.wrapDek(legacyDekHex, TEST_KEK);
+    const parsed = JSON.parse(wrappedJson);
+
+    const recovered = svc.decryptDek(
+      Buffer.from(parsed.ciphertext + parsed.tag, "hex"),
+      Buffer.from(parsed.iv, "hex"),
+      1,
+    );
+
+    expect(recovered).toBeInstanceOf(Buffer);
+    expect(recovered.length).toBe(32);
+    expect(recovered.toString("hex")).toBe(legacyDekHex);
   });
 
   describe("encryptFieldBytes()", () => {
