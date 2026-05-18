@@ -79,7 +79,9 @@ export class TradeReconcilerService {
       const liveOrders = await this.prisma.order.findMany({
         where: {
           userId,
-          status: { in: ["PENDING", "SUBMITTED", "MATCHED", "LIVE", "DELAYED", "MINED"] },
+          status: {
+            in: ["PENDING", "SUBMITTED", "MATCHED", "LIVE", "DELAYED", "MINED"],
+          },
         },
       });
 
@@ -138,7 +140,11 @@ export class TradeReconcilerService {
   private async getConnectedUsersWithActiveOrders() {
     // Find users who have active orders (PENDING, SUBMITTED, MATCHED, LIVE, DELAYED, MINED)
     const usersWithActiveOrders = await this.prisma.order.findMany({
-      where: { status: { in: ["PENDING", "SUBMITTED", "MATCHED", "LIVE", "DELAYED", "MINED"] } },
+      where: {
+        status: {
+          in: ["PENDING", "SUBMITTED", "MATCHED", "LIVE", "DELAYED", "MINED"],
+        },
+      },
       select: { userId: true },
       distinct: ["userId"],
     });

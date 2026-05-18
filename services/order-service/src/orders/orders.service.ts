@@ -19,9 +19,11 @@ const MAX_ATTEMPTS = 3;
 const RETRY_BASE_MS = 1_000;
 const DLQ_STREAM = "stream:orders:dlq";
 const MIN_GTD_LEAD_SECONDS = 60;
+const CLAIM_TIMEOUT_MS = 120_000;
+const MAX_RECLAIM_ATTEMPTS = 10;
+const RECLAIM_COUNTER_TTL_SECONDS = 1_800;
 const CLOB_ACCEPTED_PREFIX = "clob:accepted:";
 const CLOB_ACCEPTED_TTL_SECONDS = 86_400;
-const STALE_CLAIM_RECOVERY_MS = 120_000;
 
 export interface OrderIntent {
   intentId: string;
@@ -53,6 +55,15 @@ export interface CancellationIntent {
   venueOrderId?: string;
 }
 
+export interface BatchOptions {
+  /**
+   * When true the caller is a PEL reclaim handler.  "Still fresh" branches
+   * must throw instead of returning so the reclaim handler does not ACK
+   * a message that still needs retry.
+   */
+  reclaimed?: boolean;
+}
+
 export interface OrderBatchResult {
   processed: OrderIntent[];
   failed: Array<{ intent: OrderIntent; error: unknown }>;
@@ -76,14 +87,17 @@ export class OrdersService {
    * Enforces MAX_BATCH_SIZE. Each intent is attempted up to MAX_ATTEMPTS
    * times with exponential backoff. Failed intents go to the DLQ.
    */
-  async processBatch(intents: OrderIntent[]): Promise<OrderBatchResult> {
+  async processBatch(
+    intents: OrderIntent[],
+    options?: BatchOptions,
+  ): Promise<OrderBatchResult> {
     const batches = this.chunk(intents, MAX_BATCH_SIZE);
     const result: OrderBatchResult = { processed: [], failed: [] };
 
     for (const batch of batches) {
       const settled = await Promise.allSettled(
         batch.map(async (intent) => {
-          await this.processIntent(intent);
+          await this.processIntent(intent, options);
           return intent;
         }),
       );
@@ -104,7 +118,11 @@ export class OrdersService {
     return result;
   }
 
-  async processIntent(intent: OrderIntent, attempt = 1): Promise<void> {
+  async processIntent(
+    intent: OrderIntent,
+    options?: BatchOptions & { attempt?: number },
+  ): Promise<void> {
+    const attempt = options?.attempt ?? 1;
     const startedAt = Date.now();
     let orderId = intent.orderId ?? randomUUID();
     let skipDbCreate = false;
@@ -158,74 +176,188 @@ export class OrdersService {
         const hasNoVenueIds =
           !existingOrder.clobOrderId && !existingOrder.venueOrderId;
 
-        // SUBMITTED with venue ids → already submitted, terminal
-        if (!hasNoVenueIds) {
+        if (hasNoVenueIds) {
+          // Check CLOB-accepted sentinel before treating as in-flight. If the
+          // original processor submitted to CLOB successfully but crashed
+          // before persisting to DB, the sentinel lets us backfill the venue
+          // IDs without re-submitting — avoiding a permanently orphaned row.
+          const clobAcceptedKey = `${CLOB_ACCEPTED_PREFIX}${intent.intentId}`;
+          const clobAcceptedVenueOrderId = await this.redis
+            .get(clobAcceptedKey)
+            .catch(() => null);
+
+          if (clobAcceptedVenueOrderId) {
+            this.logger.warn(
+              `Order ${existingOrder.id} already accepted by venue (sentinel found: ${clobAcceptedVenueOrderId}) — updating DB without re-submitting`,
+            );
+            try {
+              await this.prisma.order.update({
+                where: { id: existingOrder.id },
+                data: {
+                  clobOrderId: clobAcceptedVenueOrderId,
+                  venueOrderId: clobAcceptedVenueOrderId,
+                },
+              });
+              // Only delete the sentinel after a successful DB backfill.
+              // A failure must keep the sentinel so the next retry can
+              // still recover without a duplicate venue submission.
+              await this.redis.del(clobAcceptedKey).catch(() => {});
+            } catch (err) {
+              this.logger.error(
+                {
+                  event: "CLOB_ACCEPTED_SENTINEL_DB_UPDATE_FAILED",
+                  orderId: existingOrder.id,
+                  venueOrderId: clobAcceptedVenueOrderId,
+                  intentId: intent.intentId,
+                  err,
+                },
+                "Failed to persist venue order id from sentinel — throwing to keep sentinel and prevent stream ACK",
+              );
+              throw err;
+            }
+            return;
+          }
+
+          // No sentinel — the original processor hasn't completed venue
+          // submission.
+          //
+          // Guard: reclaimed entries (PEL redelivery, options?.reclaimed)
+          // are handled first below (line ~235).  For fresh claims (claimAge
+          // <= CLAIM_TIMEOUT_MS) they throw to keep the entry unacked.  For
+          // stale claims they release to PENDING (or DLQ after max retries)
+          // and fall through to the age-based recovery path.
+          //
+          // For non-reclaimed entries: if the claim is stale (> CLAIM_TIMEOUT_MS)
+          // we release back to PENDING and re-submit.  If the claim is fresh,
+          // we return without processing — another processor owns the claim.
+          const claimAge =
+            Date.now() - new Date(existingOrder.updatedAt).getTime();
+
+          if (options?.reclaimed) {
+            const counterKey = `reclaim:attempts:${intent.intentId}`;
+            const attempts = await this.redis.incr(counterKey).catch((redisErr) => {
+              this.logger.error(
+                {
+                  event: "RECLAIM_COUNTER_INCR_FAILED",
+                  orderId: existingOrder.id,
+                  intentId: intent.intentId,
+                  err: redisErr,
+                },
+                "Failed to increment reclaim attempt counter",
+              );
+              throw redisErr;
+            });
+            if (attempts === 1) {
+              await this.redis
+                .expire(counterKey, RECLAIM_COUNTER_TTL_SECONDS)
+                .catch(() => {});
+            }
+
+            if (claimAge > CLAIM_TIMEOUT_MS) {
+              // Stale reclaimed claim: the original processor is confirmed dead.
+              // Release to PENDING and re-submit through the age-based recovery
+              // path below.  The counter guards against perma-stuck orders: if
+              // re-submission keeps failing, move to DLQ after bounded retries.
+              if (attempts > MAX_RECLAIM_ATTEMPTS) {
+                this.logger.warn(
+                  `Order ${existingOrder.id} reclaimed SUBMITTED claim stale (${claimAge}ms) and max reclaim attempts reached (${attempts}) — moving to DLQ`,
+                );
+                const updateResult = await this.prisma.order
+                  .updateMany({
+                    where: {
+                      id: existingOrder.id,
+                      status: "SUBMITTED",
+                      clobOrderId: null,
+                      venueOrderId: null,
+                    },
+                    data: { status: OrderStatus.FAILED },
+                  })
+                  .catch((updateErr) => {
+                    this.logger.error(
+                      {
+                        event: "RECLAIM_MAX_ATTEMPTS_DB_UPDATE_FAILED",
+                        orderId: existingOrder.id,
+                        intentId: intent.intentId,
+                        err: updateErr,
+                      },
+                      "Failed to mark reclaimed order as FAILED",
+                    );
+                    throw updateErr;
+                  });
+
+                // Only move to DLQ if the row was still SUBMITTED without venue
+                // IDs.  A concurrent processor may have completed the submission
+                // between our read and the updateMany.
+                if (updateResult.count > 0) {
+                  await this.events.emitOrderFailed(
+                    intent.userId,
+                    existingOrder.id,
+                    `RECLAIMED_SUBMITTED_NO_SENTINEL:${existingOrder.id}`,
+                    undefined,
+                    intent.copyTradeId,
+                    OrderStatus.FAILED,
+                  );
+                  await this.moveToDlq(
+                    intent,
+                    `RECLAIMED_SUBMITTED_NO_SENTINEL:${existingOrder.id}`,
+                  );
+                  return;
+                } else {
+                  // count === 0: the row may have been released to PENDING by
+                  // another path without completing venue submission.  Throw so
+                  // the stream entry stays unacked and a fresh reclaim can retry.
+                  this.logger.warn(
+                    `Order ${existingOrder.id} was no longer SUBMITTED without venue IDs — refusing to ACK reclaimed entry; row status may be PENDING`,
+                  );
+                  throw new Error(
+                    `Order ${existingOrder.id} reclaimed SUBMITTED claim FAILED transition raced (count=0) — refusing to ACK reclaimed entry`,
+                  );
+                }
+              } else {
+                this.logger.warn(
+                  `Order ${existingOrder.id} reclaimed SUBMITTED claim is stale (${claimAge}ms, attempt ${attempts}/${MAX_RECLAIM_ATTEMPTS}) — releasing to PENDING for re-submission`,
+                );
+                await this.releaseOrderClaim(existingOrder.id);
+                orderId = existingOrder.id;
+                skipDbCreate = true;
+                // Fall through to GTD / numeric validations then CLOB submit below
+              }
+            } else {
+              // Fresh reclaimed claim: the original worker may still be in-flight.
+              // Throw to keep the entry unacked so PEL retries later.  Only stale
+              // claims (confirmed abandoned) are safe to release or DLQ.
+              throw new Error(
+                `Order ${existingOrder.id} SUBMITTED claim reclaimed (attempt ${attempts}/${MAX_RECLAIM_ATTEMPTS}, ${claimAge}ms, no sentinel, no venue ids) — refusing to ACK reclaimed entry; original worker may still be in-flight`,
+              );
+            }
+          }
+
+          if (claimAge > CLAIM_TIMEOUT_MS) {
+            // For reclaimed entries, releaseOrderClaim was already called above
+            // and skipDbCreate / orderId are already set.  Only release for the
+            // non-reclaimed path.
+            if (!skipDbCreate) {
+              this.logger.warn(
+                `Order ${existingOrder.id} has stale SUBMITTED claim (${claimAge}ms, no sentinel, no venue ids) — reclaiming to PENDING`,
+              );
+              await this.releaseOrderClaim(existingOrder.id);
+              orderId = existingOrder.id;
+              skipDbCreate = true;
+            }
+            // Fall through to GTD / numeric / terms validations then CLOB submit
+          } else {
+            this.logger.warn(
+              `Order ${existingOrder.id} SUBMITTED claim still fresh (${claimAge}ms) — refusing to ACK; will retry when stale`,
+            );
+            return;
+          }
+        } else {
+          // SUBMITTED with venue ids → already submitted, terminal
           this.logger.warn(
             `Duplicate intent ${intent.intentId} — skipping (already submitted as order ${existingOrder.id})`,
           );
           return;
         }
-
-        // SUBMITTED with no venue ids — check CLOB-accepted sentinel first
-        // to recover from crash-after-venue-acceptance without re-submitting.
-        const clobAcceptedKey = `${CLOB_ACCEPTED_PREFIX}${intent.intentId}`;
-        const clobAcceptedVenueOrderId = await this.redis
-          .get(clobAcceptedKey)
-          .catch(() => null);
-
-        if (clobAcceptedVenueOrderId) {
-          this.logger.warn(
-            `Order ${existingOrder.id} already accepted by venue (sentinel found: ${clobAcceptedVenueOrderId}) — updating DB without re-submitting`,
-          );
-          try {
-            await this.prisma.order.update({
-              where: { id: existingOrder.id },
-              data: {
-                clobOrderId: clobAcceptedVenueOrderId,
-                venueOrderId: clobAcceptedVenueOrderId,
-              },
-            });
-          } catch (err) {
-            this.logger.error(
-              {
-                event: "CLOB_ACCEPTED_SENTINEL_DB_UPDATE_FAILED",
-                orderId: existingOrder.id,
-                venueOrderId: clobAcceptedVenueOrderId,
-                intentId: intent.intentId,
-                err,
-              },
-              "Failed to persist venue order id from sentinel — throwing to keep sentinel and prevent stream ACK",
-            );
-            throw err;
-          }
-          await this.redis.del(clobAcceptedKey).catch(() => {});
-          return;
-        }
-
-        // No sentinel — differentiate between in-flight processing and
-        // genuinely orphaned claims. Use a generous recovery timeout to
-        // avoid reclaiming orders still being processed by a slow signer.
-        const claimAge =
-          Date.now() - new Date(existingOrder.updatedAt).getTime();
-
-        if (claimAge < STALE_CLAIM_RECOVERY_MS) {
-          this.logger.warn(
-            `Order ${existingOrder.id} is SUBMITTED without venue ids (${claimAge}ms old) — raising error to prevent stream ACK`,
-          );
-          throw new Error(
-            `Order ${existingOrder.id} has a fresh SUBMITTED claim with no venue ids — consumer must not ACK this redelivery`,
-          );
-        }
-
-        // Claim is stale and no sentinel exists — the original processor is
-        // gone without submitting to venue. Safe to reclaim and re-submit.
-        this.logger.warn(
-          `Order ${existingOrder.id} has stale SUBMITTED claim (${claimAge}ms, no venue ids) — reclaiming to PENDING`,
-        );
-        await this.releaseOrderClaim(existingOrder.id);
-        orderId = existingOrder.id;
-        skipDbCreate = true;
-        // Fall through to GTD / numeric / terms validations then CLOB submit
       } else if (existingOrder.status === OrderStatus.PENDING) {
         // PENDING: DB record exists but CLOB submission may have completed
         // (e.g. crash after venue accepted but before claim persisted).
@@ -248,20 +380,20 @@ export class OrdersService {
                 status: OrderStatus.SUBMITTED,
               },
             });
+            await this.redis.del(clobAcceptedKey).catch(() => {});
           } catch (err) {
-            this.logger.error(
-              {
-                event: "CLOB_ACCEPTED_SENTINEL_DB_UPDATE_FAILED",
-                orderId: existingOrder.id,
-                venueOrderId: clobAcceptedVenueOrderId,
-                intentId: intent.intentId,
-                err,
-              },
-              "Failed to persist venue order id from sentinel (PENDING path) — throwing to keep sentinel and prevent stream ACK",
-            );
-            throw err;
+              this.logger.error(
+                {
+                  event: "CLOB_ACCEPTED_SENTINEL_DB_UPDATE_FAILED",
+                  orderId: existingOrder.id,
+                  venueOrderId: clobAcceptedVenueOrderId,
+                  intentId: intent.intentId,
+                  err,
+                },
+                "Failed to persist venue order id from sentinel (PENDING path) — throwing to keep sentinel and prevent stream ACK",
+              );
+              throw err;
           }
-          await this.redis.del(clobAcceptedKey).catch(() => {});
           return;
         }
 
@@ -472,7 +604,7 @@ export class OrdersService {
 
       if (attempt < MAX_ATTEMPTS) {
         const delay = RETRY_BASE_MS * Math.pow(2, attempt - 1);
-        return this.scheduleRetry(intent, attempt + 1, delay);
+        return this.scheduleRetry(intent, attempt + 1, delay, options);
       }
 
       await this.prisma.order
@@ -1101,13 +1233,17 @@ export class OrdersService {
     intent: OrderIntent,
     nextAttempt: number,
     delayMs: number,
+    options?: BatchOptions,
   ): Promise<void> {
     this.logger.log(
       `Scheduling retry ${nextAttempt}/${MAX_ATTEMPTS} for intent ${intent.intentId} in ${delayMs}ms`,
     );
     return new Promise<void>((resolve, reject) => {
       setTimeout(() => {
-        this.processIntent(intent, nextAttempt).then(resolve, reject);
+        this.processIntent(intent, {
+          ...options,
+          attempt: nextAttempt,
+        }).then(resolve, reject);
       }, delayMs);
     });
   }

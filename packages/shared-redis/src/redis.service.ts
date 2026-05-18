@@ -100,6 +100,14 @@ export class RedisService implements OnModuleDestroy {
     return result === 1;
   }
 
+  async incr(key: string): Promise<number> {
+    return this.client.incr(key);
+  }
+
+  async expire(key: string, seconds: number): Promise<void> {
+    await this.client.expire(key, seconds);
+  }
+
   async ping(): Promise<boolean> {
     try {
       const result = await this.client.ping();

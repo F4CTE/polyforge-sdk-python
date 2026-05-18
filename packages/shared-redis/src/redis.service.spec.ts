@@ -5,6 +5,8 @@ const redisClient = vi.hoisted(() => ({
   quit: vi.fn().mockResolvedValue("OK"),
   get: vi.fn(),
   set: vi.fn(),
+  incr: vi.fn().mockResolvedValue(1),
+  expire: vi.fn().mockResolvedValue(1),
   xadd: vi.fn().mockResolvedValue("1-0"),
 }));
 
@@ -134,6 +136,27 @@ describe("RedisService", () => {
       "*",
       "type",
       "ORDER",
+    );
+  });
+
+  it("increments a counter key via INCR", async () => {
+    redisClient.incr.mockResolvedValue(5);
+    const service = new RedisService();
+
+    const result = await service.incr("reclaim:attempts:intent-1");
+
+    expect(result).toBe(5);
+    expect(redisClient.incr).toHaveBeenCalledWith("reclaim:attempts:intent-1");
+  });
+
+  it("sets TTL on a key via EXPIRE", async () => {
+    const service = new RedisService();
+
+    await service.expire("reclaim:attempts:intent-1", 1800);
+
+    expect(redisClient.expire).toHaveBeenCalledWith(
+      "reclaim:attempts:intent-1",
+      1800,
     );
   });
 });

@@ -284,7 +284,9 @@ export class StreamConsumerService implements OnModuleInit, OnModuleDestroy {
       return;
     }
 
-    const result = await this.orders.processBatch([intent]);
+    const result = await this.orders.processBatch([intent], {
+      reclaimed: true,
+    });
     if (result.failed.length > 0) {
       const errors = result.failed.map((f) => String(f.error)).join("; ");
       throw new Error(

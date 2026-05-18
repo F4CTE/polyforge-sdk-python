@@ -14,7 +14,10 @@ import type {
   PriceCandle,
   CandleResolution,
 } from "@polyforge/shared-types";
-import { ClobClientService, type ClobInterval } from "../clob-client/clob-client.service";
+import {
+  ClobClientService,
+  type ClobInterval,
+} from "../clob-client/clob-client.service";
 
 interface PolymarketAuthContext {
   order: Record<string, unknown>;
