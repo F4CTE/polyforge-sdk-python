@@ -524,11 +524,9 @@ describe("StrategyRunner — SAFETY evaluation", () => {
     const onStatusChange = vi.fn().mockResolvedValue(undefined);
     const prisma = makePrisma({
       position: {
-        findUnique: vi.fn().mockResolvedValue({
-          size: "50",
-          currentPrice: "1.5",
-        }),
-        findMany: vi.fn().mockResolvedValue([]),
+        findMany: vi
+          .fn()
+          .mockResolvedValue([{ size: "50", currentPrice: "1.5" }]),
       },
       order: {
         findMany: vi.fn().mockResolvedValue([]),
@@ -565,11 +563,9 @@ describe("StrategyRunner — SAFETY evaluation", () => {
     const onStatusChange = vi.fn().mockResolvedValue(undefined);
     const prisma = makePrisma({
       position: {
-        findUnique: vi.fn().mockResolvedValue({
-          size: "50",
-          currentPrice: "1.5",
-        }),
-        findMany: vi.fn().mockResolvedValue([]),
+        findMany: vi
+          .fn()
+          .mockResolvedValue([{ size: "50", currentPrice: "1.5" }]),
       },
       order: {
         findMany: vi.fn().mockResolvedValue([]),
@@ -606,11 +602,9 @@ describe("StrategyRunner — SAFETY evaluation", () => {
     const onStatusChange = vi.fn().mockResolvedValue(undefined);
     const prisma = makePrisma({
       position: {
-        findUnique: vi.fn().mockResolvedValue({
-          size: "200",
-          currentPrice: "0.6",
-        }),
-        findMany: vi.fn().mockResolvedValue([]),
+        findMany: vi
+          .fn()
+          .mockResolvedValue([{ size: "200", currentPrice: "0.6" }]),
       },
       order: {
         findMany: vi.fn().mockResolvedValue([]),
@@ -637,7 +631,7 @@ describe("StrategyRunner — SAFETY evaluation", () => {
     expect(runner.status).toBe("STOPPED");
     expect(onStatusChange).toHaveBeenCalledWith(
       "STOPPED",
-      expect.stringContaining("position"),
+      expect.stringContaining("exposure"),
     );
     expect(prisma.strategy.update).toHaveBeenCalledWith(
       expect.objectContaining({ data: { status: "IDLE" } }),
@@ -654,11 +648,9 @@ describe("StrategyRunner — SAFETY evaluation", () => {
     const onStatusChange = vi.fn().mockResolvedValue(undefined);
     const prisma = makePrisma({
       position: {
-        findUnique: vi.fn().mockResolvedValue({
-          size: "200",
-          currentPrice: "0.6",
-        }),
-        findMany: vi.fn().mockResolvedValue([]),
+        findMany: vi
+          .fn()
+          .mockResolvedValue([{ size: "200", currentPrice: "0.6" }]),
       },
       order: {
         findMany: vi.fn().mockResolvedValue([]),
@@ -685,7 +677,7 @@ describe("StrategyRunner — SAFETY evaluation", () => {
     expect(runner.status).toBe("STOPPED");
     expect(onStatusChange).toHaveBeenCalledWith(
       "STOPPED",
-      expect.stringContaining("position"),
+      expect.stringContaining("exposure"),
     );
     expect(prisma.strategy.update).toHaveBeenCalledWith(
       expect.objectContaining({ data: { status: "IDLE" } }),
@@ -733,11 +725,9 @@ describe("StrategyRunner — SAFETY evaluation", () => {
     const onStatusChange = vi.fn().mockResolvedValue(undefined);
     const prisma = makePrisma({
       position: {
-        findUnique: vi.fn().mockResolvedValue({
-          size: "100",
-          currentPrice: "1.0",
-        }),
-        findMany: vi.fn().mockResolvedValue([]),
+        findMany: vi
+          .fn()
+          .mockResolvedValue([{ size: "100", currentPrice: "1.0" }]),
       },
       order: {
         findMany: vi.fn().mockResolvedValue([]),
@@ -764,7 +754,125 @@ describe("StrategyRunner — SAFETY evaluation", () => {
     expect(runner.status).toBe("STOPPED");
     expect(onStatusChange).toHaveBeenCalledWith(
       "STOPPED",
-      expect.stringContaining("position"),
+      expect.stringContaining("exposure"),
+    );
+  });
+
+  it("legacy MAX_POSITION_SIZE safety accepts maxSizeUsdc and stops on over-exposure", async () => {
+    const state = makeState();
+    const redis = makeRedis();
+    const onStatusChange = vi.fn().mockResolvedValue(undefined);
+    const prisma = makePrisma({
+      position: {
+        findMany: vi
+          .fn()
+          .mockResolvedValue([{ size: "500", currentPrice: "1" }]),
+      },
+      order: { findMany: vi.fn().mockResolvedValue([]) },
+    });
+    const runner = makeRunner({
+      execMode: "EVENT",
+      state,
+      redis,
+      prisma,
+      onStatusChange,
+      safety: [
+        {
+          id: "legacy-maxsize",
+          type: "MAX_POSITION_SIZE",
+          params: { maxSizeUsdc: "100" },
+        },
+      ],
+    });
+    await runner.onPriceEvent("tok1", 0.5);
+    expect(runner.status).toBe("STOPPED");
+    expect(onStatusChange).toHaveBeenCalledWith(
+      "STOPPED",
+      expect.stringContaining("exposure"),
+    );
+  });
+
+  it("legacy MAX_POSITION_SIZE safety fails closed when max is missing", async () => {
+    const state = makeState();
+    const redis = makeRedis();
+    const onStatusChange = vi.fn().mockResolvedValue(undefined);
+    const prisma = makePrisma();
+    const runner = makeRunner({
+      execMode: "EVENT",
+      state,
+      redis,
+      prisma,
+      onStatusChange,
+      safety: [
+        { id: "legacy-missing-max", type: "MAX_POSITION_SIZE", params: {} },
+      ],
+    });
+    await runner.onPriceEvent("tok1", 0.5);
+    expect(runner.status).toBe("STOPPED");
+    expect(onStatusChange).toHaveBeenCalledWith(
+      "STOPPED",
+      expect.stringContaining(
+        "legacy_safety_alias_missing_max:MAX_POSITION_SIZE",
+      ),
+    );
+  });
+
+  it("legacy MAX_POSITION_SIZE safety with zero maxUsdc fails closed to prevent unlimited exposure", async () => {
+    const state = makeState();
+    const redis = makeRedis();
+    const onStatusChange = vi.fn().mockResolvedValue(undefined);
+    const prisma = makePrisma();
+    const runner = makeRunner({
+      execMode: "EVENT",
+      state,
+      redis,
+      prisma,
+      onStatusChange,
+      safety: [
+        {
+          id: "legacy-zero-max",
+          type: "MAX_POSITION_SIZE",
+          params: { maxUsdc: "0" },
+        },
+      ],
+    });
+    await runner.onPriceEvent("tok1", 0.5);
+    expect(runner.status).toBe("STOPPED");
+    expect(onStatusChange).toHaveBeenCalledWith(
+      "STOPPED",
+      expect.stringContaining(
+        "legacy_safety_alias_missing_max:MAX_POSITION_SIZE",
+      ),
+    );
+  });
+
+  it("legacy MAX_POSITION_SIZE safety with maxUsdc resolving to zero fails closed", async () => {
+    const state = makeState();
+    const redis = makeRedis();
+    const onStatusChange = vi.fn().mockResolvedValue(undefined);
+    const prisma = makePrisma();
+    const runner = makeRunner({
+      execMode: "EVENT",
+      state,
+      redis,
+      prisma,
+      onStatusChange,
+      variables: [{ id: "v1", name: "limit", expression: "0" }],
+      safety: [
+        {
+          id: "legacy-zero-var",
+          type: "MAX_POSITION_SIZE",
+          params: { maxUsdc: "$limit" },
+        },
+      ],
+    });
+    await runner.onPriceEvent("tok1", 0.5);
+    expect(runner.status).toBe("STOPPED");
+    expect(onStatusChange).toHaveBeenCalledWith(
+      "STOPPED",
+      expect.stringContaining(
+        "legacy_safety_alias_missing_max:MAX_POSITION_SIZE",
+      ),
     );
   });
 });
@@ -3332,14 +3440,12 @@ describe("StrategyRunner — concurrent tick serialization", () => {
       const onIntents = vi
         .fn<(intents: OrderIntent[]) => Promise<void>>()
         .mockResolvedValue(undefined);
-      const onRunStrategy = vi
-        .fn()
-        .mockImplementation(
-          () =>
-            new Promise<void>((resolve) => {
-              resolveRunStrategy = resolve;
-            }),
-        );
+      const onRunStrategy = vi.fn().mockImplementation(
+        () =>
+          new Promise<void>((resolve) => {
+            resolveRunStrategy = resolve;
+          }),
+      );
 
       const runner = makeRunner({
         execMode: "EVENT",

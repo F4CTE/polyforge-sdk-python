@@ -207,6 +207,51 @@ const MAX_STALE_CHECK_BACKOFF_MS = 60_000;
 const HYBRID_LOCK_MISS_RETRY_MS = 200;
 const HYBRID_MAX_CONSECUTIVE_LOCK_MISS_RETRIES = 3;
 
+/** Historical safety block types that were dual-purpose (safety +
+ *  conditions) but later moved to CONDITION_REGISTRY-only.  Legacy
+ *  persisted strategies may still reference these under safety.
+ *  Evaluating them via the condition registry as a safety guard
+ *  introduces an allowlist gate because misconfigured condition-only
+ *  types (e.g. VENUE_SELECT) would return fired=true and render the
+ *  fail-closed safety boundary fail-open. */
+const LEGACY_SAFETY_ALIASES = new Set(["MAX_POSITION_SIZE", "max_position"]);
+
+function isMissingLegacySafetyMax(maxUsdc: unknown): boolean {
+  return (
+    maxUsdc === undefined ||
+    maxUsdc === null ||
+    String(maxUsdc) === "" ||
+    parseFloat(String(maxUsdc)) === 0
+  );
+}
+
+function normalizeLegacyMaxPositionSafetyBlock(block: Block): Block | null {
+  if (!LEGACY_SAFETY_ALIASES.has(block.type)) return block;
+  const source = { ...(block.config ?? {}), ...(block.params ?? {}) } as Record<
+    string,
+    unknown
+  >;
+  const maxUsdc =
+    source.maxUsdc !== undefined &&
+    source.maxUsdc !== null &&
+    String(source.maxUsdc) !== ""
+      ? source.maxUsdc
+      : source.maxSizeUsdc;
+  if (isMissingLegacySafetyMax(maxUsdc)) {
+    return null;
+  }
+  return {
+    ...block,
+    // Route legacy MAX_POSITION_SIZE-in-safety through the canonical
+    // global exposure safety evaluator.
+    type: "EXPOSURE_EXCEEDS",
+    params: {
+      ...(block.params ?? {}),
+      maxUsdc,
+    },
+  };
+}
+
 function secondsUntilNextUtcMidnight(now = new Date()): number {
   const next = Date.UTC(
     now.getUTCFullYear(),
@@ -472,11 +517,7 @@ export class StrategyRunner {
       } else if (ct === "MAX_ORDERS_TOTAL") {
         const raw = String(resolved.max ?? resolved.maxOrders ?? "0");
         const max = parseInt(raw, 10);
-        if (
-          !Number.isFinite(max) ||
-          max <= 0 ||
-          String(max) !== raw
-        )
+        if (!Number.isFinite(max) || max <= 0 || String(max) !== raw)
           throw new Error("WASM safety param maxOrders invalid");
       } else if (ct === "STOP_IF_EXPOSURE_EXCEEDS") {
         const maxUsdc = parseFiniteDecimal(
@@ -487,11 +528,7 @@ export class StrategyRunner {
       } else if (ct === "MAX_BETS_PER_DAY") {
         const raw = String(resolved.max ?? resolved.maxBets ?? "0");
         const max = parseInt(raw, 10);
-        if (
-          !Number.isFinite(max) ||
-          max <= 0 ||
-          String(max) !== raw
-        )
+        if (!Number.isFinite(max) || max <= 0 || String(max) !== raw)
           throw new Error("WASM safety param maxBets invalid");
       } else if (ct === "MAX_DRAWDOWN") {
         const max = parseFiniteDecimal(
@@ -1327,26 +1364,91 @@ export class StrategyRunner {
       // 2. SAFETY — any failure stops the strategy
       for (const block of this.safety) {
         let evaluator = SAFETY_REGISTRY[block.type];
+        // Fail closed: unknown / unregistered safety block types must stop
+        // the strategy. Skipping an unknown guard could allow a strategy to
+        // keep trading without an intended safety stop.
+        //
+        // Backward compat: MAX_POSITION_SIZE was historically a dual-purpose
+        // block placed under both safety and conditions.  It was moved to
+        // CONDITION_REGISTRY-only, but legacy persisted strategies may still
+        // carry it under safety.  The explicit LEGACY_SAFETY_ALIASES allowlist
+        // evaluates it via CONDITION_REGISTRY as a safety guard: if the
+        // condition passes (fired=true), safety passes; if it fails
+        // (fired=false), the strategy is stopped.
+        //
+        // Restricting the fallback to an explicit allowlist prevents
+        // misconfigured condition-only types (e.g. VENUE_SELECT,
+        // minimize_fees) from being accepted as safety guards via the
+        // fallback path — those would return fired=true and turn a
+        // fail-closed safety boundary into fail-open.
         if (!evaluator) {
-          if (
-            block.type === "MAX_POSITION_SIZE" ||
-            block.type === "max_position"
-          ) {
-            // Runtime compatibility: MAX_POSITION_SIZE was moved from
-            // SAFETY_REGISTRY to CONDITION_REGISTRY.  Fall back to the
-            // condition registry so existing persisted strategies don't
-            // silently lose their safety guards.
-            const fallback = CONDITION_REGISTRY[block.type];
-            if (fallback) {
-              if (!this._warnedSafetyFallbackIds?.has(block.id)) {
-                (this._warnedSafetyFallbackIds ??= new Set()).add(block.id);
-                this.logger.warn(
-                  `Safety block "${block.id}" (type=${block.type}) resolved from ` +
-                    `CONDITION_REGISTRY.  Move it to the conditions section in your ` +
-                    `strategy definition.`,
+          if (LEGACY_SAFETY_ALIASES.has(block.type)) {
+            const normalized = normalizeLegacyMaxPositionSafetyBlock(block);
+            if (!normalized) {
+              this.stop();
+              await this.onStatusChange(
+                "STOPPED",
+                `legacy_safety_alias_missing_max:${block.type}`,
+              );
+              await this.prisma.strategy
+                .update({
+                  where: { id: this.strategyId },
+                  data: { status: StrategyStatus.IDLE },
+                })
+                .catch(() => {});
+              await this.emitStrategyEvent(
+                "STRATEGY_STOPPED",
+                `legacy_safety_alias_missing_max:${block.type}`,
+              );
+              return;
+            }
+            const fallbackEvaluator = SAFETY_REGISTRY[normalized.type];
+            if (fallbackEvaluator) {
+              const resolvedParams = resolveParams(
+                { ...(normalized.config ?? {}), ...(normalized.params ?? {}) },
+                ctx.variables ?? {},
+              );
+              if (isMissingLegacySafetyMax(resolvedParams.maxUsdc)) {
+                this.stop();
+                await this.onStatusChange(
+                  "STOPPED",
+                  `legacy_safety_alias_missing_max:${block.type}`,
                 );
+                await this.prisma.strategy
+                  .update({
+                    where: { id: this.strategyId },
+                    data: { status: StrategyStatus.IDLE },
+                  })
+                  .catch(() => {});
+                await this.emitStrategyEvent(
+                  "STRATEGY_STOPPED",
+                  `legacy_safety_alias_missing_max:${block.type}`,
+                );
+                return;
               }
-              evaluator = fallback;
+              const resolvedBlock = {
+                ...normalized,
+                params: resolvedParams,
+              };
+              const result = await fallbackEvaluator.evaluate(
+                resolvedBlock,
+                ctx,
+                this.redis,
+                this.prisma,
+              );
+              if (!result.fired) {
+                this.stop();
+                await this.onStatusChange("STOPPED", result.reason);
+                await this.prisma.strategy
+                  .update({
+                    where: { id: this.strategyId },
+                    data: { status: StrategyStatus.IDLE },
+                  })
+                  .catch(() => {});
+                await this.emitStrategyEvent("STRATEGY_STOPPED", result.reason);
+                return;
+              }
+              continue;
             }
           }
           if (!evaluator) {
