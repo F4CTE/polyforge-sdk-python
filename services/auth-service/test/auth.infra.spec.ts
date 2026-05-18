@@ -214,6 +214,10 @@ describe.runIf(HAS_TEST_DB && HAS_TEST_REDIS)('Auth Real Integration', () => {
   // ─── Register ────────────────────────────────────────────────────────────────
 
   describe('POST /register', () => {
+    beforeEach(() => {
+      fakeMail.sentEmails = [];
+    });
+
     it('creates user in real DB and returns 201 with cookies', async () => {
       const res = await app.inject({
         method: 'POST',

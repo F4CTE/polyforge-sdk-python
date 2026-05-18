@@ -6,6 +6,8 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  UnauthorizedException,
+  Req,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -73,7 +75,11 @@ export class TotpController {
     description: '10 new backup codes. Previous codes are invalidated.',
   })
   @ApiResponse({ status: 400, description: 'TOTP_NOT_ENABLED.' })
-  async regenBackupCodes(@CurrentUser() user: JwtPayload) {
+  async regenBackupCodes(@CurrentUser() user: JwtPayload, @Req() req: { apiKeyMeta?: unknown }) {
+    if (req.apiKeyMeta) {
+      throw new UnauthorizedException('API keys cannot regenerate backup codes');
+    }
+
     return this.totpService.regenBackupCodes(user.sub);
   }
 

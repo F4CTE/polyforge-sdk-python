@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { UnauthorizedException } from '@nestjs/common';
 import { TotpController } from './totp.controller';
 import { TotpService } from './totp.service';
 
@@ -57,8 +58,15 @@ describe('TotpController', () => {
   });
 
   it('regenBackupCodes delegates to totpService.regenBackupCodes', async () => {
-    const result = await controller.regenBackupCodes(user);
+    const result = await controller.regenBackupCodes(user, {});
     expect(totpService.regenBackupCodes).toHaveBeenCalledWith(user.sub);
     expect(result).toMatchObject({ backupCodes: expect.any(Array) });
+  });
+
+  it('regenBackupCodes rejects API-key-authenticated requests', async () => {
+    await expect(
+      controller.regenBackupCodes(user, { apiKeyMeta: { keyId: 'k1' } }),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
+    expect(totpService.regenBackupCodes).not.toHaveBeenCalled();
   });
 });
