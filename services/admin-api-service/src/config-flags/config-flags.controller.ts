@@ -35,7 +35,7 @@ class UpdateBetaLimitsDto {
 @ApiTags("config")
 @ApiBearerAuth()
 @UseGuards(AdminJwtGuard, RolesGuard)
-@Roles(AdminRole.SUPER_ADMIN, AdminRole.ADMIN)
+@Roles(AdminRole.SUPER_ADMIN)
 @Controller("config")
 export class ConfigFlagsController {
   constructor(

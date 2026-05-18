@@ -128,6 +128,9 @@ describe.runIf(HAS_TEST_DB && HAS_TEST_REDIS)('Auth Real Integration', () => {
   }, 30_000);
 
   beforeEach(async () => {
+    // Drain pending async email sends from the previous test so they
+    // do not leak into sentEmails after we clear it below.
+    await new Promise((r) => setTimeout(r, 50));
     fakeMail.sentEmails = [];
     await cleanAuthDb(prisma);
     await cleanAuthRedis(redisService.getClient(), TEST_REDIS_URL);
@@ -618,6 +621,8 @@ describe.runIf(HAS_TEST_DB && HAS_TEST_REDIS)('Auth Real Integration', () => {
       expect(regRes.statusCode).toBe(201);
 
       // Fire-and-forget: poll for async verification email under CI load.
+      // Filter by recipient email so stale verification tokens from
+      // prior tests are never matched (fire-and-forget race).
       let verifyToken: string | undefined;
       for (let i = 0; i < 20; i++) {
         verifyToken = fakeMail.sentEmails.find(
@@ -709,7 +714,7 @@ describe.runIf(HAS_TEST_DB && HAS_TEST_REDIS)('Auth Real Integration', () => {
       let resetToken: string | undefined;
       for (let i = 0; i < 20; i++) {
         resetToken = fakeMail.sentEmails.find(
-          (e) => e.type === 'password-reset',
+          (e) => e.type === 'password-reset' && e.to === email,
         )?.token;
         if (resetToken) break;
         await new Promise((r) => setTimeout(r, 25));
@@ -837,6 +842,8 @@ describe.runIf(HAS_TEST_DB && HAS_TEST_REDIS)('Auth Real Integration', () => {
       expect(regRefresh).toBeDefined();
 
       // Fire-and-forget: poll for async verification email under CI load.
+      // Filter by recipient email so stale verification tokens from
+      // prior tests are never matched (fire-and-forget race).
       let verifyToken: string | undefined;
       for (let i = 0; i < 20; i++) {
         verifyToken = fakeMail.sentEmails.find(
