@@ -49,8 +49,11 @@ jobs:
 
   secret-scan:
     name: Secret scan
-    runs-on: [self-hosted, linux, x64]
+    # Fork gating: external-pr-guard independently blocks fork PRs, so this
+    # guard is defense-in-depth to prevent untrusted fork code from executing
+    # on self-hosted runners even if external-pr-guard is refactored away.
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, linux, x64]
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd

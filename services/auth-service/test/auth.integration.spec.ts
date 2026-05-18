@@ -808,9 +808,12 @@ describe('Auth Integration', () => {
         },
       });
 
-      expect(fakeMail.sentEmails.length).toBeGreaterThanOrEqual(1);
-      expect(fakeMail.sentEmails[0]?.type).toBe('verification');
-      expect(fakeMail.sentEmails[0]?.to).toBe('bob@test.com');
+      // Use find() instead of sentEmails[0] so async emails from previous
+      // tests still in-flight do not contaminate this assertion.
+      const verificationEmail = fakeMail.sentEmails.find(
+        (e) => e.to === 'bob@test.com' && e.type === 'verification',
+      );
+      expect(verificationEmail).toBeTruthy();
     });
 
     it('returns 400 on missing required fields', async () => {
