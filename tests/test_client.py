@@ -988,6 +988,21 @@ class TestPlatformContractCompliance:
         assert '"mode"' in source or "'mode'" in source, "start_strategy() must send 'mode' field"
         assert "paperMode" not in source, "start_strategy() must not send obsolete 'paperMode' field"
 
+    def test_strategy_exec_mode_exported_from_package(self):
+        """StrategyExecMode must be importable from the polyforge package root (#262)."""
+        from polyforge import StrategyExecMode
+        assert StrategyExecMode is not None
+
+    def test_support_ticket_exported_from_package(self):
+        """SupportTicket must be importable from the polyforge package root (#262)."""
+        from polyforge import SupportTicket
+        assert SupportTicket is not None
+
+    def test_user_preferences_exported_from_package(self):
+        """UserPreferences must be importable from the polyforge package root (#262)."""
+        from polyforge import UserPreferences
+        assert UserPreferences is not None
+
 
 class TestFinancialParamValidation:
     """Test _validate_financial_param rejects dangerous values (#88)."""
@@ -5684,6 +5699,37 @@ class TestPublicHealthEndpoint:
         assert "await" in source, "async get_health_authenticated not using await"
 
 
+class TestHealthEndpointAuthCoroutine:
+    """Tests for the authenticated health-check coroutine signature."""
+
+    def test_sync_get_health_authenticated(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._get = MagicMock(return_value={
+            "status": "operational",
+            "service": "api-service",
+            "version": "2.0.0",
+            "uptime": 3600.0,
+            "db": {"connections": 5, "status": "ok"},
+            "redis": {"memoryUsageMb": 128, "status": "ok"},
+            "queueDepth": 0,
+        })
+        result = client.get_health_authenticated()
+        assert isinstance(result, SystemHealthAuthenticated)
+        assert result.status == "operational"
+        assert result.service == "api-service"
+        assert result.db == {"connections": 5, "status": "ok"}
+        client._get.assert_called_once_with("/api/v1/status")
+        client.close()
+
+    def test_async_get_health_authenticated_is_coroutine(self):
+        import inspect
+        assert hasattr(AsyncPolyforgeClient, "get_health_authenticated"), \
+            "AsyncPolyforgeClient missing get_health_authenticated"
+        source = inspect.getsource(AsyncPolyforgeClient.get_health_authenticated)
+        assert "await" in source, "async get_health_authenticated not using await"
+
+
 class TestPositionPlatformContract:
     """Position model must match the platform contract (closes #143)."""
 
@@ -6536,6 +6582,70 @@ class TestVenuePreferenceMethods:
             json={"defaultVenue": "kalshi", "singlePlatformMode": True},
         )
         assert isinstance(result, VenuePreferences)
+        assert result.single_platform_mode is True
+        client.close()
+
+
+class TestMyPreferenceMethods:
+    """Tests for my_preference endpoints (sync + async) — POLA-4559."""
+
+    MY_PREF_METHODS = [
+        "get_my_preferences",
+        "update_my_preferences",
+    ]
+
+    @pytest.mark.parametrize("method", MY_PREF_METHODS)
+    def test_sync_method_exists(self, method):
+        assert hasattr(PolyforgeClient, method)
+        assert callable(getattr(PolyforgeClient, method))
+
+    @pytest.mark.parametrize("method", MY_PREF_METHODS)
+    def test_async_method_exists(self, method):
+        assert hasattr(AsyncPolyforgeClient, method)
+        assert callable(getattr(AsyncPolyforgeClient, method))
+
+    def test_sync_endpoints_use_correct_paths(self):
+        import inspect
+        for method_name in self.MY_PREF_METHODS:
+            source = inspect.getsource(getattr(PolyforgeClient, method_name))
+            assert "/api/v1/users/me/venue-preferences" in source
+
+    def test_async_endpoints_use_correct_paths(self):
+        import inspect
+        for method_name in self.MY_PREF_METHODS:
+            source = inspect.getsource(getattr(AsyncPolyforgeClient, method_name))
+            assert "/api/v1/users/me/venue-preferences" in source
+
+    def test_sync_get_my_preferences(self):
+        from unittest.mock import MagicMock
+        from polyforge.models import UserPreferences
+        client = PolyforgeClient(api_key="test-key")
+        client._get = MagicMock(return_value={
+            "defaultVenue": "polymarket",
+            "enabledVenues": ["polymarket", "kalshi"],
+            "singlePlatformMode": False,
+        })
+        result = client.get_my_preferences()
+        assert isinstance(result, UserPreferences)
+        assert result.default_venue == "polymarket"
+        assert "kalshi" in result.enabled_venues
+        client.close()
+
+    def test_sync_update_my_preferences(self):
+        from unittest.mock import MagicMock
+        from polyforge.models import UserPreferences
+        client = PolyforgeClient(api_key="test-key")
+        client._patch = MagicMock(return_value={
+            "defaultVenue": "kalshi",
+            "enabledVenues": ["kalshi"],
+            "singlePlatformMode": True,
+        })
+        result = client.update_my_preferences(default_venue="kalshi", single_platform_mode=True)
+        client._patch.assert_called_once_with(
+            "/api/v1/users/me/venue-preferences",
+            json={"defaultVenue": "kalshi", "singlePlatformMode": True},
+        )
+        assert isinstance(result, UserPreferences)
         assert result.single_platform_mode is True
         client.close()
 
