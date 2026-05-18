@@ -131,6 +131,7 @@ export class StrategyRunner {
    *  Guard is scoped per unlock promise, not globally, so a newer unlock
    *  generation can still arm exactly one retry. */
   private pendingRedisUnlockRetryFor: Promise<unknown> | null = null;
+  private pendingRedisUnlockGeneration = 0;
 
   /** Tracks child strategy IDs launched by RUN_STRATEGY action blocks */
   readonly childStrategies: Set<string> = new Set();
@@ -474,6 +475,11 @@ export class StrategyRunner {
         this.activeLockToken = null;
       }
 
+      // Snapshot the unlock generation before the lockAcquired block
+      // so the retry paths below (which run when !lockAcquired) can
+      // close over it without hitting a ReferenceError.
+      let unlockGeneration = this.pendingRedisUnlockGeneration;
+
       // Start Redis distributed unlock before releasing tickInFlight so
       // follow-up ticks can observe pendingRedisUnlock in local race windows.
       if (lockAcquired) {
@@ -487,6 +493,7 @@ export class StrategyRunner {
         );
         const thisUnlock = unlockPromise;
         this.pendingRedisUnlock = thisUnlock;
+        unlockGeneration = ++this.pendingRedisUnlockGeneration;
         thisUnlock
           .then((result) => {
             if (result !== 1) {
@@ -589,12 +596,18 @@ export class StrategyRunner {
             if (this.followUpTimer) clearTimeout(this.followUpTimer);
             void pendingUnlock
               .finally(() => {
-                const wasCurrent =
+                const isCurrentGeneration =
+                  this.pendingRedisUnlockGeneration === unlockGeneration;
+                const isArmedRetry =
                   this.pendingRedisUnlockRetryFor === pendingUnlock;
-                if (wasCurrent) {
+                if (isArmedRetry) {
                   this.pendingRedisUnlockRetryFor = null;
                 }
-                if (wasCurrent && this.status === "RUNNING") {
+                if (
+                  isArmedRetry &&
+                  isCurrentGeneration &&
+                  this.status === "RUNNING"
+                ) {
                   this.scheduledFollowUp = true;
                   void this.tick();
                 }
@@ -643,12 +656,18 @@ export class StrategyRunner {
             if (this.followUpTimer) clearTimeout(this.followUpTimer);
             void pendingUnlock
               .finally(() => {
-                const wasCurrent =
+                const isCurrentGeneration =
+                  this.pendingRedisUnlockGeneration === unlockGeneration;
+                const isArmedRetry =
                   this.pendingRedisUnlockRetryFor === pendingUnlock;
-                if (wasCurrent) {
+                if (isArmedRetry) {
                   this.pendingRedisUnlockRetryFor = null;
                 }
-                if (wasCurrent && this.status === "RUNNING") {
+                if (
+                  isArmedRetry &&
+                  isCurrentGeneration &&
+                  this.status === "RUNNING"
+                ) {
                   this.scheduledFollowUp = true;
                   void this.tick();
                 }
