@@ -9,8 +9,8 @@ export default defineConfig({
     fileParallelism: false,
     include: ['src/**/*.spec.ts', 'test/**/*.spec.ts'],
     globalSetup: ['test/global-setup.ts'],
-    testTimeout: 15_000,
     hookTimeout: 30_000,
+    testTimeout: 15_000,
     env: {
       USER_JWT_SECRET: 'test-user-jwt-secret-min-32-chars!',
       INTERNAL_JWT_SECRET: 'test-user-jwt-secret-min-32-chars!',

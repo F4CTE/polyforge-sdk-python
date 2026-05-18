@@ -231,25 +231,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   logout: async () => {
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), 10_000);
+
     try {
-      const controller = new AbortController();
-      const timeoutId = window.setTimeout(() => controller.abort(), 10_000);
-      try {
-        await fetch("/auth/v1/logout", {
-          method: "POST",
-          credentials: "include",
-          signal: controller.signal,
-        });
-      } catch (err) {
-        // Continue local logout even if the network request is slow or fails.
-        console.warn(
-          "Logout request failed (continuing local cleanup):",
-          err instanceof Error ? err.message : err,
-        );
-      } finally {
-        window.clearTimeout(timeoutId);
+      const response = await fetch("/auth/v1/logout", {
+        method: "POST",
+        credentials: "include",
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Logout failed with status ${response.status}`);
       }
-    } finally {
+
       resetAnalytics();
       clearSentryUser();
       try {
@@ -259,6 +254,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
       set({ user: null, loading: false });
       window.location.assign("/login");
+    } finally {
+      window.clearTimeout(timeoutId);
     }
   },
 

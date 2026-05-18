@@ -288,7 +288,7 @@ export function Topbar() {
               type="button"
               role="menuitem"
               onClick={() => {
-                void logout();
+                logout().catch(() => {});
               }}
               className="flex items-center gap-2 w-full px-4 py-2 text-body-md text-loss hover:bg-surface transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring"
             >

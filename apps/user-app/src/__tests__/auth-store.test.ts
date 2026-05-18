@@ -66,8 +66,8 @@ describe("auth store logout", () => {
     });
   });
 
-  it("clears local auth state and redirects when the network logout fails", async () => {
-    await useAuthStore.getState().logout();
+  it("does not clear local auth state when network logout fails", async () => {
+    await expect(useAuthStore.getState().logout()).rejects.toThrow("network stalled");
 
     expect(fetch).toHaveBeenCalledWith(
       "/auth/v1/logout",
@@ -76,10 +76,9 @@ describe("auth store logout", () => {
         credentials: "include",
       }),
     );
-    expect(removeItem).toHaveBeenCalledWith("access_token");
-    expect(useAuthStore.getState().user).toBeNull();
-    expect(useAuthStore.getState().loading).toBe(false);
-    expect(locationAssign).toHaveBeenCalledWith("/login");
+    expect(removeItem).not.toHaveBeenCalled();
+    expect(useAuthStore.getState().user?.id).toBe("user-1");
+    expect(locationAssign).not.toHaveBeenCalled();
   });
 });
 
