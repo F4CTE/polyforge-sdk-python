@@ -1784,7 +1784,6 @@ class CorrelationCategoriesReport:
 
 
 @dataclass
-@dataclass
 class JournalEntry:
     """A row in the journal page (orders annotated with a mood).
 
