@@ -264,10 +264,9 @@ function process_flow_entries(buf) {
     if (parts_count < 2) continue
     host = parts[1]
 
-    # Unbracketed IPv6 (e.g. ::1:6000:6000 — first part empty)
-    if (host == "" && parts_count >= 4) {
-      host = "::" parts[3]
-    }
+    # Unbracketed IPv6 loopback short syntax must be exact "::1:host:container".
+    # Do not reconstruct from partial segments (e.g. ::1:2:3000:3000 is NOT loopback).
+    if (qval ~ /^::1:(([0-9]+(-[0-9]+)?|\$([A-Za-z_][A-Za-z0-9_]*|\{[^}]+\})):([0-9]+(-[0-9]+)?|\$([A-Za-z_][A-Za-z0-9_]*|\{[^}]+\}))|:([0-9]+(-[0-9]+)?|\$([A-Za-z_][A-Za-z0-9_]*|\{[^}]+\})))$/) continue
 
     if (host == "127.0.0.1" || host == "[::1]" || host == "::1") continue
 
@@ -533,15 +532,9 @@ in_ports && /^[[:space:]]+-[[:space:]]+/ && !in_block {
     }
     host = parts[1]
 
-    # Unbracketed IPv6 (host empty due to leading ::).  Compose accepts
-    # short syntax like "::1:6000:6000" (unbracketed IPv6 loopback).
-    # Reconstruct the host: for ::1:... with 4+ colon-separated parts
-    # the first three are the IPv6 address (two empty from :: plus the
-    # hex segment).  ::1 is loopback-safe; everything else (e.g. :::...
-    # for all-interfaces ::) is unsafe.
-    if (host == "" && parts_count >= 4) {
-      host = "::" parts[3]
-    }
+    # Unbracketed IPv6 loopback short syntax must be exact "::1:host:container".
+    # Do not reconstruct from partial segments (e.g. ::1:2:3000:3000 is NOT loopback).
+    if (val ~ /^::1:(([0-9]+(-[0-9]+)?|\$([A-Za-z_][A-Za-z0-9_]*|\{[^}]+\})):([0-9]+(-[0-9]+)?|\$([A-Za-z_][A-Za-z0-9_]*|\{[^}]+\}))|:([0-9]+(-[0-9]+)?|\$([A-Za-z_][A-Za-z0-9_]*|\{[^}]+\})))$/) { next }
   }
 
   # Detect IPv6 bracket notation: [::], [::1], [2001:db8::1], etc.
