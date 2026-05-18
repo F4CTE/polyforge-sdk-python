@@ -134,35 +134,63 @@ export class AccuracyService {
           ? new Date(Date.now() - 30 * 86400_000)
           : new Date(0);
 
-    const positions = await this.prisma.position.findMany({
-      where: {
-        resolutionStatus: ResolutionStatus.RESOLVED,
-        updatedAt: { gte: since },
-      },
-      select: {
-        userId: true,
-        realizedPnl: true,
-      },
-    });
+    const start = (page - 1) * limit;
+    const grouped = await this.prisma.$queryRaw<
+      Array<{
+        total: number;
+        userId: string | null;
+        tradeCount: number | null;
+        pnl: unknown | null;
+        winRate: unknown | null;
+      }>
+    >`
+      WITH leaderboard AS MATERIALIZED (
+        SELECT
+          "userId",
+          COUNT(*)::int AS "tradeCount",
+          COALESCE(SUM("realizedPnl"), 0) AS pnl,
+          ROUND(
+            (
+              COUNT(*) FILTER (WHERE "realizedPnl" > 0)::decimal
+              / NULLIF(COUNT(*), 0)::decimal
+            ) * 100,
+            1
+          ) AS "winRate"
+        FROM "positions"
+        WHERE "resolutionStatus" = 'RESOLVED'::"ResolutionStatus"
+          AND "updatedAt" >= ${since}
+        GROUP BY "userId"
+      ),
+      total_count AS (
+        SELECT COUNT(*)::int AS total FROM leaderboard
+      ),
+      page_rows AS (
+        SELECT *
+        FROM leaderboard
+        ORDER BY "winRate" DESC, "tradeCount" DESC, "userId" ASC
+        OFFSET ${start}
+        LIMIT ${limit}
+      )
+      SELECT
+        t.total,
+        p."userId",
+        p."tradeCount",
+        p.pnl,
+        p."winRate"
+      FROM total_count t
+      LEFT JOIN page_rows p ON TRUE
+      ORDER BY p."winRate" DESC NULLS LAST, p."tradeCount" DESC NULLS LAST, p."userId" ASC NULLS LAST
+    `;
 
-    const userStats: Record<
-      string,
-      { total: number; wins: number; pnl: number }
-    > = {};
-
-    for (const pos of positions) {
-      if (!userStats[pos.userId]) {
-        userStats[pos.userId] = { total: 0, wins: 0, pnl: 0 };
-      }
-      userStats[pos.userId].total++;
-      const parsedPnl = parseFloat(String(pos.realizedPnl ?? 0));
-      userStats[pos.userId].pnl += parsedPnl;
-      if (parsedPnl > 0) {
-        userStats[pos.userId].wins++;
-      }
+    const total = grouped[0]?.total ?? 0;
+    if (total === 0) {
+      return paginate([], 0, page, limit);
     }
 
-    const userIds = Object.keys(userStats);
+    const pagedRows = grouped.filter(
+      (row): row is typeof row & { userId: string } => row.userId !== null,
+    );
+    const userIds = pagedRows.map((row) => row.userId);
 
     let userMap = new Map<
       string,
@@ -181,27 +209,23 @@ export class AccuracyService {
       userMap = new Map(users.map((u) => [u.id, u]));
     }
 
-    const entries: AccuracyLeaderboardEntry[] = Object.entries(userStats)
-      .map(([userId, stats]) => ({
-        rank: 0,
-        userId,
-        username: userMap.get(userId)?.username ?? "",
-        displayName: userMap.get(userId)?.displayName ?? null,
-        avatarUrl: userMap.get(userId)?.avatarUrl ?? null,
-        pnl: String(stats.pnl),
-        winRate:
-          stats.total > 0 ? ((stats.wins / stats.total) * 100).toFixed(1) : "0",
-        tradeCount: stats.total,
-      }))
-      .sort((a, b) => parseFloat(b.winRate) - parseFloat(a.winRate));
+    const entries: AccuracyLeaderboardEntry[] = pagedRows.map((row, i) => {
+      const tradeCount = Number(row.tradeCount ?? 0);
+      const pnl = Number(row.pnl ?? 0);
+      const winRate = Number(row.winRate ?? 0);
 
-    const total = entries.length;
-    const start = (page - 1) * limit;
-    const pageEntries = entries.slice(start, start + limit);
-    pageEntries.forEach((entry, i) => {
-      entry.rank = start + i + 1;
+      return {
+        rank: start + i + 1,
+        userId: row.userId,
+        username: userMap.get(row.userId)?.username ?? "",
+        displayName: userMap.get(row.userId)?.displayName ?? null,
+        avatarUrl: userMap.get(row.userId)?.avatarUrl ?? null,
+        pnl: String(pnl),
+        winRate: Number.isFinite(winRate) ? winRate.toFixed(1) : "0.0",
+        tradeCount,
+      };
     });
 
-    return paginate(pageEntries, total, page, limit);
+    return paginate(entries, total, page, limit);
   }
 }

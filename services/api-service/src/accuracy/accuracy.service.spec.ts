@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import { AccuracyService } from "./accuracy.service";
 import { createMockDb, MockDb } from "../../test/helpers/mock-db";
 
@@ -37,7 +37,7 @@ describe("AccuracyService", () => {
 
   beforeEach(() => {
     db = createMockDb();
-    service = new AccuracyService(db as any);
+    service = new AccuracyService(db);
   });
 
   it("returns defaults when user has no resolved positions", async () => {
@@ -194,11 +194,27 @@ describe("AccuracyService.getLeaderboard", () => {
 
   beforeEach(() => {
     db = createMockDb();
-    service = new AccuracyService(db as any);
+    service = new AccuracyService(db);
   });
 
+  function mockLeaderboardQuery(totalCount: number, pageRows: any[]) {
+    const rows =
+      pageRows.length > 0
+        ? pageRows.map((row) => ({ total: totalCount, ...row }))
+        : [
+            {
+              total: totalCount,
+              userId: null,
+              tradeCount: null,
+              pnl: null,
+              winRate: null,
+            },
+          ];
+    db.$queryRaw.mockResolvedValueOnce(rows as any);
+  }
+
   it("returns empty paginated response when no resolved positions exist", async () => {
-    db.position.findMany.mockResolvedValue([]);
+    mockLeaderboardQuery(0, []);
 
     const result = await service.getLeaderboard({ period: "30d" });
 
@@ -212,12 +228,10 @@ describe("AccuracyService.getLeaderboard", () => {
   it("ranks users by win-rate descending", async () => {
     // user-1: 2 positions, both won (100%)
     // user-2: 2 positions, 1 won (50%)
-    db.position.findMany.mockResolvedValue([
-      makePosition({ id: "p1", userId: "user-1", realizedPnl: "10.00" }),
-      makePosition({ id: "p2", userId: "user-1", realizedPnl: "5.00" }),
-      makePosition({ id: "p3", userId: "user-2", realizedPnl: "8.00" }),
-      makePosition({ id: "p4", userId: "user-2", realizedPnl: "-2.00" }),
-    ] as any);
+    mockLeaderboardQuery(2, [
+      { userId: "user-1", tradeCount: 2, pnl: "15.00", winRate: "100.0" },
+      { userId: "user-2", tradeCount: 2, pnl: "6.00", winRate: "50.0" },
+    ]);
     db.user.findMany.mockResolvedValue([
       {
         id: "user-1",
@@ -247,12 +261,30 @@ describe("AccuracyService.getLeaderboard", () => {
     expect(result.data[1].avatarUrl).toBe("/bob.png");
   });
 
-  it("includes pnl and tradeCount in each entry", async () => {
-    db.position.findMany.mockResolvedValue([
-      makePosition({ id: "p1", userId: "user-1", realizedPnl: "15.5" }),
-      makePosition({ id: "p2", userId: "user-1", realizedPnl: "-3.2" }),
-      makePosition({ id: "p3", userId: "user-1", realizedPnl: "7.0" }),
+  it("keeps win-rate ordering even when a lower-ranked user has more trades", async () => {
+    mockLeaderboardQuery(2, [
+      { userId: "user-1", tradeCount: 2, pnl: "10.00", winRate: "100.0" },
+      { userId: "user-2", tradeCount: 5, pnl: "25.00", winRate: "80.0" },
+    ]);
+    db.user.findMany.mockResolvedValue([
+      { id: "user-1", username: "alpha", displayName: null, avatarUrl: null },
+      { id: "user-2", username: "beta", displayName: null, avatarUrl: null },
     ] as any);
+
+    const result = await service.getLeaderboard({ period: "30d" });
+
+    expect(result.data[0].userId).toBe("user-1");
+    expect(result.data[0].winRate).toBe("100.0");
+    expect(result.data[0].tradeCount).toBe(2);
+    expect(result.data[1].userId).toBe("user-2");
+    expect(result.data[1].winRate).toBe("80.0");
+    expect(result.data[1].tradeCount).toBe(5);
+  });
+
+  it("includes pnl and tradeCount in each entry", async () => {
+    mockLeaderboardQuery(1, [
+      { userId: "user-1", tradeCount: 3, pnl: "19.3", winRate: "66.7" },
+    ]);
     db.user.findMany.mockResolvedValue([
       { id: "user-1", username: "trader", displayName: null, avatarUrl: null },
     ] as any);
@@ -265,14 +297,24 @@ describe("AccuracyService.getLeaderboard", () => {
   });
 
   it("respects page and limit pagination", async () => {
-    const positions = Array.from({ length: 25 }, (_, i) =>
-      makePosition({ id: `p${i}`, userId: `user-${i}`, realizedPnl: "10.00" }),
+    const positions = Array.from({ length: 25 }, (_, i) => ({
+      userId: `user-${i}`,
+      _count: { _all: 1 },
+      _sum: { realizedPnl: "10.00" },
+    }));
+    mockLeaderboardQuery(
+      25,
+      positions.slice(10, 20).map((p) => ({
+        userId: p.userId,
+        tradeCount: 1,
+        pnl: "10.00",
+        winRate: "100.0",
+      })),
     );
-    db.position.findMany.mockResolvedValue(positions as any);
     db.user.findMany.mockResolvedValue(
-      positions.map((p) => ({
-        id: p.userId,
-        username: `user${p.userId}`,
+      Array.from({ length: 25 }, (_, i) => ({
+        id: `user-${i}`,
+        username: `user-user-${i}`,
         displayName: null,
         avatarUrl: null,
       })) as any,
@@ -294,7 +336,7 @@ describe("AccuracyService.getLeaderboard", () => {
   });
 
   it("defaults to page=1 limit=20", async () => {
-    db.position.findMany.mockResolvedValue([]);
+    mockLeaderboardQuery(0, []);
 
     const result = await service.getLeaderboard({});
 
@@ -303,7 +345,7 @@ describe("AccuracyService.getLeaderboard", () => {
   });
 
   it("caps limit at 100", async () => {
-    db.position.findMany.mockResolvedValue([]);
+    mockLeaderboardQuery(0, []);
 
     const result = await service.getLeaderboard({ limit: 200 });
 
@@ -311,9 +353,9 @@ describe("AccuracyService.getLeaderboard", () => {
   });
 
   it("falls back to empty username when user profile is missing", async () => {
-    db.position.findMany.mockResolvedValue([
-      makePosition({ id: "p1", userId: "ghost", realizedPnl: "1.00" }),
-    ] as any);
+    mockLeaderboardQuery(1, [
+      { userId: "ghost", tradeCount: 1, pnl: "1.00", winRate: "100.0" },
+    ]);
     db.user.findMany.mockResolvedValue([]);
 
     const result = await service.getLeaderboard({ period: "30d" });
@@ -324,9 +366,9 @@ describe("AccuracyService.getLeaderboard", () => {
   });
 
   it("clamps winRate to 0 when user has no resolved positions after filtering", async () => {
-    db.position.findMany.mockResolvedValue([
-      makePosition({ id: "p1", userId: "u1", realizedPnl: "0.00" }),
-    ] as any);
+    mockLeaderboardQuery(1, [
+      { userId: "u1", tradeCount: 1, pnl: "0.00", winRate: "0.0" },
+    ]);
     db.user.findMany.mockResolvedValue([
       { id: "u1", username: "zero", displayName: null, avatarUrl: null },
     ] as any);
