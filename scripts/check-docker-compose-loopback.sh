@@ -286,6 +286,7 @@ function process_flow_entries(buf) {
 /^[[:space:]]+["\047]?ports["\047]?:[[:space:]]*($|#|&|\*)/ {
   ports_indent = leadingspaces($0)
   in_ports = 1
+  prev_nosemgrep = 0
   if ($0 ~ /["\047]?ports["\047]?:[[:space:]]*\*/ && $0 !~ /# nosemgrep:.*docker-compose-port-no-loopback(-long-syntax|-flow-style)?/) {
     printf "::error file=%s,line=%d::ports: uses YAML alias — cannot verify loopback binding. Inline the port mapping or suppress with # nosemgrep: docker-compose-port-no-loopback(-long-syntax|-flow-style). See https://github.com/F4CTE/PolyForge/issues/1310\n", file, NR
     exit_code = 1
@@ -308,6 +309,7 @@ in_ports && !in_block {
     is_indentless_item = (cur == ports_indent && $0 ~ /^[[:space:]]*-[[:space:]]+/)
     if (cur < ports_indent || (cur == ports_indent && !is_indentless_item && $0 !~ /^[[:space:]]+["\047]?ports["\047]?:/)) {
       in_ports = 0
+      prev_nosemgrep = 0
     }
   }
 }
@@ -371,6 +373,7 @@ in_block {
     # (and is not blank / a comment), also exit the ports section.
     if (cur_indent <= ports_indent && $0 !~ /^[[:space:]]*$/ && $0 !~ /^[[:space:]]*#/) {
       in_ports = 0
+      prev_nosemgrep = 0
     }
 
     # Re-process this line in case it starts a new port block
