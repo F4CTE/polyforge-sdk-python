@@ -240,6 +240,13 @@ export function checkSafety(
 
 // ─── Triggers ────────────────────────────────────────────────────────────────
 
+const MAX_TA_LOOKBACK = 5000;
+
+function clampLookback(value: number): number {
+  if (!Number.isFinite(value) || value <= 0) return 0;
+  return Math.min(Math.floor(value), MAX_TA_LOOKBACK);
+}
+
 export function computeMaxLookback(triggers: Block[]): number {
   let max = 0;
   for (const block of triggers) {
@@ -255,9 +262,11 @@ export function computeMaxLookback(triggers: Block[]): number {
           String(cfg.slowPeriod ?? cfg.longPeriod ?? 50),
           10,
         );
-        const period = Math.max(
-          isNaN(fastPeriod) ? 0 : fastPeriod,
-          isNaN(slowPeriod) ? 0 : slowPeriod,
+        const period = clampLookback(
+          Math.max(
+            isNaN(fastPeriod) ? 0 : fastPeriod,
+            isNaN(slowPeriod) ? 0 : slowPeriod,
+          ),
         );
         if (period > 0) max = Math.max(max, period + 1);
         break;
@@ -267,18 +276,18 @@ export function computeMaxLookback(triggers: Block[]): number {
         const slow = parseInt(String(cfg.slowPeriod ?? 26), 10);
         const signalPeriod = parseInt(String(cfg.signalPeriod ?? 9), 10);
         if (!isNaN(slow) && !isNaN(signalPeriod))
-          max = Math.max(max, slow + signalPeriod);
+          max = Math.max(max, clampLookback(slow + signalPeriod));
         break;
       }
       case "bollinger_bands":
       case "bollinger_breakout_tick": {
-        const period = parseInt(String(cfg.period ?? 20), 10);
-        if (!isNaN(period)) max = Math.max(max, period + 1);
+        const period = clampLookback(parseInt(String(cfg.period ?? 20), 10));
+        if (period > 0) max = Math.max(max, period + 1);
         break;
       }
       case "rsi_threshold_tick": {
-        const period = parseInt(String(cfg.period ?? 14), 10);
-        if (!isNaN(period)) max = Math.max(max, period + 1);
+        const period = clampLookback(parseInt(String(cfg.period ?? 14), 10));
+        if (period > 0) max = Math.max(max, period + 1);
         break;
       }
       case "vwap_cross_tick": {
@@ -364,14 +373,34 @@ export function checkTriggers(
         // Fires when short MA crosses above/below long MA (configurable direction)
         // Backward compat: old config used fastPeriod/slowPeriod
         // Live engine uses shortPeriod/longPeriod + direction
-        const fastPeriod = parseInt(
+        const rawFastPeriod = parseInt(
           String(cfg.fastPeriod ?? cfg.shortPeriod ?? 10),
           10,
         );
-        const slowPeriod = parseInt(
+        const rawSlowPeriod = parseInt(
           String(cfg.slowPeriod ?? cfg.longPeriod ?? 50),
           10,
         );
+        let fastPeriod = clampLookback(rawFastPeriod);
+        let slowPeriod = clampLookback(rawSlowPeriod);
+        // When clamping collapses distinct oversized periods to the same value,
+        // scale both proportionally so the crossover can still fire.
+        if (
+          fastPeriod > 0 &&
+          slowPeriod > 0 &&
+          fastPeriod >= slowPeriod
+        ) {
+          const rawFast = isNaN(rawFastPeriod) ? 0 : rawFastPeriod;
+          const rawSlow = isNaN(rawSlowPeriod) ? 0 : rawSlowPeriod;
+          const rawMax = Math.max(rawFast, rawSlow);
+          if (rawMax > MAX_TA_LOOKBACK && rawFast > MAX_TA_LOOKBACK && rawSlow > MAX_TA_LOOKBACK && rawSlow > 0) {
+            const scale = MAX_TA_LOOKBACK / rawMax;
+            slowPeriod = Math.max(2, Math.round(rawSlow * scale));
+            fastPeriod = Math.max(1, Math.round(rawFast * scale));
+            if (fastPeriod >= slowPeriod) fastPeriod = slowPeriod - 1;
+          }
+        }
+        if (fastPeriod <= 0 || slowPeriod <= 0) break;
         const maType = String(cfg.maType ?? "sma");
         const direction = String(
           block.type === "ma_crossover"
@@ -401,11 +430,40 @@ export function checkTriggers(
         // Fires on MACD signal conditions
         // macd_crossover (legacy): crossAbove (boolean)
         // macd_signal_tick (live): signal (line_cross | histogram_sign_change)
-        const fast = parseInt(String(cfg.fastPeriod ?? 12), 10);
-        const slow = parseInt(String(cfg.slowPeriod ?? 26), 10);
-        const signalPeriod = parseInt(String(cfg.signalPeriod ?? 9), 10);
+        let fast = parseInt(String(cfg.fastPeriod ?? 12), 10);
+        const rawSlow = parseInt(String(cfg.slowPeriod ?? 26), 10);
+        const rawSignal = parseInt(String(cfg.signalPeriod ?? 9), 10);
         const signal = String(cfg.signal ?? "");
         const crossAbove = String(cfg.crossAbove ?? "true") !== "false";
+        // Validate raw periods: fail-closed for non-positive or non-finite input
+        if (!Number.isFinite(fast) || fast <= 0) break;
+        if (!Number.isFinite(rawSlow) || rawSlow <= 0) break;
+        if (!Number.isFinite(rawSignal) || rawSignal <= 0) break;
+        const rawSum = rawSlow + rawSignal;
+        const cappedSum = clampLookback(rawSum);
+        if (cappedSum <= 0) break;
+        // Scale individual periods proportionally when the sum is capped,
+        // and keep the effective sum within MAX_TA_LOOKBACK.
+        let slow = rawSlow;
+        let signalPeriod = rawSignal;
+        if (rawSum > MAX_TA_LOOKBACK) {
+          const scale = MAX_TA_LOOKBACK / rawSum;
+          slow = Math.max(
+            1,
+            Math.min(MAX_TA_LOOKBACK - 1, Math.round(rawSlow * scale)),
+          );
+          signalPeriod = Math.max(1, MAX_TA_LOOKBACK - slow);
+          fast = Math.max(1, Math.round(fast * scale));
+          if (fast >= slow) {
+            if (slow <= 1) {
+              slow = 2;
+              fast = 1;
+              signalPeriod = Math.max(1, MAX_TA_LOOKBACK - slow);
+            } else {
+              fast = slow - 1;
+            }
+          }
+        }
         const minLen = slow + signalPeriod;
 
         // Reject signal-less macd_signal_tick — parity with live engine
@@ -448,7 +506,8 @@ export function checkTriggers(
         // Fires when price breaks outside upper or lower band
         // Old config: band (upper | lower)
         // Live config: direction (upper_break | lower_break)
-        const period = parseInt(String(cfg.period ?? 20), 10);
+        const period = clampLookback(parseInt(String(cfg.period ?? 20), 10));
+        if (period <= 0) break;
         const stdDev = parseFloat(
           String(cfg.stdDev ?? cfg.stdDevMultiplier ?? 2),
         );
@@ -470,7 +529,8 @@ export function checkTriggers(
       }
 
       case "rsi_threshold_tick": {
-        const period = parseInt(String(cfg.period ?? 14), 10);
+        const period = clampLookback(parseInt(String(cfg.period ?? 14), 10));
+        if (period <= 0) break;
         const level = parseFloat(String(cfg.level ?? "70"));
         const direction = String(cfg.direction ?? "above");
         if (hist.length >= period + 1) {

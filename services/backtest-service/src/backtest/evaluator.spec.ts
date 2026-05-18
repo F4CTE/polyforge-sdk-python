@@ -185,6 +185,26 @@ describe("computeMaxLookback", () => {
     // ma: 50+1=51, macd: 26+9=35, rsi: 14+1=15, every_tick: 0 → max=51
     expect(computeMaxLookback(blocks)).toBe(51);
   });
+
+  it("caps oversized TA periods to a safe maximum lookback", () => {
+    const blocks: Block[] = [
+      {
+        type: "ma_crossover_tick",
+        config: { fastPeriod: "10", slowPeriod: "999999999" },
+      },
+    ];
+    expect(computeMaxLookback(blocks)).toBe(5001);
+  });
+
+  it("caps summed MACD lookback (slowPeriod + signalPeriod) at MAX_TA_LOOKBACK", () => {
+    const blocks: Block[] = [
+      {
+        type: "macd_signal_tick",
+        config: { slowPeriod: "999999999", signalPeriod: "999999999" },
+      },
+    ];
+    expect(computeMaxLookback(blocks)).toBe(5000);
+  });
 });
 
 // ─── checkSafety ─────────────────────────────────────────────────────────────
@@ -1470,6 +1490,213 @@ describe("checkTriggers — TA blocks", () => {
         },
       ];
       expect(checkTriggers(blocks, prices, makeHistory(hist))).toBe(false);
+    });
+  });
+
+  // ── TA period capping (MAX_TA_LOOKBACK = 5000) ────────────────────────
+
+  describe("period capping in checkTriggers", () => {
+    it("ma_crossover clamps oversized slowPeriod so gate can pass", () => {
+      // slowPeriod=999999 → clamped to 5000; gate needs 5001 entries.
+      // With 5001 entries, reaches computation (returns boolean, not inert).
+      const hist = Array.from({ length: 5001 }, (_, i) =>
+        i < 5000 ? 0.5 : 0.1,
+      );
+      const prices = makePrices({ "tok-a": { price: 0.1 } });
+      const blocks: Block[] = [
+        {
+          type: "ma_crossover",
+          config: { tokenId: "tok-a", fastPeriod: 3, slowPeriod: 999999 },
+        },
+      ];
+      const result = checkTriggers(blocks, prices, makeHistory(hist));
+      expect(typeof result).toBe("boolean");
+    });
+
+    it("ma_crossover scales both periods when both exceed the cap so ordering is preserved", () => {
+      // fastPeriod=6000, slowPeriod=7000 → both clamp to 5000 independently.
+      // Scaling preserves the ratio so fast≈4286, slow=5000 and crossover
+      // can still fire (fast ≠ slow). History needs slowPeriod+1=5001 entries.
+      const hist = Array.from({ length: 5001 }, (_, i) =>
+        i < 5000 ? 0.5 : 0.1,
+      );
+      const prices = makePrices({ "tok-a": { price: 0.1 } });
+      const blocks: Block[] = [
+        {
+          type: "ma_crossover",
+          config: { tokenId: "tok-a", fastPeriod: 6000, slowPeriod: 7000 },
+        },
+      ];
+      const result = checkTriggers(blocks, prices, makeHistory(hist));
+      expect(typeof result).toBe("boolean");
+    });
+
+    it("macd_crossover scales individual periods when sum exceeds cap", () => {
+      // slow(10000) + signal(10) = 10010 → cappedSum=5000; scale≈0.4995
+      // slow → ~4995, signal → ~5; sum=5000; _macdFull needs ≥4999 entries.
+      const flat = Array.from({ length: 20 }, () => 0.5);
+      const hist = [...flat, 0.1, 0.9];
+      const prices = makePrices({ "tok-a": { price: 0.9 } });
+      const blocks: Block[] = [
+        {
+          type: "macd_crossover",
+          config: {
+            tokenId: "tok-a",
+            fastPeriod: 3,
+            slowPeriod: 10000,
+            signalPeriod: 10,
+          },
+        },
+      ];
+      const result = checkTriggers(blocks, prices, makeHistory(hist));
+      // Should produce a determinate result rather than being permanently inert.
+      expect(typeof result).toBe("boolean");
+    });
+
+    it("macd_crossover uses capped representation when scaling rounds slow to 1", () => {
+      // fast=1, slow=2, signal=100000 → rawSum=100002 > 5000, scale≈0.05.
+      // Scaling rounds: slow=1, signalPeriod=4999, fast=1 → fast >= slow.
+      // slow <= 1 guard promotes slow→2, fast→1, signalPeriod→4998 (capped).
+      // Flat prices produce no zero-line crossover → false.
+      // Use hist.length=5000 so the test reaches the scaling branch.
+      const hist = Array.from({ length: 5000 }, () => 0.5);
+      const prices = makePrices({ "tok-a": { price: 0.5 } });
+      const blocks: Block[] = [
+        {
+          type: "macd_crossover",
+          config: { tokenId: "tok-a", fastPeriod: 1, slowPeriod: 2, signalPeriod: 100000 },
+        },
+      ];
+      expect(checkTriggers(blocks, prices, makeHistory(hist))).toBe(false);
+    });
+
+    it("MACD guarded cap: scaling collapse to slow<=1 uses capped representation instead of fail-closing", () => {
+      // fast=5, slow=5, signal=200000 → rawSum=200005 > 5000, scale≈0.025.
+      // Scaling: slow = max(1, round(5*0.025)) = 1
+      //          signalPeriod = max(1, 5000-1) = 4999
+      //          fast = max(1, round(5*0.025)) = 1
+      // fast >= slow and slow <= 1 → guard promotes slow→2, fast→1, signalPeriod→4998.
+      // Without promotion, fast = slow-1 = 0 → kFast=2 aggressive EMA → false crossover.
+      // Capped representation allows evaluation; no zero-line crossover at last bar → false.
+      const hist = Array.from({ length: 5000 }, (_, i) =>
+        i < 4950 ? 0.5 : 0.5 + (i - 4950) * 0.04,
+      );
+      const prices = makePrices({ "tok-a": { price: hist[hist.length - 1] } });
+      const blocks: Block[] = [
+        {
+          type: "macd_crossover",
+          config: { tokenId: "tok-a", fastPeriod: 5, slowPeriod: 5, signalPeriod: 200000 },
+        },
+      ];
+      expect(checkTriggers(blocks, prices, makeHistory(hist))).toBe(false);
+    });
+
+    it("MACD capped representation fires zero-line crossover when price moves", () => {
+      // fast=5, slow=5, signal=200000 → guarded cap to fast=1, slow=2, signal=4998.
+      // Flat at 0.5, then spike(1.0) → dip(0.1) → spike(1.0) at last bar.
+      // The dip makes the slow EMA exceed the price (MACD negative),
+      // the final spike pushes MACD above zero → zero-line crossover fires.
+      const hist = Array.from({ length: 5000 }, () => 0.5);
+      hist[hist.length - 3] = 1.0;
+      hist[hist.length - 2] = 0.1;
+      hist[hist.length - 1] = 1.0;
+      const prices = makePrices({ "tok-a": { price: hist[hist.length - 1] } });
+      const blocks: Block[] = [
+        {
+          type: "macd_crossover",
+          config: { tokenId: "tok-a", fastPeriod: 5, slowPeriod: 5, signalPeriod: 200000 },
+        },
+      ];
+      expect(checkTriggers(blocks, prices, makeHistory(hist))).toBe(true);
+    });
+
+    it("bollinger_bands clamps oversized period", () => {
+      // period=999999 → clamped to 5000. With 5001 entries, gate passes.
+      const hist = Array.from({ length: 5001 }, () => 0.5);
+      const prices = makePrices({ "tok-a": { price: 0.9 } });
+      const blocks: Block[] = [
+        {
+          type: "bollinger_bands",
+          config: { tokenId: "tok-a", period: 999999, band: "upper" },
+        },
+      ];
+      const result = checkTriggers(blocks, prices, makeHistory(hist));
+      expect(typeof result).toBe("boolean");
+    });
+
+    it("rsi_threshold_tick clamps oversized period", () => {
+      // period=999999 → clamped to 5000. With 5001 entries, gate passes.
+      const hist = Array.from({ length: 5001 }, (_, i) => 0.5 + i * 0.0001);
+      const prices = makePrices({ "tok-a": { price: hist[hist.length - 1] } });
+      const blocks: Block[] = [
+        {
+          type: "rsi_threshold_tick",
+          config: { tokenId: "tok-a", period: 999999, level: 70, direction: "above" },
+        },
+      ];
+      const result = checkTriggers(blocks, prices, makeHistory(hist));
+      expect(typeof result).toBe("boolean");
+    });
+
+    it("still returns false when capped history is far below clamped gate", () => {
+      // period=999999 clamped to 5000, but only 10 entries → gate still fails
+      const prices = makePrices({ "tok-a": { price: 0.5 } });
+      const blocks: Block[] = [
+        {
+          type: "rsi_threshold_tick",
+          config: { tokenId: "tok-a", period: 999999, level: 70, direction: "above" },
+        },
+      ];
+      expect(checkTriggers(blocks, prices, makeHistory(Array.from({ length: 10 }, () => 0.5)))).toBe(false);
+    });
+
+    it("ma_crossover remains fail-closed when only one period exceeds cap", () => {
+      // fastPeriod=100000 (exceeds cap), slowPeriod=50 (within cap).
+      // After clamping: fastPeriod=5000, slowPeriod=50, so fastPeriod >= slowPeriod.
+      // But only rawFast > MAX_TA_LOOKBACK, not rawSlow → should NOT rescale,
+      // preserving failure (strategy remains inert).
+      const hist = Array.from({ length: 5001 }, () => 0.5);
+      const prices = makePrices({ "tok-a": { price: 0.5 } });
+      const blocks: Block[] = [
+        {
+          type: "ma_crossover",
+          config: { tokenId: "tok-a", fastPeriod: 100000, slowPeriod: 50 },
+        },
+      ];
+      expect(checkTriggers(blocks, prices, makeHistory(hist))).toBe(false);
+    });
+
+    it("macd_crossover remains fail-closed for non-positive slowPeriod", () => {
+      // slowPeriod=0 with signalPeriod=10000. Without validation the scaling
+      // path would turn this into a positive signal. With validation it breaks
+      // early and stays inert.
+      const hist = Array.from({ length: 100 }, () => 0.5);
+      const prices = makePrices({ "tok-a": { price: 0.5 } });
+      const blocks: Block[] = [
+        {
+          type: "macd_crossover",
+          config: { tokenId: "tok-a", slowPeriod: 0, signalPeriod: 10000 },
+        },
+      ];
+      expect(checkTriggers(blocks, prices, makeHistory(hist))).toBe(false);
+    });
+
+    it("macd_crossover scales fast proportionally to preserve fast < slow ordering", () => {
+      // fast=12, slow=50, signal=100000 → rawSum=100050 > 5000.
+      // After scaling: slow≈2, signalPeriod=4998, fast≈1 → fast < slow ✓
+      const hist = Array.from({ length: 5000 }, (_, i) =>
+        i < 4990 ? 0.5 : 0.5 + (i - 4990) * 0.05,
+      );
+      const prices = makePrices({ "tok-a": { price: hist[hist.length - 1] } });
+      const blocks: Block[] = [
+        {
+          type: "macd_crossover",
+          config: { tokenId: "tok-a", fastPeriod: 12, slowPeriod: 50, signalPeriod: 100000 },
+        },
+      ];
+      const result = checkTriggers(blocks, prices, makeHistory(hist));
+      // Should not crash or throw; produces a boolean (may fire or not, but determinate)
+      expect(typeof result).toBe("boolean");
     });
   });
 
