@@ -621,7 +621,7 @@ describe.runIf(HAS_TEST_DB && HAS_TEST_REDIS)('Auth Real Integration', () => {
       let verifyToken: string | undefined;
       for (let i = 0; i < 20; i++) {
         verifyToken = fakeMail.sentEmails.find(
-          (e) => e.type === 'verification',
+          (e) => e.type === 'verification' && e.to === email,
         )?.token;
         if (verifyToken) break;
         await new Promise((r) => setTimeout(r, 25));
@@ -840,7 +840,7 @@ describe.runIf(HAS_TEST_DB && HAS_TEST_REDIS)('Auth Real Integration', () => {
       let verifyToken: string | undefined;
       for (let i = 0; i < 20; i++) {
         verifyToken = fakeMail.sentEmails.find(
-          (e) => e.type === 'verification',
+          (e) => e.type === 'verification' && e.to === email,
         )?.token;
         if (verifyToken) break;
         await new Promise((r) => setTimeout(r, 25));

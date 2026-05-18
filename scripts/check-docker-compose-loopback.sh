@@ -330,7 +330,7 @@ in_ports && /^[[:space:]]+- +(name|target|published|host_ip|protocol|mode|app_pr
   # confused for a real binding.
   noncomment = $0
   sub(/[[:space:]]*#.*$/, "", noncomment)
-  has_host_ip = (noncomment ~ /host_ip:[[:space:]]*["'\'']?(127\.0\.0\.1|\[::1\]|::1)["'\'']?([^0-9a-f.:]|$)/)
+  has_host_ip = (noncomment ~ /^[[:space:]]+-[[:space:]]+host_ip:[[:space:]]*["'\'']?(127\.0\.0\.1|\[::1\]|::1)["'\'']?([^0-9a-f.:]|$)/)
   suppressed = (prev_nosemgrep || $0 ~ /# nosemgrep:.*docker-compose-port-no-loopback(-long-syntax|-flow-style)?/)
   prev_nosemgrep = 0
   next
@@ -382,7 +382,7 @@ in_block {
       saw_published = ($0 ~ / published:/)
       noncomment = $0
       sub(/[[:space:]]*#.*$/, "", noncomment)
-      has_host_ip = (noncomment ~ /host_ip:[[:space:]]*["'\'']?(127\.0\.0\.1|\[::1\]|::1)["'\'']?([^0-9a-f.:]|$)/)
+      has_host_ip = (noncomment ~ /^[[:space:]]+-[[:space:]]+host_ip:[[:space:]]*["'\'']?(127\.0\.0\.1|\[::1\]|::1)["'\'']?([^0-9a-f.:]|$)/)
       suppressed = ($0 ~ /# nosemgrep:.*docker-compose-port-no-loopback(-long-syntax|-flow-style)?/)
       next
     }
