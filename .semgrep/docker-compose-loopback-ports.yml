@@ -81,7 +81,7 @@ rules:
 
   - id: docker-compose-port-no-loopback-flow-style
     patterns:
-      - pattern-regex: '^\s+ports:\s*\['
+      - pattern-regex: '^\s+["'']?ports["'']?:\s*\['
     message: >
       Docker Compose flow-style port sequence detected.  Flow-style
       (e.g. `ports: ["3000:3000"]` or `ports: [3000]`) bypasses the

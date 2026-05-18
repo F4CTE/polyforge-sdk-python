@@ -91,7 +91,7 @@ BEGIN { exit_code = 0; prev_nosemgrep = 0 }
 # Clear prev_nosemgrep on any non-blank, non-comment, non-ports: line
 # so that a stale suppression does not leak to unrelated entries.
 !in_ports && !in_flow && prev_nosemgrep {
-  if ($0 !~ /^[[:space:]]*$/ && $0 !~ /^[[:space:]]*#/ && $0 !~ /^[[:space:]]+ports:[[:space:]]*\[/) {
+  if ($0 !~ /^[[:space:]]*$/ && $0 !~ /^[[:space:]]*#/ && $0 !~ /^[[:space:]]+["\047]?ports["\047]?:[[:space:]]*\[/) {
     prev_nosemgrep = 0
   }
 }
@@ -111,7 +111,7 @@ BEGIN { exit_code = 0; prev_nosemgrep = 0 }
 # Unsafe: ports: [3000]
 # Unsafe: ports: ["0.0.0.0:3000:3000"]
 
-/^[[:space:]]+ports:[[:space:]]*\[/ && !in_flow {
+/^[[:space:]]+["\047]?ports["\047]?:[[:space:]]*\[/ && !in_flow {
   in_flow = 1
   flow_lineno = NR
   flow_suppressed = prev_nosemgrep
@@ -284,10 +284,10 @@ function process_flow_entries(buf) {
 # misidentified as port lists.
 # YAML aliases (ports: *name) cannot be statically verified, so they
 # are flagged unless suppressed with nosemgrep.
-/^[[:space:]]+ports:[[:space:]]*($|#|&|\*)/ {
+/^[[:space:]]+["\047]?ports["\047]?:[[:space:]]*($|#|&|\*)/ {
   ports_indent = leadingspaces($0)
   in_ports = 1
-  if ($0 ~ /ports:[[:space:]]*\*/ && $0 !~ /# nosemgrep:.*docker-compose-port-no-loopback(-long-syntax|-flow-style)?/) {
+  if ($0 ~ /["\047]?ports["\047]?:[[:space:]]*\*/ && $0 !~ /# nosemgrep:.*docker-compose-port-no-loopback(-long-syntax|-flow-style)?/) {
     printf "::error file=%s,line=%d::ports: uses YAML alias — cannot verify loopback binding. Inline the port mapping or suppress with # nosemgrep: docker-compose-port-no-loopback(-long-syntax|-flow-style). See https://github.com/F4CTE/PolyForge/issues/1310\n", file, NR
     exit_code = 1
   }
@@ -307,7 +307,7 @@ in_ports && !in_block {
     # So a dash item at the same indentation as ports: must remain
     # inside the ports section and be parsed by the rules below.
     is_indentless_item = (cur == ports_indent && $0 ~ /^[[:space:]]*-[[:space:]]+/)
-    if (cur < ports_indent || (cur == ports_indent && !is_indentless_item && $0 !~ /^[[:space:]]+ports:/)) {
+    if (cur < ports_indent || (cur == ports_indent && !is_indentless_item && $0 !~ /^[[:space:]]+["\047]?ports["\047]?:/)) {
       in_ports = 0
     }
   }
