@@ -28,11 +28,48 @@ const HAS_TEST_DB = !!process.env.TEST_DATABASE_URL;
 const HAS_TEST_REDIS = !!process.env.TEST_REDIS_URL;
 
 // ─── Mock bcrypt.util to avoid worker threads ────────────────────────────────
+// Use a lower cost factor (6 instead of 12) for test performance.
+// bcrypt cost 12 ≈ 250ms locally; under CI CPU contention this can exceed
+// the vitest default 5000ms testTimeout when multiple bcrypt operations
+// stack across beforeEach hooks and test bodies.
+//
+// The mock hashes at BCRYPT_TEST_ROUNDS for speed and stores the resulting
+// hash as-is, producing valid bcrypt hashes at cost 6.
+// comparePassword delegates directly to real bcrypt.compare.
+//
+// A side effect of hashing at cost 6 is that rehashIfNeeded sees
+// getRounds() = 6 < MIN_ROUNDS = 12 and fires a fire-and-forget rehash
+// on every successful login. This is harmless:
+//   - The rehash is fire-and-forget with .catch(), so test failures are
+//     never masked and rejected promises never propagate.
+//   - cleanAuthDb in beforeEach resets the DB between tests.
+//   - hashPasswordRoundsLog assertions use .toContain(12), which passes
+//     regardless of how many rehash calls are logged.
+//
+// The hashPasswordRoundsLog records what rounds the production code
+// requested, so the integration suite can verify the production contract
+// (rounds=12) without paying the cost of actual bcrypt(12) hashing.
+const BCRYPT_TEST_ROUNDS = 6;
+
+const { hashPasswordRoundsLog } = vi.hoisted(() => {
+  const log: number[] = [];
+  return {
+    hashPasswordRoundsLog: {
+      push(r: number) { log.push(r); },
+      getAll(): number[] { return [...log]; },
+      reset() { log.length = 0; },
+    },
+  };
+});
+
 vi.mock('../src/auth/bcrypt.util', () => ({
-  hashPassword: async (password: string, rounds = 12) =>
-    bcrypt.hash(password, rounds),
-  comparePassword: async (password: string, hash: string) =>
-    bcrypt.compare(password, hash),
+  hashPassword: async (password: string, rounds = 12): Promise<string> => {
+    hashPasswordRoundsLog.push(rounds);
+    return bcrypt.hash(password, BCRYPT_TEST_ROUNDS);
+  },
+  comparePassword: async (password: string, hash: string) => {
+    return bcrypt.compare(password, hash);
+  },
 }));
 
 // ─── Fake Mail ────────────────────────────────────────────────────────────────
@@ -132,6 +169,7 @@ describe.runIf(HAS_TEST_DB && HAS_TEST_REDIS)('Auth Real Integration', () => {
     // do not leak into sentEmails after we clear it below.
     await new Promise((r) => setTimeout(r, 50));
     fakeMail.sentEmails = [];
+    hashPasswordRoundsLog.reset();
     await cleanAuthDb(prisma);
     await cleanAuthRedis(redisService.getClient(), TEST_REDIS_URL);
   }, 30_000);
@@ -252,6 +290,16 @@ describe.runIf(HAS_TEST_DB && HAS_TEST_REDIS)('Auth Real Integration', () => {
       expect(dbUser!.username).toBe('alice_test');
       expect(dbUser!.passwordHash).toMatch(/^\$2[bay]\$/); // bcrypt prefix
       // No PII in stored data: password is hashed, email is stored
+
+      // Prove the persisted hash is valid under real bcrypt.compare.
+      // The mock hashes at BCRYPT_TEST_ROUNDS and stores the hash as-is
+      // — no prefix rewriting — so this is a genuine validity check.
+      expect(await bcrypt.compare(TEST_PASSWORD, dbUser!.passwordHash)).toBe(
+        true,
+      );
+
+      // Verify production requested bcrypt cost 12 for user creation
+      expect(hashPasswordRoundsLog.getAll()).toContain(12);
     });
 
     it('sends a verification email after registration', async () => {
@@ -389,6 +437,10 @@ describe.runIf(HAS_TEST_DB && HAS_TEST_REDIS)('Auth Real Integration', () => {
 
       const loginRefresh = refreshCookie(res.cookies);
       expect(loginRefresh).toBeDefined();
+
+      // Verify login works and production code requested bcrypt cost 12
+      // (from the registration step in registerAndLogin).
+      expect(hashPasswordRoundsLog.getAll()).toContain(12);
     });
 
     it('returns 400 INVALID_CREDENTIALS for unknown email', async () => {
@@ -476,6 +528,62 @@ describe.runIf(HAS_TEST_DB && HAS_TEST_REDIS)('Auth Real Integration', () => {
 
       expect(res.statusCode).toBe(429);
       expect(parseJson(res.body).code).toBe('ACCOUNT_LOCKED');
+    });
+
+    it('transparently rehashes a weak password on login with bcrypt cost 12', async () => {
+      const email = 'rehash-me@test.com';
+      const username = 'rehash_user';
+
+      // Bypass the bcrypt.util mock to create a user with a deliberately
+      // weak hash (cost 6).  The mock hashes at BCRYPT_TEST_ROUNDS (6), so
+      // rehashIfNeeded fires on every login — including this one — which
+      // proves the rehash path works end-to-end.
+      const weakHash = await bcrypt.hash(TEST_PASSWORD, 6);
+      expect(weakHash).toMatch(/^\$2[bay]\$06\$/);
+
+      await prisma.user.create({
+        data: {
+          email,
+          username,
+          passwordHash: weakHash,
+          approved: true,
+        },
+      });
+
+      // Login — all mock-created hashes are at cost 6, so rehashIfNeeded
+      // fires fire-and-forget on every login.  This test explicitly checks
+      // that the weak hash is replaced by the rehash path.
+      const res = await app.inject({
+        method: 'POST',
+        url: '/login',
+        payload: { email, password: TEST_PASSWORD },
+      });
+      expect(res.statusCode).toBe(200);
+      expect(parseJson(res.body).email).toBe(email);
+
+      // Verify production requested bcrypt cost 12 for the rehash.
+      // The push into hashPasswordRoundsLog is synchronous inside the
+      // mock, so it happens even before the fire-and-forget completes.
+      expect(hashPasswordRoundsLog.getAll()).toContain(12);
+
+      // Poll for the rehash to complete (fire-and-forget, async DB write)
+      let updatedHash: string | null = null;
+      for (let i = 0; i < 30; i++) {
+        const user = await prisma.user.findUnique({ where: { email } });
+        if (user?.passwordHash && user.passwordHash !== weakHash) {
+          updatedHash = user.passwordHash;
+          break;
+        }
+        await new Promise((r) => setTimeout(r, 50));
+      }
+      expect(updatedHash).toBeTruthy();
+      // The mock hashes at BCRYPT_TEST_ROUNDS (6) for speed.
+      // The production contract (rounds=12) is verified via
+      // hashPasswordRoundsLog above, not via the hash prefix.
+      expect(updatedHash).toMatch(/^\$2[bay]\$\d+\$/);
+
+      // Prove the rehashed hash is valid under real bcrypt.compare
+      expect(await bcrypt.compare(TEST_PASSWORD, updatedHash!)).toBe(true);
     });
   });
 
@@ -714,6 +822,10 @@ describe.runIf(HAS_TEST_DB && HAS_TEST_REDIS)('Auth Real Integration', () => {
       const email = 'pwreset@test.com';
       await registerAndLogin(email, TEST_PASSWORD);
 
+      // Reset the rounds log so we measure only rounds requested by the
+      // reset-password flow, not by the earlier registration.
+      hashPasswordRoundsLog.reset();
+
       // Trigger password reset to get a token
       fakeMail.sentEmails = [];
       await app.inject({
@@ -765,6 +877,19 @@ describe.runIf(HAS_TEST_DB && HAS_TEST_REDIS)('Auth Real Integration', () => {
       });
       expect(dbUser!.passwordHash).not.toBe(TEST_PASSWORD);
       expect(dbUser!.passwordHash).toMatch(/^\$2[bay]\$/);
+
+      // Prove the reset hash is valid under real bcrypt.compare
+      expect(await bcrypt.compare(newPassword, dbUser!.passwordHash)).toBe(
+        true,
+      );
+
+      // Verify production requested bcrypt cost 12 for password reset.
+      // The log was reset after registerAndLogin, so only calls from the
+      // reset-password path (and any rehash triggered by login below) are
+      // captured here.
+      const resetRounds = hashPasswordRoundsLog.getAll();
+      expect(resetRounds.length).toBeGreaterThanOrEqual(1);
+      expect(resetRounds.every((r) => r === 12)).toBe(true);
     });
   });
 
