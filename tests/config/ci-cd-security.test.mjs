@@ -103,6 +103,13 @@ test("external fork pull requests cannot execute self-hosted CI jobs", () => {
       block.includes(`if: ${trustedPrGuard}`),
       `${jobName} must skip external forks`,
     );
+  }
+
+  // Heavy/security-critical jobs (test, build) must stay on self-hosted.
+  // Lightweight jobs (lint, nginx-security, docker-compose-security, typecheck)
+  // may run on ubuntu-latest to free self-hosted capacity.
+  for (const jobName of ["test", "build"]) {
+    const block = jobBlock(workflow, jobName);
     assert.ok(
       block.includes("runs-on: [self-hosted, linux]"),
       `${jobName} must remain self-hosted for trusted CI`,

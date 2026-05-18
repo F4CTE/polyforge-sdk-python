@@ -3,9 +3,10 @@ import { SentryModule } from "@sentry/nestjs/setup";
 import { SentryGlobalFilter } from "@sentry/nestjs/setup";
 import { ConfigModule } from "@nestjs/config";
 import { JwtModule } from "@nestjs/jwt";
-import { ThrottlerModule, ThrottlerGuard } from "@nestjs/throttler";
+import { ThrottlerModule } from "@nestjs/throttler";
 import { ThrottlerStorageRedisService } from "@nest-lab/throttler-storage-redis";
 import { APP_FILTER, APP_GUARD } from "@nestjs/core";
+import { UserScopedThrottlerGuard } from "./common/user-scoped-throttler.guard";
 import { LoggerModule } from "@polyforge/logger";
 import { RedisModule, RedisService } from "@polyforge/shared-redis";
 import { EncryptionModule } from "./encryption/encryption.module";
@@ -37,7 +38,7 @@ import { HealthController } from "./health/health.controller";
   controllers: [HealthController],
   providers: [
     { provide: APP_FILTER, useClass: SentryGlobalFilter },
-    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_GUARD, useClass: UserScopedThrottlerGuard },
   ],
 })
 export class AppModule {}
