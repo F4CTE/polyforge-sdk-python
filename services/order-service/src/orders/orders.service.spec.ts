@@ -1390,7 +1390,7 @@ describe("OrdersService", () => {
         status: "SUBMITTED",
         clobOrderId: null,
         venueOrderId: null,
-        updatedAt: new Date(Date.now() - 60_000), // 60s ago, claim expired
+        updatedAt: new Date(Date.now() - 180_000), // 180s ago, past recovery timeout
       });
 
       const p = svc.processIntent(makeIntent());
@@ -1412,7 +1412,7 @@ describe("OrdersService", () => {
       expect(clob.submitOrder).toHaveBeenCalled();
     });
 
-    it("skips a SUBMITTED order with fresh claim (still processing)", async () => {
+    it("throws for a SUBMITTED order with fresh claim to prevent stream ACK", async () => {
       prisma.order.findFirst.mockResolvedValue({
         id: "fresh-order",
         status: "SUBMITTED",
@@ -1421,9 +1421,9 @@ describe("OrdersService", () => {
         updatedAt: new Date(Date.now() - 5_000), // 5s ago, claim still fresh
       });
 
-      const p = svc.processIntent(makeIntent());
-      await vi.runAllTimersAsync();
-      await p;
+      await expect(svc.processIntent(makeIntent())).rejects.toThrow(
+        /consumer must not ACK this redelivery/,
+      );
 
       // Did NOT release claim
       expect(prisma.order.updateMany).not.toHaveBeenCalledWith(
@@ -1529,7 +1529,7 @@ describe("OrdersService", () => {
         status: "SUBMITTED",
         clobOrderId: null,
         venueOrderId: null,
-        updatedAt: new Date(Date.now() - 60_000),
+        updatedAt: new Date(Date.now() - 180_000), // 180s ago, past recovery timeout
       });
       redis.get.mockResolvedValue(null); // No sentinel — safe to reclaim
 
@@ -1550,6 +1550,28 @@ describe("OrdersService", () => {
       // Proceeded to CLOB submission
       expect(signer.signOrder).toHaveBeenCalled();
       expect(clob.submitOrder).toHaveBeenCalled();
+    });
+
+    it("preserves sentinel and throws when DB update fails to prevent stream ACK", async () => {
+      prisma.order.findFirst.mockResolvedValue({
+        id: "stale-order",
+        status: "SUBMITTED",
+        clobOrderId: null,
+        venueOrderId: null,
+        updatedAt: new Date(Date.now() - 180_000), // Stale, past recovery timeout
+      });
+      redis.get.mockResolvedValue("clob-sentinel-123"); // Sentinel exists
+
+      // Simulate transient DB failure during sentinel recovery
+      prisma.order.update.mockRejectedValueOnce(new Error("transient DB fail"));
+
+      await expect(svc.processIntent(makeIntent())).rejects.toThrow("transient DB fail");
+
+      // Did NOT delete the sentinel — preserves duplicate-submit guard
+      expect(redis.del).not.toHaveBeenCalled();
+      // Did NOT attempt CLOB submission
+      expect(clob.submitOrder).not.toHaveBeenCalled();
+      expect(signer.signOrder).not.toHaveBeenCalled();
     });
 
     it("writes CLOB-accepted sentinel after successful venue submission", async () => {
@@ -1608,8 +1630,9 @@ describe("OrdersService", () => {
         svc.processIntent(intents[1]),
       ]);
 
-      // Both should resolve (second skips after fresh claim detected)
-      expect(results.every((r) => r.status === "fulfilled")).toBe(true);
+      // First processes normally, second throws (fresh SUBMITTED → prevent ACK)
+      expect(results[0].status).toBe("fulfilled");
+      expect(results[1].status).toBe("rejected");
       // Only one submission to CLOB
       expect(clob.submitOrder).toHaveBeenCalledTimes(1);
     });

@@ -19,9 +19,9 @@ const MAX_ATTEMPTS = 3;
 const RETRY_BASE_MS = 1_000;
 const DLQ_STREAM = "stream:orders:dlq";
 const MIN_GTD_LEAD_SECONDS = 60;
-const CLAIM_TIMEOUT_MS = 30_000;
 const CLOB_ACCEPTED_PREFIX = "clob:accepted:";
 const CLOB_ACCEPTED_TTL_SECONDS = 86_400;
+const STALE_CLAIM_RECOVERY_MS = 120_000;
 
 export interface OrderIntent {
   intentId: string;
@@ -155,70 +155,77 @@ export class OrdersService {
       }
 
       if (existingOrder.status === OrderStatus.SUBMITTED) {
-        // SUBMITTED with no venue ids and claim expired → stale claim, reclaim
         const hasNoVenueIds =
           !existingOrder.clobOrderId && !existingOrder.venueOrderId;
-        const claimAge =
-          Date.now() - new Date(existingOrder.updatedAt).getTime();
-        if (hasNoVenueIds && claimAge > CLAIM_TIMEOUT_MS) {
-          // Check CLOB-accepted sentinel before re-submitting. If the
-          // original processor submitted to CLOB successfully but crashed
-          // before persisting to DB, the sentinel prevents a duplicate.
-          const clobAcceptedKey = `${CLOB_ACCEPTED_PREFIX}${intent.intentId}`;
-          const clobAcceptedVenueOrderId = await this.redis
-            .get(clobAcceptedKey)
-            .catch(() => null);
 
-          if (clobAcceptedVenueOrderId) {
-            this.logger.warn(
-              `Order ${existingOrder.id} already accepted by venue (sentinel found: ${clobAcceptedVenueOrderId}) — updating DB without re-submitting`,
-            );
-            // Persist the known venue order id and mark as SUBMITTED so
-            // downstream monitoring can reconcile the true CLOB status.
-            await this.prisma.order
-              .update({
-                where: { id: existingOrder.id },
-                data: {
-                  clobOrderId: clobAcceptedVenueOrderId,
-                  venueOrderId: clobAcceptedVenueOrderId,
-                },
-              })
-              .catch((err) => {
-                this.logger.error(
-                  {
-                    event: "CLOB_ACCEPTED_SENTINEL_DB_UPDATE_FAILED",
-                    orderId: existingOrder.id,
-                    venueOrderId: clobAcceptedVenueOrderId,
-                    intentId: intent.intentId,
-                    err,
-                  },
-                  "Failed to persist venue order id from sentinel",
-                );
-              });
-            await this.redis.del(clobAcceptedKey).catch(() => {});
-            return;
-          }
-
-          this.logger.warn(
-            `Order ${existingOrder.id} has stale SUBMITTED claim (${claimAge}ms, no venue ids) — reclaiming to PENDING`,
-          );
-          await this.releaseOrderClaim(existingOrder.id);
-          orderId = existingOrder.id;
-          skipDbCreate = true;
-          // Fall through to GTD / numeric / terms validations then CLOB submit
-        } else if (!hasNoVenueIds) {
-          // SUBMITTED with venue ids → already submitted, terminal
+        // SUBMITTED with venue ids → already submitted, terminal
+        if (!hasNoVenueIds) {
           this.logger.warn(
             `Duplicate intent ${intent.intentId} — skipping (already submitted as order ${existingOrder.id})`,
           );
           return;
-        } else {
-          // SUBMITTED with no venue ids but claim not yet stale → still processing
+        }
+
+        // SUBMITTED with no venue ids — check CLOB-accepted sentinel first
+        // to recover from crash-after-venue-acceptance without re-submitting.
+        const clobAcceptedKey = `${CLOB_ACCEPTED_PREFIX}${intent.intentId}`;
+        const clobAcceptedVenueOrderId = await this.redis
+          .get(clobAcceptedKey)
+          .catch(() => null);
+
+        if (clobAcceptedVenueOrderId) {
           this.logger.warn(
-            `Order ${existingOrder.id} SUBMITTED claim still fresh (${claimAge}ms) — not reclaiming`,
+            `Order ${existingOrder.id} already accepted by venue (sentinel found: ${clobAcceptedVenueOrderId}) — updating DB without re-submitting`,
           );
+          try {
+            await this.prisma.order.update({
+              where: { id: existingOrder.id },
+              data: {
+                clobOrderId: clobAcceptedVenueOrderId,
+                venueOrderId: clobAcceptedVenueOrderId,
+              },
+            });
+          } catch (err) {
+            this.logger.error(
+              {
+                event: "CLOB_ACCEPTED_SENTINEL_DB_UPDATE_FAILED",
+                orderId: existingOrder.id,
+                venueOrderId: clobAcceptedVenueOrderId,
+                intentId: intent.intentId,
+                err,
+              },
+              "Failed to persist venue order id from sentinel — throwing to keep sentinel and prevent stream ACK",
+            );
+            throw err;
+          }
+          await this.redis.del(clobAcceptedKey).catch(() => {});
           return;
         }
+
+        // No sentinel — differentiate between in-flight processing and
+        // genuinely orphaned claims. Use a generous recovery timeout to
+        // avoid reclaiming orders still being processed by a slow signer.
+        const claimAge =
+          Date.now() - new Date(existingOrder.updatedAt).getTime();
+
+        if (claimAge < STALE_CLAIM_RECOVERY_MS) {
+          this.logger.warn(
+            `Order ${existingOrder.id} is SUBMITTED without venue ids (${claimAge}ms old) — raising error to prevent stream ACK`,
+          );
+          throw new Error(
+            `Order ${existingOrder.id} has a fresh SUBMITTED claim with no venue ids — consumer must not ACK this redelivery`,
+          );
+        }
+
+        // Claim is stale and no sentinel exists — the original processor is
+        // gone without submitting to venue. Safe to reclaim and re-submit.
+        this.logger.warn(
+          `Order ${existingOrder.id} has stale SUBMITTED claim (${claimAge}ms, no venue ids) — reclaiming to PENDING`,
+        );
+        await this.releaseOrderClaim(existingOrder.id);
+        orderId = existingOrder.id;
+        skipDbCreate = true;
+        // Fall through to GTD / numeric / terms validations then CLOB submit
       } else if (existingOrder.status === OrderStatus.PENDING) {
         // PENDING: DB record exists but CLOB submission may have completed
         // (e.g. crash after venue accepted but before claim persisted).
@@ -232,27 +239,28 @@ export class OrdersService {
           this.logger.warn(
             `Order ${existingOrder.id} already accepted by venue (sentinel found: ${clobAcceptedVenueOrderId}) — updating DB without re-submitting`,
           );
-          await this.prisma.order
-            .update({
+          try {
+            await this.prisma.order.update({
               where: { id: existingOrder.id },
               data: {
                 clobOrderId: clobAcceptedVenueOrderId,
                 venueOrderId: clobAcceptedVenueOrderId,
                 status: OrderStatus.SUBMITTED,
               },
-            })
-            .catch((err) => {
-              this.logger.error(
-                {
-                  event: "CLOB_ACCEPTED_SENTINEL_DB_UPDATE_FAILED",
-                  orderId: existingOrder.id,
-                  venueOrderId: clobAcceptedVenueOrderId,
-                  intentId: intent.intentId,
-                  err,
-                },
-                "Failed to persist venue order id from sentinel (PENDING path)",
-              );
             });
+          } catch (err) {
+            this.logger.error(
+              {
+                event: "CLOB_ACCEPTED_SENTINEL_DB_UPDATE_FAILED",
+                orderId: existingOrder.id,
+                venueOrderId: clobAcceptedVenueOrderId,
+                intentId: intent.intentId,
+                err,
+              },
+              "Failed to persist venue order id from sentinel (PENDING path) — throwing to keep sentinel and prevent stream ACK",
+            );
+            throw err;
+          }
           await this.redis.del(clobAcceptedKey).catch(() => {});
           return;
         }
