@@ -16,8 +16,11 @@ describe("InternalAuthGuard", () => {
   it("stores each jti with Redis SET NX so replay protection survives restarts", async () => {
     const set = vi.fn().mockResolvedValue("OK");
     const guard = new InternalAuthGuard(
-      { verify: vi.fn().mockReturnValue({ jti: "jti-1" }) } as any,
-      { get: vi.fn().mockReturnValue("secret") } as any,
+      {
+        verify: vi.fn().mockReturnValue({ jti: "jti-1" }),
+        decode: vi.fn().mockReturnValue({ iss: "api-service" }),
+      } as any,
+      { get: vi.fn().mockReturnValue("secret"), getOrThrow: vi.fn().mockReturnValue("secret") } as any,
       { getClient: vi.fn().mockReturnValue({ set }) } as any,
     );
 
@@ -35,8 +38,11 @@ describe("InternalAuthGuard", () => {
   it("rejects a replayed jti when Redis SET NX reports an existing key", async () => {
     const set = vi.fn().mockResolvedValue(null);
     const guard = new InternalAuthGuard(
-      { verify: vi.fn().mockReturnValue({ jti: "jti-1" }) } as any,
-      { get: vi.fn().mockReturnValue("secret") } as any,
+      {
+        verify: vi.fn().mockReturnValue({ jti: "jti-1" }),
+        decode: vi.fn().mockReturnValue({ iss: "api-service" }),
+      } as any,
+      { get: vi.fn().mockReturnValue("secret"), getOrThrow: vi.fn().mockReturnValue("secret") } as any,
       { getClient: vi.fn().mockReturnValue({ set }) } as any,
     );
 

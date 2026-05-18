@@ -3,14 +3,18 @@ import {
   ExecutionContext,
   Injectable,
   UnauthorizedException,
+  Logger,
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
 import { RedisService } from "@polyforge/shared-redis";
+import { deriveServiceKey } from "@polyforge/shared-auth";
 import { FastifyRequest } from "fastify";
 
 @Injectable()
 export class InternalAuthGuard implements CanActivate {
+  private readonly logger = new Logger(InternalAuthGuard.name);
+
   constructor(
     private readonly jwt: JwtService,
     private readonly config: ConfigService,
@@ -29,12 +33,38 @@ export class InternalAuthGuard implements CanActivate {
     let payload: any;
 
     try {
-      payload = this.jwt.verify(token, {
-        secret: this.config.get<string>("INTERNAL_JWT_SECRET"),
-        audience: "order-service",
-        issuer: ["api-service"],
-        algorithms: ["HS256"],
-      });
+      const masterSecret = this.config.getOrThrow<string>(
+        "INTERNAL_JWT_SECRET",
+      );
+
+      // Decode without verification to extract issuer for key derivation
+      const decoded = this.jwt.decode(token) as { iss?: string } | null;
+      if (!decoded?.iss) {
+        throw new UnauthorizedException("Missing issuer claim");
+      }
+
+      // Derive per-service key from the iss claim
+      const derivedKey = deriveServiceKey(masterSecret, decoded.iss);
+
+      try {
+        payload = this.jwt.verify(token, {
+          secret: derivedKey,
+          audience: "order-service",
+          issuer: ["api-service"],
+          algorithms: ["HS256"],
+        });
+      } catch {
+        // Transition: fall back to raw master secret
+        payload = this.jwt.verify(token, {
+          secret: masterSecret,
+          audience: "order-service",
+          issuer: ["api-service"],
+          algorithms: ["HS256"],
+        });
+        this.logger.warn(
+          `Deprecated: token from "${decoded.iss}" verified with raw INTERNAL_JWT_SECRET`,
+        );
+      }
     } catch {
       throw new UnauthorizedException("Invalid service token");
     }

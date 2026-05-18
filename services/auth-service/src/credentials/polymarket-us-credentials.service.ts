@@ -1,6 +1,7 @@
 import { Injectable, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { deriveServiceKey } from '@polyforge/shared-auth';
 import { PrismaService } from '@polyforge/shared-db';
 import { CURRENT_US_RAIL_TERMS_VERSION } from '@polyforge/shared-types';
 import { randomUUID } from 'crypto';
@@ -26,8 +27,9 @@ export class PolymarketUsCredentialsService {
       'STRATEGY_ENGINE_URL',
       'http://strategy-engine:3006',
     );
-    this.internalJwtSecret = this.config.getOrThrow<string>(
-      'INTERNAL_JWT_SECRET',
+    this.internalJwtSecret = deriveServiceKey(
+      this.config.getOrThrow<string>('INTERNAL_JWT_SECRET'),
+      'auth-service',
     );
   }
 

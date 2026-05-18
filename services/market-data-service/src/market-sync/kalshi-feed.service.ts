@@ -2,6 +2,7 @@ import { Injectable, OnModuleDestroy, OnModuleInit } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { JwtService } from "@nestjs/jwt";
+import { deriveServiceKey } from "@polyforge/shared-auth";
 import { randomUUID } from "crypto";
 import { BaseVenueWsService } from "@polyforge/venue-ws";
 import { parseFiniteDecimal } from "@polyforge/shared-types";
@@ -137,7 +138,10 @@ export class KalshiFeedService
     const serviceJwt = this.jwt.sign(
       { jti: randomUUID() },
       {
-        secret: this.config.get<string>("INTERNAL_JWT_SECRET"),
+        secret: deriveServiceKey(
+          this.config.getOrThrow<string>("INTERNAL_JWT_SECRET"),
+          "market-data-service",
+        ),
         issuer: "market-data-service",
         audience: "signer-service",
         expiresIn: 30,

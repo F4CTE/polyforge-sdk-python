@@ -107,6 +107,7 @@ describe("OrdersService", () => {
     } as unknown as RedisService;
     config = {
       get: vi.fn().mockReturnValue(undefined),
+      getOrThrow: vi.fn().mockReturnValue("test-internal-secret"),
     } as unknown as ConfigService;
     const posthog = {
       capture: vi.fn(),

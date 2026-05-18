@@ -9,6 +9,7 @@ import { JwtService } from "@nestjs/jwt";
 import { InternalJwtPayload } from "@polyforge/shared-types";
 import { RedisService } from "@polyforge/shared-redis";
 import { getInternalJwtConfig } from "./internal-jwt-config";
+import { deriveServiceKey } from "./hmac-key-derivation";
 
 @Injectable()
 export class InternalJwtGuard implements CanActivate {
@@ -40,12 +41,38 @@ export class InternalJwtGuard implements CanActivate {
 
     try {
       const { audience, issuer } = getInternalJwtConfig();
-      const payload = this.jwtService.verify<InternalJwtPayload>(token, {
-        secret: process.env.INTERNAL_JWT_SECRET,
-        audience,
-        issuer,
-        algorithms: ["HS256"],
-      });
+      const masterSecret = process.env.INTERNAL_JWT_SECRET!;
+
+      // Decode without verification to extract issuer for key derivation
+      const decoded = this.jwtService.decode(token);
+      if (!decoded || typeof decoded === "string" || !decoded.iss) {
+        throw new UnauthorizedException("Missing issuer claim");
+      }
+
+      // Derive per-service key from the iss claim
+      const derivedKey = deriveServiceKey(masterSecret, decoded.iss);
+
+      let payload: InternalJwtPayload;
+      try {
+        payload = this.jwtService.verify<InternalJwtPayload>(token, {
+          secret: derivedKey,
+          audience,
+          issuer,
+          algorithms: ["HS256"],
+        });
+      } catch {
+        // Transition: fall back to raw master secret for tokens still signed
+        // with the old shared key. Remove after all services migrate.
+        payload = this.jwtService.verify<InternalJwtPayload>(token, {
+          secret: masterSecret,
+          audience,
+          issuer,
+          algorithms: ["HS256"],
+        });
+        this.logger.warn(
+          `Deprecated: token from "${decoded.iss}" verified with raw INTERNAL_JWT_SECRET — issuer must migrate to derived keys`,
+        );
+      }
 
       if (!payload.iss) {
         throw new UnauthorizedException("Missing issuer claim");

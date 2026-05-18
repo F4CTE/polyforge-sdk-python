@@ -5,6 +5,7 @@ import {
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
+import { deriveServiceKey } from "@polyforge/shared-auth";
 import { randomUUID } from "crypto";
 
 type CircuitBreakerState = "CLOSED" | "OPEN" | "HALF_OPEN";
@@ -100,7 +101,10 @@ export class InternalClientService {
     private readonly config: ConfigService,
     private readonly jwt: JwtService,
   ) {
-    this.secret = this.config.getOrThrow<string>("INTERNAL_JWT_SECRET");
+    this.secret = deriveServiceKey(
+      this.config.getOrThrow<string>("INTERNAL_JWT_SECRET"),
+      "api-service",
+    );
     this.failureThreshold = this.getPositiveInteger(
       "INTERNAL_CLIENT_CIRCUIT_BREAKER_FAILURE_THRESHOLD",
       3,

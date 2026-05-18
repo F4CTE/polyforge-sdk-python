@@ -7,7 +7,21 @@ import {
 import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
 import { RedisService } from "@polyforge/shared-redis";
+import { deriveServiceKey } from "@polyforge/shared-auth";
 import { FastifyRequest } from "fastify";
+
+type InternalAuthPayload = {
+  iss: string;
+  aud: string;
+  jti: string;
+  exp: number;
+  iat?: number;
+  sub?: string;
+};
+
+type InternalAuthRequest = FastifyRequest & {
+  internalAuth?: InternalAuthPayload;
+};
 
 /**
  * Validates the internal service JWT on every request.
@@ -27,7 +41,7 @@ export class InternalAuthGuard implements CanActivate {
   ) {}
 
   async canActivate(ctx: ExecutionContext): Promise<boolean> {
-    const req = ctx.switchToHttp().getRequest<FastifyRequest>();
+    const req = ctx.switchToHttp().getRequest<InternalAuthRequest>();
     const auth = req.headers["authorization"];
 
     if (!auth?.startsWith("Bearer ")) {
@@ -35,11 +49,24 @@ export class InternalAuthGuard implements CanActivate {
     }
 
     const token = auth.slice(7);
-    let payload: any;
+    let payload: InternalAuthPayload;
 
     try {
+      const masterSecret = this.config.getOrThrow<string>(
+        "INTERNAL_JWT_SECRET",
+      );
+
+      // Decode without verification to extract issuer for key derivation
+      const decoded = this.jwt.decode(token) as { iss?: string } | null;
+      if (!decoded?.iss) {
+        throw new UnauthorizedException("Missing issuer claim");
+      }
+
+      // Derive per-service key from the iss claim
+      const derivedKey = deriveServiceKey(masterSecret, decoded.iss);
+
       payload = this.jwt.verify(token, {
-        secret: this.config.get<string>("INTERNAL_JWT_SECRET"),
+        secret: derivedKey,
         audience: "signer-service",
         issuer: [
           "api-service",
@@ -64,6 +91,8 @@ export class InternalAuthGuard implements CanActivate {
     if (set === null) {
       throw new UnauthorizedException("Token already used");
     }
+
+    req.internalAuth = payload;
 
     return true;
   }

@@ -5,6 +5,8 @@ import {
   HttpCode,
   UseGuards,
   ValidationPipe,
+  Req,
+  ForbiddenException,
 } from "@nestjs/common";
 import { Throttle } from "@nestjs/throttler";
 import { SigningService } from "./signing.service";
@@ -14,6 +16,7 @@ import { CancelOrderDto } from "./dto/cancel-order.dto";
 import { SignKalshiJwtDto } from "./dto/sign-kalshi-jwt.dto";
 import { SignPolymarketUsRequestDto } from "./dto/sign-polymarket-us-request.dto";
 import { InternalAuthGuard } from "../common/internal-auth.guard";
+import { FastifyRequest } from "fastify";
 
 @Controller("sign")
 @UseGuards(InternalAuthGuard)
@@ -61,7 +64,20 @@ export class SigningController {
   async signPolymarketUs(
     @Body(new ValidationPipe({ whitelist: true }))
     dto: SignPolymarketUsRequestDto,
+    @Req() req: FastifyRequest & { internalAuth?: { iss?: string; sub?: string } },
   ) {
+    const auth = req.internalAuth;
+    if (auth?.iss !== "order-service") {
+      throw new ForbiddenException(
+        "Only order-service can request Polymarket US signatures",
+      );
+    }
+    if (auth?.sub !== undefined && auth?.sub !== "order-service") {
+      throw new ForbiddenException(
+        "Only order-service can request Polymarket US signatures",
+      );
+    }
+
     return this.ed25519.signRequest(dto.userId, dto.method, dto.path, dto.body);
   }
 }

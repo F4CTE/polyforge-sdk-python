@@ -7,6 +7,7 @@ import {
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
+import { deriveServiceKey } from "@polyforge/shared-auth";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
 import { SuspendUserDto } from "./dto/suspend.dto";
@@ -497,7 +498,10 @@ export class UsersService {
     return this.jwt.sign(
       { sub: "admin-api-service", jti: randomUUID() },
       {
-        secret: this.config.getOrThrow<string>("INTERNAL_JWT_SECRET"),
+        secret: deriveServiceKey(
+          this.config.getOrThrow<string>("INTERNAL_JWT_SECRET"),
+          "admin-api-service",
+        ),
         audience: "strategy-engine",
         issuer: "admin-api-service",
         expiresIn: "30s",

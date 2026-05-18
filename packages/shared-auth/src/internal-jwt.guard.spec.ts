@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import { UnauthorizedException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
+import { deriveServiceKey } from "./hmac-key-derivation";
 
 vi.mock("@polyforge/shared-redis", () => ({
   RedisService: vi.fn(),
@@ -46,7 +47,10 @@ describe("InternalJwtGuard", () => {
     const mod = await import("./internal-jwt.guard");
     InternalJwtGuard = mod.InternalJwtGuard;
 
-    jwtService = { verify: vi.fn().mockReturnValue(validPayload) };
+    jwtService = {
+      verify: vi.fn().mockReturnValue(validPayload),
+      decode: vi.fn().mockReturnValue(validPayload),
+    };
     redis = {
       exists: vi.fn().mockResolvedValue(0),
       set: vi.fn().mockResolvedValue("OK"),
@@ -88,12 +92,12 @@ describe("InternalJwtGuard", () => {
     await expect(guard.canActivate(ctx)).rejects.toThrow(UnauthorizedException);
   });
 
-  it("verifies token with audience, issuer, and HS256", async () => {
+  it("verifies token with derived key from issuer, audience, and HS256", async () => {
     const ctx = makeContext({ authorization: "Bearer valid-token" });
     await guard.canActivate(ctx);
 
     expect(jwtService.verify).toHaveBeenCalledWith("valid-token", {
-      secret: TEST_SECRET,
+      secret: deriveServiceKey(TEST_SECRET, "api-service"),
       audience: "api-service",
       issuer: ["api-service", "auth-service"],
       algorithms: ["HS256"],
@@ -120,7 +124,7 @@ describe("InternalJwtGuard", () => {
   });
 
   it("rejects tokens with missing iss claim", async () => {
-    jwtService.verify.mockReturnValue({ ...validPayload, iss: undefined });
+    jwtService.decode.mockReturnValue({ ...validPayload, iss: undefined });
     const ctx = makeContext({ authorization: "Bearer no-iss-token" });
     await expect(guard.canActivate(ctx)).rejects.toThrow(UnauthorizedException);
   });
@@ -147,6 +151,23 @@ describe("InternalJwtGuard", () => {
     await guard.canActivate(ctx);
 
     expect(request).toHaveProperty("servicePayload", validPayload);
+  });
+
+  it("falls back to raw secret when derived-key verification fails", async () => {
+    // First call with derived key throws; second call with raw secret succeeds
+    jwtService.verify.mockImplementationOnce(() => {
+      throw new Error("signature mismatch");
+    });
+    const ctx = makeContext({ authorization: "Bearer legacy-token" });
+    await guard.canActivate(ctx);
+
+    expect(jwtService.verify).toHaveBeenCalledTimes(2);
+    expect(jwtService.verify).toHaveBeenNthCalledWith(2, "legacy-token", {
+      secret: TEST_SECRET,
+      audience: "api-service",
+      issuer: ["api-service", "auth-service"],
+      algorithms: ["HS256"],
+    });
   });
 
   it("rejects when JWT verification fails", async () => {

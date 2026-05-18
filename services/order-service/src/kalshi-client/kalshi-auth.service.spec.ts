@@ -6,10 +6,16 @@ import { KalshiAuthService } from "./kalshi-auth.service";
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function makeConfig(url = "http://signer:3012"): ConfigService {
+  const map: Record<string, string> = {
+    SIGNER_SERVICE_URL: url,
+    INTERNAL_JWT_SECRET: "test-secret",
+  };
   return {
-    get: (k: string, d?: string) => {
-      const map: Record<string, string> = { SIGNER_SERVICE_URL: url };
-      return map[k] ?? d ?? "";
+    get: (k: string, d?: string) => map[k] ?? d ?? "",
+    getOrThrow: (key: string) => {
+      const value = map[key];
+      if (value === undefined) throw new Error(`Missing config: ${key}`);
+      return value;
     },
   } as any;
 }

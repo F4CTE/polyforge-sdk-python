@@ -1,6 +1,7 @@
 import { Injectable, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { deriveServiceKey } from '@polyforge/shared-auth';
 import { PrismaService } from '@polyforge/shared-db';
 import { ImportCredentialsDto } from './dto/import-credentials.dto';
 import { randomUUID } from 'crypto';
@@ -31,8 +32,9 @@ export class CredentialsService {
       'STRATEGY_ENGINE_URL',
       'http://strategy-engine:3006',
     );
-    this.internalJwtSecret = this.config.getOrThrow<string>(
-      'INTERNAL_JWT_SECRET',
+    this.internalJwtSecret = deriveServiceKey(
+      this.config.getOrThrow<string>('INTERNAL_JWT_SECRET'),
+      'auth-service',
     );
   }
 

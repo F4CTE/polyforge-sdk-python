@@ -4,6 +4,7 @@ import {
   ServiceUnavailableException,
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
+import { deriveServiceKey } from "@polyforge/shared-auth";
 import { ConfigService } from "@nestjs/config";
 import { randomUUID } from "node:crypto";
 
@@ -85,9 +86,12 @@ export class KalshiAuthService {
 
   private makeServiceJwt(): string {
     return this.jwt.sign(
-      { jti: randomUUID() },
+      { sub: "order-service", jti: randomUUID() },
       {
-        secret: this.config.get<string>("INTERNAL_JWT_SECRET"),
+        secret: deriveServiceKey(
+          this.config.getOrThrow<string>("INTERNAL_JWT_SECRET"),
+          "order-service",
+        ),
         issuer: "order-service",
         audience: "signer-service",
         expiresIn: 30,

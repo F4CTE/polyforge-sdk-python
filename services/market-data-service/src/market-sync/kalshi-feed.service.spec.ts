@@ -68,16 +68,19 @@ vi.mock("ws", () => ({
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function makeConfig(enabled = "true"): ConfigService {
+  const map: Record<string, string> = {
+    KALSHI_ENABLED: enabled,
+    KALSHI_BASE_URL: "https://demo-api.kalshi.co/trade-api/v2",
+    KALSHI_WS_URL: "wss://demo-api.kalshi.co/trade-api/ws/v2",
+    SIGNER_SERVICE_URL: "http://signer:3012",
+    INTERNAL_JWT_SECRET: "test-secret",
+  };
   return {
-    get: (k: string, d?: string) => {
-      const map: Record<string, string> = {
-        KALSHI_ENABLED: enabled,
-        KALSHI_BASE_URL: "https://demo-api.kalshi.co/trade-api/v2",
-        KALSHI_WS_URL: "wss://demo-api.kalshi.co/trade-api/ws/v2",
-        SIGNER_SERVICE_URL: "http://signer:3012",
-        INTERNAL_JWT_SECRET: "test-secret",
-      };
-      return map[k] ?? d ?? "";
+    get: (k: string, d?: string) => map[k] ?? d ?? "",
+    getOrThrow: (key: string) => {
+      const value = map[key];
+      if (value === undefined) throw new Error(`Missing config: ${key}`);
+      return value;
     },
   } as any;
 }

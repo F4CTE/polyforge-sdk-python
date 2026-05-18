@@ -10,6 +10,7 @@ import { BetaLimitsConfigService } from "@polyforge/shared-redis";
 import { getMonthlyConfirmedVolume } from "../common/monthly-volume";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
+import { deriveServiceKey } from "@polyforge/shared-auth";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
 import { PosthogService } from "@polyforge/shared-posthog";
@@ -265,7 +266,10 @@ export class OrdersService {
     const internalToken = this.jwtService.sign(
       { sub: "api-service", jti: randomUUID() },
       {
-        secret: this.config.getOrThrow<string>("INTERNAL_JWT_SECRET"),
+        secret: deriveServiceKey(
+          this.config.getOrThrow<string>("INTERNAL_JWT_SECRET"),
+          "api-service",
+        ),
         audience: "signer-service",
         issuer: "api-service",
         expiresIn: "30s",
@@ -320,7 +324,10 @@ export class OrdersService {
     const mergeToken = this.jwtService.sign(
       { sub: "api-service", jti: randomUUID() },
       {
-        secret: this.config.getOrThrow<string>("INTERNAL_JWT_SECRET"),
+        secret: deriveServiceKey(
+          this.config.getOrThrow<string>("INTERNAL_JWT_SECRET"),
+          "api-service",
+        ),
         audience: "signer-service",
         issuer: "api-service",
         expiresIn: "30s",

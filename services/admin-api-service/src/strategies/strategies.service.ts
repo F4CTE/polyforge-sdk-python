@@ -8,6 +8,7 @@ import {
 import { ConfigService } from "@nestjs/config";
 import { PrismaService } from "@polyforge/shared-db";
 import { JwtService } from "@nestjs/jwt";
+import { deriveServiceKey } from "@polyforge/shared-auth";
 import { randomUUID } from "crypto";
 import { Prisma } from "@prisma/client";
 const STRATEGY_ENGINE_URL =
@@ -152,7 +153,10 @@ export class StrategiesService {
     return this.jwtService.sign(
       { jti: randomUUID() },
       {
-        secret: this.config.getOrThrow<string>("INTERNAL_JWT_SECRET"),
+        secret: deriveServiceKey(
+          this.config.getOrThrow<string>("INTERNAL_JWT_SECRET"),
+          "admin-api-service",
+        ),
         issuer: "admin-api-service",
         audience: "strategy-engine",
         expiresIn: "30s",

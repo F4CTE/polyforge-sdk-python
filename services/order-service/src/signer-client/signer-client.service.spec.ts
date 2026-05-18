@@ -45,14 +45,17 @@ function makeConfig(
   url = "http://signer:3012",
   overrides: Record<string, string> = {},
 ): ConfigService {
+  const map: Record<string, string> = {
+    SIGNER_SERVICE_URL: url,
+    INTERNAL_JWT_SECRET: "test-secret",
+    ...overrides,
+  };
   return {
-    get: (key: string, def?: string) => {
-      const map: Record<string, string> = {
-        SIGNER_SERVICE_URL: url,
-        INTERNAL_JWT_SECRET: "test-secret",
-        ...overrides,
-      };
-      return map[key] ?? def ?? "";
+    get: (key: string, def?: string) => map[key] ?? def ?? "",
+    getOrThrow: (key: string) => {
+      const value = map[key];
+      if (value === undefined) throw new Error(`Missing config: ${key}`);
+      return value;
     },
   } as any;
 }
@@ -166,9 +169,10 @@ describe("SignerClientService", () => {
       expect(jwt.sign).toHaveBeenCalledTimes(2);
     });
 
-    it("JWT has correct issuer, audience, and short expiry", async () => {
+    it("JWT has correct claims, audience, and short expiry", async () => {
       await svc.signOrder(SIGN_REQ);
-      const [, options] = (jwt.sign as ReturnType<typeof vi.fn>).mock.calls[0];
+      const [payload, options] = (jwt.sign as ReturnType<typeof vi.fn>).mock.calls[0];
+      expect(payload.sub).toBe("order-service");
       expect(options.issuer).toBe("order-service");
       expect(options.audience).toBe("signer-service");
       expect(options.expiresIn).toBe(30);
@@ -566,7 +570,13 @@ describe("SignerClientService", () => {
     });
 
     it("falls back to default signer URL when config returns undefined", async () => {
-      const config = { get: () => undefined } as any as ConfigService;
+      const config = {
+        get: () => undefined,
+        getOrThrow: (key: string) => {
+          if (key === "INTERNAL_JWT_SECRET") return "test-secret";
+          throw new Error(`Missing config: ${key}`);
+        },
+      } as any as ConfigService;
       const fallbackSvc = new SignerClientService(makeJwt(), config);
       fetchSpy.mockResolvedValue({
         ok: true,

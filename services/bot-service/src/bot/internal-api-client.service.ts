@@ -1,6 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
+import { deriveServiceKey } from "@polyforge/shared-auth";
 import { randomUUID } from "crypto";
 
 @Injectable()
@@ -19,7 +20,10 @@ export class InternalApiClient {
     this.engineUrl =
       this.config.get<string>("STRATEGY_ENGINE_URL") ??
       "http://strategy-engine:3006";
-    this.secret = this.config.getOrThrow<string>("INTERNAL_JWT_SECRET");
+    this.secret = deriveServiceKey(
+      this.config.getOrThrow<string>("INTERNAL_JWT_SECRET"),
+      "bot-service",
+    );
   }
 
   private issueToken(): string {
