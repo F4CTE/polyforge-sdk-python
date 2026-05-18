@@ -32,6 +32,8 @@ const MIN_TICK_MS = 200;
 const TICK_LOCK_TTL_MS = 10_000;
 const STALE_PRICE_MS = 5_000;
 const MAX_STALE_CHECK_BACKOFF_MS = 60_000;
+const HYBRID_LOCK_MISS_RETRY_MS = 200;
+const HYBRID_MAX_CONSECUTIVE_LOCK_MISS_RETRIES = 3;
 
 /** Legacy safety block types that are handled via CONDITION_REGISTRY fallback.
  *  These block types were historically placed under safety but are now
@@ -132,6 +134,9 @@ export class StrategyRunner {
    *  generation can still arm exactly one retry. */
   private pendingRedisUnlockRetryFor: Promise<unknown> | null = null;
   private pendingRedisUnlockGeneration = 0;
+
+  /** Consecutive HYBRID lock-miss retries (contention path only). */
+  private hybridLockMissRetryCount = 0;
 
   /** Tracks child strategy IDs launched by RUN_STRATEGY action blocks */
   readonly childStrategies: Set<string> = new Set();
@@ -375,6 +380,7 @@ export class StrategyRunner {
       );
       if (!acquired) return;
       lockAcquired = true;
+      this.hybridLockMissRetryCount = 0;
 
       // Cancel any pending delayed follow-up timer now that a real
       // evaluation is starting.  Only cleared after SET NX succeeds:
@@ -675,11 +681,22 @@ export class StrategyRunner {
               .catch(() => {});
           }
         } else if (this.execMode === "HYBRID" && this.followUpTimer === null) {
-          this.followUpTimer = setTimeout(() => {
-            this.followUpTimer = null;
-            this.scheduledFollowUp = true;
-            void this.tick();
-          }, 200);
+          // Bound contention retries in HYBRID mode. The interval timer
+          // already provides natural re-evaluation cadence, so after a few
+          // immediate misses we stop short-backoff retries and wait for the
+          // regular tick to avoid replay/amplification under sustained lock
+          // contention.
+          if (
+            this.hybridLockMissRetryCount <
+            HYBRID_MAX_CONSECUTIVE_LOCK_MISS_RETRIES
+          ) {
+            this.hybridLockMissRetryCount += 1;
+            this.followUpTimer = setTimeout(() => {
+              this.followUpTimer = null;
+              this.scheduledFollowUp = true;
+              void this.tick();
+            }, HYBRID_LOCK_MISS_RETRY_MS);
+          }
         }
       }
     }

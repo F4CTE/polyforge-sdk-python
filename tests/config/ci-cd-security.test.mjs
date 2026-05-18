@@ -125,6 +125,7 @@ test("CI includes a secret-scanning gate and a matching pre-commit hook", () => 
     jobBlock(workflow, "build").includes(
       "needs: [secret-scan, semgrep, lint, typecheck, test, auth-integration-test, nginx-security, docker-compose-security]",
     ),
+    "build needs must include secret-scan, semgrep, lint, typecheck, test, auth-integration-test, nginx-security, and docker-compose-security",
   );
   assert.ok(
     hook.includes("gitleaks protect --staged --redact --config .gitleaks.toml"),

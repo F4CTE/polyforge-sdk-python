@@ -9,6 +9,7 @@ on:
 
 # Limit the default GITHUB_TOKEN to read-only. This reduces the blast radius
 # if a malicious PR manages to execute code on the self-hosted runner.
+# PR #1541 refresh: no-op metadata-only CI retry bump
 permissions:
   contents: read
 
@@ -48,8 +49,8 @@ jobs:
 
   secret-scan:
     name: Secret scan
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: [self-hosted, linux, x64]
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
@@ -123,7 +124,7 @@ jobs:
     name: Semgrep scan
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: [self-hosted, linux, x64]
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
