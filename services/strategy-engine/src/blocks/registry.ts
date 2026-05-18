@@ -10,6 +10,7 @@ import {
   StopIfOrdersPerMinBlock,
   StopIfConsecutiveLossBlock,
   StopIfExposureExceedsBlock,
+  StopIfMaxDrawdownBlock,
   PauseAfterFillBlock,
   MaxOrdersTotalBlock,
 } from "./safety.blocks";
@@ -91,12 +92,15 @@ import {
 export const SAFETY_REGISTRY: Record<string, BlockEvaluator> = {
   DAILY_LOSS_LIMIT: StopIfDailyLossBlock,
   stop_if_daily_loss: StopIfDailyLossBlock,
+  STOP_IF_DAILY_LOSS: StopIfDailyLossBlock,
   ORDERS_PER_MIN: StopIfOrdersPerMinBlock,
   stop_if_orders_per_min: StopIfOrdersPerMinBlock,
   CONSECUTIVE_LOSS: StopIfConsecutiveLossBlock,
   stop_if_consecutive_loss: StopIfConsecutiveLossBlock,
+  STOP_IF_CONSECUTIVE_LOSS: StopIfConsecutiveLossBlock,
   EXPOSURE_EXCEEDS: StopIfExposureExceedsBlock,
   stop_if_exposure_exceeds: StopIfExposureExceedsBlock,
+  STOP_IF_EXPOSURE_EXCEEDS: StopIfExposureExceedsBlock,
   PAUSE_AFTER_FILL: PauseAfterFillBlock,
   pause_after_fill: PauseAfterFillBlock,
   // MAX_POSITION_SIZE / max_position intentionally left in CONDITION_REGISTRY only.
@@ -107,6 +111,10 @@ export const SAFETY_REGISTRY: Record<string, BlockEvaluator> = {
   // fail closed to prevent misconfigured condition-only types from bypassing
   // the safety boundary.
   max_orders_total: MaxOrdersTotalBlock,
+  MAX_ORDERS_TOTAL: MaxOrdersTotalBlock,
+  MAX_BETS_PER_DAY: MaxBetsPerDayBlock,
+  MAX_DRAWDOWN: StopIfMaxDrawdownBlock,
+  max_drawdown: StopIfMaxDrawdownBlock,
 };
 
 export const TRIGGER_REGISTRY: Record<string, BlockEvaluator> = {
@@ -127,12 +135,14 @@ export const TRIGGER_REGISTRY: Record<string, BlockEvaluator> = {
   price_below: PriceBelowTickBlock,
   PRICE_BELOW: PriceBelowTickBlock,
   spread_below_tick: SpreadBelowTickBlock,
+  SPREAD_BELOW: SpreadBelowTickBlock,
   SPREAD_ABOVE: SpreadBelowTickBlock,
   volume_rate_tick: VolumeRateTickBlock,
   price_momentum_tick: PriceMomentumTickBlock,
   rsi_threshold_tick: RsiThresholdTickBlock,
   TICK: EveryTickBlock,
   every_tick: EveryTickBlock,
+  EVERY_TICK: EveryTickBlock,
   ma_crossover_tick: MaCrossoverTickBlock,
   MA_CROSSOVER: MaCrossoverTickBlock,
   macd_signal_tick: MacdSignalTickBlock,
@@ -168,6 +178,8 @@ export const CONDITION_REGISTRY: Record<string, BlockEvaluator> = {
   VENUE_SELECT: VenueSelectBlock,
   venue_select: VenueSelectBlock,
   minimize_fees: VenueSelectBlock,
+  SPREAD_BELOW_CONDITION: SpreadBelowTickBlock,
+  spread_below_condition: SpreadBelowTickBlock,
 };
 
 export const ACTION_REGISTRY: Record<string, ActionEvaluator> = {

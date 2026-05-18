@@ -29,6 +29,8 @@ export default defineConfig({
                 'src/common/**',
                 'src/blocks/__helpers__.ts',
                 'src/blocks/block.types.ts',       // interfaces only — no runtime code
+                'src/strategy/wasm-worker.ts',             // worker entry point — dedicated thread
+                'src/strategy/wasm-worker-pool.ts',        // thread-pool lifecycle — integration test
                 'src/strategy/strategy-registry.service.ts', // event loop — integration test
             ],
             thresholds: {

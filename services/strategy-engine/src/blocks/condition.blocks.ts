@@ -96,7 +96,7 @@ export const MaxPositionBlock: BlockEvaluator = {
 export const MaxBetsPerDayBlock: BlockEvaluator = {
   evaluate(block, ctx, _redis, _prisma): Promise<BlockResult> {
     const params = (block["params"] as BlockParams) ?? {};
-    const max = parseInt(String(params.max ?? "10"), 10);
+    const max = parseInt(String(params.max ?? params.maxBets ?? "10"), 10);
     const fired = ctx.state.betsToday < max;
     return Promise.resolve({
       fired,
@@ -109,7 +109,9 @@ export const MaxBetsPerDayBlock: BlockEvaluator = {
 export const DailyLossLimitBlock: BlockEvaluator = {
   evaluate(block, ctx, _redis, _prisma): Promise<BlockResult> {
     const params = (block["params"] as BlockParams) ?? {};
-    const maxLossUsdc = String(params.maxLossUsdc ?? "0");
+    const maxLossUsdc = String(
+      params.maxLossUsdc ?? params.maxLoss ?? params.limit ?? "0",
+    );
     const maxLoss = parseFiniteDecimal(maxLossUsdc);
     if (maxLoss === null)
       return Promise.resolve(invalidNumeric("maxLossUsdc", maxLossUsdc));

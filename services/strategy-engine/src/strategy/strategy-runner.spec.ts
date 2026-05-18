@@ -44,7 +44,10 @@ function makeBetaLimits(overrides: Record<string, unknown> = {}) {
 
 function makePrisma(overrides: Record<string, unknown> = {}) {
   return {
-    strategy: { update: vi.fn().mockResolvedValue({}) },
+    strategy: {
+      update: vi.fn().mockResolvedValue({}),
+      findUnique: vi.fn().mockResolvedValue(null),
+    },
     position: {
       findMany: vi.fn().mockResolvedValue([]),
       findUnique: vi.fn().mockResolvedValue(null),
@@ -118,6 +121,14 @@ function makeRunner({
     .fn<(intents: OrderIntent[]) => Promise<void>>()
     .mockResolvedValue(undefined),
   onStatusChange = vi.fn().mockResolvedValue(undefined),
+  onRunStrategy = undefined as
+    | ((
+        childStrategyId: string,
+        parentId: string,
+        mode: string,
+        context?: { userId: string },
+      ) => Promise<void>)
+    | undefined,
   logicBlocks = [] as any[],
   logicConnections = [] as any[],
 } = {}) {
@@ -139,6 +150,8 @@ function makeRunner({
     onStatusChange,
     logicBlocks,
     logicConnections,
+    [] as any[],
+    onRunStrategy,
   );
 }
 
@@ -364,6 +377,72 @@ describe("StrategyRunner — SAFETY evaluation", () => {
     );
   });
 
+  it("falls back to CONDITION_REGISTRY when MAX_POSITION_SIZE is in safety blocks", async () => {
+    const state = makeState();
+    const prisma = makePrisma();
+    // No position exists → MaxPositionBlock returns fired: true
+    prisma.position.findUnique.mockResolvedValue(null);
+    const onStatusChange = vi.fn().mockResolvedValue(undefined);
+
+    const runner = makeRunner({
+      execMode: "EVENT",
+      state,
+      prisma,
+      onStatusChange,
+      safety: [
+        {
+          id: "safety-1",
+          type: "MAX_POSITION_SIZE",
+          params: { tokenId: "tok1", maxUsdc: "100" },
+        },
+      ],
+    });
+
+    await runner.onPriceEvent("tok1", 0.5);
+
+    // Strategy should remain RUNNING (not fail-closed) since
+    // MaxPositionBlock resolved via CONDITION_REGISTRY and fired: true
+    expect(runner.status).toBe("RUNNING");
+    expect(onStatusChange).not.toHaveBeenCalledWith(
+      "STOPPED",
+      expect.anything(),
+    );
+  });
+
+  it("stops strategy on unknown safety block type (fail closed)", async () => {
+    const state = makeState();
+    const redis = makeRedis();
+    const onStatusChange = vi.fn().mockResolvedValue(undefined);
+    const prisma = makePrisma();
+
+    const runner = makeRunner({
+      execMode: "EVENT",
+      state,
+      redis,
+      prisma,
+      onStatusChange,
+      safety: [
+        {
+          id: "safety-1",
+          type: "NONEXISTENT_SAFETY_BLOCK",
+          params: {},
+        },
+      ],
+    });
+
+    await runner.onPriceEvent("tok1", 0.5);
+
+    expect(runner.status).toBe("STOPPED");
+    expect(onStatusChange).toHaveBeenCalledWith(
+      "STOPPED",
+      expect.stringContaining("Unknown safety block"),
+    );
+    expect(prisma.strategy.update).toHaveBeenCalled();
+    expect(redis.xadd).toHaveBeenCalledWith(
+      "stream:events",
+      expect.objectContaining({ type: "STRATEGY_STOPPED" }),
+    );
+  });
   it("resolves safety block params from config fallback", async () => {
     const state = makeState();
     const redis = makeRedis();
@@ -1038,6 +1117,8 @@ describe("StrategyRunner — error handling", () => {
 
     await runner.onPriceEvent("tok-yes", 0.7);
 
+    // Counter increment failures pause the strategy because orders may
+    // have been published but the accounting state is inconsistent
     expect(runner.status).toBe("PAUSED");
     expect(runner.pauseReason).toBe("counter_increment_failed");
     expect(onStatusChange).toHaveBeenCalledWith(
@@ -3116,6 +3197,184 @@ describe("StrategyRunner — concurrent tick serialization", () => {
       expect(state.getStateAndPrices).toHaveBeenCalledTimes(2);
 
       await tickAPromise;
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("suppresses side effects when distributed lock ownership is lost mid-tick", async () => {
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(700);
+
+      let releaseStateRead!: () => void;
+      let evalCallCount = 0;
+      const client = {
+        lrange: vi.fn().mockResolvedValue([]),
+        mget: vi
+          .fn()
+          .mockResolvedValue([
+            JSON.stringify({ price: 0.5, timestamp: Date.now() }),
+          ]),
+        incr: vi.fn().mockResolvedValue(1),
+        expire: vi.fn().mockResolvedValue(1),
+        set: vi.fn().mockResolvedValue("OK"),
+        del: vi.fn().mockResolvedValue(1),
+        eval: vi.fn().mockImplementation(() => {
+          evalCallCount++;
+          // First eval call is lock renewal; report ownership loss.
+          if (evalCallCount === 1) return Promise.resolve(0);
+          // Lock release remains best-effort success.
+          return Promise.resolve(1);
+        }),
+      };
+
+      const redis = makeRedis({
+        getClient: vi.fn().mockReturnValue(client),
+        getJson: vi.fn().mockResolvedValue({ price: 0.7 }),
+      });
+      const prisma = makePrisma();
+      prisma.token.findUnique.mockResolvedValue({
+        id: "tok-yes",
+        marketId: "mkt-1",
+        outcome: "YES",
+      });
+
+      const state = makeState();
+      state.getStateAndPrices.mockImplementation(
+        (_strategyId: string, tokenIds: string[]) =>
+          new Promise<{
+            state: typeof DEFAULT_STATE;
+            prices: Map<string, { price: number; timestamp: number } | null>;
+          }>((resolve) => {
+            releaseStateRead = () => {
+              const prices = new Map<
+                string,
+                { price: number; timestamp: number } | null
+              >();
+              for (const id of tokenIds) {
+                prices.set(id, { price: 0.7, timestamp: Date.now() });
+              }
+              resolve({ state: { ...DEFAULT_STATE }, prices });
+            };
+          }),
+      );
+
+      const onIntents = vi
+        .fn<(intents: OrderIntent[]) => Promise<void>>()
+        .mockResolvedValue(undefined);
+
+      const runner = makeRunner({
+        execMode: "EVENT",
+        state,
+        redis,
+        prisma,
+        onIntents,
+        actions: [
+          {
+            id: "a1",
+            type: "buy_yes",
+            params: { tokenId: "tok-yes", size: "10" },
+          },
+        ],
+      });
+
+      const tickPromise = runner.onPriceEvent("tok-yes", 0.7);
+
+      // Trigger renewal while evaluate is still blocked.
+      await vi.advanceTimersByTimeAsync(6_000);
+      releaseStateRead();
+      await tickPromise;
+
+      expect(onIntents).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("does not emit order intents when lock ownership is lost during awaited child strategy launches", async () => {
+    vi.useFakeTimers();
+    try {
+      let resolveRunStrategy!: () => void;
+      let evalCall = 0;
+      const client = {
+        lrange: vi.fn().mockResolvedValue([]),
+        mget: vi
+          .fn()
+          .mockResolvedValue([
+            JSON.stringify({ price: 0.7, timestamp: Date.now() }),
+          ]),
+        incr: vi.fn().mockResolvedValue(1),
+        expire: vi.fn().mockResolvedValue(1),
+        set: vi.fn().mockResolvedValue("OK"),
+        del: vi.fn().mockResolvedValue(1),
+        eval: vi.fn().mockImplementation(() => {
+          evalCall++;
+          // Call 1: lock-refresh interval — simulate lock loss (returns 0
+          //          instead of 1, triggering activeLockToken = null).
+          if (evalCall === 1) return Promise.resolve(0);
+          // Subsequent calls: lock release (finally block), etc.
+          return Promise.resolve(1);
+        }),
+      };
+      const redis = makeRedis({ getClient: vi.fn().mockReturnValue(client) });
+      const prisma = makePrisma();
+      prisma.strategy.findUnique.mockResolvedValue({
+        id: "child-1",
+        userId: "user-test",
+      });
+      prisma.token.findUnique.mockResolvedValue({
+        id: "tok-yes",
+        marketId: "mkt-1",
+        outcome: "YES",
+      });
+      const state = makeState();
+      const onIntents = vi
+        .fn<(intents: OrderIntent[]) => Promise<void>>()
+        .mockResolvedValue(undefined);
+      const onRunStrategy = vi
+        .fn()
+        .mockImplementation(
+          () =>
+            new Promise<void>((resolve) => {
+              resolveRunStrategy = resolve;
+            }),
+        );
+
+      const runner = makeRunner({
+        execMode: "EVENT",
+        state,
+        redis,
+        prisma,
+        onIntents,
+        onRunStrategy,
+        actions: [
+          {
+            id: "a1",
+            type: "run_strategy",
+            params: { strategyId: "child-1", mode: "managed" },
+          },
+          {
+            id: "a2",
+            type: "buy_yes",
+            params: { tokenId: "tok-yes", size: "10" },
+          },
+        ],
+      });
+
+      const tickPromise = runner.onPriceEvent("tok-yes", 0.7);
+
+      // Advance past the 2s lock-refresh interval so the renewal fires
+      // and clears activeLockToken while onRunStrategy is stalled.
+      await vi.advanceTimersByTimeAsync(3_000);
+
+      // Release the stalled onRunStrategy callback.
+      resolveRunStrategy();
+      await tickPromise;
+
+      // Order intents must NOT be emitted — lock ownership was lost
+      // during the awaited child launch.
+      expect(onIntents).not.toHaveBeenCalled();
     } finally {
       vi.useRealTimers();
     }

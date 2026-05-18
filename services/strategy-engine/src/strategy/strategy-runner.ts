@@ -1,4 +1,3 @@
-import { randomUUID } from "node:crypto";
 import { Logger } from "@nestjs/common";
 import { StrategyStatus } from ".prisma/client";
 import { PrismaService } from "@polyforge/shared-db";
@@ -17,9 +16,182 @@ import {
 import { resolveParams } from "../blocks/resolve-params";
 import { StateService } from "../state/state.service";
 import { safeEvaluate } from "../common/safe-evaluate";
-
 import { sma, ema, macd, bollingerBands, atr } from "../ta/indicators";
 import { readPriceWindow } from "../ta/price-window";
+import { TickMutex } from "./tick-mutex";
+import { WasmWorkerPoolService, WasmEvalContext } from "./wasm-worker-pool";
+import { assertWasmEvaluationBudget } from "../wasm-evaluation-limits";
+import { parseFiniteDecimal } from "@polyforge/shared-types";
+
+const WASM_SAFETY_TYPES = new Set([
+  "STOP_IF_DAILY_LOSS",
+  "MAX_ORDERS_TOTAL",
+  "STOP_IF_CONSECUTIVE_LOSS",
+  "STOP_IF_EXPOSURE_EXCEEDS",
+  "MAX_BETS_PER_DAY",
+  "MAX_DRAWDOWN",
+]);
+
+const WASM_TRIGGER_TYPES = new Set([
+  "EVERY_TICK",
+  "PRICE_ABOVE",
+  "PRICE_BELOW",
+  "PRICE_CROSSES_UP",
+  "PRICE_CROSSES_DOWN",
+  "SPREAD_BELOW",
+]);
+
+const WASM_CONDITION_TYPES = new Set([
+  "SPREAD_BELOW_CONDITION",
+  "DAILY_LOSS_LIMIT",
+]);
+
+const TOKEN_SCOPED_WASM_TYPES = new Set([
+  "PRICE_ABOVE",
+  "PRICE_BELOW",
+  "PRICE_CROSSES_UP",
+  "PRICE_CROSSES_DOWN",
+  "SPREAD_BELOW",
+  "SPREAD_BELOW_CONDITION",
+]);
+
+const SAFETY_PARAM_NORMALIZE: Record<string, Record<string, string>> = {
+  STOP_IF_DAILY_LOSS: { maxLossUsdc: "maxLoss" },
+  MAX_ORDERS_TOTAL: { max: "maxOrders" },
+  STOP_IF_CONSECUTIVE_LOSS: { maxLosses: "maxLosses" },
+  STOP_IF_EXPOSURE_EXCEEDS: { maxUsdc: "maxExposure" },
+  MAX_BETS_PER_DAY: { max: "maxBets" },
+  MAX_DRAWDOWN: { max: "maxDrawdown" },
+};
+
+const TRIGGER_CONDITION_PARAM_NORMALIZE: Record<
+  string,
+  Record<string, string>
+> = {
+  PRICE_ABOVE: { price: "threshold" },
+  PRICE_BELOW: { price: "threshold" },
+  PRICE_CROSSES_UP: { price: "threshold" },
+  PRICE_CROSSES_DOWN: { price: "threshold" },
+  SPREAD_BELOW: { minSpread: "threshold", maxSpread: "threshold" },
+  SPREAD_BELOW_CONDITION: { minSpread: "maxSpread" },
+  DAILY_LOSS_LIMIT: { maxLossUsdc: "limit", maxLoss: "limit" },
+};
+
+const WASM_TYPE_CANONICAL: Record<string, string> = {
+  stop_if_daily_loss: "STOP_IF_DAILY_LOSS",
+  max_orders_total: "MAX_ORDERS_TOTAL",
+  CONSECUTIVE_LOSS: "STOP_IF_CONSECUTIVE_LOSS",
+  stop_if_consecutive_loss: "STOP_IF_CONSECUTIVE_LOSS",
+  EXPOSURE_EXCEEDS: "STOP_IF_EXPOSURE_EXCEEDS",
+  stop_if_exposure_exceeds: "STOP_IF_EXPOSURE_EXCEEDS",
+  every_tick: "EVERY_TICK",
+  TICK: "EVERY_TICK",
+  price_above: "PRICE_ABOVE",
+  price_above_tick: "PRICE_ABOVE",
+  price_below: "PRICE_BELOW",
+  price_below_tick: "PRICE_BELOW",
+  price_crosses_up: "PRICE_CROSSES_UP",
+  price_crosses_down: "PRICE_CROSSES_DOWN",
+  spread_below_tick: "SPREAD_BELOW",
+  SPREAD_ABOVE: "SPREAD_BELOW",
+  spread_below_condition: "SPREAD_BELOW_CONDITION",
+  daily_loss_limit: "DAILY_LOSS_LIMIT",
+  max_drawdown: "MAX_DRAWDOWN",
+};
+
+function canonicalWasmType(
+  type: string,
+  category?: "safety" | "trigger" | "condition",
+): string {
+  if (category === "safety" && type === "DAILY_LOSS_LIMIT")
+    return "STOP_IF_DAILY_LOSS";
+  return WASM_TYPE_CANONICAL[type] ?? type;
+}
+
+function toWasmBlock(
+  block: Block,
+  variables?: Record<string, number>,
+  category?: "safety" | "trigger" | "condition",
+): {
+  id: string;
+  type: string;
+  config: Record<string, unknown>;
+} {
+  const merged = { ...(block.config ?? {}), ...(block.params ?? {}) };
+  const config =
+    Object.keys(merged).length > 0
+      ? resolveParams(merged, variables ?? {})
+      : {};
+
+  const toWasmParam = (
+    remap: Record<string, string>,
+    aliasWins = false,
+  ): void => {
+    // `aliasWins`: tsKey (alias) takes precedence over rustKey
+    // (canonical) when both exist in the TS evaluator's ?? chain
+    // (e.g. maxLossUsdc ?? maxLoss, max ?? maxOrders).
+    // `!aliasWins`: canonical-first — rustKey is preserved when
+    // already present (e.g. threshold ?? price).
+    const written = new Set<string>();
+    for (const [tsKey, rustKey] of Object.entries(remap)) {
+      if (tsKey in config) {
+        const isIdentity = tsKey === rustKey;
+        if (aliasWins) {
+          if (!written.has(rustKey)) {
+            config[rustKey] = config[tsKey];
+            written.add(rustKey);
+          }
+        } else if (!(rustKey in config)) {
+          config[rustKey] = config[tsKey];
+        }
+        if (tsKey !== rustKey) delete config[tsKey];
+      }
+    }
+  };
+
+  const canonicalType = canonicalWasmType(block.type, category);
+
+  if (category === "safety") {
+    const safetyRemap = SAFETY_PARAM_NORMALIZE[canonicalType];
+    if (safetyRemap) {
+      // Safety block aliases normally take precedence over canonical keys
+      // in the TS evaluator (e.g. maxLossUsdc ?? maxLoss).
+      //
+      // Exception: MAX_DRAWDOWN uses maxDrawdown ?? max, so the canonical
+      // key (maxDrawdown) must not be overwritten by the legacy alias (max).
+      toWasmParam(safetyRemap, canonicalType !== "MAX_DRAWDOWN");
+    }
+  }
+
+  if (category === "trigger" || category === "condition") {
+    const tcRemap = TRIGGER_CONDITION_PARAM_NORMALIZE[canonicalType];
+    if (tcRemap) {
+      // SPREAD_BELOW_CONDITION has minSpread alias taking TS precedence
+      // over maxSpread; DAILY_LOSS_LIMIT uses maxLossUsdc ?? maxLoss
+      // (alias-first).  All other tcRemap entries are canonical-first.
+      toWasmParam(
+        tcRemap,
+        canonicalType === "SPREAD_BELOW" ||
+          canonicalType === "SPREAD_BELOW_CONDITION" ||
+          canonicalType === "DAILY_LOSS_LIMIT",
+      );
+    }
+  }
+
+  // Keep TS parity for legacy/default spread conditions:
+  // SpreadBelowTickBlock defaults to 0.05 when no threshold is provided.
+  // Rust defaults missing maxSpread to 0.0, which is stricter and can
+  // incorrectly fail otherwise-valid condition blocks.
+  if (canonicalType === "SPREAD_BELOW_CONDITION" && !("maxSpread" in config)) {
+    config.maxSpread = "0.05";
+  }
+
+  return {
+    id: block.id,
+    type: canonicalType,
+    config,
+  };
+}
 
 /** Redis key for daily execution counter — resets at midnight UTC */
 const dailyExecKey = (strategyId: string): string => {
@@ -35,15 +207,6 @@ const MAX_STALE_CHECK_BACKOFF_MS = 60_000;
 const HYBRID_LOCK_MISS_RETRY_MS = 200;
 const HYBRID_MAX_CONSECUTIVE_LOCK_MISS_RETRIES = 3;
 
-/** Legacy safety block types that are handled via CONDITION_REGISTRY fallback.
- *  These block types were historically placed under safety but are now
- *  defined only in CONDITION_REGISTRY.  The explicit allowlist prevents
- *  misconfigured condition-only types (e.g. VENUE_SELECT, minimize_fees)
- *  from being accepted as safety guards via the fallback path — those
- *  would return fired=true and turn a fail-closed safety boundary into
- *  fail-open. */
-const LEGACY_SAFETY_ALIASES = new Set(["MAX_POSITION_SIZE", "max_position"]);
-
 function secondsUntilNextUtcMidnight(now = new Date()): number {
   const next = Date.UTC(
     now.getUTCFullYear(),
@@ -52,6 +215,22 @@ function secondsUntilNextUtcMidnight(now = new Date()): number {
   );
   return Math.max(1, Math.ceil((next - now.getTime()) / 1000));
 }
+
+const LOCK_RELEASE_SCRIPT = `
+if redis.call('GET', KEYS[1]) == ARGV[1] then
+  return redis.call('DEL', KEYS[1])
+else
+  return 0
+end
+`;
+
+const LOCK_RENEW_SCRIPT = `
+if redis.call('GET', KEYS[1]) == ARGV[1] then
+  return redis.call('PEXPIRE', KEYS[1], ARGV[2] * 1000)
+else
+  return 0
+end
+`;
 
 export type StrategyRunnerStatus = "RUNNING" | "PAUSED" | "STOPPED";
 
@@ -82,28 +261,25 @@ export interface LogicConnection {
  */
 export class StrategyRunner {
   private readonly logger: Logger;
-  private readonly strategyId: string;
-  private readonly userId: string;
-  private readonly execMode: string;
-  private readonly tickMs: number;
-  private readonly triggers: Block[];
-  private readonly conditions: Block[];
-  private readonly actions: Block[];
-  private readonly safety: Block[];
-  private readonly logicBlocks: LogicBlock[];
-  private readonly logicConnections: LogicConnection[];
-  private readonly calcBlocks: Block[];
   status: StrategyRunnerStatus = "RUNNING";
   private timer: NodeJS.Timeout | null = null;
   private _pauseReason: string | null = null;
+  get pauseReason() {
+    return this._pauseReason;
+  }
   private delayedActions: Map<string, NodeJS.Timeout> = new Map();
+  /** Throttles EVENT-mode ticks to prevent bursty in-order evaluation */
   private lastTickMs = -MIN_TICK_MS;
   private lastStaleCheckMs = 0;
   private staleCheckBackoffMs = STALE_PRICE_MS;
+  readonly tickMutex = new TickMutex();
   private tickInFlight = false;
   private pendingTick = false;
   /** True when a follow-up tick is scheduled — bypasses the min-tick throttle */
   private scheduledFollowUp = false;
+  private deferredRetryTick: NodeJS.Timeout | null = null;
+
+  private _warnedSafetyFallbackIds: Set<string> | null = null;
 
   /** Delayed follow-up timeout for TICK/HYBRID modes — cleared on stop() */
   private followUpTimer: NodeJS.Timeout | null = null;
@@ -144,14 +320,14 @@ export class StrategyRunner {
   private readonly childModes: Map<string, SubStrategyMode> = new Map();
 
   constructor(
-    strategyId: string,
-    userId: string,
-    execMode: string,
-    tickMs: number,
-    triggers: Block[],
-    conditions: Block[],
-    actions: Block[],
-    safety: Block[],
+    private readonly strategyId: string,
+    private readonly userId: string,
+    private readonly execMode: string,
+    private readonly tickMs: number,
+    private readonly triggers: Block[],
+    private readonly conditions: Block[],
+    private readonly actions: Block[],
+    private readonly safety: Block[],
     private readonly variables: StrategyVariable[],
     private readonly redis: RedisService,
     private readonly betaLimits: BetaLimitsConfigService,
@@ -162,9 +338,9 @@ export class StrategyRunner {
       status: StrategyRunnerStatus,
       reason?: string,
     ) => Promise<void>,
-    logicBlocks: LogicBlock[] = [],
-    logicConnections: LogicConnection[] = [],
-    calcBlocks: Block[] = [],
+    private readonly logicBlocks: LogicBlock[] = [],
+    private readonly logicConnections: LogicConnection[] = [],
+    private readonly calcBlocks: Block[] = [],
     private readonly onRunStrategy?: (
       childStrategyId: string,
       parentId: string,
@@ -173,35 +349,239 @@ export class StrategyRunner {
     ) => Promise<void>,
     private readonly venue?: VenueId | "best",
     private readonly kalshiSubaccount?: number,
+    private readonly wasmWorkerPool?: WasmWorkerPoolService,
   ) {
-    this.strategyId = strategyId;
-    this.userId = userId;
-    this.execMode = execMode;
-    this.tickMs = tickMs;
-    this.triggers = StrategyRunner.normalizeBlocks(triggers);
-    this.conditions = StrategyRunner.normalizeBlocks(conditions);
-    this.actions = StrategyRunner.normalizeBlocks(actions);
-    this.safety = StrategyRunner.normalizeBlocks(safety);
-    this.logicBlocks = StrategyRunner.normalizeBlocks(logicBlocks) as LogicBlock[];
-    this.logicConnections = logicConnections;
-    this.calcBlocks = StrategyRunner.normalizeBlocks(calcBlocks);
     this.logger = new Logger(`StrategyRunner:${strategyId}`);
+    this.wasmGateCompatible = this.checkWasmGateCompatible();
   }
 
-  /**
-   * Normalize blocks from the builder/DB format (which may use `config`) to
-   * the runner's internal format (which expects `params`).  Falls back to
-   * `config` when `params` is missing so strategies saved before the
-   * builder→runner field-name alignment are not silently dropped.
-   */
-  private static normalizeBlocks(blocks: Block[]): Block[] {
-    return blocks.map((b) => {
-      const raw = b as unknown as Record<string, unknown>;
-      return {
-        ...b,
-        params: b.params ?? (raw.config as Record<string, unknown>) ?? {},
-      };
+  /** True when safety, trigger, and condition blocks are all WASM-compatible. */
+  readonly wasmGateCompatible: boolean;
+
+  private getWasmGateToken(): string | null | undefined {
+    const tokens = new Set<string>();
+    for (const block of this.triggers) {
+      if (
+        !TOKEN_SCOPED_WASM_TYPES.has(canonicalWasmType(block.type, "trigger"))
+      )
+        continue;
+      const merged = StrategyRunner.mergedParams(block);
+      const tokenId = merged.tokenId;
+      if (typeof tokenId !== "string" || tokenId.length === 0) return null;
+      tokens.add(tokenId);
+    }
+    for (const block of this.conditions) {
+      if (
+        !TOKEN_SCOPED_WASM_TYPES.has(canonicalWasmType(block.type, "condition"))
+      )
+        continue;
+      const merged = StrategyRunner.mergedParams(block);
+      const tokenId = merged.tokenId;
+      if (typeof tokenId !== "string" || tokenId.length === 0) return null;
+      tokens.add(tokenId);
+    }
+    if (tokens.size > 1) return null;
+    if (tokens.size === 0) return undefined;
+    return [...tokens][0];
+  }
+
+  private checkWasmGateCompatible(): boolean {
+    if (!this.wasmWorkerPool) return false;
+    if (
+      this.safety.length === 0 &&
+      this.triggers.length === 0 &&
+      this.conditions.length === 0
+    )
+      return false;
+    if (
+      this.safety.some(
+        (b) => !WASM_SAFETY_TYPES.has(canonicalWasmType(b.type, "safety")),
+      )
+    )
+      return false;
+    if (
+      this.triggers.length > 0 &&
+      this.triggers.some(
+        (b) => !WASM_TRIGGER_TYPES.has(canonicalWasmType(b.type, "trigger")),
+      )
+    )
+      return false;
+    if (
+      this.conditions.length > 0 &&
+      this.conditions.some(
+        (b) =>
+          !WASM_CONDITION_TYPES.has(canonicalWasmType(b.type, "condition")),
+      )
+    )
+      return false;
+
+    // The WASM ABI uses a single orders_today field for both MAX_ORDERS_TOTAL
+    // (totalOrders) and MAX_BETS_PER_DAY (betsToday).  When both safety types
+    // are present, the field cannot correctly represent both counters, so fall
+    // back to TS evaluators.
+    const hasMaxOrdersTotal = this.safety.some(
+      (b) => canonicalWasmType(b.type, "safety") === "MAX_ORDERS_TOTAL",
+    );
+    const hasMaxBetsPerDay = this.safety.some(
+      (b) => canonicalWasmType(b.type, "safety") === "MAX_BETS_PER_DAY",
+    );
+    if (hasMaxOrdersTotal && hasMaxBetsPerDay) return false;
+
+    const gateToken = this.getWasmGateToken();
+    if (gateToken === null) return false;
+
+    return true;
+  }
+
+  private hasSpreadDependentBlocks(): boolean {
+    return (
+      this.triggers.some(
+        (b) => canonicalWasmType(b.type, "trigger") === "SPREAD_BELOW",
+      ) ||
+      this.conditions.some(
+        (b) =>
+          canonicalWasmType(b.type, "condition") === "SPREAD_BELOW_CONDITION",
+      )
+    );
+  }
+
+  private hasExposureDependentBlocks(): boolean {
+    return this.safety.some((b) => {
+      const ct = canonicalWasmType(b.type, "safety");
+      return ct === "STOP_IF_EXPOSURE_EXCEEDS";
     });
+  }
+
+  private hasMaxOrdersTotalBlock(): boolean {
+    return this.safety.some((b) => {
+      const ct = canonicalWasmType(b.type, "safety");
+      return ct === "MAX_ORDERS_TOTAL";
+    });
+  }
+
+  private validateSafetyParamsForWasm(vars: Record<string, number>): void {
+    for (const block of this.safety) {
+      const resolved = resolveParams(StrategyRunner.mergedParams(block), vars);
+      const ct = canonicalWasmType(block.type, "safety");
+      if (ct === "STOP_IF_DAILY_LOSS") {
+        const maxLoss = parseFiniteDecimal(
+          String(resolved.maxLossUsdc ?? resolved.maxLoss ?? "0"),
+        );
+        if (maxLoss === null || maxLoss <= 0)
+          throw new Error("WASM safety param maxLoss invalid");
+      } else if (ct === "MAX_ORDERS_TOTAL") {
+        const raw = String(resolved.max ?? resolved.maxOrders ?? "0");
+        const max = parseInt(raw, 10);
+        if (
+          !Number.isFinite(max) ||
+          max <= 0 ||
+          String(max) !== raw
+        )
+          throw new Error("WASM safety param maxOrders invalid");
+      } else if (ct === "STOP_IF_EXPOSURE_EXCEEDS") {
+        const maxUsdc = parseFiniteDecimal(
+          String(resolved.maxUsdc ?? resolved.maxExposure ?? "0"),
+        );
+        if (maxUsdc === null || maxUsdc < 0)
+          throw new Error("WASM safety param maxExposure invalid");
+      } else if (ct === "MAX_BETS_PER_DAY") {
+        const raw = String(resolved.max ?? resolved.maxBets ?? "0");
+        const max = parseInt(raw, 10);
+        if (
+          !Number.isFinite(max) ||
+          max <= 0 ||
+          String(max) !== raw
+        )
+          throw new Error("WASM safety param maxBets invalid");
+      } else if (ct === "MAX_DRAWDOWN") {
+        const max = parseFiniteDecimal(
+          String(resolved.maxDrawdown ?? resolved.max ?? "0"),
+        );
+        if (max === null || max <= 0)
+          throw new Error("WASM safety param maxDrawdown invalid");
+      } else if (ct === "STOP_IF_CONSECUTIVE_LOSS") {
+        const raw = String(resolved.maxLosses ?? "0");
+        const maxLosses = parseInt(raw, 10);
+        if (
+          !Number.isFinite(maxLosses) ||
+          maxLosses <= 0 ||
+          String(maxLosses) !== raw
+        )
+          throw new Error("WASM safety param maxLosses invalid");
+      }
+    }
+  }
+
+  private validateTriggerParamsForWasm(vars: Record<string, number>): void {
+    for (const block of this.triggers) {
+      if (canonicalWasmType(block.type, "trigger") === "EVERY_TICK") continue;
+      const resolved = resolveParams(StrategyRunner.mergedParams(block), vars);
+      const rawValue =
+        resolved.threshold ??
+        resolved.minSpread ??
+        resolved.maxSpread ??
+        resolved.price;
+      if (rawValue === undefined) {
+        throw new Error(
+          `WASM trigger threshold missing for block ${block.type}`,
+        );
+      }
+      const price = parseFiniteDecimal(String(rawValue));
+      if (price === null)
+        throw new Error(
+          `WASM trigger param threshold invalid for block ${block.type}`,
+        );
+    }
+  }
+
+  private validateConditionParamsForWasm(vars: Record<string, number>): void {
+    for (const block of this.conditions) {
+      const ct = canonicalWasmType(block.type, "condition");
+      if (ct === "DAILY_LOSS_LIMIT") {
+        const resolved = resolveParams(
+          StrategyRunner.mergedParams(block),
+          vars,
+        );
+        const maxLoss = parseFiniteDecimal(
+          String(
+            resolved.maxLossUsdc ?? resolved.maxLoss ?? resolved.limit ?? "0",
+          ),
+        );
+        if (maxLoss === null || maxLoss <= 0)
+          throw new Error("WASM condition param limit invalid");
+      }
+      if (ct === "SPREAD_BELOW_CONDITION") {
+        const resolved = resolveParams(
+          StrategyRunner.mergedParams(block),
+          vars,
+        );
+        const raw = resolved.minSpread ?? resolved.maxSpread;
+        // No threshold is fine — toWasmBlock() defaults maxSpread to 0.05.
+        if (raw !== undefined) {
+          const spread = parseFiniteDecimal(String(raw));
+          if (spread === null || spread <= 0)
+            throw new Error(
+              "WASM condition param spread threshold invalid for SPREAD_BELOW_CONDITION",
+            );
+        }
+      }
+    }
+  }
+
+  private validateNoUnresolvedVariables(
+    blocks: Block[],
+    vars: Record<string, number>,
+  ): void {
+    for (const block of blocks) {
+      const resolved = resolveParams(StrategyRunner.mergedParams(block), vars);
+      for (const value of Object.values(resolved)) {
+        if (typeof value === "string" && value.startsWith("$")) {
+          throw new Error(
+            `WASM dispatch blocked: unresolved variable ${value} in block ${block.type}`,
+          );
+        }
+      }
+    }
   }
 
   /** Register a child strategy launched by this runner */
@@ -214,11 +594,6 @@ export class StrategyRunner {
   removeChild(childId: string) {
     this.childStrategies.delete(childId);
     this.childModes.delete(childId);
-  }
-
-  /** Returns the reason the runner was paused, or null if not paused */
-  get pauseReason(): string | null {
-    return this._pauseReason;
   }
 
   /** Get the mode for a child strategy */
@@ -260,7 +635,12 @@ export class StrategyRunner {
       clearTimeout(timer);
     }
     this.delayedActions.clear();
-    // Clear the follow-up timer for TICK/HYBRID coalesced ticks
+    // Clear deferred retry tick if pending
+    if (this.deferredRetryTick) {
+      clearTimeout(this.deferredRetryTick);
+      this.deferredRetryTick = null;
+    }
+    // Clear follow-up timer for TICK/HYBRID coalesced ticks
     if (this.followUpTimer) {
       clearTimeout(this.followUpTimer);
       this.followUpTimer = null;
@@ -333,53 +713,54 @@ export class StrategyRunner {
 
     if (this.status !== "RUNNING") return;
 
-    // Min-tick throttle for EVENT/HYBRID mode to prevent bursty
-    // every-tick triggers from firing on every incoming price event.
+    // Throttle EVENT/HYBRID event-driven ticks to prevent bursty
+    // every_tick triggers from firing on every incoming price event.
     // Bypassed for internally-scheduled follow-up ticks (deferred work
-    // that was coalesced while the lock was held).
+    // that was coalesced while the mutex was held).
+    // TICK-mode ticks are already scheduled at Math.max(tickMs, MIN_TICK_MS).
     if (this.execMode === "EVENT" || this.execMode === "HYBRID") {
       const followUp = this.scheduledFollowUp;
       this.scheduledFollowUp = false;
       if (!followUp) {
         const now = Date.now();
-        if (now - this.lastTickMs < MIN_TICK_MS) return;
+        if (now - this.lastTickMs < MIN_TICK_MS) {
+          if (this.tickInFlight) {
+            this.pendingTick = true;
+          }
+          return;
+        }
         this.lastTickMs = now;
-      } else {
-        // Advance lastTickMs when consuming a coalesced follow-up tick
-        // so that events arriving during this evaluation still respect
-        // MIN_TICK_MS spacing and cannot start an immediate back-to-back
-        // follow-up chain that defeats the throttle.
-        this.lastTickMs = Date.now();
       }
     }
 
     // In-process coalescing: only one tick evaluates at a time.
-    if (this.tickInFlight) {
+    if (!this.tickMutex.tryEnter()) {
       this.pendingTick = true;
       return;
     }
 
     this.tickInFlight = true;
-    let lockAcquired = false;
-    let lockRefresh: NodeJS.Timeout | null = null;
-    const lockToken = randomUUID();
+
+    let redisLockAcquired = false;
+    let lockRenewal: NodeJS.Timeout | undefined;
+    let redisClient: ReturnType<typeof this.redis.getClient> | undefined;
+    let lockKey = "";
+    let lockToken = "";
+
     try {
-      // Distributed lock: prevent concurrent evaluation across multiple
-      // strategy-engine instances via Redis SET NX with a 10s TTL.
-      // A per-acquisition token (lockToken) prevents stale unlocks: if a
-      // tick overruns the TTL and a subsequent tick reacquires the lock,
-      // the older tick's finally block can no longer match and delete it.
-      const redisClient = this.redis.getClient();
-      const lockKey = `strategy:${this.strategyId}:tick:lock`;
+      redisClient = this.redis.getClient();
+      lockKey = `strategy:${this.strategyId}:tick:lock`;
+      lockToken = `${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
+
       const acquired = await redisClient.set(
         lockKey,
         lockToken,
-        "EX",
-        10,
+        "PX",
+        TICK_LOCK_TTL_MS,
         "NX",
       );
       if (!acquired) return;
-      lockAcquired = true;
+      redisLockAcquired = true;
       this.hybridLockMissRetryCount = 0;
 
       // Cancel any pending delayed follow-up timer now that a real
@@ -391,45 +772,31 @@ export class StrategyRunner {
         clearTimeout(this.followUpTimer);
         this.followUpTimer = null;
       }
+      redisLockAcquired = true;
       this.activeLockToken = lockToken;
 
-      // Periodically refresh the lock TTL during long-running evaluations.
-      // Uses an atomic Lua check-and-extend script that verifies this runner
-      // still owns the lock (GET == lockToken) before extending the TTL.
-      // - If ownership is lost (key expired or re-acquired by another instance),
-      //   the interval self-cancels and stops extending the foreign lock.
-      // - If Redis is unreachable during refresh, the interval self-cancels
-      //   rather than silently continuing without protection.
-      lockRefresh = setInterval(() => {
-        redisClient
+      const LOCK_RENEW_MS = 2_000;
+      lockRenewal = setInterval(() => {
+        redisClient!
           .eval(
-            "if redis.call('GET', KEYS[1]) == ARGV[1] then return redis.call('EXPIRE', KEYS[1], tonumber(ARGV[2])) else return 0 end",
+            LOCK_RENEW_SCRIPT,
             1,
             lockKey,
             lockToken,
-            "10",
+            String(TICK_LOCK_TTL_MS / 1000),
           )
-          .then((result) => {
-            // Ignore if this callback is from a previous tick whose lock
-            // token no longer matches the active acquisition.
+          .then((result: unknown) => {
             if (this.activeLockToken !== lockToken) return;
-            if (result !== 1 && lockRefresh) {
-              clearInterval(lockRefresh);
-              lockRefresh = null;
+            if (result !== 1) {
               this.activeLockToken = null;
             }
           })
           .catch(() => {
-            // Ignore if this callback is from a previous tick whose lock
-            // token no longer matches the active acquisition.
             if (this.activeLockToken !== lockToken) return;
-            if (lockRefresh) {
-              clearInterval(lockRefresh);
-              lockRefresh = null;
-            }
             this.activeLockToken = null;
           });
-      }, 5_000).unref();
+      }, LOCK_RENEW_MS);
+      if (lockRenewal.unref) lockRenewal.unref();
 
       // Enforce daily execution limit — auto-stop if exceeded
       const key = dailyExecKey(this.strategyId);
@@ -452,7 +819,7 @@ export class StrategyRunner {
         return;
       }
 
-      await this.evaluate();
+      await this.evaluate(lockToken);
     } catch (err) {
       this.logger.error("Tick evaluation failed", err);
       if (
@@ -465,30 +832,24 @@ export class StrategyRunner {
         );
       }
     } finally {
-      // Stop the lock-refresh interval and nullify the handle so any
-      // already-queued Promise callbacks from this tick's interval catch
-      // the nulled reference and cannot mutate activeLockToken during
-      // a subsequent tick.
-      if (lockRefresh) {
-        clearInterval(lockRefresh);
-        lockRefresh = null;
+      this.tickInFlight = false;
+      if (lockRenewal) {
+        clearInterval(lockRenewal);
       }
-
-      // Release the lock token so stale refresh callbacks from a prior
-      // tick can never match and spuriously clear the active token during
-      // a later evaluation.
+      const lockHeldAtFinish =
+        redisLockAcquired && this.activeLockToken === lockToken;
       if (this.activeLockToken === lockToken) {
         this.activeLockToken = null;
       }
 
       // Snapshot the unlock generation before the lockAcquired block
-      // so the retry paths below (which run when !lockAcquired) can
+      // so the retry paths below (which run when !redisLockAcquired) can
       // close over it without hitting a ReferenceError.
       let unlockGeneration = this.pendingRedisUnlockGeneration;
 
       // Start Redis distributed unlock before releasing tickInFlight so
       // follow-up ticks can observe pendingRedisUnlock in local race windows.
-      if (lockAcquired) {
+      if (redisLockAcquired) {
         const redisClient = this.redis.getClient();
         const lockKey = `strategy:${this.strategyId}:tick:lock`;
         const unlockPromise = redisClient.eval(
@@ -532,9 +893,14 @@ export class StrategyRunner {
       // active, the new tick fails SET NX and retries via the normal
       // pendingTick retry path.
       this.tickInFlight = false;
+
+      // Release the in-process tick mutex so the coalesced follow-up
+      // tick below (or a subsequent external tick) can re-acquire it.
+      this.tickMutex.exit();
+
       if (this.pendingTick) {
         this.pendingTick = false;
-        if (lockAcquired) {
+        if (redisLockAcquired) {
           // Fire a coalesced follow-up tick after release.
           // This catches ticks/events that arrived while the in-flight
           // evaluation was running (they set pendingTick and returned).
@@ -632,7 +998,7 @@ export class StrategyRunner {
         //
         // If the lock holder crashes, the lock expires after the TTL
         // and the next incoming price event naturally re-acquires it.
-      } else if (!lockAcquired && this.status === "RUNNING") {
+      } else if (!redisLockAcquired && this.status === "RUNNING") {
         // Lock acquisition failed without any pending coalesced tick.
         //
         // HYBRID mode schedules a 200 ms retry so the strategy can
@@ -698,18 +1064,34 @@ export class StrategyRunner {
             }, HYBRID_LOCK_MISS_RETRY_MS);
           }
         }
+      } else if (this.execMode !== "EVENT" && !lockHeldAtFinish) {
+        // TICK/HYBRID lock miss with no coalesced pending follow-up:
+        // tickMutex.exit() returned false so the normal retry path above
+        // was skipped.  Schedule a short retry here so the strategy
+        // reattempts distributed-lock acquisition instead of waiting
+        // for the next full setInterval tick.
+        this.deferredRetryTick = setTimeout(() => {
+          this.deferredRetryTick = null;
+          void this.tick();
+        }, MIN_TICK_MS).unref();
       }
     }
   }
 
-  private async evaluate() {
+  private hasLockOwnership(lockToken?: string): boolean {
+    if (!lockToken) return true;
+    return this.activeLockToken === lockToken;
+  }
+
+  private async evaluate(lockToken?: string) {
     // 0. Fetch strategy state + all referenced price caches in a single
     //    Redis pipeline.  This eliminates the old double-read where
     //    state.get() and detectStaleData() each fetched prices separately.
-    const tokenIds = this.getReferencedTokenIds();
+    const allTokenIds = this.getReferencedTokenIds();
+    const staleTokenIds = this.getStalePriceTokenIds();
     const { state: stateData, prices } = await this.state.getStateAndPrices(
       this.strategyId,
-      tokenIds,
+      allTokenIds,
     );
 
     const ctx: EvalContext = {
@@ -726,7 +1108,9 @@ export class StrategyRunner {
     // 0.1 Check stale data — pause if any subscribed token's price is stale.
     //     Moved before expensive variable / TA evaluation so we bail early
     //     when market data is not fresh.
-    const staleToken = this.detectStaleFromPrices(tokenIds, prices);
+    //     Only price-dependent blocks (triggers/actions) are checked to avoid
+    //     false pauses from non-price conditions (MAX_POSITION, etc.).
+    const staleToken = this.detectStaleFromPrices(staleTokenIds, prices);
     if (staleToken) {
       if (this.status === "RUNNING") {
         this.pause(`stale_market_data:${staleToken}`);
@@ -751,7 +1135,7 @@ export class StrategyRunner {
         totalOrders: stateData.totalOrders,
       };
 
-      const primaryTokenId = tokenIds[0];
+      const primaryTokenId = allTokenIds[0];
       if (primaryTokenId) {
         const priceData = prices.get(primaryTokenId) ?? null;
         scope.currentPrice = priceData?.price ?? 0;
@@ -863,157 +1247,211 @@ export class StrategyRunner {
       }
     }
 
-    // 2. SAFETY — any failure stops the strategy
-    for (const block of this.safety) {
-      const evaluator = SAFETY_REGISTRY[block.type];
-      // Fail closed: unknown / unregistered safety block types must stop
-      // the strategy. Skipping an unknown guard could allow a strategy to
-      // keep trading without an intended safety stop.
-      //
-      // Backward compat: MAX_POSITION_SIZE was historically a dual-purpose
-      // block placed under both safety and conditions.  It was moved to
-      // CONDITION_REGISTRY-only, but legacy persisted strategies may still
-      // carry it under safety.  The explicit LEGACY_SAFETY_ALIASES allowlist
-      // evaluates it via CONDITION_REGISTRY as a safety guard: if the
-      // condition passes (fired=true), safety passes; if it fails
-      // (fired=false), the strategy is stopped.
-      //
-      // Restricting the fallback to an explicit allowlist prevents
-      // misconfigured condition-only types (e.g. VENUE_SELECT,
-      // minimize_fees) from being accepted as safety guards via the
-      // fallback path — those would return fired=true and turn a
-      // fail-closed safety boundary into fail-open.
-      if (!evaluator) {
-        if (LEGACY_SAFETY_ALIASES.has(block.type)) {
-          const fallbackEvaluator = CONDITION_REGISTRY[block.type];
-          if (fallbackEvaluator) {
-            const resolvedBlock = {
-              ...block,
-              params: resolveParams(
-                { ...(block.config ?? {}), ...(block.params ?? {}) },
-                ctx.variables ?? {},
-              ),
-            };
-            const result = await fallbackEvaluator.evaluate(
-              resolvedBlock,
-              ctx,
-              this.redis,
-              this.prisma,
-            );
-            if (!result.fired) {
-              this.stop();
-              await this.onStatusChange("STOPPED", result.reason);
-              await this.prisma.strategy
-                .update({
-                  where: { id: this.strategyId },
-                  data: { status: StrategyStatus.IDLE },
-                })
-                .catch(() => {});
-              await this.emitStrategyEvent("STRATEGY_STOPPED", result.reason);
-              return;
+    // 2. Gate evaluation — SAFETY + TRIGGERS + CONDITIONS
+    // When all blocks are WASM-compatible, evaluate off the main thread via
+    // the worker pool.  On worker-pool failures, fall back to the TypeScript
+    // evaluators so transient errors do not silently skip ticks.
+    let wasmEvaluated = false;
+    if (this.wasmGateCompatible && this.wasmWorkerPool) {
+      const vars = ctx.variables ?? {};
+
+      try {
+        assertWasmEvaluationBudget([
+          this.safety,
+          this.triggers,
+          this.conditions,
+        ]);
+
+        this.validateSafetyParamsForWasm(vars);
+        this.validateTriggerParamsForWasm(vars);
+
+        this.validateNoUnresolvedVariables(this.safety, vars);
+        this.validateNoUnresolvedVariables(this.triggers, vars);
+        this.validateNoUnresolvedVariables(this.conditions, vars);
+
+        this.validateConditionParamsForWasm(vars);
+
+        const wasmCtx = await this.buildWasmContext(ctx);
+
+        if (
+          this.hasSpreadDependentBlocks() &&
+          wasmCtx.spread === 0 &&
+          wasmCtx.best_bid === 0 &&
+          wasmCtx.best_ask === 0
+        ) {
+          this.logger.warn(
+            "WASM gate token has no book snapshot — skip tick, fall through to TS safety",
+          );
+          throw new Error("No book snapshot — evaluate TS safety gates");
+        }
+
+        const wasmResult = await this.wasmWorkerPool.evaluate(
+          this.safety.map((b) => toWasmBlock(b, vars, "safety")),
+          this.triggers.map((b) => toWasmBlock(b, vars, "trigger")),
+          this.conditions.map((b) => toWasmBlock(b, vars, "condition")),
+          [],
+          wasmCtx,
+        );
+        wasmEvaluated = true;
+
+        if (!wasmResult.safety_passed) {
+          this.stop();
+          await this.onStatusChange(
+            "STOPPED",
+            wasmResult.safety_reason ?? "WASM safety",
+          );
+          await this.prisma.strategy
+            .update({
+              where: { id: this.strategyId },
+              data: { status: StrategyStatus.IDLE },
+            })
+            .catch(() => {});
+          await this.emitStrategyEvent(
+            "STRATEGY_STOPPED",
+            wasmResult.safety_reason ?? undefined,
+          );
+          return;
+        }
+        if (!wasmResult.triggered) return;
+        if (!wasmResult.conditions_met) return;
+        // WASM gate passed — proceed to action execution below
+      } catch (err: unknown) {
+        this.logger.warn(
+          `WASM evaluation failed, falling back to TypeScript gates: ${err instanceof Error ? err.message : String(err)}`,
+        );
+        // wasmEvaluated stays false → fall through to TS evaluators
+      }
+    }
+
+    if (!wasmEvaluated) {
+      // 2. SAFETY — any failure stops the strategy
+      for (const block of this.safety) {
+        let evaluator = SAFETY_REGISTRY[block.type];
+        if (!evaluator) {
+          if (
+            block.type === "MAX_POSITION_SIZE" ||
+            block.type === "max_position"
+          ) {
+            // Runtime compatibility: MAX_POSITION_SIZE was moved from
+            // SAFETY_REGISTRY to CONDITION_REGISTRY.  Fall back to the
+            // condition registry so existing persisted strategies don't
+            // silently lose their safety guards.
+            const fallback = CONDITION_REGISTRY[block.type];
+            if (fallback) {
+              if (!this._warnedSafetyFallbackIds?.has(block.id)) {
+                (this._warnedSafetyFallbackIds ??= new Set()).add(block.id);
+                this.logger.warn(
+                  `Safety block "${block.id}" (type=${block.type}) resolved from ` +
+                    `CONDITION_REGISTRY.  Move it to the conditions section in your ` +
+                    `strategy definition.`,
+                );
+              }
+              evaluator = fallback;
             }
-            continue;
+          }
+          if (!evaluator) {
+            // Unknown safety block — fail closed
+            this.logger.error(
+              `Unknown safety block type: ${block.type}. Failing closed for safety.`,
+            );
+            this.stop();
+            await this.onStatusChange(
+              "STOPPED",
+              `Unknown safety block: ${block.type} (safety_block_type_missing:${block.type})`,
+            );
+            await this.prisma.strategy
+              .update({
+                where: { id: this.strategyId },
+                data: { status: StrategyStatus.IDLE },
+              })
+              .catch(() => {});
+            await this.emitStrategyEvent(
+              "STRATEGY_STOPPED",
+              `Unknown safety block: ${block.type} (safety_block_type_missing:${block.type})`,
+            );
+            return;
           }
         }
 
-        this.stop();
-        await this.onStatusChange(
-          "STOPPED",
-          `safety_block_type_missing:${block.type}`,
+        const resolvedBlock = {
+          ...block,
+          params: resolveParams(
+            StrategyRunner.mergedParams(block),
+            ctx.variables ?? {},
+          ),
+        };
+        const result = await evaluator.evaluate(
+          resolvedBlock,
+          ctx,
+          this.redis,
+          this.prisma,
         );
-        await this.prisma.strategy
-          .update({
-            where: { id: this.strategyId },
-            data: { status: StrategyStatus.IDLE },
-          })
-          .catch(() => {});
-        await this.emitStrategyEvent(
-          "STRATEGY_STOPPED",
-          `safety_block_type_missing:${block.type}`,
+        if (!result.fired) {
+          this.stop();
+          await this.onStatusChange("STOPPED", result.reason);
+          await this.prisma.strategy
+            .update({
+              where: { id: this.strategyId },
+              data: { status: StrategyStatus.IDLE },
+            })
+            .catch(() => {});
+          await this.emitStrategyEvent("STRATEGY_STOPPED", result.reason);
+          return;
+        }
+      }
+
+      // 3. TRIGGERS — any trigger must fire
+      let triggerFired = this.triggers.length === 0; // no triggers = always fire
+      for (const block of this.triggers) {
+        const evaluator = TRIGGER_REGISTRY[block.type];
+        if (!evaluator) continue;
+
+        const resolvedBlock = {
+          ...block,
+          params: resolveParams(
+            StrategyRunner.mergedParams(block),
+            ctx.variables ?? {},
+          ),
+        };
+        const result = await evaluator.evaluate(
+          resolvedBlock,
+          ctx,
+          this.redis,
+          this.prisma,
         );
-        return;
+        if (result.fired) {
+          triggerFired = true;
+          break;
+        }
       }
+      if (!triggerFired) return;
 
-      const resolvedBlock = {
-        ...block,
-        params: resolveParams(
-          { ...(block.config ?? {}), ...(block.params ?? {}) },
-          ctx.variables ?? {},
-        ),
-      };
-      const result = await evaluator.evaluate(
-        resolvedBlock,
-        ctx,
-        this.redis,
-        this.prisma,
-      );
-      if (!result.fired) {
-        this.stop();
-        await this.onStatusChange("STOPPED", result.reason);
-        await this.prisma.strategy
-          .update({
-            where: { id: this.strategyId },
-            data: { status: StrategyStatus.IDLE },
-          })
-          .catch(() => {});
-        await this.emitStrategyEvent("STRATEGY_STOPPED", result.reason);
-        return;
-      }
-    }
+      // 4. CONDITIONS — ALL conditions must pass
+      for (const block of this.conditions) {
+        const evaluator = CONDITION_REGISTRY[block.type];
+        if (!evaluator) {
+          // Unknown condition — fail closed
+          this.logger.warn(
+            `Unknown condition block type: ${block.type}. Failing closed.`,
+          );
+          return; // condition failed, skip tick
+        }
 
-    // 3. TRIGGERS — any trigger must fire
-    let triggerFired = this.triggers.length === 0; // no triggers = always fire
-    for (const block of this.triggers) {
-      const evaluator = TRIGGER_REGISTRY[block.type];
-      if (!evaluator) continue;
-
-      const resolvedBlock = {
-        ...block,
-        params: resolveParams(
-          { ...(block.config ?? {}), ...(block.params ?? {}) },
-          ctx.variables ?? {},
-        ),
-      };
-      const result = await evaluator.evaluate(
-        resolvedBlock,
-        ctx,
-        this.redis,
-        this.prisma,
-      );
-      if (result.fired) {
-        triggerFired = true;
-        break;
-      }
-    }
-    if (!triggerFired) return;
-
-    // 4. CONDITIONS — ALL conditions must pass
-    for (const block of this.conditions) {
-      const evaluator = CONDITION_REGISTRY[block.type];
-      // Fail closed: unknown / unregistered condition block types must
-      // abort the tick. Skipping an unknown condition could allow actions
-      // to fire when a condition type is missing or unsupported.
-      if (!evaluator) {
-        this.logger.warn(
-          `Unknown condition block type: ${block.type}. Failing closed.`,
+        const resolvedBlock = {
+          ...block,
+          params: resolveParams(
+            StrategyRunner.mergedParams(block),
+            ctx.variables ?? {},
+          ),
+        };
+        const result = await evaluator.evaluate(
+          resolvedBlock,
+          ctx,
+          this.redis,
+          this.prisma,
         );
-        return;
+        if (!result.fired) return; // condition failed, skip tick
       }
-
-      const resolvedBlock = {
-        ...block,
-        params: resolveParams(
-          { ...(block.config ?? {}), ...(block.params ?? {}) },
-          ctx.variables ?? {},
-        ),
-      };
-      const result = await evaluator.evaluate(
-        resolvedBlock,
-        ctx,
-        this.redis,
-        this.prisma,
-      );
-      if (!result.fired) return; // condition failed, skip tick
     }
 
     // 5. LOGIC BLOCKS — evaluate in topological order if present
@@ -1062,33 +1500,22 @@ export class StrategyRunner {
         i.marketId !== "__run_strategy__" && i.tokenId !== "__cancel_all__",
     );
 
-    // Abort tick if lock ownership was lost mid-evaluation.
-    // The lock-refresh handler (setInterval in tick()) clears activeLockToken
-    // when the Lua GET==lockToken check returns non-1 — meaning the key
-    // expired or was re-acquired by another instance. Continuing through
-    // evaluate() after ownership loss can emit duplicate order intents and
-    // launch duplicate sub-strategies across instances.
-    if (this.activeLockToken === null) {
-      this.logger.warn(
-        `Tick ownership lost for ${this.strategyId} — discarding ${orderIntents.length} order intent(s) and ${runStrategyIntents.length} sub-strategy launch(es)`,
-      );
-      return;
-    }
+    // Guard: abort side effects if lock ownership was lost during
+    // evaluation — the lock-renewal interval may have cleared the token
+    // while evaluate() was waiting on WASM pool / Redis I/O.
+    // Use lockToken (passed from tick()) as a stronger guard than just
+    // null-checking activeLockToken: it ensures another instance hasn't
+    // acquired the lock in the window between the check and the await.
+    if (this.activeLockToken !== lockToken) return;
 
-    // Handle sub-strategy launches.
-    // Re-check lock ownership before every onRunStrategy() call: a long
-    // sub-strategy launch can outlive the Redis lock-refresh interval.
-    // If the activeLockToken was cleared mid-loop by a stale callback or
-    // ownership-loss event, continuing to launch additional sub-strategies
-    // would violate the cross-instance mutual-exclusion guarantee.
+    // Handle sub-strategy launches
     for (const intent of runStrategyIntents) {
-      if (this.activeLockToken === null) {
+      if (this.activeLockToken !== lockToken) {
         this.logger.warn(
           `Tick ownership lost for ${this.strategyId} during sub-strategy launch loop — ${runStrategyIntents.length - runStrategyIntents.indexOf(intent)} remaining launch(es) discarded`,
         );
         break;
       }
-
       const childStrategyId = intent.tokenId;
       const mode = intent.size as SubStrategyMode;
 
@@ -1121,32 +1548,11 @@ export class StrategyRunner {
           this.logger.error(
             `Failed to launch sub-strategy ${childStrategyId}: ${String(err)}`,
           );
-          continue;
-        }
-        // Ownership may have been lost during the awaited launch call.
-        // Stop launching further sub-strategies to preserve the
-        // cross-instance mutual-exclusion guarantee.
-        if (this.activeLockToken === null) {
-          this.logger.warn(
-            `Tick ownership lost for ${this.strategyId} after launching ${childStrategyId} — discarding remaining sub-strategy launches`,
-          );
-          break;
         }
       }
     }
 
-    // Re-check lock ownership after sub-strategy launches — those await
-    // onRunStrategy() calls may have taken long enough for ownership to
-    // flip mid-tick.  Emitting orders after ownership loss reintroduces
-    // the duplicate-side-effect race the lock is meant to prevent.
-    if (this.activeLockToken === null) {
-      this.logger.warn(
-        `Tick ownership lost for ${this.strategyId} before emitting ${orderIntents.length} order intent(s) — discarding`,
-      );
-      return;
-    }
-
-    if (orderIntents.length > 0) {
+    if (orderIntents.length > 0 && this.activeLockToken === lockToken) {
       await this.onIntents(orderIntents);
     }
   }
@@ -1224,7 +1630,10 @@ export class StrategyRunner {
 
       const resolvedBlock = {
         ...block,
-        params: resolveParams(block.params ?? {}, ctx.variables ?? {}),
+        params: resolveParams(
+          StrategyRunner.mergedParams(block),
+          ctx.variables ?? {},
+        ),
       };
 
       const result = evaluator.evaluate(resolvedBlock, inputs, ctx);
@@ -1232,7 +1641,7 @@ export class StrategyRunner {
 
       // Handle DELAY blocks: schedule delayed execution
       if (block.type === "DELAY" && result.value) {
-        const seconds = Number(block.params?.seconds ?? 0);
+        const seconds = Number(StrategyRunner.mergedParams(block).seconds ?? 0);
         if (seconds > 0) {
           this.scheduleDelayedAction(blockId, seconds, result.value);
         }
@@ -1270,13 +1679,44 @@ export class StrategyRunner {
   private getReferencedTokenIds(): string[] {
     if (this._cachedTokenIds) return this._cachedTokenIds;
     const ids = new Set<string>();
-    for (const block of [...this.triggers, ...this.actions]) {
+    for (const block of [
+      ...this.triggers,
+      ...this.actions,
+      ...this.conditions,
+    ]) {
       const params = StrategyRunner.mergedParams(block);
       if (params?.tokenId && typeof params.tokenId === "string")
         ids.add(params.tokenId);
     }
     this._cachedTokenIds = [...ids];
     return this._cachedTokenIds;
+  }
+
+  /** Returns the first tokenId found in triggers or actions (for variable scope). */
+  private getPrimaryTokenId(): string | null {
+    return this.getReferencedTokenIds()[0] ?? null;
+  }
+
+  /** Token IDs used for stale-price detection — includes token-scoped conditions. */
+  private getStalePriceTokenIds(): string[] {
+    const ids = new Set<string>();
+    for (const block of [...this.triggers, ...this.actions]) {
+      const params = StrategyRunner.mergedParams(block);
+      if (params?.tokenId && typeof params.tokenId === "string")
+        ids.add(params.tokenId);
+    }
+    // Include token-scoped conditions (e.g. SPREAD_BELOW_CONDITION)
+    // so stale detection covers cross-token condition strategies.
+    for (const block of this.conditions) {
+      if (
+        !TOKEN_SCOPED_WASM_TYPES.has(canonicalWasmType(block.type, "condition"))
+      )
+        continue;
+      const params = StrategyRunner.mergedParams(block);
+      if (params?.tokenId && typeof params.tokenId === "string")
+        ids.add(params.tokenId);
+    }
+    return [...ids];
   }
 
   /**
@@ -1302,7 +1742,7 @@ export class StrategyRunner {
    * overhead for the common single-token strategy).
    */
   private async detectStaleData(): Promise<string | null> {
-    const tokenIds = this.getReferencedTokenIds();
+    const tokenIds = this.getStalePriceTokenIds();
     if (tokenIds.length === 0) return null;
 
     if (tokenIds.length === 1) {
@@ -1333,6 +1773,121 @@ export class StrategyRunner {
       }
     }
     return null;
+  }
+
+  private async buildWasmContext(ctx: EvalContext): Promise<WasmEvalContext> {
+    const tokenId =
+      this.getWasmGateToken() ?? this.getReferencedTokenIds()[0] ?? null;
+
+    let currentPrice = 0;
+    let previousPrice: number | undefined;
+    let bestBid = 0;
+    let bestAsk = 0;
+    let spread = 0;
+    let volume24h = 0;
+
+    if (tokenId) {
+      const priceData = await this.state.getPrice(tokenId);
+      currentPrice = priceData?.price ?? 0;
+
+      const prevRaw = await this.redis
+        .getClient()
+        .get(`cache:price:prev:${tokenId}`);
+      if (prevRaw) {
+        try {
+          const prev = JSON.parse(prevRaw) as { price: number };
+          previousPrice = prev.price;
+        } catch {
+          // Ignore parse errors — use undefined
+        }
+      }
+
+      const bookData = await this.state.getBook(tokenId);
+      if (bookData) {
+        bestBid = bookData.bids.length > 0 ? Number(bookData.bids[0].price) : 0;
+        bestAsk = bookData.asks.length > 0 ? Number(bookData.asks[0].price) : 0;
+        spread = Number(bookData.spread);
+
+        for (const bid of bookData.bids) {
+          const bp = Number(bid.price);
+          const bs = Number(bid.size);
+          if (Number.isFinite(bp) && Number.isFinite(bs)) {
+            volume24h += bp * bs;
+          }
+        }
+      }
+    }
+
+    let totalExposure = 0;
+    let openPositions = 0;
+    let hasNonFiniteExposure = false;
+    let pendingOrdersCount = 0;
+
+    if (this.hasExposureDependentBlocks()) {
+      const positions = await this.prisma.position.findMany({
+        where: { userId: ctx.userId },
+        select: { size: true, currentPrice: true },
+      });
+      for (const p of positions) {
+        const size = Number(p.size);
+        const price = Number(p.currentPrice);
+        if (!Number.isFinite(size) || !Number.isFinite(price)) {
+          hasNonFiniteExposure = true;
+          continue;
+        }
+        totalExposure += size * price;
+        openPositions += 1;
+      }
+
+      const pendingOrders = await this.prisma.order.findMany({
+        where: {
+          userId: ctx.userId,
+          side: "BUY",
+          status: { in: ["PENDING", "SUBMITTED", "LIVE"] },
+        },
+        select: { size: true, price: true },
+      });
+      pendingOrdersCount = pendingOrders.length;
+      for (const o of pendingOrders) {
+        const size = Number(o.size);
+        const price = Number(o.price);
+        if (!Number.isFinite(size) || !Number.isFinite(price)) {
+          hasNonFiniteExposure = true;
+          continue;
+        }
+        totalExposure += size * price;
+      }
+    }
+
+    if (hasNonFiniteExposure) {
+      totalExposure = Number.MAX_VALUE;
+    }
+
+    const rawVariables = ctx.variables ?? {};
+    const cleanVariables: Record<string, number> = {};
+    for (const [key, value] of Object.entries(rawVariables)) {
+      if (Number.isFinite(value)) {
+        cleanVariables[key] = value;
+      }
+    }
+
+    return {
+      current_price: currentPrice,
+      previous_price: previousPrice,
+      best_bid: bestBid,
+      best_ask: bestAsk,
+      spread,
+      volume_24h: volume24h,
+      daily_pnl: ctx.state.dailyPnl,
+      total_exposure: totalExposure,
+      open_positions: openPositions,
+      pending_orders: pendingOrdersCount,
+      consecutive_losses: ctx.state.consecutiveLoss,
+      orders_today: this.hasMaxOrdersTotalBlock()
+        ? ctx.state.totalOrders
+        : ctx.state.betsToday,
+      variables: cleanVariables,
+    };
   }
 
   private async emitStrategyEvent(type: string, reason?: string) {

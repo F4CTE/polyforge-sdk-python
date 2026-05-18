@@ -194,7 +194,7 @@ export const SpreadBelowTickBlock: BlockEvaluator = {
   async evaluate(block, _ctx, redis, _prisma): Promise<BlockResult> {
     const params = (block["params"] as BlockParams) ?? {};
     const tokenId = String(params.tokenId ?? "");
-    const minSpread = String(params.minSpread ?? "0.05");
+    const minSpread = String(params.minSpread ?? params.maxSpread ?? "0.05");
     const book = await redis.getJson<{ spread: string }>(
       `cache:book:${tokenId}`,
     );
@@ -203,7 +203,7 @@ export const SpreadBelowTickBlock: BlockEvaluator = {
     const minSpreadNum = parseFiniteDecimal(minSpread);
     if (spread === null) return { fired: false, reason: "invalid spread" };
     if (minSpreadNum === null)
-      return { fired: false, reason: "invalid minSpread" };
+      return { fired: false, reason: "invalid minSpread/maxSpread" };
     const fired = spread < minSpreadNum;
     return { fired, reason: `spread ${spread} < ${minSpread}: ${fired}` };
   },

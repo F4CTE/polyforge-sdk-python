@@ -42,7 +42,9 @@ async function getUserExposure(
 export const StopIfDailyLossBlock: BlockEvaluator = {
   evaluate(block, ctx, _redis, _prisma): Promise<BlockResult> {
     const params = (block["params"] as BlockParams) ?? {};
-    const maxLoss = parseFiniteDecimal(params.maxLossUsdc ?? "0");
+    const maxLoss = parseFiniteDecimal(
+      params.maxLossUsdc ?? params.maxLoss ?? "0",
+    );
     if (maxLoss === null) {
       return Promise.resolve({
         fired: false,
@@ -98,7 +100,9 @@ export const StopIfConsecutiveLossBlock: BlockEvaluator = {
 export const StopIfExposureExceedsBlock: BlockEvaluator = {
   async evaluate(block, ctx, _redis, prisma): Promise<BlockResult> {
     const params = (block["params"] as BlockParams) ?? {};
-    const maxUsdc = parseFiniteDecimal(params.maxUsdc ?? "0");
+    const maxUsdc = parseFiniteDecimal(
+      params.maxUsdc ?? params.maxExposure ?? "0",
+    );
     if (maxUsdc === null) {
       return {
         fired: false,
@@ -138,11 +142,34 @@ export const PauseAfterFillBlock: BlockEvaluator = {
   },
 };
 
+// ─── SAFETY: max_drawdown ──────────────────────────────────────────────────────
+// TS fallback for MAX_DRAWDOWN Rust WASM safety evaluator.
+// Same check as STOP_IF_DAILY_LOSS but uses maxDrawdown ?? max param keys.
+export const StopIfMaxDrawdownBlock: BlockEvaluator = {
+  evaluate(block, ctx, _redis, _prisma): Promise<BlockResult> {
+    const params = (block["params"] as BlockParams) ?? {};
+    const max = parseFiniteDecimal(params.maxDrawdown ?? params.max ?? "0");
+    if (max === null) {
+      return Promise.resolve({
+        fired: false,
+        reason: "SAFETY STOP: invalid maxDrawdown",
+      });
+    }
+    const passed = ctx.state.dailyPnl > -max;
+    return Promise.resolve({
+      fired: passed,
+      reason: passed
+        ? `dailyPnl ${ctx.state.dailyPnl} > -${max}`
+        : `SAFETY STOP: drawdown ${Math.abs(ctx.state.dailyPnl)} exceeds limit ${max}`,
+    });
+  },
+};
+
 // ─── SAFETY: max_orders_total ─────────────────────────────────────────────────
 export const MaxOrdersTotalBlock: BlockEvaluator = {
   evaluate(block, ctx, _redis, _prisma): Promise<BlockResult> {
     const params = (block["params"] as BlockParams) ?? {};
-    const max = parseInt(String(params.max ?? "0"), 10);
+    const max = parseInt(String(params.max ?? params.maxOrders ?? "0"), 10);
     const passed = ctx.state.totalOrders < max;
     return Promise.resolve({
       fired: passed,

@@ -323,6 +323,26 @@ describe("MaxBetsPerDayBlock", () => {
     );
     expect(res.fired).toBe(true); // 9 < 10
   });
+
+  it("accepts canonical maxBets as alias for max", async () => {
+    const ctx = makeCtx({ betsToday: 2 });
+    const res = await MaxBetsPerDayBlock.evaluate(
+      block("max_bets_per_day", { maxBets: "3" }),
+      ctx,
+      makeRedis(),
+      makePrisma(),
+    );
+    expect(res.fired).toBe(true); // 2 < 3
+
+    // max takes precedence over maxBets when both are present (canonical TS param wins)
+    const res2 = await MaxBetsPerDayBlock.evaluate(
+      block("max_bets_per_day", { max: "5", maxBets: "3" }),
+      ctx,
+      makeRedis(),
+      makePrisma(),
+    );
+    expect(res2.fired).toBe(true); // 2 < 5 (max wins over maxBets)
+  });
 });
 
 describe("DailyLossLimitBlock", () => {

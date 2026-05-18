@@ -19,6 +19,7 @@ import {
   LogicBlock,
   LogicConnection,
 } from "./strategy-runner";
+import { WasmWorkerPoolService } from "./wasm-worker-pool";
 import { StateService } from "../state/state.service";
 import { OrderIntent } from "../blocks/block.types";
 
@@ -129,12 +130,15 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
     private readonly redis: RedisService,
     private readonly state: StateService,
     private readonly betaLimits: BetaLimitsConfigService,
+    private readonly wasmWorkerPool?: WasmWorkerPoolService,
   ) {}
 
   // ─── Startup reconciliation ─────────────────────────────────────────────────
   // After a restart, re-start runners for all strategies that should be active.
 
   async onApplicationBootstrap(): Promise<void> {
+    this.wasmWorkerPool?.start();
+
     try {
       const strategies = await this.prisma.strategy.findMany({
         where: {
@@ -208,6 +212,7 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
             (strategy as Record<string, unknown>).kalshiSubaccount as
               | number
               | undefined,
+            this.wasmWorkerPool,
           );
 
           this.runners.set(strategy.id, runner);
@@ -291,6 +296,7 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
       (strategy as Record<string, unknown>).kalshiSubaccount as
         | number
         | undefined,
+      this.wasmWorkerPool,
     );
 
     // Re-establish parent-child linkage if this strategy is a child.
@@ -559,6 +565,7 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
         this.startAsChild(grandchildId, pId, m, ctx),
       mapVenue((child as Record<string, unknown>).venue as string),
       (child as Record<string, unknown>).kalshiSubaccount as number | undefined,
+      this.wasmWorkerPool,
     );
 
     this.runners.set(childStrategyId, runner);

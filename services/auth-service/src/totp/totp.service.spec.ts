@@ -303,6 +303,8 @@ describe('TotpService', () => {
       db.user.update.mockResolvedValue(user as any);
       redis._ioClient.set.mockResolvedValue('OK');
 
+      mockedVerifySync.mockReturnValueOnce({ valid: true, delta: 0, epoch: Math.floor(Date.now() / 1000), timeStep: 0 });
+
       await service.disable(user.id, 'correct_password', validCode);
 
       expect(db.user.update).toHaveBeenCalledWith({
@@ -337,6 +339,8 @@ describe('TotpService', () => {
       db.user.findUniqueOrThrow.mockResolvedValue(user as any);
       redis._ioClient.set.mockResolvedValue(null);
 
+      mockedVerifySync.mockReturnValueOnce({ valid: true, delta: 0, epoch: Math.floor(Date.now() / 1000), timeStep: 0 });
+
       await expect(
         service.disable(user.id, 'correct_password', validCode),
       ).rejects.toMatchObject({
@@ -367,6 +371,8 @@ describe('TotpService', () => {
       } as any);
       db.user.findUniqueOrThrow.mockResolvedValue(user as any);
       redis._ioClient.set.mockRejectedValueOnce(new Error('READONLY'));
+
+      mockedVerifySync.mockReturnValueOnce({ valid: true, delta: 0, epoch: Math.floor(Date.now() / 1000), timeStep: 0 });
 
       const logSpy = vi
         .spyOn((service as any).logger, 'error')
