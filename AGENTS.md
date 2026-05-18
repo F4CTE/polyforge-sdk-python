@@ -117,3 +117,17 @@ These rules are mandatory for all agents working in this repository. Violations 
 5. **One fix, one PR.** Each PR addresses exactly one issue. Do not bundle unrelated fixes — it makes review harder, reverts riskier, and CI failures ambiguous.
 
 6. **PR creation rate limits (hard cap).** No agent may create more than 10 PRs in any rolling 60-minute window, and no more than 3 PRs per session or heartbeat. When ≥2 fixes touch the same files or functional area, batch them into a single PR. If a task requires 4+ PRs, request CEO/board approval first. Respect the `ci-pr-queue` concurrency group — opening many PRs simultaneously queues them, it does not speed up CI.
+
+## Security Guardrails
+
+These rules prevent credential exposure and are mandatory for ALL agents working in this repository.
+
+1. **NEVER dump environment variables.** Running `env`, `printenv`, `declare -p`, `set`, or any command that enumerates shell environment variables is forbidden. Environment dumps can expose `PAPERCLIP_API_KEY`, `DEEPSEEK_API_KEY`, `GITHUB_TOKEN`, database URLs, and other credentials. To check whether a variable exists without printing its value, use `[ -n "$VAR" ] && echo "VAR is set" || echo "VAR is missing"`.
+
+2. **NEVER print secret environment variable values.** If you need to check that a secret exists, use `[ -n "$VAR" ] && echo "VAR is set" || echo "VAR is missing"`. Never print the value itself. Secret prefixed include: `PAPERCLIP_*`, `DEEPSEEK_*`, `ANTHROPIC_*`, `OPENAI_*`, `GITHUB_*`, `JWT_*`, `MASTER_*`, `TOTP_*`, `DATABASE_URL`, `REDIS_URL`, and any variable containing `KEY`, `SECRET`, `TOKEN`, or `PASSWORD`.
+
+3. **Redact credentials before posting output.** If command output may contain credentials (e.g., `PAPERCLIP_API_KEY` in environment-inspection output, JWT tokens in HTTP responses), redact those values before including the output in Paperclip comments, issue bodies, commit messages, or code. Use patterns like `PAPERCLIP_API_KEY=<redacted>`. // gitleaks:allow
+
+4. **Use sanitized logging.** Environment variable values must never appear in `console.log`, `console.error`, logger output, Sentry events, or error messages. Use the shared logger's redact configuration (see `packages/logger`) and replicate its patterns in scripts. Check for credential-looking values before logging any object that may contain environment context.
+
+5. **Check for credential exposure before committing.** Run `gitleaks protect --staged --redact --config .gitleaks.toml` before committing to catch accidental credential leaks in staged files. The `.gitleaks.toml` configuration includes rules for common credential patterns.

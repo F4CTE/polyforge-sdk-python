@@ -17,7 +17,7 @@
 set -euo pipefail
 
 REGION="${AWS_REGION:-us-east-1}"
-SECRET_NAME_APP="polyforge/prod/secrets"
+SECRET_NAME_APP="polyforge/prod/secrets" # gitleaks:allow
 SECRET_NAME_DB="polyforge/prod/db"
 OUTPUT_FILE="/opt/polyforge/.env.prod"
 DEPLOY_USER="${DEPLOY_USER:-ec2-user}"
@@ -142,7 +142,7 @@ log "Done."
 # Expected Secrets Manager layout
 # ─────────────────────────────────────────────────────────────────────────────
 #
-# Secret: polyforge/prod/secrets  (JSON object)
+# Secret: polyforge/prod/secrets  (JSON object) # gitleaks:allow
 # {
 #   "USER_JWT_SECRET":           "<64+ char random>",
 #   "ADMIN_JWT_SECRET":          "<64+ char random>",

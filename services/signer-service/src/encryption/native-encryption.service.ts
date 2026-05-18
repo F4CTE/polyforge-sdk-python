@@ -54,7 +54,7 @@ function assertDekLength(dek: unknown): asserts dek is Buffer {
 // If the loaded platform binary is stale (missing these exports),
 // the service must refuse to start rather than fail at runtime.
 const REQUIRED_AAD_NATIVE_FUNCTIONS = [
-  "encryptAes256GcmBytesWithRawKeyAndAad",
+  "encryptAes256GcmBytesWithRawKeyAndAad", // gitleaks:allow
   "decryptAes256GcmBytesWithRawKeyAndAad",
   "wrapDekWithCurrentKekAndAad",
   "unwrapDekWithAadRaw",

@@ -7,6 +7,8 @@ import {
   formatFailureComment,
   formatStaleComment,
   formatSummaryComment,
+  requirePaperclipApiUrl,
+  requirePaperclipCompanyId,
   EXPECTED_BRANCH_FAILURES,
   STALE_PR_DAYS,
   type CheckRun,
@@ -325,5 +327,74 @@ describe('EXPECTED_BRANCH_FAILURES', () => {
     expect(EXPECTED_BRANCH_FAILURES).not.toContain('Lint');
     expect(EXPECTED_BRANCH_FAILURES).not.toContain('Test');
     expect(EXPECTED_BRANCH_FAILURES).not.toContain('Build');
+  });
+});
+
+// ─── Deferred Paperclip config validation ────────────────────────────
+
+describe('requirePaperclipApiUrl', () => {
+  it('returns the trimmed URL for a valid http URL', () => {
+    expect(requirePaperclipApiUrl('http://polyforge-lab:3100')).toBe('http://polyforge-lab:3100');
+  });
+
+  it('returns the trimmed URL for a valid https URL', () => {
+    expect(requirePaperclipApiUrl('https://api.example.com')).toBe('https://api.example.com');
+  });
+
+  it('strips trailing slashes', () => {
+    expect(requirePaperclipApiUrl('http://polyforge-lab:3100/')).toBe('http://polyforge-lab:3100');
+    expect(requirePaperclipApiUrl('http://polyforge-lab:3100///')).toBe('http://polyforge-lab:3100');
+  });
+
+  it('throws when the URL is empty', () => {
+    expect(() => requirePaperclipApiUrl('')).toThrow('PAPERCLIP_API_URL is required');
+  });
+
+  it('throws when the URL is whitespace only', () => {
+    expect(() => requirePaperclipApiUrl('   ')).toThrow('PAPERCLIP_API_URL is required');
+  });
+
+  it('throws when the URL is not parseable', () => {
+    expect(() => requirePaperclipApiUrl('not a valid url ///')).toThrow('PAPERCLIP_API_URL must be an absolute URL');
+  });
+
+  it('throws when the URL is not http/https', () => {
+    expect(() => requirePaperclipApiUrl('ftp://polyforge-lab:3100')).toThrow('PAPERCLIP_API_URL must be an absolute http(s)');
+  });
+});
+
+describe('requirePaperclipCompanyId', () => {
+  it('returns the trimmed value for a valid company id', () => {
+    expect(requirePaperclipCompanyId('06f20246-bb00-4cb5-8efb-7a8630c54d40'))
+      .toBe('06f20246-bb00-4cb5-8efb-7a8630c54d40');
+  });
+
+  it('trims whitespace', () => {
+    expect(requirePaperclipCompanyId('  06f20246-bb00-4cb5-8efb-7a8630c54d40  '))
+      .toBe('06f20246-bb00-4cb5-8efb-7a8630c54d40');
+  });
+
+  it('throws when the value is empty', () => {
+    expect(() => requirePaperclipCompanyId('')).toThrow('PAPERCLIP_COMPANY_ID');
+  });
+
+  it('throws when the value is CHANGE_ME', () => {
+    expect(() => requirePaperclipCompanyId('CHANGE_ME')).toThrow('PAPERCLIP_COMPANY_ID');
+  });
+
+  it('throws when the value is REPLACE_ME', () => {
+    expect(() => requirePaperclipCompanyId('REPLACE_ME')).toThrow('PAPERCLIP_COMPANY_ID');
+  });
+
+  it('throws when the value is TODO', () => {
+    expect(() => requirePaperclipCompanyId('TODO')).toThrow('PAPERCLIP_COMPANY_ID');
+  });
+
+  it('throws when the value is TBD', () => {
+    expect(() => requirePaperclipCompanyId('TBD')).toThrow('PAPERCLIP_COMPANY_ID');
+  });
+
+  it('does not throw for a UUID-like value', () => {
+    expect(() => requirePaperclipCompanyId('abc123-def456')).not.toThrow();
   });
 });

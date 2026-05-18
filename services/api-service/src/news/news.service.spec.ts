@@ -407,8 +407,8 @@ describe("LlmService", () => {
 
   it("falls back to OpenAI when Claude fails", async () => {
     const config = createMockConfig({
-      ANTHROPIC_API_KEY: "sk-ant-test",
-      OPENAI_API_KEY: "sk-test",
+      ANTHROPIC_API_KEY: "sk-ant-test", // gitleaks:allow
+      OPENAI_API_KEY: "sk-test", // gitleaks:allow
     });
     const llm = new LlmService(config);
 
@@ -445,7 +445,7 @@ describe("LlmService", () => {
 
   it("uses Claude when available", async () => {
     const config = createMockConfig({
-      ANTHROPIC_API_KEY: "sk-ant-test",
+      ANTHROPIC_API_KEY: "sk-ant-test", // gitleaks:allow
     });
     const llm = new LlmService(config);
 

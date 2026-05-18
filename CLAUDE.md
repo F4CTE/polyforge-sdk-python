@@ -674,6 +674,7 @@ Updates every 30 min.
 - Never store private keys — signer service handles all signing
 - User data: no selling, no sharing with third parties, GDPR-compliant deletion on request
 - Simulated performance metrics must be labeled as "simulated"
+- **Credential hygiene — never dump environment variables.** Running `env`, `printenv`, or any full-environment enumeration command is forbidden. These commands dump `PAPERCLIP_API_KEY`, `DEEPSEEK_API_KEY`, `GITHUB_TOKEN`, and other secrets into run transcripts. Verify individual non-secret vars with `[ -n "$VAR" ] && echo "set"`. Never print secret values. Secret prefixes: `PAPERCLIP_*`, `DEEPSEEK_*`, `ANTHROPIC_*`, `OPENAI_*`, `GITHUB_*`, `JWT_*`, `MASTER_*`, `TOTP_*`, and any var containing `KEY`, `SECRET`, `TOKEN`, or `PASSWORD`. Redact credential-looking patterns before posting any output to Paperclip comments, issues, or commit messages. See `AGENTS.md` and `SECURITY.md` for full guardrails.
 
 ---
 

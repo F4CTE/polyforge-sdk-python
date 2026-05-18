@@ -97,6 +97,47 @@ If you discover a security vulnerability in Polyforge, please report it responsi
 |---------|-----------|
 | Latest  | Yes       |
 
+## Agent Credential Hygiene
+
+PolyForge's AI agents (via Paperclip) are injected with `PAPERCLIP_*` environment variables
+including short-lived run JWTs (`PAPERCLIP_API_KEY`). These credentials must never appear in:
+
+- Run transcripts (captured stdout/stderr)
+- Paperclip issue comments or bodies
+- Git commit messages
+- Source code, config files, or `.env` examples
+- Sentry events, log output, or error messages
+
+### Guardrails
+
+1. **Never dump environment variables.** Agents are forbidden from running `env`, `printenv`,
+   `declare -p`, `set`, or any command that enumerates shell environment variables.
+2. **Check existence, never values.** Use `[ -n "$VAR" ] && echo "VAR is set"` to verify a
+   secret env var exists. Never print the value.
+3. **Redact before posting.** If command output may contain credentials (e.g., an HTTP
+   response with a JWT), redact credential-looking patterns before including output in
+   comments or issues.
+4. **The `packages/logger` Pino configuration** redacts known Paperclip credential fields
+   (`PAPERCLIP_API_KEY`, `PAPERCLIP_JWT`, `PAPERCLIP_JWT_TOKEN`, `PAPERCLIP_ACCESS_TOKEN`,
+   `PAPERCLIP_SESSION_TOKEN`, `PAPERCLIP_SECRET`, `PAPERCLIP_PASSWORD`,
+   `PAPERCLIP_COMPANY_ID`, `PAPERCLIP_AGENT_ID`), `DEEPSEEK_API_KEY`, `ANTHROPIC_API_KEY`,
+   `OPENAI_API_KEY`, `GITHUB_TOKEN`, `GITHUB_PAT`, and similarly sensitive patterns (both
+   root-level and nested) from all structured logs.
+
+### Secret Prefixes
+
+The following environment variable patterns are considered secret and must never be
+printed, logged, or committed: `PAPERCLIP_*`, `DEEPSEEK_*`, `ANTHROPIC_*`, `OPENAI_*`,
+`GITHUB_*`, `JWT_*`, `MASTER_*`, `TOTP_*`, `DATABASE_URL`, `REDIS_URL`, and any variable
+containing `KEY`, `SECRET`, `TOKEN`, or `PASSWORD`.
+
+### Response to Exposure
+
+If a `PAPERCLIP_*` credential is discovered in any persistent artifact (transcript,
+comment, commit), the run JWT is short-lived (single heartbeat) and will expire
+automatically. For longer-lived credentials, follow the incident response process in
+`docs/ops/05-incident-response.md` and rotate the credential immediately.
+
 ## Security Audit History
 
 - **Round 10 (2026-03-25):** 3 HIGH, 7 MEDIUM, 3 LOW findings — all remediated

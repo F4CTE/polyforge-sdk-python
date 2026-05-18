@@ -5,10 +5,39 @@
  * corresponding Paperclip tasks with workload-based agent assignment.
  */
 
-const PAPERCLIP_API_URL = process.env.PAPERCLIP_API_URL ?? 'http://polyforge-lab:3100';
+const PAPERCLIP_API_URL = process.env.PAPERCLIP_API_URL ?? '';
 const PAPERCLIP_API_KEY = process.env.PAPERCLIP_API_KEY;
-const PAPERCLIP_COMPANY_ID = process.env.PAPERCLIP_COMPANY_ID ?? '06f20246-bb00-4cb5-8efb-7a8630c54d40';
+const PAPERCLIP_COMPANY_ID = process.env.PAPERCLIP_COMPANY_ID ?? 'CHANGE_ME';
 const PAPERCLIP_RUN_ID = process.env.PAPERCLIP_RUN_ID ?? '';
+
+function requirePaperclipApiUrl(): string {
+  const raw = PAPERCLIP_API_URL.trim();
+  if (!raw) {
+    throw new Error('PAPERCLIP_API_URL is required before making Paperclip API requests');
+  }
+
+  let parsed: URL;
+  try {
+    parsed = new URL(raw);
+  } catch {
+    throw new Error('PAPERCLIP_API_URL must be an absolute URL before making Paperclip API requests');
+  }
+
+  if (!['http:', 'https:'].includes(parsed.protocol) || !parsed.hostname) {
+    throw new Error('PAPERCLIP_API_URL must be an absolute http(s) URL before making Paperclip API requests');
+  }
+
+  return raw.replace(/\/+$/, '');
+}
+
+function requirePaperclipCompanyId(): string {
+  const value = PAPERCLIP_COMPANY_ID.trim();
+  if (!value || /^(CHANGE_ME|REPLACE_ME|TODO|TBD)$/i.test(value)) {
+    throw new Error('PAPERCLIP_COMPANY_ID must be set to a real company id before making Paperclip API requests');
+  }
+
+  return value;
+}
 
 const GOAL_ID = '1b200877-f597-4390-b6c9-789c48f709f3';
 const PROJECT_ID = '376affbf-04e6-4df3-8f66-9eeca7a531df';
@@ -112,7 +141,7 @@ async function fetchGHIssues(): Promise<GHIssue[]> {
 }
 
 async function paperclipFetch(path: string, options: RequestInit = {}): Promise<Response> {
-  const url = `${PAPERCLIP_API_URL}${path}`;
+  const url = `${requirePaperclipApiUrl()}${path}`;
   const headers: Record<string, string> = {
     'Authorization': `Bearer ${PAPERCLIP_API_KEY}`,
     'Content-Type': 'application/json',
@@ -124,7 +153,7 @@ async function paperclipFetch(path: string, options: RequestInit = {}): Promise<
 
 async function issueAlreadyExists(ghUrl: string): Promise<boolean> {
   const res = await paperclipFetch(
-    `/api/companies/${PAPERCLIP_COMPANY_ID}/issues?q=${encodeURIComponent(ghUrl)}&status=todo,in_progress,in_review,blocked,backlog`,
+    `/api/companies/${requirePaperclipCompanyId()}/issues?q=${encodeURIComponent(ghUrl)}&status=todo,in_progress,in_review,blocked,backlog`,
   );
   if (!res.ok) return false;
   const issues = (await res.json()) as Array<{ description?: string }>;
@@ -133,7 +162,7 @@ async function issueAlreadyExists(ghUrl: string): Promise<boolean> {
 
 async function getAgentWorkload(agentId: string): Promise<number> {
   const res = await paperclipFetch(
-    `/api/companies/${PAPERCLIP_COMPANY_ID}/issues?assigneeAgentId=${agentId}&status=todo,in_progress`,
+    `/api/companies/${requirePaperclipCompanyId()}/issues?assigneeAgentId=${agentId}&status=todo,in_progress`,
   );
   if (!res.ok) return 999;
   const issues = (await res.json()) as Array<unknown>;
@@ -172,7 +201,7 @@ async function createPaperclipIssue(
     ghIssue.body.slice(0, 2000) || '_No description provided._',
   ].join('\n');
 
-  const res = await paperclipFetch(`/api/companies/${PAPERCLIP_COMPANY_ID}/issues`, {
+  const res = await paperclipFetch(`/api/companies/${requirePaperclipCompanyId()}/issues`, {
     method: 'POST',
     body: JSON.stringify({
       title: `[${ghIssue.repo.split('/')[1]}#${ghIssue.number}] ${ghIssue.title}`,
@@ -200,6 +229,9 @@ async function main() {
     console.error('[triage] PAPERCLIP_API_KEY is required');
     process.exit(1);
   }
+
+  requirePaperclipApiUrl();
+  requirePaperclipCompanyId();
 
   console.log('[triage] Starting GitHub issues triage...');
   console.log(`[triage] Scanning ${REPOS.length} repos`);

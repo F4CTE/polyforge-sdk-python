@@ -4,10 +4,39 @@
  * reports failures to Paperclip, and flags stale PRs.
  */
 
-const PAPERCLIP_API_URL = process.env.PAPERCLIP_API_URL ?? 'http://polyforge-lab:3100';
+const PAPERCLIP_API_URL = process.env.PAPERCLIP_API_URL ?? '';
 const PAPERCLIP_API_KEY = process.env.PAPERCLIP_API_KEY;
-const PAPERCLIP_COMPANY_ID = process.env.PAPERCLIP_COMPANY_ID ?? '06f20246-bb00-4cb5-8efb-7a8630c54d40';
+const PAPERCLIP_COMPANY_ID = process.env.PAPERCLIP_COMPANY_ID ?? 'CHANGE_ME';
 const PAPERCLIP_RUN_ID = process.env.PAPERCLIP_RUN_ID ?? '';
+
+export function requirePaperclipApiUrl(url: string = PAPERCLIP_API_URL): string {
+  const raw = url.trim();
+  if (!raw) {
+    throw new Error('PAPERCLIP_API_URL is required before making Paperclip API requests');
+  }
+
+  let parsed: URL;
+  try {
+    parsed = new URL(raw);
+  } catch {
+    throw new Error('PAPERCLIP_API_URL must be an absolute URL before making Paperclip API requests');
+  }
+
+  if (!['http:', 'https:'].includes(parsed.protocol) || !parsed.hostname) {
+    throw new Error('PAPERCLIP_API_URL must be an absolute http(s) URL before making Paperclip API requests');
+  }
+
+  return raw.replace(/\/+$/, '');
+}
+
+export function requirePaperclipCompanyId(value: string = PAPERCLIP_COMPANY_ID): string {
+  const v = value.trim();
+  if (!v || /^(CHANGE_ME|REPLACE_ME|TODO|TBD)$/i.test(v)) {
+    throw new Error('PAPERCLIP_COMPANY_ID must be set to a real company id before making Paperclip API requests');
+  }
+
+  return v;
+}
 
 const GOAL_ID = '1b200877-f597-4390-b6c9-789c48f709f3';
 const PROJECT_ID = '376affbf-04e6-4df3-8f66-9eeca7a531df';
@@ -225,7 +254,7 @@ async function paperclipComment(issueId: string, body: string): Promise<void> {
   };
   if (PAPERCLIP_RUN_ID) headers['X-Paperclip-Run-Id'] = PAPERCLIP_RUN_ID;
 
-  const res = await fetch(`${PAPERCLIP_API_URL}/api/issues/${issueId}/comments`, {
+  const res = await fetch(`${requirePaperclipApiUrl()}/api/issues/${issueId}/comments`, {
     method: 'POST',
     headers,
     body: JSON.stringify({ body }),
@@ -254,7 +283,7 @@ async function paperclipCreateIssue(opts: {
   };
   if (PAPERCLIP_RUN_ID) headers['X-Paperclip-Run-Id'] = PAPERCLIP_RUN_ID;
 
-  const res = await fetch(`${PAPERCLIP_API_URL}/api/companies/${PAPERCLIP_COMPANY_ID}/issues`, {
+  const res = await fetch(`${requirePaperclipApiUrl()}/api/companies/${requirePaperclipCompanyId()}/issues`, {
     method: 'POST',
     headers,
     body: JSON.stringify({
@@ -282,7 +311,7 @@ async function searchExistingIssue(query: string): Promise<boolean> {
   if (!PAPERCLIP_API_KEY) return false;
 
   const res = await fetch(
-    `${PAPERCLIP_API_URL}/api/companies/${PAPERCLIP_COMPANY_ID}/issues?q=${encodeURIComponent(query)}&status=todo,in_progress,blocked`,
+    `${requirePaperclipApiUrl()}/api/companies/${requirePaperclipCompanyId()}/issues?q=${encodeURIComponent(query)}&status=todo,in_progress,blocked`,
     { headers: { 'Authorization': `Bearer ${PAPERCLIP_API_KEY}` } },
   );
 
@@ -298,6 +327,7 @@ export async function runMonitor(opts?: {
   rerunTransient?: boolean;
   parentIssueId?: string;
 }): Promise<MonitorResult> {
+
   const now = new Date();
   const result: MonitorResult = {
     scannedRepos: REPOS.length,
@@ -344,31 +374,33 @@ export async function runMonitor(opts?: {
   }
 
   for (const failure of result.failures) {
-    const searchKey = `CI failure ${failure.repo}#${failure.pr.number}`;
-    const exists = await searchExistingIssue(searchKey);
+    if (!opts?.dryRun) {
+      const searchKey = `CI failure ${failure.repo}#${failure.pr.number}`;
+      const exists = await searchExistingIssue(searchKey);
 
-    if (!exists && !opts?.dryRun) {
-      const failedNames = failure.failedChecks.map((c) => c.name).join(', ');
-      const prUrl = `https://github.com/${failure.repo}/pull/${failure.pr.number}`;
+      if (!exists) {
+        const failedNames = failure.failedChecks.map((c) => c.name).join(', ');
+        const prUrl = `https://github.com/${failure.repo}/pull/${failure.pr.number}`;
 
-      await paperclipCreateIssue({
-        title: `CI failure: ${failure.repo}#${failure.pr.number} — ${failedNames}`,
-        description: [
-          `## CI Failure on [${failure.repo}#${failure.pr.number}](${prUrl})`,
-          '',
-          `**PR:** ${failure.pr.title}`,
-          `**Branch:** \`${failure.pr.headRefName}\``,
-          `**Author:** ${failure.pr.author.login}`,
-          '',
-          '### Failed Checks',
-          '',
-          ...failure.failedChecks.map((c) => `- **${c.name}** — [View logs](${c.detailsUrl})`),
-          '',
-          'Auto-detected by CI Monitor.',
-        ].join('\n'),
-        priority: 'high',
-        parentId: opts?.parentIssueId,
-      });
+        await paperclipCreateIssue({
+          title: `CI failure: ${failure.repo}#${failure.pr.number} — ${failedNames}`,
+          description: [
+            `## CI Failure on [${failure.repo}#${failure.pr.number}](${prUrl})`,
+            '',
+            `**PR:** ${failure.pr.title}`,
+            `**Branch:** \`${failure.pr.headRefName}\``,
+            `**Author:** ${failure.pr.author.login}`,
+            '',
+            '### Failed Checks',
+            '',
+            ...failure.failedChecks.map((c) => `- **${c.name}** — [View logs](${c.detailsUrl})`),
+            '',
+            'Auto-detected by CI Monitor.',
+          ].join('\n'),
+          priority: 'high',
+          parentId: opts?.parentIssueId,
+        });
+      }
     }
 
     if (opts?.rerunTransient) {

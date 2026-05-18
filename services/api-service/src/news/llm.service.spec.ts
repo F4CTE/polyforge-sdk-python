@@ -31,7 +31,7 @@ describe("LlmService", () => {
       vi.stubGlobal("fetch", fetchMock);
 
       const service = new LlmService(
-        createConfig({ ANTHROPIC_API_KEY: "sk-ant-test" }),
+        createConfig({ ANTHROPIC_API_KEY: "sk-ant-test" }), // gitleaks:allow
       );
       const result = await service.analyze("test prompt");
 
@@ -66,8 +66,8 @@ describe("LlmService", () => {
 
       const service = new LlmService(
         createConfig({
-          ANTHROPIC_API_KEY: "sk-ant-test",
-          OPENAI_API_KEY: "sk-openai-test",
+          ANTHROPIC_API_KEY: "sk-ant-test", // gitleaks:allow
+          OPENAI_API_KEY: "sk-openai-test", // gitleaks:allow
         }),
       );
       const result = await service.analyze("test prompt");
@@ -139,8 +139,8 @@ describe("LlmService", () => {
 
       const service = new LlmService(
         createConfig({
-          ANTHROPIC_API_KEY: "sk-ant-test",
-          OPENAI_API_KEY: "sk-openai-test",
+          ANTHROPIC_API_KEY: "sk-ant-test", // gitleaks:allow
+          OPENAI_API_KEY: "sk-openai-test", // gitleaks:allow
         }),
       );
 
@@ -165,8 +165,8 @@ describe("LlmService", () => {
 
       const service = new LlmService(
         createConfig({
-          ANTHROPIC_API_KEY: "sk-ant-test",
-          OPENAI_API_KEY: "sk-openai-test",
+          ANTHROPIC_API_KEY: "sk-ant-test", // gitleaks:allow
+          OPENAI_API_KEY: "sk-openai-test", // gitleaks:allow
         }),
       );
 
@@ -192,7 +192,7 @@ describe("LlmService", () => {
       vi.stubGlobal("fetch", fetchMock);
 
       const service = new LlmService(
-        createConfig({ OPENAI_API_KEY: "sk-openai-test" }),
+        createConfig({ OPENAI_API_KEY: "sk-openai-test" }), // gitleaks:allow
       );
 
       try {
