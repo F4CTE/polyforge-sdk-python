@@ -169,7 +169,9 @@ jobs:
             -r .semgrep/requirements-semgrep.txt
 
       - name: Run semgrep
-        run: semgrep scan --config .semgrep/ --severity ERROR --error --no-secrets-validation --exclude '.semgrep/' --jobs 1
+        run: |
+          ulimit -l unlimited
+          semgrep scan --config .semgrep/ --severity ERROR --error --no-secrets-validation --exclude '.semgrep/' --jobs 1
 
   # ── 1b. Typecheck (parallel) ────────────────────────────────────────────
   typecheck:

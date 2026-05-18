@@ -216,8 +216,9 @@ export class OrdersController {
   }
 
   @Post("place")
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(ApiKeyScopeGuard, GeoBlockGuard)
   @UseInterceptors(IdempotencyInterceptor)
+  @RequireScopes("TRADE")
   @Throttle({
     default: {
       limit: process.env.NODE_ENV === "production" ? 30 : 10000,
