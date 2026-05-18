@@ -4,12 +4,13 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    hookTimeout: 30_000,
     // All auth-service tests share a single test DB/Redis.
     // Parallel files would deadlock on TRUNCATE TABLE during beforeEach cleanup.
     fileParallelism: false,
     include: ['src/**/*.spec.ts', 'test/**/*.spec.ts'],
     globalSetup: ['test/global-setup.ts'],
+    testTimeout: 15_000,
+    hookTimeout: 30_000,
     env: {
       USER_JWT_SECRET: 'test-user-jwt-secret-min-32-chars!',
       INTERNAL_JWT_SECRET: 'test-user-jwt-secret-min-32-chars!',

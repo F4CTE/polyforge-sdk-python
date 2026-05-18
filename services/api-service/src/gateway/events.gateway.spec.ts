@@ -667,6 +667,47 @@ describe("EventsGateway", () => {
         expect.stringContaining('"type":"PONG"'),
       );
     });
+
+    it("caps strategy subscriptions per socket", () => {
+      vi.mocked(jwtService.verify).mockReturnValue({
+        sub: "user-A",
+        email: "a@b.com",
+        username: "a",
+      });
+      const socket = makeSocket();
+      gateway.handleConnection(socket, makeRequest("?token=tA"));
+
+      for (let i = 0; i < 250; i++) {
+        sendClientMessage(socket, {
+          type: "SUBSCRIBE_STRATEGY",
+          strategyId: `strategy-${i}`,
+        });
+      }
+
+      const subscriptions = (gateway as any).strategySubscriptions.get(socket);
+      expect(subscriptions.size).toBe(200);
+    });
+
+    it("rejects oversized websocket messages", () => {
+      vi.mocked(jwtService.verify).mockReturnValue({
+        sub: "user-A",
+        email: "a@b.com",
+        username: "a",
+      });
+      const socket = makeSocket();
+      gateway.handleConnection(socket, makeRequest("?token=tA"));
+      vi.mocked(socket.send).mockClear();
+
+      const handlers = (socket as any)._handlers.get("message");
+      const oversized = Buffer.alloc(17 * 1024, "a");
+      handlers?.forEach((handler: (...args: unknown[]) => void) =>
+        handler(oversized),
+      );
+
+      expect(socket.send).toHaveBeenCalledWith(
+        expect.stringContaining("Message too large"),
+      );
+    });
   });
 
   describe("per-user connection limit", () => {

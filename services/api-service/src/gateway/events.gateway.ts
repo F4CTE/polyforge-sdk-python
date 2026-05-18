@@ -13,6 +13,8 @@ import { URL } from "url";
 
 const DEFAULT_MAX_CONNECTIONS_PER_USER = 5;
 const MAX_PRICE_SUBSCRIPTIONS_PER_SOCKET = 200;
+const MAX_STRATEGY_SUBSCRIPTIONS_PER_SOCKET = 200;
+const MAX_CLIENT_MESSAGE_BYTES = 16 * 1024;
 const DEV_ORIGINS = new Set([
   "http://localhost",
   "http://localhost:4200",
@@ -267,6 +269,10 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   private handleClientMessage(client: WebSocket, raw: WebSocket.RawData): void {
     if (!this.socketUsers.has(client)) return;
+    if (this.rawDataByteLength(raw) > MAX_CLIENT_MESSAGE_BYTES) {
+      this.safeSend(client, { type: "ERROR", message: "Message too large" });
+      return;
+    }
 
     let message: Record<string, unknown>;
     try {
@@ -290,12 +296,17 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
         this.updatePriceSubscriptions(client, message.tokenIds, false);
         break;
       case "SUBSCRIBE_STRATEGY":
-        if (typeof message.strategyId === "string") {
-          this.strategySubscriptions.get(client)?.add(message.strategyId);
+        if (this.isValidStrategyId(message.strategyId)) {
+          const subscriptions = this.strategySubscriptions.get(client);
+          if (!subscriptions) break;
+          if (subscriptions.size >= MAX_STRATEGY_SUBSCRIPTIONS_PER_SOCKET) {
+            break;
+          }
+          subscriptions.add(message.strategyId);
         }
         break;
       case "UNSUBSCRIBE_STRATEGY":
-        if (typeof message.strategyId === "string") {
+        if (this.isValidStrategyId(message.strategyId)) {
           this.strategySubscriptions.get(client)?.delete(message.strategyId);
         }
         break;
@@ -313,6 +324,19 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (Buffer.isBuffer(raw)) return raw.toString("utf8");
     if (Array.isArray(raw)) return Buffer.concat(raw).toString("utf8");
     return Buffer.from(raw).toString("utf8");
+  }
+
+  private rawDataByteLength(raw: WebSocket.RawData): number {
+    if (typeof raw === "string") return Buffer.byteLength(raw, "utf8");
+    if (Buffer.isBuffer(raw)) return raw.byteLength;
+    if (Array.isArray(raw)) {
+      return raw.reduce((total, chunk) => total + chunk.byteLength, 0);
+    }
+    return raw.byteLength;
+  }
+
+  private isValidStrategyId(value: unknown): value is string {
+    return typeof value === "string" && value.length > 0 && value.length <= 128;
   }
 
   private updatePriceSubscriptions(
