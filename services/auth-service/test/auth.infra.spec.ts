@@ -167,6 +167,21 @@ describe.runIf(HAS_TEST_DB && HAS_TEST_REDIS)('Auth Real Integration', () => {
     return JSON.parse(body);
   }
 
+  async function waitForSentEmail(
+    predicate: (
+      email: { to: string; type: string; token?: string },
+    ) => boolean,
+    timeoutMs = 2_000,
+  ): Promise<boolean> {
+    const interval = 50;
+    const deadline = Date.now() + timeoutMs;
+    while (Date.now() < deadline) {
+      if (fakeMail.sentEmails.some(predicate)) return true;
+      await new Promise((r) => setTimeout(r, interval));
+    }
+    return false;
+  }
+
   async function registerAndLogin(
     email: string,
     password: string,
@@ -247,18 +262,12 @@ describe.runIf(HAS_TEST_DB && HAS_TEST_REDIS)('Auth Real Integration', () => {
         },
       });
 
-      // Fire-and-forget: poll for async verification email under CI load.
-      // Use find() by recipient instead of index [0] because a slow
-      // async email from a prior test can arrive after beforeEach
-      // clears the array and land before the current test's email.
-      let bobMail: { to: string; type: string; token?: string } | undefined;
-      for (let i = 0; i < 20; i++) {
-        bobMail = fakeMail.sentEmails.find((e) => e.to === 'bob@test.com');
-        if (bobMail) break;
-        await new Promise((r) => setTimeout(r, 25));
-      }
-      expect(bobMail).toBeDefined();
-      expect(bobMail!.type).toBe('verification');
+      const gotEmail = await waitForSentEmail(
+        (email) => email.type === 'verification' && email.to === 'bob@test.com',
+      );
+      expect(gotEmail).toBeTruthy();
+      const bobMail = fakeMail.sentEmails.find((e) => e.to === 'bob@test.com');
+      expect(bobMail?.type).toBe('verification');
     });
 
     it('returns 400 on missing required fields', async () => {
@@ -687,11 +696,10 @@ describe.runIf(HAS_TEST_DB && HAS_TEST_REDIS)('Auth Real Integration', () => {
       });
 
       expect(res.statusCode).toBe(200);
-      await new Promise((r) => setTimeout(r, 100));
-      expect(fakeMail.sentEmails.length).toBeGreaterThanOrEqual(1);
-      expect(fakeMail.sentEmails.some((e) => e.type === 'password-reset')).toBe(
-        true,
+      const gotResetEmail = await waitForSentEmail(
+        (email) => email.type === 'password-reset',
       );
+      expect(gotResetEmail).toBeTruthy();
     });
   });
 
@@ -841,17 +849,15 @@ describe.runIf(HAS_TEST_DB && HAS_TEST_REDIS)('Auth Real Integration', () => {
       expect(regToken).toBeDefined();
       expect(regRefresh).toBeDefined();
 
-      // Fire-and-forget: poll for async verification email under CI load.
-      // Filter by recipient email so stale verification tokens from
-      // prior tests are never matched (fire-and-forget race).
-      let verifyToken: string | undefined;
-      for (let i = 0; i < 20; i++) {
-        verifyToken = fakeMail.sentEmails.find(
-          (e) => e.type === 'verification' && e.to === email,
-        )?.token;
-        if (verifyToken) break;
-        await new Promise((r) => setTimeout(r, 25));
-      }
+      const gotLifecycleEmail = await waitForSentEmail(
+        (sentEmail) =>
+          sentEmail.type === 'verification' && sentEmail.to === email,
+      );
+      expect(gotLifecycleEmail).toBeTruthy();
+
+      const verifyToken = fakeMail.sentEmails.find(
+        (e) => e.type === 'verification' && e.to === email,
+      )?.token;
       expect(verifyToken).toBeDefined();
 
       // 2. Verify email
