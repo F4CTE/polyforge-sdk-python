@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { NotFoundException } from "@nestjs/common";
+import { ForbiddenException, NotFoundException } from "@nestjs/common";
 import { PublicUsersService } from "./public-users.service";
 import { createMockDb, MockDb } from "../../test/helpers/mock-db";
 
 function makeUser(overrides: Record<string, unknown> = {}) {
-  return { id: "user-uuid-1", username: "alice", ...overrides };
+  return { id: "user-uuid-1", username: "alice", showPnl: true, ...overrides };
 }
 
 describe("PublicUsersService", () => {
@@ -50,6 +50,14 @@ describe("PublicUsersService", () => {
 
       await expect(service.getPerformance("ghost", "30d")).rejects.toThrow(
         NotFoundException,
+      );
+    });
+
+    it("throws ForbiddenException when user performance is private", async () => {
+      db.user.findUnique.mockResolvedValue(makeUser({ showPnl: false }) as any);
+
+      await expect(service.getPerformance("alice", "30d")).rejects.toThrow(
+        ForbiddenException,
       );
     });
 
@@ -180,6 +188,14 @@ describe("PublicUsersService", () => {
 
       await expect(service.getActivity("ghost", 5)).rejects.toThrow(
         NotFoundException,
+      );
+    });
+
+    it("throws ForbiddenException when user performance is private", async () => {
+      db.user.findUnique.mockResolvedValue(makeUser({ showPnl: false }) as any);
+
+      await expect(service.getActivity("alice", 5)).rejects.toThrow(
+        ForbiddenException,
       );
     });
 

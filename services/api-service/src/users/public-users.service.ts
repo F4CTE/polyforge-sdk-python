@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "@polyforge/shared-db";
 import { StrategyStatus, StrategyVisibility } from ".prisma/client";
 
@@ -19,8 +19,28 @@ export class PublicUsersService {
     return user.id;
   }
 
+  private async resolvePublicUserId(username: string): Promise<string> {
+    const user = await this.prisma.user.findUnique({
+      where: { username },
+      select: { id: true, showPnl: true },
+    });
+    if (!user)
+      throw new NotFoundException({
+        code: "NOT_FOUND",
+        message: "User not found",
+      });
+
+    if (!user.showPnl)
+      throw new ForbiddenException({
+        code: "FORBIDDEN",
+        message: "User performance is private",
+      });
+
+    return user.id;
+  }
+
   async getPerformance(username: string, period: string) {
-    const userId = await this.resolveUserId(username);
+    const userId = await this.resolvePublicUserId(username);
 
     const days = parseInt(period, 10) || 30;
     const since = new Date();
@@ -88,7 +108,7 @@ export class PublicUsersService {
   }
 
   async getActivity(username: string, limit: number) {
-    const userId = await this.resolveUserId(username);
+    const userId = await this.resolvePublicUserId(username);
 
     const positions = await this.prisma.position.findMany({
       where: {
