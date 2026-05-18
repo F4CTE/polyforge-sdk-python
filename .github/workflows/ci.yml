@@ -133,6 +133,12 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Purge stale semgrep
+        run: |
+          pip uninstall -y semgrep 2>/dev/null || true
+          pip cache purge 2>/dev/null || true
+          rm -rf "$(python3 -c 'import site; print(site.getsitepackages()[0])')/semgrep" 2>/dev/null || true
+
       - name: Install semgrep
         env:
           SEMGREP_SHA256: 768166fe64a2bf75e1e9f007b75350b136d5e56d87fd322b9fcffe16797c6b21
@@ -141,19 +147,12 @@ jobs:
           wheel_dir="$RUNNER_TEMP/semgrep-wheelhouse"
           mkdir -p "$wheel_dir"
 
-          # Download all wheels using the committed hash-pinned requirements file.
-          # .semgrep/requirements-semgrep.txt pins every transitive dependency
-          # with pre-reviewed SHA256 hashes so that install verification does not
-          # trust hashes computed on-the-fly from the same download source.
-          # --only-binary=:all: prevents source-distribution builds, ensuring
-          # the same pre-reviewed binary wheels are always installed.
           python3 -m pip download \
             --no-cache-dir \
             --only-binary=:all: \
             --dest "$wheel_dir" \
             -r .semgrep/requirements-semgrep.txt
 
-          # Quick sanity check: the top-level semgrep wheel matches its known hash.
           semgrep_wheel=$(find "$wheel_dir" -maxdepth 1 -name 'semgrep-*.whl' -print -quit)
           [ -n "$semgrep_wheel" ] || { echo "ERROR: no semgrep wheel found in $wheel_dir" >&2; exit 1; }
           echo "${SEMGREP_SHA256}  $semgrep_wheel" | sha256sum -c -

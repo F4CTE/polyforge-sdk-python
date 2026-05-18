@@ -9,6 +9,7 @@ import { logCloudWatchMetric } from "@polyforge/logger";
 import { randomUUID } from "node:crypto";
 
 type CircuitBreakerState = "CLOSED" | "OPEN" | "HALF_OPEN";
+type BreakerClassification = "failure" | "success" | "ignore";
 
 class CircuitBreakerOpenError extends Error {
   constructor() {
@@ -30,15 +31,18 @@ class CircuitBreaker {
 
   async execute<T>(
     operation: () => Promise<T>,
-    isFailure: (result: T) => boolean,
+    classifyResponse: (result: T) => BreakerClassification,
   ): Promise<T> {
     const halfOpenProbe = this.beforeRequest();
 
     try {
       const result = await operation();
-      if (isFailure(result)) {
+      const classification = classifyResponse(result);
+      if (classification === "failure") {
         this.recordFailure();
-      } else {
+      } else if (classification === "success") {
+        this.recordSuccess();
+      } else if (halfOpenProbe) {
         this.recordSuccess();
       }
       return result;
@@ -165,7 +169,7 @@ export class SignerClientService {
             body: JSON.stringify(req),
             signal: AbortSignal.timeout(10_000),
           }),
-        (response) => !response.ok,
+        (response) => this.classifyBreakerResponse(response),
       );
     } catch (err) {
       if (err instanceof CircuitBreakerOpenError) {
@@ -242,7 +246,7 @@ export class SignerClientService {
               signal: AbortSignal.timeout(10_000),
             },
           ),
-        (response) => !response.ok,
+        (response) => this.classifyBreakerResponse(response),
       );
     } catch (err) {
       if (err instanceof CircuitBreakerOpenError) {
@@ -280,7 +284,7 @@ export class SignerClientService {
             body: JSON.stringify({ userId, venueOrderId }),
             signal: AbortSignal.timeout(10_000),
           }),
-        (response) => !response.ok,
+        (response) => this.classifyBreakerResponse(response),
       );
     } catch (err) {
       if (err instanceof CircuitBreakerOpenError) {
@@ -295,6 +299,16 @@ export class SignerClientService {
         `signer-service error ${res.status}: ${body}`,
       );
     }
+  }
+
+  private classifyBreakerResponse(response: Response): BreakerClassification {
+    if (response.status >= 500) return "failure";
+    if (response.status === 429) return "failure";
+    if (response.status === 401 || response.status === 403) return "failure";
+    if (response.status === 408) return "failure";
+    if (response.status === 404) return "failure";
+    if (response.ok) return "success";
+    return "ignore";
   }
 
   private getPositiveInteger(key: string, fallback: number): number {

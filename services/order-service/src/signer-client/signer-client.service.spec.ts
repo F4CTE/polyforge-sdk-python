@@ -269,6 +269,42 @@ describe("SignerClientService", () => {
       vi.useRealTimers();
     });
 
+    it("does not open on repeated HTTP 400 responses", async () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date("2026-05-05T00:00:00.000Z"));
+      svc = new SignerClientService(
+        jwt,
+        makeConfig("http://signer:3012", {
+          SIGNER_SERVICE_CIRCUIT_BREAKER_FAILURE_THRESHOLD: "2",
+          SIGNER_SERVICE_CIRCUIT_BREAKER_RESET_MS: "30000",
+        }),
+      );
+
+      fetchSpy.mockResolvedValue({
+        ok: false,
+        status: 400,
+        text: vi.fn().mockResolvedValue("Bad Request"),
+      });
+
+      await expect(svc.signOrder(SIGN_REQ)).rejects.toBeInstanceOf(
+        ServiceUnavailableException,
+      );
+      await expect(svc.signOrder(SIGN_REQ)).rejects.toBeInstanceOf(
+        ServiceUnavailableException,
+      );
+
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({ keyId: "kid", secretKey: "sek" }),
+      });
+
+      await expect(svc.getPolymarketUsCredentials("user-1")).resolves.toEqual({
+        keyId: "kid",
+        secretKey: "sek",
+      });
+      expect(fetchSpy).toHaveBeenCalledTimes(3);
+    });
+
     it("opens after repeated signer failures and fails credentials fast without fetch", async () => {
       vi.useFakeTimers();
       vi.setSystemTime(new Date("2026-05-05T00:00:00.000Z"));
@@ -293,6 +329,188 @@ describe("SignerClientService", () => {
         svc.getPolymarketUsCredentials("user-1"),
       ).rejects.toBeInstanceOf(ServiceUnavailableException);
       expect(fetchSpy).not.toHaveBeenCalled();
+    });
+
+    it("treats HTTP 429 as a breaker failure and opens the circuit", async () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date("2026-05-05T00:00:00.000Z"));
+      svc = new SignerClientService(
+        jwt,
+        makeConfig("http://signer:3012", {
+          SIGNER_SERVICE_CIRCUIT_BREAKER_FAILURE_THRESHOLD: "2",
+          SIGNER_SERVICE_CIRCUIT_BREAKER_RESET_MS: "30000",
+        }),
+      );
+      fetchSpy.mockResolvedValue({
+        ok: false,
+        status: 429,
+        text: vi.fn().mockResolvedValue("Rate limit exceeded"),
+      });
+
+      await expect(svc.signOrder(SIGN_REQ)).rejects.toBeInstanceOf(
+        ServiceUnavailableException,
+      );
+      await expect(svc.signOrder(SIGN_REQ)).rejects.toBeInstanceOf(
+        ServiceUnavailableException,
+      );
+      fetchSpy.mockClear();
+
+      await expect(
+        svc.getPolymarketUsCredentials("user-1"),
+      ).rejects.toBeInstanceOf(ServiceUnavailableException);
+      expect(fetchSpy).not.toHaveBeenCalled();
+    });
+
+    it("treats HTTP 404 as a breaker failure and opens the circuit", async () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date("2026-05-05T00:00:00.000Z"));
+      svc = new SignerClientService(
+        jwt,
+        makeConfig("http://signer:3012", {
+          SIGNER_SERVICE_CIRCUIT_BREAKER_FAILURE_THRESHOLD: "2",
+          SIGNER_SERVICE_CIRCUIT_BREAKER_RESET_MS: "30000",
+        }),
+      );
+      fetchSpy.mockResolvedValue({
+        ok: false,
+        status: 404,
+        text: vi.fn().mockResolvedValue("Not Found"),
+      });
+
+      await expect(svc.signOrder(SIGN_REQ)).rejects.toBeInstanceOf(
+        ServiceUnavailableException,
+      );
+      await expect(svc.signOrder(SIGN_REQ)).rejects.toBeInstanceOf(
+        ServiceUnavailableException,
+      );
+      fetchSpy.mockClear();
+
+      await expect(
+        svc.getPolymarketUsCredentials("user-1"),
+      ).rejects.toBeInstanceOf(ServiceUnavailableException);
+      expect(fetchSpy).not.toHaveBeenCalled();
+    });
+
+    it("treats auth errors (401/403) as breaker failures", async () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date("2026-05-05T00:00:00.000Z"));
+      svc = new SignerClientService(
+        jwt,
+        makeConfig("http://signer:3012", {
+          SIGNER_SERVICE_CIRCUIT_BREAKER_FAILURE_THRESHOLD: "2",
+          SIGNER_SERVICE_CIRCUIT_BREAKER_RESET_MS: "30000",
+        }),
+      );
+      fetchSpy.mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+        text: vi.fn().mockResolvedValue("Unauthorized"),
+      });
+      fetchSpy.mockResolvedValueOnce({
+        ok: false,
+        status: 403,
+        text: vi.fn().mockResolvedValue("Forbidden"),
+      });
+
+      await expect(svc.signOrder(SIGN_REQ)).rejects.toBeInstanceOf(
+        ServiceUnavailableException,
+      );
+      await expect(svc.signOrder(SIGN_REQ)).rejects.toBeInstanceOf(
+        ServiceUnavailableException,
+      );
+      fetchSpy.mockClear();
+
+      await expect(
+        svc.getPolymarketUsCredentials("user-1"),
+      ).rejects.toBeInstanceOf(ServiceUnavailableException);
+      expect(fetchSpy).not.toHaveBeenCalled();
+    });
+
+    it("does not clear failure history on interleaved non-breaker 4xx responses", async () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date("2026-05-05T00:00:00.000Z"));
+      svc = new SignerClientService(
+        jwt,
+        makeConfig("http://signer:3012", {
+          SIGNER_SERVICE_CIRCUIT_BREAKER_FAILURE_THRESHOLD: "2",
+          SIGNER_SERVICE_CIRCUIT_BREAKER_RESET_MS: "30000",
+        }),
+      );
+      fetchSpy.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        text: vi.fn().mockResolvedValue("Server Error"),
+      });
+      fetchSpy.mockResolvedValueOnce({
+        ok: false,
+        status: 400,
+        text: vi.fn().mockResolvedValue("Bad Request"),
+      });
+      fetchSpy.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        text: vi.fn().mockResolvedValue("Server Error"),
+      });
+
+      await expect(svc.signOrder(SIGN_REQ)).rejects.toBeInstanceOf(
+        ServiceUnavailableException,
+      );
+      await expect(svc.signOrder(SIGN_REQ)).rejects.toBeInstanceOf(
+        ServiceUnavailableException,
+      );
+      await expect(svc.signOrder(SIGN_REQ)).rejects.toBeInstanceOf(
+        ServiceUnavailableException,
+      );
+      fetchSpy.mockClear();
+
+      await expect(
+        svc.getPolymarketUsCredentials("user-1"),
+      ).rejects.toBeInstanceOf(ServiceUnavailableException);
+      expect(fetchSpy).not.toHaveBeenCalled();
+    });
+
+    it("transitions half-open circuit to closed on non-breaker 4xx probe", async () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date("2026-05-05T00:00:00.000Z"));
+      svc = new SignerClientService(
+        jwt,
+        makeConfig("http://signer:3012", {
+          SIGNER_SERVICE_CIRCUIT_BREAKER_FAILURE_THRESHOLD: "2",
+          SIGNER_SERVICE_CIRCUIT_BREAKER_RESET_MS: "1000",
+        }),
+      );
+      fetchSpy.mockRejectedValue(new Error("ECONNREFUSED"));
+
+      await expect(svc.signOrder(SIGN_REQ)).rejects.toBeInstanceOf(
+        ServiceUnavailableException,
+      );
+      await expect(svc.signOrder(SIGN_REQ)).rejects.toBeInstanceOf(
+        ServiceUnavailableException,
+      );
+      fetchSpy.mockClear();
+
+      vi.setSystemTime(new Date("2026-05-05T00:00:01.001Z"));
+      fetchSpy.mockResolvedValueOnce({
+        ok: false,
+        status: 400,
+        text: vi.fn().mockResolvedValue("Bad Request"),
+      });
+
+      await expect(svc.signOrder(SIGN_REQ)).rejects.toBeInstanceOf(
+        ServiceUnavailableException,
+      );
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+      fetchSpy.mockClear();
+
+      // after non-breaker 4xx HALF_OPEN probe, breaker transitions to CLOSED
+      // signer-service is reachable; full traffic resumes
+      fetchSpy.mockResolvedValueOnce({
+        ok: true,
+        json: vi.fn().mockResolvedValue(SIGN_RESPONSE),
+      });
+
+      await expect(svc.signOrder(SIGN_REQ)).resolves.toEqual(SIGN_RESPONSE);
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
     });
 
     it("allows a half-open signer probe after reset and closes on success", async () => {
