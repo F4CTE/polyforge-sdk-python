@@ -813,4 +813,61 @@ describe("TimeWindowBlock", () => {
     );
     expect(res.fired).toBe(false);
   });
+
+  it("fails closed when a time bound is not numeric", async () => {
+    const dt = new Date();
+    dt.setUTCHours(10, 0, 0, 0);
+    const ctx = makeCtx({}, dt.getTime());
+    const res = await TimeWindowBlock.evaluate(
+      block("time_window", {
+        startHH: "9",
+        startMM: "0",
+        endHH: "bad",
+        endMM: "0",
+      }),
+      ctx,
+      makeRedis(),
+      makePrisma(),
+    );
+    expect(res.fired).toBe(false);
+    expect(res.reason).toMatch(/invalid time_window bounds/);
+  });
+
+  it("fails closed when a time bound is partially numeric (17xyz)", async () => {
+    const dt = new Date();
+    dt.setUTCHours(10, 0, 0, 0);
+    const ctx = makeCtx({}, dt.getTime());
+    const res = await TimeWindowBlock.evaluate(
+      block("time_window", {
+        startHH: "9",
+        startMM: "0",
+        endHH: "17xyz",
+        endMM: "0",
+      }),
+      ctx,
+      makeRedis(),
+      makePrisma(),
+    );
+    expect(res.fired).toBe(false);
+    expect(res.reason).toMatch(/invalid time_window bounds/);
+  });
+
+  it("fails closed when a time bound is out of range", async () => {
+    const dt = new Date();
+    dt.setUTCHours(16, 0, 0, 0);
+    const ctx = makeCtx({}, dt.getTime());
+    const res = await TimeWindowBlock.evaluate(
+      block("time_window", {
+        startHH: "99",
+        startMM: "0",
+        endHH: "17",
+        endMM: "0",
+      }),
+      ctx,
+      makeRedis(),
+      makePrisma(),
+    );
+    expect(res.fired).toBe(false);
+    expect(res.reason).toMatch(/invalid time_window bounds/);
+  });
 });

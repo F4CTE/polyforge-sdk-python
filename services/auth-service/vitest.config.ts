@@ -5,6 +5,9 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     hookTimeout: 30_000,
+    // All auth-service tests share a single test DB/Redis.
+    // Parallel files would deadlock on TRUNCATE TABLE during beforeEach cleanup.
+    fileParallelism: false,
     include: ['src/**/*.spec.ts', 'test/**/*.spec.ts'],
     globalSetup: ['test/global-setup.ts'],
     env: {

@@ -219,14 +219,34 @@ export const NoExistingPositionBlock: BlockEvaluator = {
 export const TimeWindowBlock: BlockEvaluator = {
   evaluate(block, ctx, _redis, _prisma): Promise<BlockResult> {
     const params = (block["params"] as BlockParams) ?? {};
-    const startHH = String(params.startHH ?? "0");
-    const startMM = String(params.startMM ?? "0");
-    const endHH = String(params.endHH ?? "23");
-    const endMM = String(params.endMM ?? "59");
+    const startHHStr = String(params.startHH ?? "0");
+    const startMMStr = String(params.startMM ?? "0");
+    const endHHStr = String(params.endHH ?? "23");
+    const endMMStr = String(params.endMM ?? "59");
+
+    const isValidTimePiece = (s: string, min: number, max: number): boolean =>
+      /^\d{1,2}$/.test(s) && Number(s) >= min && Number(s) <= max;
+
+    if (
+      !isValidTimePiece(startHHStr, 0, 23) ||
+      !isValidTimePiece(startMMStr, 0, 59) ||
+      !isValidTimePiece(endHHStr, 0, 23) ||
+      !isValidTimePiece(endMMStr, 0, 59)
+    ) {
+      return Promise.resolve({
+        fired: false,
+        reason: "invalid time_window bounds",
+      });
+    }
+
+    const startHH = Number(startHHStr);
+    const startMM = Number(startMMStr);
+    const endHH = Number(endHHStr);
+    const endMM = Number(endMMStr);
     const now = new Date(ctx.now);
     const currentMins = now.getUTCHours() * 60 + now.getUTCMinutes();
-    const startMins = parseInt(startHH, 10) * 60 + parseInt(startMM, 10);
-    const endMins = parseInt(endHH, 10) * 60 + parseInt(endMM, 10);
+    const startMins = startHH * 60 + startMM;
+    const endMins = endHH * 60 + endMM;
 
     const fired =
       startMins <= endMins
@@ -236,7 +256,7 @@ export const TimeWindowBlock: BlockEvaluator = {
       `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
     return Promise.resolve({
       fired,
-      reason: `current ${fmt(now.getUTCHours(), now.getUTCMinutes())} UTC in [${fmt(parseInt(startHH), parseInt(startMM))}, ${fmt(parseInt(endHH), parseInt(endMM))}]: ${fired}`,
+      reason: `current ${fmt(now.getUTCHours(), now.getUTCMinutes())} UTC in [${fmt(startHH, startMM)}, ${fmt(endHH, endMM)}]: ${fired}`,
     });
   },
 };
