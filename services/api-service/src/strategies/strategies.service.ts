@@ -128,17 +128,15 @@ export class StrategiesService {
     // Phase 1 (POLA-956) adds POLYMARKET_US to the Venue enum and
     // polymarketUsConnected/country to User — cast until that migration lands.
     let autoVenue: string | undefined;
-    if (!dto.kalshiSubaccount) {
-      const user = await this.prisma.user.findUnique({
-        where: { id: userId },
-        select: { country: true, polymarketUsConnected: true } as any,
-      });
-      if (
-        (user as any)?.country === "US" &&
-        (user as any)?.polymarketUsConnected
-      ) {
-        autoVenue = "POLYMARKET_US";
-      }
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { country: true, polymarketUsConnected: true } as any,
+    });
+    if (
+      (user as any)?.country === "US" &&
+      (user as any)?.polymarketUsConnected
+    ) {
+      autoVenue = "POLYMARKET_US";
     }
 
     const strategy = await this.prisma.strategy.create({
@@ -157,9 +155,6 @@ export class StrategiesService {
         tags: dto.tags ?? [],
         canvas: dto.canvas as unknown as Prisma.InputJsonValue | undefined,
         ...(dto.marketId ? { marketId: dto.marketId } : {}),
-        ...(dto.kalshiSubaccount != null
-          ? { kalshiSubaccount: dto.kalshiSubaccount }
-          : {}),
         ...(autoVenue ? { venue: autoVenue as any } : {}),
         status: StrategyStatus.IDLE,
         version: 1,
@@ -279,8 +274,6 @@ export class StrategiesService {
         ? { connect: { id: dto.marketId } }
         : { disconnect: true };
     }
-    if (dto.kalshiSubaccount !== undefined)
-      data.kalshiSubaccount = dto.kalshiSubaccount;
 
     return this.prisma.strategy.update({ where: { id }, data });
   }
