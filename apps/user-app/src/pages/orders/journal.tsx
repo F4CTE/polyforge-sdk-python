@@ -1,41 +1,42 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router";
-import { toast } from "sonner";
 import { Button, Input, Select } from "@polyforge/ui";
-import { BookOpen, Search, Tag, Edit2, Trash2 } from "lucide-react";
+import { BookOpen, Search, Tag } from "lucide-react";
 
-type JournalMood =
-  | "confident"
-  | "uncertain"
-  | "fomo"
-  | "disciplined"
-  | "neutral";
+type JournalMood = "CONFIDENT" | "UNCERTAIN" | "FOMO" | "DISCIPLINED" | "REVENGE";
 
 interface JournalEntry {
   id: string;
-  orderId: string;
-  marketTitle: string;
+  orderId?: string;
+  marketId?: string;
+  marketTitle?: string;
   outcome: "YES" | "NO";
   side: "BUY" | "SELL";
   price: number;
   size: number;
   pnl?: number;
   note: string;
-  tags: string[];
-  mood: JournalMood;
+  tags?: string[];
+  mood: JournalMood | string;
   createdAt: string;
-  updatedAt: string;
+  updatedAt?: string;
 }
 
 const MOOD_CONFIG: Record<JournalMood, { emoji: string; label: string }> = {
-  confident: { emoji: "😊", label: "Confident" },
-  uncertain: { emoji: "🤔", label: "Uncertain" },
-  fomo: { emoji: "😰", label: "FOMO" },
-  disciplined: { emoji: "🎯", label: "Disciplined" },
-  neutral: { emoji: "😐", label: "Neutral" },
+  CONFIDENT: { emoji: "😊", label: "Confident" },
+  UNCERTAIN: { emoji: "🤔", label: "Uncertain" },
+  FOMO: { emoji: "😰", label: "FOMO" },
+  DISCIPLINED: { emoji: "🎯", label: "Disciplined" },
+  REVENGE: { emoji: "😤", label: "Revenge" },
 };
 
 const MOOD_KEYS = Object.keys(MOOD_CONFIG) as JournalMood[];
+
+function normalizeMood(mood: string): JournalMood {
+  const upper = mood.toUpperCase();
+  if (upper in MOOD_CONFIG) return upper as JournalMood;
+  return "UNCERTAIN";
+}
 
 function formatDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString("en-US", {
@@ -48,20 +49,16 @@ function formatDate(dateStr: string): string {
 
 function JournalEntryCard({
   entry,
-  onEdit,
-  onDelete,
 }: {
   entry: JournalEntry;
-  onEdit: () => void;
-  onDelete: () => void;
 }) {
-  const mood = MOOD_CONFIG[entry.mood];
+  const mood = MOOD_CONFIG[normalizeMood(entry.mood)];
   return (
     <div className="bg-elevated border border-default rounded-pf p-4 space-y-3 hover:border-default transition-colors">
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <p className="text-body-md font-medium text-primary line-clamp-1">
-            {entry.marketTitle || `Order ${entry.orderId.slice(0, 8)}`}
+            {entry.marketTitle || entry.marketId || (entry.orderId ? `Order ${entry.orderId.slice(0, 8)}` : `Order ${entry.id.slice(0, 8)}`)}
           </p>
           <div className="flex items-center gap-2 mt-1 flex-wrap">
             <span
@@ -87,26 +84,6 @@ function JournalEntryCard({
             )}
           </div>
         </div>
-        <div className="flex items-center gap-1 shrink-0">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            onClick={onEdit}
-            aria-label="Edit journal note"
-          >
-            <Edit2 className="size-4" />
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            onClick={onDelete}
-            aria-label="Delete journal note"
-          >
-            <Trash2 className="size-4" />
-          </Button>
-        </div>
       </div>
       <div className="flex items-start gap-2">
         <span className="text-base shrink-0" title={mood.label}>
@@ -118,7 +95,7 @@ function JournalEntryCard({
       </div>
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <div className="flex flex-wrap gap-1">
-          {entry.tags.map((t) => (
+          {(entry.tags ?? []).map((t) => (
             <span
               key={t}
               className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-caption bg-variable-subtle text-variable-text border border-variable/20"
@@ -147,13 +124,28 @@ export function Component() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/v1/journal?page=1&limit=200", {
-        credentials: "include",
-      });
-      if (res.ok) {
-        const data = (await res.json()) as { data: JournalEntry[] };
-        setEntries(data.data ?? []);
+      const limit = 100;
+      let page = 1;
+      let hasNext = true;
+      const all: JournalEntry[] = [];
+
+      while (hasNext) {
+        const res = await fetch(
+          `/api/v1/journal?page=${page}&limit=${limit}`,
+          { credentials: "include" },
+        );
+        if (!res.ok) break;
+
+        const body = (await res.json()) as {
+          data: JournalEntry[];
+          hasNext: boolean;
+        };
+        all.push(...(body.data ?? []));
+        hasNext = body.hasNext ?? false;
+        page += 1;
       }
+
+      setEntries(all);
     } catch {
       /* ignore */
     }
@@ -164,33 +156,19 @@ export function Component() {
     void load();
   }, [load]);
 
-  async function handleDelete(entry: JournalEntry) {
-    try {
-      const res = await fetch(`/api/v1/journal/${entry.id}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
-      if (res.ok) {
-        toast.success("Journal note deleted");
-        setEntries((prev) => prev.filter((e) => e.id !== entry.id));
-      } else {
-        toast.error("Failed to delete journal note");
-      }
-    } catch {
-      toast.error("Failed to delete journal note");
-    }
-  }
 
-  const allTags = Array.from(new Set(entries.flatMap((e) => e.tags))).sort();
+
+  const allTags = Array.from(new Set(entries.flatMap((e) => e.tags ?? []))).sort();
 
   const filtered = entries.filter((e) => {
-    if (moodFilter !== "ALL" && e.mood !== moodFilter) return false;
-    if (tagFilter && !e.tags.includes(tagFilter)) return false;
+    if (moodFilter !== "ALL" && normalizeMood(e.mood) !== moodFilter) return false;
+    if (tagFilter && !(e.tags ?? []).includes(tagFilter)) return false;
     if (search) {
       const q = search.toLowerCase();
       return (
-        e.note.toLowerCase().includes(q) ||
-        e.marketTitle.toLowerCase().includes(q)
+        (e.note ?? "").toLowerCase().includes(q) ||
+        (e.marketTitle ?? "").toLowerCase().includes(q) ||
+        (e.marketId ?? "").toLowerCase().includes(q)
       );
     }
     return true;
@@ -313,8 +291,6 @@ export function Component() {
               <JournalEntryCard
                 key={entry.id}
                 entry={entry}
-                onEdit={() => void navigate("/orders")}
-                onDelete={() => void handleDelete(entry)}
               />
             ))}
           </div>
