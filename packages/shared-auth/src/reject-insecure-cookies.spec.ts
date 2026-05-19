@@ -45,14 +45,14 @@ describe("rejectInsecureCookies", () => {
     ).not.toThrow();
   });
 
-  it("allows COOKIE_SECURE=false in production when CI=true", () => {
+  it("throws when COOKIE_SECURE=false in production when CI=true", () => {
     expect(() =>
       rejectInsecureCookies("test-service", {
         NODE_ENV: "production",
         COOKIE_SECURE: "false",
         CI: "true",
       }),
-    ).not.toThrow();
+    ).toThrow("COOKIE_SECURE=false is forbidden in production");
   });
 
   it("still throws in production when CI is not true", () => {
