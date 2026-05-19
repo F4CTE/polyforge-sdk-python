@@ -1,4 +1,9 @@
-import { Injectable, Logger } from "@nestjs/common";
+import {
+  Injectable,
+  Logger,
+  OnModuleDestroy,
+  OnModuleInit,
+} from "@nestjs/common";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService, BetaLimitsConfigService } from "@polyforge/shared-redis";
 import { Prisma } from "@prisma/client";
@@ -30,10 +35,60 @@ interface PriceSnapshot {
 const PROGRESS_KEY = (runId: string) => `backtest:${runId}:progress`;
 const BATCH_SIZE = 500; // BacktestOrders written per DB flush
 const PROGRESS_EVERY = 200; // ticks between progress broadcasts
+const STREAM_BACKTESTS = "stream:backtests";
+const DEFERRED_REQUEUE_KEY = "backtest:deferred-requeues";
+const DEFER_REQUEUE_BACKOFF_MS = 1000;
+const DEFERRED_REQUEUE_POLL_MS = 250;
+const DEFERRED_REQUEUE_BATCH_SIZE = 100;
+
+interface DeferredBacktestRequeue {
+  runId: string;
+  userId: string;
+  strategyId: string;
+}
+
+const DRAIN_DEFERRED_REQUEUES_SCRIPT = `
+local due = redis.call(
+  "ZRANGEBYSCORE",
+  KEYS[1],
+  "-inf",
+  ARGV[1],
+  "LIMIT",
+  0,
+  tonumber(ARGV[3])
+)
+
+for _, member in ipairs(due) do
+  local ok, payload = pcall(cjson.decode, member)
+  if ok and type(payload) == "table" and payload["runId"] and payload["userId"] then
+    redis.call(
+      "XADD",
+      KEYS[2],
+      "*",
+      "runId",
+      tostring(payload["runId"]),
+      "userId",
+      tostring(payload["userId"]),
+      "strategyId",
+      tostring(payload["strategyId"] or ""),
+      "ts",
+      ARGV[2],
+      "requeued",
+      "1"
+    )
+  end
+  redis.call("ZREM", KEYS[1], member)
+end
+
+return #due
+`;
 
 @Injectable()
-export class BacktestService {
+export class BacktestService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(BacktestService.name);
+  private deferredRequeueTimer: ReturnType<typeof setTimeout> | null = null;
+  private deferredRequeuePumpRunning = false;
+  private deferredRequeueDrainInFlight = false;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -41,6 +96,19 @@ export class BacktestService {
     private readonly metrics: MetricsService,
     private readonly betaLimits: BetaLimitsConfigService,
   ) {}
+
+  onModuleInit() {
+    this.deferredRequeuePumpRunning = true;
+    this.scheduleDeferredRequeueDrain(0);
+  }
+
+  onModuleDestroy() {
+    this.deferredRequeuePumpRunning = false;
+    if (this.deferredRequeueTimer) {
+      clearTimeout(this.deferredRequeueTimer);
+      this.deferredRequeueTimer = null;
+    }
+  }
 
   // ─── Entry point ─────────────────────────────────────────────────────────
 
@@ -67,13 +135,12 @@ export class BacktestService {
         this.logger.log(
           `Backtest run ${runId} deferred — user ${run.userId} already has ${runningCount} running`,
         );
-        // Re-enqueue so it will be picked up when the running job finishes
-        await this.redis.xadd("stream:backtests", {
+        // Store the retry durably, then let the consumer move on to unrelated
+        // stream entries while the background pump applies the backoff.
+        await this.deferBacktestRequeue({
           runId,
           userId: run.userId,
           strategyId: run.strategyId ?? "",
-          ts: String(Date.now()),
-          requeued: "1",
         });
         return;
       }
@@ -264,6 +331,57 @@ export class BacktestService {
   }
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
+
+  private async deferBacktestRequeue(
+    payload: DeferredBacktestRequeue,
+  ): Promise<void> {
+    await this.redis
+      .getClient()
+      .zadd(
+        DEFERRED_REQUEUE_KEY,
+        String(Date.now() + DEFER_REQUEUE_BACKOFF_MS),
+        JSON.stringify(payload),
+      );
+  }
+
+  private scheduleDeferredRequeueDrain(delayMs = DEFERRED_REQUEUE_POLL_MS) {
+    if (!this.deferredRequeuePumpRunning || this.deferredRequeueTimer) return;
+
+    this.deferredRequeueTimer = setTimeout(() => {
+      this.deferredRequeueTimer = null;
+      void this.drainDeferredBacktestRequeues()
+        .catch((err: unknown) => {
+          this.logger.error(
+            "Deferred backtest requeue drain failed",
+            err instanceof Error ? err.message : String(err),
+          );
+        })
+        .finally(() => {
+          this.scheduleDeferredRequeueDrain();
+        });
+    }, delayMs);
+    this.deferredRequeueTimer.unref?.();
+  }
+
+  private async drainDeferredBacktestRequeues(): Promise<void> {
+    if (this.deferredRequeueDrainInFlight) return;
+
+    this.deferredRequeueDrainInFlight = true;
+    try {
+      const now = String(Date.now());
+      await this.redis.getClient().eval(
+        DRAIN_DEFERRED_REQUEUES_SCRIPT,
+        2,
+        DEFERRED_REQUEUE_KEY,
+        STREAM_BACKTESTS,
+        now,
+        now,
+        String(DEFERRED_REQUEUE_BATCH_SIZE),
+      );
+    } finally {
+      this.deferredRequeueDrainInFlight = false;
+    }
+  }
 
   private extractTokenIds(blocks: Block[]): string[] {
     const ids = new Set<string>();

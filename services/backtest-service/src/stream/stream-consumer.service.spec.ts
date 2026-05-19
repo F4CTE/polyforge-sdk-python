@@ -136,6 +136,37 @@ describe("StreamConsumerService", () => {
       expect(backtest.run).toHaveBeenCalledWith("run-abc");
     });
 
+    it("continues to unrelated ready messages after a deferred run returns", async () => {
+      let callCount = 0;
+      redis._client.xreadgroup.mockImplementation(async () => {
+        callCount++;
+        if (callCount === 1) {
+          return [["stream:backtests", [["msg-deferred", ["runId", "run-a"]]]]];
+        }
+        if (callCount === 2) {
+          return [["stream:backtests", [["msg-ready", ["runId", "run-b"]]]]];
+        }
+        (svc as any).running = false;
+        return null;
+      });
+
+      (svc as any).running = true;
+      await (svc as any).consumeLoop();
+
+      expect(redis._client.xack).toHaveBeenCalledWith(
+        "stream:backtests",
+        "backtest-service",
+        "msg-deferred",
+      );
+      expect(redis._client.xack).toHaveBeenCalledWith(
+        "stream:backtests",
+        "backtest-service",
+        "msg-ready",
+      );
+      expect(backtest.run).toHaveBeenNthCalledWith(1, "run-a");
+      expect(backtest.run).toHaveBeenNthCalledWith(2, "run-b");
+    });
+
     it("ACKs and skips messages without runId", async () => {
       let callCount = 0;
       redis._client.xreadgroup.mockImplementation(async () => {
@@ -192,6 +223,52 @@ describe("StreamConsumerService", () => {
 
       // Should have tried to run and continued
       expect(backtest.run).toHaveBeenCalledWith("run-err");
+    });
+
+    it("does not ACK another message until the current run finishes", async () => {
+      let resolveFirstRun!: () => void;
+      backtest.run.mockImplementationOnce(
+        () =>
+          new Promise<void>((resolve) => {
+            resolveFirstRun = resolve;
+          }),
+      );
+
+      redis._client.xreadgroup
+        .mockResolvedValueOnce([
+          ["stream:backtests", [["msg-1", ["runId", "run-1"]]]],
+        ])
+        .mockResolvedValueOnce([
+          ["stream:backtests", [["msg-2", ["runId", "run-2"]]]],
+        ])
+        .mockImplementation(async () => {
+          (svc as any).running = false;
+          return null;
+        });
+
+      (svc as any).running = true;
+      const loopPromise = (svc as any).consumeLoop();
+      await vi.waitFor(() => {
+        expect(backtest.run).toHaveBeenCalledWith("run-1");
+      });
+
+      expect(redis._client.xack).toHaveBeenCalledTimes(1);
+      expect(redis._client.xack).toHaveBeenCalledWith(
+        "stream:backtests",
+        "backtest-service",
+        "msg-1",
+      );
+      expect(backtest.run).not.toHaveBeenCalledWith("run-2");
+
+      resolveFirstRun();
+      await loopPromise;
+
+      expect(redis._client.xack).toHaveBeenCalledWith(
+        "stream:backtests",
+        "backtest-service",
+        "msg-2",
+      );
+      expect(backtest.run).toHaveBeenCalledWith("run-2");
     });
 
     it("handles xreadgroup errors gracefully and continues", async () => {

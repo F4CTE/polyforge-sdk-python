@@ -13,6 +13,8 @@ import { Prisma } from "@prisma/client";
  */
 function makeRedisMock() {
   const innerClient = {
+    eval: vi.fn().mockResolvedValue(0),
+    zadd: vi.fn().mockResolvedValue(1),
     xadd: vi.fn().mockResolvedValue("1-0"),
     set: vi.fn().mockResolvedValue("OK"),
   };
@@ -23,6 +25,7 @@ function makeRedisMock() {
     getJson: vi.fn().mockResolvedValue(null),
     xadd: vi.fn().mockResolvedValue("1-0"),
     getClient: vi.fn().mockReturnValue(innerClient),
+    _client: innerClient,
   } as any;
 }
 
@@ -716,6 +719,32 @@ describe("BacktestService — finalize()", () => {
 // ─── run() error handling ─────────────────────────────────────────────────────
 
 describe("BacktestService — run() error handling", () => {
+  it("drains due deferred requeues into the backtest stream with one Redis script", async () => {
+    const prisma = makePrismaMock();
+    const redis = makeRedisMock();
+    const metrics = makeMetricsMock();
+    const svc = new BacktestService(
+      prisma,
+      redis,
+      metrics,
+      makeBetaLimitsMock(),
+    );
+
+    await (svc as any).drainDeferredBacktestRequeues();
+
+    expect(redis._client.eval).toHaveBeenCalledTimes(1);
+    expect(redis._client.eval).toHaveBeenCalledWith(
+      expect.stringContaining("ZRANGEBYSCORE"),
+      2,
+      "backtest:deferred-requeues",
+      "stream:backtests",
+      expect.any(String),
+      expect.any(String),
+      "100",
+    );
+    expect(redis._client.eval.mock.calls[0][0]).toContain("XADD");
+  });
+
   it("marks run as FAILED when an unexpected error is thrown", async () => {
     const prisma = makePrismaMock();
     const redis = makeRedisMock();
@@ -955,5 +984,126 @@ describe("BacktestService — TA trigger integration", () => {
     expect(finalizeCall).toBeDefined();
     // price_above_tick > 0.8 should fire on the last tok-a tick
     expect(finalizeCall![0].data.totalOrders).toBeGreaterThan(0);
+  });
+});
+
+describe("BacktestService — concurrency guard", () => {
+  it("starts the deferred requeue pump on module init", async () => {
+    vi.useFakeTimers();
+    const prisma = makePrismaMock();
+    const redis = makeRedisMock();
+    const metrics = makeMetricsMock();
+    const svc = new BacktestService(
+      prisma,
+      redis,
+      metrics,
+      makeBetaLimitsMock(),
+    );
+    const drainSpy = vi
+      .spyOn(svc as any, "drainDeferredBacktestRequeues")
+      .mockResolvedValue(undefined);
+
+    try {
+      svc.onModuleInit();
+
+      expect((svc as any).deferredRequeuePumpRunning).toBe(true);
+      expect((svc as any).deferredRequeueTimer).not.toBeNull();
+
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect(drainSpy).toHaveBeenCalledTimes(1);
+      expect((svc as any).deferredRequeueTimer).not.toBeNull();
+    } finally {
+      svc.onModuleDestroy();
+      vi.useRealTimers();
+    }
+  });
+
+  it("logs deferred requeue pump errors and schedules the next drain", async () => {
+    vi.useFakeTimers();
+    const prisma = makePrismaMock();
+    const redis = makeRedisMock();
+    const metrics = makeMetricsMock();
+    const svc = new BacktestService(
+      prisma,
+      redis,
+      metrics,
+      makeBetaLimitsMock(),
+    ) as any;
+    svc.logger.error = vi.fn();
+    vi.spyOn(svc, "drainDeferredBacktestRequeues").mockRejectedValue(
+      new Error("drain down"),
+    );
+
+    try {
+      svc.onModuleInit();
+
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect(svc.logger.error).toHaveBeenCalledWith(
+        "Deferred backtest requeue drain failed",
+        "drain down",
+      );
+      expect(svc.deferredRequeueTimer).not.toBeNull();
+    } finally {
+      svc.onModuleDestroy();
+      vi.useRealTimers();
+    }
+  });
+
+  it("stops the deferred requeue pump and clears a pending timer on destroy", () => {
+    vi.useFakeTimers();
+    const prisma = makePrismaMock();
+    const redis = makeRedisMock();
+    const metrics = makeMetricsMock();
+    const svc = new BacktestService(
+      prisma,
+      redis,
+      metrics,
+      makeBetaLimitsMock(),
+    );
+
+    try {
+      svc.onModuleInit();
+      expect((svc as any).deferredRequeueTimer).not.toBeNull();
+
+      svc.onModuleDestroy();
+
+      expect((svc as any).deferredRequeuePumpRunning).toBe(false);
+      expect((svc as any).deferredRequeueTimer).toBeNull();
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("stores deferred requeues durably with backoff without sleeping in run()", async () => {
+    const prisma = makePrismaMock();
+    const redis = makeRedisMock();
+    const metrics = makeMetricsMock();
+    const svc = new BacktestService(
+      prisma,
+      redis,
+      metrics,
+      makeBetaLimitsMock(),
+    );
+
+    prisma.backtestRun.count.mockResolvedValue(1);
+
+    const before = Date.now();
+    await svc.run("run-1");
+
+    expect(redis.xadd).not.toHaveBeenCalled();
+    expect(prisma.backtestRun.update).not.toHaveBeenCalled();
+    expect(redis._client.zadd).toHaveBeenCalledTimes(1);
+
+    const [key, score, payload] = redis._client.zadd.mock.calls[0];
+    expect(key).toBe("backtest:deferred-requeues");
+    expect(Number(score)).toBeGreaterThanOrEqual(before + 1000);
+    expect(JSON.parse(payload)).toEqual({
+      runId: "run-1",
+      userId: "user-1",
+      strategyId: "strat-1",
+    });
   });
 });
