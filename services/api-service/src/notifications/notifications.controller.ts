@@ -1,6 +1,11 @@
 import { Controller, Get, Query, UseGuards } from "@nestjs/common";
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
-import { JwtAuthGuard, CurrentUser } from "@polyforge/shared-auth";
+import {
+  JwtAuthGuard,
+  CurrentUser,
+  ApiKeyScopeGuard,
+  RequireScopes,
+} from "@polyforge/shared-auth";
 import { JwtPayload } from "@polyforge/shared-types";
 import { NotificationsService } from "./notifications.service";
 import { PaginationDto } from "../common/dto/pagination.dto";
@@ -13,6 +18,8 @@ export class NotificationsController {
   constructor(private readonly notifications: NotificationsService) {}
 
   @Get()
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes("READ")
   list(@CurrentUser() user: JwtPayload, @Query() query: PaginationDto) {
     return this.notifications.list(user.sub, query.page, query.limit);
   }
