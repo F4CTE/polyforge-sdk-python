@@ -41,7 +41,7 @@ export function createCorsOriginDelegate(
     } else if (allowed.includes(origin)) {
       callback(null, true);
     } else {
-      callback(null, false);
+      callback(new Error("CORS: origin not allowed"), false);
     }
   };
 }

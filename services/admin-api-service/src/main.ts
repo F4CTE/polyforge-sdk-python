@@ -19,6 +19,7 @@ import etag from "@fastify/etag";
 import helmet from "@fastify/helmet";
 import { AppModule } from "./app.module";
 import {
+  createCorsOriginDelegate,
   rejectPlaceholderSecrets,
   validateSesSmtpConfig,
 } from "@polyforge/shared-auth";
@@ -120,18 +121,19 @@ async function bootstrap() {
     new GlobalExceptionFilter(),
   );
 
-  // CORS — admin subdomain only
+  // CORS — admin subdomain only (fail-closed via shared delegate)
   app.enableCors({
-    origin: (origin, cb) => {
-      const allowed = getAllowedAdminCorsOrigins();
-      if (!origin) {
-        cb(null, false);
-      } else if (allowed.includes(origin)) {
-        cb(null, true);
-      } else {
-        cb(null, false);
-      }
-    },
+    origin: createCorsOriginDelegate({
+      configuredOrigins: process.env.ADMIN_CORS_ORIGINS ?? undefined,
+      includeDevOrigins: process.env.NODE_ENV !== "production",
+      devOrigins: [
+        "http://localhost:4300",
+        "http://localhost:8080",
+        "http://127.0.0.1:8080",
+        "https://localhost:8443",
+        "https://polyforge-lab:8443",
+      ] as const,
+    }),
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,

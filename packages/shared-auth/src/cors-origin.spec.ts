@@ -17,7 +17,7 @@ describe("createCorsOriginDelegate", () => {
     expect(callbackCalls).toEqual([[null, true]]);
   });
 
-  it("silently rejects disallowed origins without echoing the origin", () => {
+  it("rejects disallowed origins with an error", () => {
     const delegate = createCorsOriginDelegate({
       configuredOrigins: "https://app.polyforge.test",
       includeDevOrigins: false,
@@ -29,7 +29,9 @@ describe("createCorsOriginDelegate", () => {
       callbackCalls.push([error, allowed]);
     });
 
-    expect(callbackCalls).toEqual([[null, false]]);
+    expect(callbackCalls).toEqual([
+      [new Error("CORS: origin not allowed"), false],
+    ]);
   });
 
   it("silently rejects originless requests", () => {
@@ -44,6 +46,24 @@ describe("createCorsOriginDelegate", () => {
     });
 
     expect(callbackCalls).toEqual([[null, false]]);
+  });
+
+  it("rejects disallowed origins with custom dev origins (regression: admin-api path)", () => {
+    const delegate = createCorsOriginDelegate({
+      configuredOrigins: "https://admin.polyforge.test",
+      includeDevOrigins: true,
+      devOrigins: ["http://localhost:4300", "http://localhost:8080"] as const,
+    });
+    const blockedOrigin = "https://attacker.example";
+    const callbackCalls: Array<[Error | null, boolean]> = [];
+
+    delegate(blockedOrigin, (error, allowed) => {
+      callbackCalls.push([error, allowed]);
+    });
+
+    expect(callbackCalls).toEqual([
+      [new Error("CORS: origin not allowed"), false],
+    ]);
   });
 });
 
