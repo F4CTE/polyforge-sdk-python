@@ -7,6 +7,7 @@ function makeRedis(acquired: "OK" | null = "OK") {
   const client = {
     set: vi.fn().mockResolvedValue(acquired),
     del: vi.fn().mockResolvedValue(1),
+    eval: vi.fn().mockResolvedValue(1),
   };
 
   return {
@@ -41,7 +42,7 @@ describe("runOncePerCluster", () => {
     expect(result).toBe("done");
     expect(client.set).toHaveBeenCalledWith(
       "lock:job",
-      "1",
+      expect.any(String),
       "PX",
       30_000,
       "NX",
@@ -49,7 +50,7 @@ describe("runOncePerCluster", () => {
     expect(job).toHaveBeenCalledTimes(1);
     // Lock is NOT deleted on success — TTL handles cleanup to prevent
     // a second caller from re-acquiring and re-running the same job.
-    expect(client.del).not.toHaveBeenCalled();
+    expect(client.eval).not.toHaveBeenCalled();
   });
 
   it("returns null without running the job when another worker owns the lock", async () => {
@@ -65,10 +66,10 @@ describe("runOncePerCluster", () => {
 
     expect(result).toBeNull();
     expect(job).not.toHaveBeenCalled();
-    expect(client.del).not.toHaveBeenCalled();
+    expect(client.eval).not.toHaveBeenCalled();
   });
 
-  it("releases the lock when the job throws", async () => {
+  it("releases the lock safely when the job throws", async () => {
     const { redis, client } = makeRedis("OK");
     const job = vi.fn().mockRejectedValue(new Error("boom"));
 
@@ -81,6 +82,11 @@ describe("runOncePerCluster", () => {
       }),
     ).rejects.toThrow("boom");
 
-    expect(client.del).toHaveBeenCalledWith("lock:job");
+    expect(client.eval).toHaveBeenCalledWith(
+      "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end",
+      1,
+      "lock:job",
+      expect.any(String),
+    );
   });
 });

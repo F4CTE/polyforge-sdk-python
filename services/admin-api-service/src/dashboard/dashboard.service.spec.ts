@@ -76,9 +76,12 @@ describe("DashboardService", () => {
 
       const client = redis.getClient();
       const setCalls = client.set.mock.calls;
-      // At least one call should have "down" status
+      // Ignore lock bookkeeping writes from runOncePerCluster and inspect only health payloads.
       const hasDown = setCalls.some(
-        (call: any[]) => JSON.parse(call[1]).status === "down",
+        (call: any[]) =>
+          typeof call[0] === "string" &&
+          call[0].startsWith("health:") &&
+          JSON.parse(call[1]).status === "down",
       );
       expect(hasDown).toBe(true);
     });
