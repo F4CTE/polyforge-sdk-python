@@ -35,9 +35,20 @@ resource "aws_sns_topic_policy" "alerts" {
       {
         Sid       = "AllowElastiCachePublish"
         Effect    = "Allow"
-        Principal = { Service = "elasticache.amazonaws.com" }
+        Principal = { Service = ["elasticache.amazonaws.com", "ec.amazonaws.com"] }
         Action    = "sns:Publish"
         Resource  = aws_sns_topic.alerts.arn
+        Condition = {
+          StringEquals = {
+            "aws:SourceAccount" = data.aws_caller_identity.current.account_id
+          }
+          ArnLike = {
+            "aws:SourceArn" = [
+              "arn:aws:elasticache:${var.aws_region}:${data.aws_caller_identity.current.account_id}:replicationgroup:${local.redis_replication_group_id}",
+              "arn:aws:elasticache:${var.aws_region}:${data.aws_caller_identity.current.account_id}:cluster:${local.redis_replication_group_id}-*"
+            ]
+          }
+        }
       },
       {
         Sid       = "AllowEventBridgePublish"
