@@ -732,6 +732,7 @@ describe('UsersService', () => {
       expect(redis._pipelineDel).toHaveBeenCalledWith(
         `refresh:${record.userId}:abc123`,
       );
+      expect(redis._pipelineDel).toHaveBeenCalledWith('refresh_lookup:abc123');
       expect(redis._pipelineExec).toHaveBeenCalledOnce();
     });
 

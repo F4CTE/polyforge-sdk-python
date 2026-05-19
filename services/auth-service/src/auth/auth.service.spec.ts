@@ -954,6 +954,9 @@ describe('AuthService', () => {
       expect(usersService.findById).not.toHaveBeenCalled();
       expect(jwtService.sign).not.toHaveBeenCalled();
       expect(redis.set).not.toHaveBeenCalled();
+      expect(redis.del).toHaveBeenCalledWith(
+        `refresh_lookup:${tokenHash}`,
+      );
     });
   });
 

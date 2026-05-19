@@ -335,6 +335,10 @@ export class UsersService {
       stream.on('data', (keys: string[]) => {
         for (const key of keys) {
           pipeline.del(key);
+          const tokenHash = key.split(':').pop();
+          if (tokenHash) {
+            pipeline.del(`refresh_lookup:${tokenHash}`);
+          }
           count++;
         }
       });

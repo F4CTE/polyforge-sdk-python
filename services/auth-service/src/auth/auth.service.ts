@@ -39,6 +39,7 @@ const REFRESH_KEY = (userId: string, tokenHash: string) =>
 
 /** Pattern to match all refresh tokens for a user */
 const REFRESH_PATTERN = (userId: string) => `refresh:${userId}:*`;
+const REFRESH_LOOKUP_KEY = (tokenHash: string) => `refresh_lookup:${tokenHash}`;
 
 function hashToken(token: string): string {
   return createHash('sha256').update(token).digest('hex');
@@ -477,7 +478,7 @@ export class AuthService {
 
   async refresh(refreshToken: string) {
     const tokenHash = hashToken(refreshToken);
-    const lookupKey = `refresh_lookup:${tokenHash}`;
+    const lookupKey = REFRESH_LOOKUP_KEY(tokenHash);
 
     const userId = await this.redis.get(lookupKey);
     if (!userId) {
@@ -503,6 +504,7 @@ export class AuthService {
         `Refresh token replay detected for user ${userId} — revoking all tokens`,
       );
       await this.revokeAllRefreshTokens(userId);
+      await this.redis.del(lookupKey);
       throw new HttpException(
         {
           code: 'REFRESH_TOKEN_REPLAY',
@@ -549,6 +551,7 @@ export class AuthService {
     // We don't know the userId from the token alone, so scan for the key
     const result = await this.scanRefreshKeys(refreshToken);
     if (result) {
+      await this.redis.del(REFRESH_LOOKUP_KEY(tokenHash));
       await this.redis.del(result.key);
     }
   }
@@ -565,6 +568,10 @@ export class AuthService {
       stream.on('data', (keys: string[]) => {
         for (const key of keys) {
           pipeline.del(key);
+          const tokenHash = key.split(':')[2];
+          if (tokenHash) {
+            pipeline.del(REFRESH_LOOKUP_KEY(tokenHash));
+          }
           count++;
         }
       });
@@ -772,7 +779,7 @@ export class AuthService {
     await this.redis.set(key, userId, REFRESH_TTL_SECONDS);
     // Reverse lookup: tokenHash -> userId (O(1) instead of SCAN)
     await this.redis.set(
-      `refresh_lookup:${tokenHash}`,
+      REFRESH_LOOKUP_KEY(tokenHash),
       userId,
       REFRESH_TTL_SECONDS,
     );
@@ -787,7 +794,7 @@ export class AuthService {
     const tokenHash = hashToken(refreshToken);
 
     // O(1) reverse lookup — no SCAN needed
-    const userId = await this.redis.get(`refresh_lookup:${tokenHash}`);
+    const userId = await this.redis.get(REFRESH_LOOKUP_KEY(tokenHash));
     if (!userId) return null;
 
     const key = REFRESH_KEY(userId, tokenHash);
@@ -795,7 +802,7 @@ export class AuthService {
     const stored = await this.redis.get(key);
     if (!stored) {
       // Clean up orphaned reverse lookup
-      await this.redis.del(`refresh_lookup:${tokenHash}`);
+      await this.redis.del(REFRESH_LOOKUP_KEY(tokenHash));
       return null;
     }
 
