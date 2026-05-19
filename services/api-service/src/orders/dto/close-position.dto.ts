@@ -13,4 +13,8 @@ export class ClosePositionDto {
   @IsOptional()
   @IsNumberString()
   size?: string;
+
+  @IsOptional()
+  @IsNumberString()
+  price?: string;
 }

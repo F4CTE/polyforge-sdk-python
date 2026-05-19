@@ -89,7 +89,7 @@ describe('trading POST idempotency callsites', () => {
 
   it('sends Idempotency-Key from orders, portfolio, and arbitrage submits', () => {
     expectFetchHeader('apps/user-app/src/pages/orders/orders.tsx', '/api/v1/orders/conditional');
-    expectFetchHeader('apps/user-app/src/pages/portfolio/portfolio.tsx', '/api/v1/orders/place');
+    expectFetchHeader('apps/user-app/src/pages/portfolio/portfolio.tsx', '/api/v1/orders/close-position');
     expectFetchHeader('apps/user-app/src/pages/portfolio/portfolio.tsx', '/api/v1/orders/redeem');
     expectFetchHeader('apps/user-app/src/pages/arbitrage/arbitrage.tsx', '/api/v1/orders/place');
   });

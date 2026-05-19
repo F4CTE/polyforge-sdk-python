@@ -13,7 +13,12 @@ export class PortfolioService {
   async getPortfolio(userId: string): Promise<any> {
     // Positions: no `closed` field — use resolutionStatus
     const positions = await this.prisma.position.findMany({
-      where: { userId, resolutionStatus: ResolutionStatus.UNRESOLVED },
+      where: {
+        userId,
+        resolutionStatus: {
+          in: [ResolutionStatus.UNRESOLVED, ResolutionStatus.RESOLVING],
+        },
+      },
     });
 
     let totalUnrealizedPnl = 0;

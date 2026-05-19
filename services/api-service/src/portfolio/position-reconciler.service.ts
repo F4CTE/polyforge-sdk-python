@@ -26,7 +26,11 @@ export class PositionReconcilerService {
       job: async () => {
         // Only reconcile users who actually have unresolved positions
         const usersWithPositions = await this.prisma.position.findMany({
-          where: { resolutionStatus: ResolutionStatus.UNRESOLVED },
+          where: {
+            resolutionStatus: {
+              in: [ResolutionStatus.UNRESOLVED, ResolutionStatus.RESOLVING],
+            },
+          },
           select: { userId: true },
           distinct: ["userId"],
         });
@@ -70,11 +74,19 @@ export class PositionReconcilerService {
 
   async reconcileUser(userId: string, walletAddress: string): Promise<void> {
     const polyPositions = await this.clob.getPositions(walletAddress);
-    if (polyPositions.length === 0) return;
 
     const localPositions = await this.prisma.position.findMany({
-      where: { userId, resolutionStatus: ResolutionStatus.UNRESOLVED },
+      where: {
+        userId,
+        resolutionStatus: {
+          in: [ResolutionStatus.UNRESOLVED, ResolutionStatus.RESOLVING],
+        },
+      },
     });
+
+    if (polyPositions.length === 0 && localPositions.length === 0) return;
+
+    const matchedLocalIds = new Set<string>();
 
     for (const polyPos of polyPositions) {
       const local = localPositions.find((lp) => lp.tokenId === polyPos.asset);
@@ -98,22 +110,69 @@ export class PositionReconcilerService {
           },
         });
       } else if (local && parseFloat(polyPos.size) === 0) {
-        this.logger.warn(`Stale local position ${local.id}, marking resolved`);
-        await this.prisma.position.update({
-          where: { id: local.id },
-          data: { resolutionStatus: ResolutionStatus.RESOLVED, size: 0 },
-        });
-        // Notify user via WebSocket
-        this.gateway.pushNotification(userId, {
-          type: "MARKET_RESOLVED",
-          positionId: local.id,
-          tokenId: local.tokenId,
-          marketId: local.marketId,
-          outcome: local.outcome,
-          realizedPnl: polyPos.realizedPnl ?? "0",
-          message: `Market resolved — your ${local.outcome} position has settled. P&L: ${polyPos.realizedPnl ?? "0"} USDC`,
-        });
+        matchedLocalIds.add(local.id);
+
+        if (local.resolutionStatus === ResolutionStatus.RESOLVING) {
+          this.logger.warn(
+            `User-closed position ${local.id} settled, marking resolved`,
+          );
+          await this.prisma.position.update({
+            where: { id: local.id },
+            data: {
+              resolutionStatus: ResolutionStatus.RESOLVED,
+              size: 0,
+              realizedPnl: polyPos.realizedPnl ?? "0",
+            },
+          });
+        } else {
+          this.logger.warn(
+            `Stale local position ${local.id}, marking resolved`,
+          );
+          await this.prisma.position.update({
+            where: { id: local.id },
+            data: { resolutionStatus: ResolutionStatus.RESOLVED, size: 0 },
+          });
+          this.gateway.pushNotification(userId, {
+            type: "MARKET_RESOLVED",
+            positionId: local.id,
+            tokenId: local.tokenId,
+            marketId: local.marketId,
+            outcome: local.outcome,
+            realizedPnl: polyPos.realizedPnl ?? "0",
+            message: `Market resolved — your ${local.outcome} position has settled. P&L: ${polyPos.realizedPnl ?? "0"} USDC`,
+          });
+        }
+      } else if (local) {
+        matchedLocalIds.add(local.id);
+
+        // If a RESOLVING position still has CLOB size, the close failed.
+        // Revert to UNRESOLVED so the user can retry.
+        if (
+          local.resolutionStatus === ResolutionStatus.RESOLVING &&
+          parseFloat(polyPos.size) > 0
+        ) {
+          this.logger.warn(
+            `RESOLVING position ${local.id} still has CLOB size, reverting to UNRESOLVED`,
+          );
+          await this.prisma.position.update({
+            where: { id: local.id },
+            data: { resolutionStatus: ResolutionStatus.UNRESOLVED },
+          });
+        }
       }
+    }
+
+    for (const local of localPositions) {
+      if (matchedLocalIds.has(local.id)) continue;
+      if (local.resolutionStatus !== ResolutionStatus.RESOLVING) continue;
+
+      this.logger.warn(
+        `RESOLVING position ${local.id} absent from CLOB, marking resolved`,
+      );
+      await this.prisma.position.update({
+        where: { id: local.id },
+        data: { resolutionStatus: ResolutionStatus.RESOLVED, size: 0 },
+      });
     }
   }
 }

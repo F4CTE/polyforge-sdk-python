@@ -1,10 +1,12 @@
 import {
   Injectable,
+  Logger,
   NotFoundException,
   UnprocessableEntityException,
   ForbiddenException,
   BadRequestException,
   ConflictException,
+  InternalServerErrorException,
 } from "@nestjs/common";
 import { BetaLimitsConfigService } from "@polyforge/shared-redis";
 import { getMonthlyConfirmedVolume } from "../common/monthly-volume";
@@ -49,6 +51,8 @@ type CancelledOrderRow = {
 
 @Injectable()
 export class OrdersService {
+  private readonly logger = new Logger(OrdersService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly redis: RedisService,
@@ -157,24 +161,43 @@ export class OrdersService {
 
     const intentId = randomUUID();
     const orderId = randomUUID();
-    const size = dto.size ?? String(position.size);
+    const size = String(position.size);
 
     // Publish close intent to stream:orders
-    await this.redis.xadd("stream:orders", {
-      intentId,
-      orderId,
-      userId,
-      strategyId: "",
-      marketId: position.marketId,
-      tokenId: dto.tokenId,
-      side: "SELL",
-      outcome: "YES",
-      size,
-      price: "0.01",
-      orderType: "FOK",
-      expiration: "0",
-      ts: String(Date.now()),
-    });
+    try {
+      await this.redis.xadd("stream:orders", {
+        intentId,
+        orderId,
+        userId,
+        strategyId: "",
+        marketId: position.marketId,
+        tokenId: dto.tokenId,
+        side: "SELL",
+        outcome: position.outcome,
+        size,
+        price: dto.price ?? "0.01",
+        orderType: "FOK",
+        expiration: "0",
+        ts: String(Date.now()),
+      });
+    } catch (err: unknown) {
+      this.logger.error(
+        `Failed to publish close intent for position ${position.id}, reverting status`,
+        err instanceof Error ? err.message : String(err),
+      );
+      await this.prisma.position.updateMany({
+        where: {
+          id: position.id,
+          userId,
+          resolutionStatus: ResolutionStatus.RESOLVING,
+        },
+        data: { resolutionStatus: ResolutionStatus.UNRESOLVED },
+      });
+      throw new InternalServerErrorException({
+        code: "CLOSE_PUBLISH_FAILED",
+        message: "Failed to submit close order, please try again",
+      });
+    }
 
     return { orderId, intentId, status: "PENDING" };
   }

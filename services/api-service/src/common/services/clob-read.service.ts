@@ -119,7 +119,11 @@ export class ClobReadService {
     }>
   > {
     const res = await this.fetch(`/positions?user=${walletAddress}`);
-    if (!res.ok) return [];
+    if (!res.ok) {
+      throw new Error(
+        `CLOB positions endpoint returned ${res.status} for ${walletAddress}`,
+      );
+    }
     return res.json() as Promise<
       Array<{
         asset: string;

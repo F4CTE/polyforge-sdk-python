@@ -120,7 +120,7 @@ describe("PositionReconcilerService", () => {
 
   // ── Closes stale local positions ───────────────────────────────────────
 
-  it("marks stale local positions as resolved when Polymarket size is 0", async () => {
+  it("marks stale UNRESOLVED positions as resolved when Polymarket size is 0", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({
@@ -135,6 +135,8 @@ describe("PositionReconcilerService", () => {
       {
         id: "pos-1",
         tokenId: "token-xyz",
+        marketId: "mkt-1",
+        outcome: "YES",
         resolutionStatus: "UNRESOLVED",
       },
     ]);
@@ -145,6 +147,128 @@ describe("PositionReconcilerService", () => {
       where: { id: "pos-1" },
       data: { resolutionStatus: "RESOLVED", size: 0 },
     });
+
+    expect(gateway.pushNotification).toHaveBeenCalledWith(
+      "user-1",
+      expect.objectContaining({ type: "MARKET_RESOLVED" }),
+    );
+  });
+
+  it("marks RESOLVING positions as resolved without MARKET_RESOLVED notification when Polymarket size is 0", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => [
+          { asset: "token-xyz", size: "0", avgPrice: "0.50", realizedPnl: "0" },
+        ],
+      }),
+    );
+
+    prisma.position.findMany.mockResolvedValue([
+      {
+        id: "pos-2",
+        tokenId: "token-xyz",
+        marketId: "mkt-2",
+        outcome: "YES",
+        resolutionStatus: "RESOLVING",
+      },
+    ]);
+
+    await svc.reconcileUser("user-1", "0xWallet");
+
+    expect(prisma.position.update).toHaveBeenCalledWith({
+      where: { id: "pos-2" },
+      data: { resolutionStatus: "RESOLVED", size: 0, realizedPnl: "0" },
+    });
+
+    expect(gateway.pushNotification).not.toHaveBeenCalled();
+  });
+
+  it("marks unmatched RESOLVING positions as resolved when CLOB omits them", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => [
+          { asset: "other-token", size: "10", avgPrice: "0.70", realizedPnl: "0" },
+        ],
+      }),
+    );
+
+    prisma.position.findMany.mockResolvedValue([
+      {
+        id: "pos-3",
+        tokenId: "missing-from-clob",
+        marketId: "mkt-3",
+        outcome: "NO",
+        resolutionStatus: "RESOLVING",
+      },
+    ]);
+
+    await svc.reconcileUser("user-1", "0xWallet");
+
+    expect(prisma.position.update).toHaveBeenCalledWith({
+      where: { id: "pos-3" },
+      data: { resolutionStatus: "RESOLVED", size: 0 },
+    });
+
+    expect(gateway.pushNotification).not.toHaveBeenCalled();
+  });
+
+  it("reverts RESOLVING positions to UNRESOLVED when CLOB still shows positive size (close failed)", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => [
+          { asset: "token-xyz", size: "10", avgPrice: "0.50", realizedPnl: "0" },
+        ],
+      }),
+    );
+
+    prisma.position.findMany.mockResolvedValue([
+      {
+        id: "pos-5",
+        tokenId: "token-xyz",
+        marketId: "mkt-5",
+        outcome: "YES",
+        resolutionStatus: "RESOLVING",
+      },
+    ]);
+
+    await svc.reconcileUser("user-1", "0xWallet");
+
+    expect(prisma.position.update).toHaveBeenCalledWith({
+      where: { id: "pos-5" },
+      data: { resolutionStatus: "UNRESOLVED" },
+    });
+
+    expect(gateway.pushNotification).not.toHaveBeenCalled();
+  });
+
+  it("does not mark UNRESOLVED positions as resolved when absent from CLOB", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => [
+          { asset: "other-token", size: "10", avgPrice: "0.70", realizedPnl: "0" },
+        ],
+      }),
+    );
+
+    prisma.position.findMany.mockResolvedValue([
+      {
+        id: "pos-4",
+        tokenId: "missing-from-clob",
+        resolutionStatus: "UNRESOLVED",
+      },
+    ]);
+
+    await svc.reconcileUser("user-1", "0xWallet");
+
+    expect(prisma.position.update).not.toHaveBeenCalled();
   });
 
   // ── Skips non-connected users ──────────────────────────────────────────
@@ -188,7 +312,9 @@ describe("PositionReconcilerService", () => {
     await svc.reconcile();
 
     expect(prisma.position.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { resolutionStatus: "UNRESOLVED" } }),
+      expect.objectContaining({
+        where: { resolutionStatus: { in: ["UNRESOLVED", "RESOLVING"] } },
+      }),
     );
     expect(prisma.user.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -231,13 +357,15 @@ describe("PositionReconcilerService", () => {
 
   // ── Handles non-ok API response ────────────────────────────────────────
 
-  it("returns early for non-ok API response", async () => {
+  it("throws on non-ok API response to prevent reconciliation with stale data", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({ ok: false, status: 503 }),
     );
 
-    await svc.reconcileUser("user-1", "0xAddr");
+    await expect(svc.reconcileUser("user-1", "0xAddr")).rejects.toThrow(
+      "503",
+    );
 
     expect(prisma.position.findMany).not.toHaveBeenCalled();
   });

@@ -387,7 +387,7 @@ describe("OrdersService", () => {
       expect(streamPayload.size).toBe("100.00");
     });
 
-    it("uses dto.size when explicitly provided", async () => {
+    it("ignores dto.size and always uses the full position size", async () => {
       db.user.findUnique.mockResolvedValue(makeUser() as any);
       db.position.findFirst.mockResolvedValue(makePosition() as any);
 
@@ -398,7 +398,7 @@ describe("OrdersService", () => {
 
       const streamPayload = (redis.xadd as ReturnType<typeof vi.fn>).mock
         .calls[0][1];
-      expect(streamPayload.size).toBe("25.00");
+      expect(streamPayload.size).toBe("50.00");
     });
 
     it("publishes close intent with generated orderId and FOK order type", async () => {

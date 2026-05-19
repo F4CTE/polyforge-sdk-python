@@ -58,13 +58,16 @@ describe("PortfolioService", () => {
       expect(result.totalRealizedPnl).toBeDefined();
     });
 
-    it("queries only UNRESOLVED positions", async () => {
+    it("queries UNRESOLVED and RESOLVING positions", async () => {
       db.position.findMany.mockResolvedValue([]);
 
       await service.getPortfolio("user-uuid-1");
 
       expect(db.position.findMany).toHaveBeenCalledWith({
-        where: { userId: "user-uuid-1", resolutionStatus: "UNRESOLVED" },
+        where: {
+          userId: "user-uuid-1",
+          resolutionStatus: { in: ["UNRESOLVED", "RESOLVING"] },
+        },
       });
     });
 

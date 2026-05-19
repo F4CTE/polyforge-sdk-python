@@ -85,4 +85,38 @@ describe("ClobReadService", () => {
       "network down",
     );
   });
+
+  it("returns positions for an ok response", async () => {
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockResolvedValue(
+      mockFetchResponse(true, [
+        { asset: "token-1", size: "10", avgPrice: "0.50", realizedPnl: "0" },
+      ]),
+    );
+    const service = makeService();
+
+    const result = await service.getPositions("0xAddr");
+
+    expect(result).toEqual([
+      { asset: "token-1", size: "10", avgPrice: "0.50", realizedPnl: "0" },
+    ]);
+  });
+
+  it("throws on non-ok positions response so reconciler does not process stale data", async () => {
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockResolvedValue(mockFetchResponse(false, null, 503));
+    const service = makeService();
+
+    await expect(service.getPositions("0xAddr")).rejects.toThrow("503");
+  });
+
+  it("propagates network errors from positions lookup", async () => {
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockRejectedValue(new Error("ECONNREFUSED"));
+    const service = makeService();
+
+    await expect(service.getPositions("0xAddr")).rejects.toThrow(
+      "ECONNREFUSED",
+    );
+  });
 });

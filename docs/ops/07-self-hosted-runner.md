@@ -129,13 +129,15 @@ systemctl list-unit-files "actions.runner*.service" --no-legend \
 
 ## CI Pipeline Structure
 
-The PolyForge CI workflow (`.github/workflows/ci.yml`) uses `runs-on: [self-hosted, linux]`:
+The PolyForge CI workflow (`.github/workflows/ci.yml`) uses `runs-on: [self-hosted, linux]` for most jobs and `runs-on: [self-hosted, linux, x64]` for the `secret-scan` and `semgrep` jobs whose tooling is x64-only.
 
 | Job | Runner | Notes |
 |---|---|---|
 | Lint | self-hosted | pnpm cache warm — ~5s install |
 | Typecheck | self-hosted | pnpm cache warm |
 | Test | self-hosted | pnpm cache warm; unit tests with mocked infra |
+| secret-scan | self-hosted (x64) | gitleaks binary is x64-only |
+| semgrep | self-hosted (x64) | pinned semgrep wheels are x64-only |
 | Build | self-hosted | pnpm cache + Docker build cache via local registry |
 | Deploy to Dev | self-hosted | SSH to `polyforge-lab` → Docker rebuild → health check |
 | E2E | self-hosted | Playwright against Docker services on `polyforge-lab` |
@@ -185,7 +187,7 @@ tar xzf ./actions-runner-linux-x64.tar.gz
 ./config.sh --url https://github.com/F4CTE/PolyForge \
             --token <TOKEN> \
             --name polyforge-lab-4 \
-            --labels self-hosted,linux \
+            --labels self-hosted,linux,x64,gpu,polyforge \
             --unattended
 
 # 4. Install as systemd service

@@ -763,19 +763,13 @@ export function Component() {
     setClosingPosition(prev => ({ ...prev, [pos.id]: true }));
     try {
       const idempotencyKey = getOrCreatePendingIdempotencyKeyForId(closePositionIdempotencyKeysRef, pos.id, 'close-position');
-      const res = await fetch('/api/v1/orders/place', {
+      const res = await fetch('/api/v1/orders/close-position', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...idempotencyHeaders(idempotencyKey) },
         credentials: 'include',
         body: JSON.stringify({
           tokenId: pos.tokenId,
-          side: pos.side === 'BUY' ? 'SELL' : 'BUY',
-          outcome: pos.outcome,
-          size: pos.size,
-          orderType: 'FOK',
-          price: pos.currentPrice && parseFloat(pos.currentPrice) > 0
-            ? parseFloat(pos.currentPrice)
-            : 0.5,
+          price: parseFloat(pos.currentPrice) > 0 ? pos.currentPrice : undefined,
         }),
       });
       if (res.ok) {
