@@ -4,7 +4,7 @@ export interface ApiRateLimitEnv {
 }
 
 export function getApiRateLimit(env: ApiRateLimitEnv = process.env): number {
-  if (env.CI === "true") {
+  if (env.CI === "true" && env.NODE_ENV !== "production") {
     return 10000;
   }
 
