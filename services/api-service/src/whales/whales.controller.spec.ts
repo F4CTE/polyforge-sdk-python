@@ -1,6 +1,10 @@
 import { describe, it, expect } from "vitest";
 import { WhalesController } from "./whales.controller";
-import { JwtAuthGuard } from "@polyforge/shared-auth";
+import {
+  JwtAuthGuard,
+  ApiKeyScopeGuard,
+  REQUIRED_SCOPES,
+} from "@polyforge/shared-auth";
 
 const GUARDS_KEY = "__guards__";
 
@@ -47,5 +51,59 @@ describe("WhalesController — auth guard coverage", () => {
     const method = WhalesController.prototype.getFeed;
     const ttl: unknown = Reflect.getMetadata("THROTTLER:TTLdefault", method);
     expect(ttl, "@Throttle ttl must be set on getFeed").toBeDefined();
+  });
+
+  // ─── Alert filter mutation guard coverage ────────────────────────────
+
+  it("upsertAlertFilter has ApiKeyScopeGuard applied", () => {
+    const method = WhalesController.prototype.upsertAlertFilter;
+    expect(method).toBeDefined();
+
+    const methodGuards: unknown[] =
+      Reflect.getMetadata(GUARDS_KEY, method) ?? [];
+    const hasScopeGuard = methodGuards.some(
+      (g: any) =>
+        g === ApiKeyScopeGuard || g?.name === "ApiKeyScopeGuard",
+    );
+    expect(
+      hasScopeGuard,
+      "upsertAlertFilter must have ApiKeyScopeGuard applied",
+    ).toBe(true);
+  });
+
+  it("upsertAlertFilter requires WRITE scope", () => {
+    const method = WhalesController.prototype.upsertAlertFilter;
+    const scopes: string[] | undefined = Reflect.getMetadata(
+      REQUIRED_SCOPES,
+      method,
+    );
+    expect(scopes, "upsertAlertFilter must have required scopes").toBeDefined();
+    expect(scopes).toContain("WRITE");
+  });
+
+  it("deleteAlertFilter has ApiKeyScopeGuard applied", () => {
+    const method = WhalesController.prototype.deleteAlertFilter;
+    expect(method).toBeDefined();
+
+    const methodGuards: unknown[] =
+      Reflect.getMetadata(GUARDS_KEY, method) ?? [];
+    const hasScopeGuard = methodGuards.some(
+      (g: any) =>
+        g === ApiKeyScopeGuard || g?.name === "ApiKeyScopeGuard",
+    );
+    expect(
+      hasScopeGuard,
+      "deleteAlertFilter must have ApiKeyScopeGuard applied",
+    ).toBe(true);
+  });
+
+  it("deleteAlertFilter requires WRITE scope", () => {
+    const method = WhalesController.prototype.deleteAlertFilter;
+    const scopes: string[] | undefined = Reflect.getMetadata(
+      REQUIRED_SCOPES,
+      method,
+    );
+    expect(scopes, "deleteAlertFilter must have required scopes").toBeDefined();
+    expect(scopes).toContain("WRITE");
   });
 });

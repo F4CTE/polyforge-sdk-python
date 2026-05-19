@@ -13,7 +13,12 @@ import {
 } from "@nestjs/common";
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
 import { Throttle } from "@nestjs/throttler";
-import { JwtAuthGuard, CurrentUser } from "@polyforge/shared-auth";
+import {
+  JwtAuthGuard,
+  CurrentUser,
+  RequireScopes,
+  ApiKeyScopeGuard,
+} from "@polyforge/shared-auth";
 import { WhalesService } from "./whales.service";
 import { SmartMoneyService } from "./smart-money.service";
 import { UpsertWhaleAlertFilterDto } from "./dto/whale-alert-filter.dto";
@@ -78,6 +83,8 @@ export class WhalesController {
   }
 
   @Put("alerts/filter")
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes("WRITE")
   upsertAlertFilter(
     @CurrentUser() user: JwtPayload,
     @Body() dto: UpsertWhaleAlertFilterDto,
@@ -87,6 +94,8 @@ export class WhalesController {
 
   @Delete("alerts/filter")
   @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes("WRITE")
   deleteAlertFilter(@CurrentUser() user: JwtPayload) {
     return this.whales.deleteAlertFilter(user.sub);
   }
