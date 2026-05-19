@@ -111,7 +111,7 @@ test("external fork pull requests cannot execute self-hosted CI jobs", () => {
   for (const jobName of ["test", "build"]) {
     const block = jobBlock(workflow, jobName);
     assert.ok(
-      block.includes("runs-on: [self-hosted, linux]"),
+      block.includes("runs-on: [self-hosted, linux, polyforge]"),
       `${jobName} must remain self-hosted for trusted CI`,
     );
   }
@@ -398,5 +398,57 @@ test("composite setup action uses the pinned setup-node SHA", () => {
     setupAction.includes(
       "actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
     ),
+  );
+});
+
+test("every self-hosted workflow job across all workflow files must use the polyforge runner label", () => {
+  const workflowDir = ".github/workflows";
+  const yamlFiles = readdirSync(workflowDir).filter((entry) =>
+    /\.(ya?ml)$/.test(entry),
+  );
+
+  assert.notEqual(yamlFiles.length, 0, "Expected at least one workflow file");
+
+  const violations = [];
+
+  for (const fileName of yamlFiles) {
+    const filePath = path.join(workflowDir, fileName);
+    const content = read(filePath);
+    const lines = content.split("\n");
+
+    for (let i = 0; i < lines.length; i++) {
+      const match = lines[i].match(/^\s*runs-on:\s*(.*)$/);
+      if (!match) continue;
+
+      let runnerExpr = match[1].trim();
+
+      if (runnerExpr === "") {
+        const labels = [];
+        let j = i + 1;
+        while (j < lines.length && /^\s+-\s+/.test(lines[j])) {
+          const item = lines[j].match(/^\s+-\s+(.+)$/);
+          if (item) labels.push(item[1].trim());
+          j++;
+        }
+        runnerExpr = labels.join(", ");
+      }
+
+      const labels = runnerExpr
+        .replace(/\s*#.*$/, "")
+        .replace(/^\[|\]$/g, "")
+        .split(",")
+        .map((l) => l.trim().replace(/^["']|["']$/g, ""))
+        .filter((l) => l.length > 0);
+
+      if (labels.includes("self-hosted") && !labels.includes("polyforge")) {
+        violations.push(`${filePath}:${i + 1}: ${runnerExpr}`);
+      }
+    }
+  }
+
+  assert.deepStrictEqual(
+    violations,
+    [],
+    `All self-hosted runner labels must include the polyforge project label.\nViolations:\n${violations.join("\n")}`,
   );
 });

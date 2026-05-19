@@ -20,7 +20,7 @@ on:
 jobs:
   configure-docker-cache:
     name: Configure pull-through registry
-    runs-on: [self-hosted, linux]
+    runs-on: [self-hosted, linux, polyforge]
     # All 3 PolyForge runners share the same host machine (polyforge-lab),
     # so a single job is sufficient — no matrix needed.
     steps:

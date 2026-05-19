@@ -45,7 +45,7 @@ jobs:
     # guard is defense-in-depth to prevent untrusted fork code from executing
     # on self-hosted runners even if external-pr-guard is refactored away.
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: [self-hosted, linux]
+    runs-on: [self-hosted, linux, x64, polyforge]
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
@@ -82,7 +82,7 @@ jobs:
   lint:
     name: Lint
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: [self-hosted, linux]
+    runs-on: [self-hosted, linux, polyforge]
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
@@ -100,7 +100,7 @@ jobs:
   nginx-security:
     name: Nginx H2C check
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: [self-hosted, linux]
+    runs-on: [self-hosted, linux, polyforge]
     timeout-minutes: 2
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
@@ -114,7 +114,7 @@ jobs:
   docker-compose-security:
     name: Docker Compose loopback check
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: [self-hosted, linux]
+    runs-on: [self-hosted, linux, polyforge]
     timeout-minutes: 2
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
@@ -128,7 +128,7 @@ jobs:
   semgrep:
     name: Semgrep scan
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: [self-hosted, linux, x64]
+    runs-on: [self-hosted, linux, x64, polyforge]
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
@@ -182,7 +182,7 @@ jobs:
   typecheck:
     name: Typecheck
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: [self-hosted, linux]
+    runs-on: [self-hosted, linux, polyforge]
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
@@ -200,7 +200,7 @@ jobs:
   test:
     name: Test
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: [self-hosted, linux]
+    runs-on: [self-hosted, linux, polyforge]
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
@@ -222,7 +222,7 @@ jobs:
   auth-integration-test:
     name: Auth Integration Test
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: [self-hosted, linux]
+    runs-on: [self-hosted, linux, polyforge]
     needs: [test]
     timeout-minutes: 15
     services:
@@ -277,7 +277,7 @@ jobs:
   build:
     name: Build
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: [self-hosted, linux]
+    runs-on: [self-hosted, linux, polyforge]
     needs: [secret-scan, semgrep, lint, typecheck, test, auth-integration-test, nginx-security, docker-compose-security]
     timeout-minutes: 15
     steps:
@@ -319,7 +319,7 @@ jobs:
   deploy-and-e2e:
     name: Deploy to Dev
     if: github.ref == 'refs/heads/main'
-    runs-on: [self-hosted, linux]
+    runs-on: [self-hosted, linux, polyforge]
     needs: [build]
     timeout-minutes: 150
     environment: development
@@ -540,7 +540,7 @@ jobs:
   e2e-a11y:
     name: E2E — A11y & Keyboard
     if: github.ref == 'refs/heads/main'
-    runs-on: [self-hosted, linux]
+    runs-on: [self-hosted, linux, polyforge]
     needs: [deploy-and-e2e]
     timeout-minutes: 30
     steps:
@@ -567,7 +567,7 @@ jobs:
   # ── 5. Deploy to AWS (Production) ──────────────────────────────────────
   deploy:
     name: Deploy to Production
-    runs-on: [self-hosted, linux]
+    runs-on: [self-hosted, linux, polyforge]
     needs: [deploy-and-e2e]
     if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch'
     environment: production

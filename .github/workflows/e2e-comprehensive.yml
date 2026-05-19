@@ -24,7 +24,7 @@ jobs:
   comprehensive-e2e:
     name: Comprehensive E2E
     if: github.ref == 'refs/heads/main'
-    runs-on: [self-hosted, linux]
+    runs-on: [self-hosted, linux, polyforge]
     timeout-minutes: 180
     steps:
       - name: Show deployed revision
