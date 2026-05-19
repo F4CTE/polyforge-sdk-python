@@ -6,12 +6,15 @@ import {
   Query,
   Body,
   Logger,
+  UseGuards,
 } from "@nestjs/common";
 import { SkipThrottle } from "@nestjs/throttler";
+import { InternalAuthGuard } from "../common/internal-auth.guard";
 import { KalshiRestService } from "./kalshi-rest.service";
 
 @Controller("internal/kalshi/sports")
 @SkipThrottle()
+@UseGuards(InternalAuthGuard)
 export class SportsDataController {
   private readonly logger = new Logger(SportsDataController.name);
 

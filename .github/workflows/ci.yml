@@ -7,22 +7,14 @@ on:
     branches: [main]
   workflow_dispatch:
 
-# Limit the default GITHUB_TOKEN to read-only. This reduces the blast radius
-# if a malicious PR manages to execute code on the self-hosted runner.
-# PR #1541 refresh: no-op metadata-only CI retry bump
+# Limit the default GITHUB_TOKEN to read-only.
 permissions:
   contents: read
 
-# PR-triggered workflows are distributed across 6 named slots using endsWith()
-# on the last digit of the PR number (GitHub Actions does not support the %
-# modulo operator).  Each slot serializes its share of PRs with queuing
-# (cancel-in-progress: false) so a flood of PRs cannot overwhelm the 6
-# self-hosted runners.  Digits 0-5 map to matching slots; 6-9 share overflow
-# slot ci-pr-slot-overflow.
-# Push and workflow_dispatch events retain per-ref grouping with cancellation so
-# pushing to main cancels stale runs as before.
+# Per-branch concurrency: a new push to the SAME branch cancels its previous run,
+# but different branches queue independently instead of killing each other.
 # The heavy jobs (deploy-dev + E2E) that share Docker services use a separate
-# job-level concurrency group — see those jobs below.
+# job-level concurrency group to serialize access — see those jobs below.
 concurrency:
   group: ${{ github.event_name == 'pull_request' && ( endsWith(toJSON(github.event.pull_request.number), '0') && 'ci-pr-slot-0' || endsWith(toJSON(github.event.pull_request.number), '1') && 'ci-pr-slot-1' || endsWith(toJSON(github.event.pull_request.number), '2') && 'ci-pr-slot-2' || endsWith(toJSON(github.event.pull_request.number), '3') && 'ci-pr-slot-3' || endsWith(toJSON(github.event.pull_request.number), '4') && 'ci-pr-slot-4' || endsWith(toJSON(github.event.pull_request.number), '5') && 'ci-pr-slot-5' || 'ci-pr-slot-overflow' ) || format('ci-{0}', github.ref) }}
   cancel-in-progress: ${{ github.event_name != 'pull_request' }}

@@ -5,6 +5,7 @@ import { KalshiRestService } from "./kalshi-rest.service";
 import { KalshiWsService } from "./kalshi-ws.service";
 import { KalshiAdapterService } from "./kalshi-adapter.service";
 import { SportsDataController } from "./sports-data.controller";
+import { InternalAuthGuard } from "../common/internal-auth.guard";
 
 @Module({
   imports: [JwtModule.register({})],
@@ -14,6 +15,7 @@ import { SportsDataController } from "./sports-data.controller";
     KalshiRestService,
     KalshiWsService,
     KalshiAdapterService,
+    InternalAuthGuard,
   ],
   exports: [KalshiAdapterService, KalshiRestService],
 })

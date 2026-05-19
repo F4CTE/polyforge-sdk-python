@@ -3,6 +3,7 @@ import { SportsService } from "./sports.service";
 import { createMockDb, MockDb } from "../../test/helpers/mock-db";
 import { RedisService } from "@polyforge/shared-redis";
 import { ConfigService } from "@nestjs/config";
+import { JwtService } from "@nestjs/jwt";
 
 function makeRedis(): RedisService {
   return {
@@ -22,7 +23,18 @@ function makeRedis(): RedisService {
 function makeConfig(overrides: Record<string, string> = {}): ConfigService {
   return {
     get: vi.fn((key: string) => overrides[key] ?? undefined),
+    getOrThrow: vi.fn((key: string) => {
+      const val = overrides[key];
+      if (val === undefined) throw new Error(`Missing config: ${key}`);
+      return val;
+    }),
   } as unknown as ConfigService;
+}
+
+function makeJwt(): JwtService {
+  return {
+    sign: vi.fn().mockReturnValue("fake.service.jwt.token"),
+  } as unknown as JwtService;
 }
 
 describe("SportsService", () => {
@@ -35,8 +47,10 @@ describe("SportsService", () => {
     redis = makeRedis();
     const config = makeConfig({
       ORDER_SERVICE_URL: "http://order-service:3007",
+      INTERNAL_JWT_SECRET: "test-secret",
     });
-    service = new SportsService(db as any, redis, config);
+    const jwtService = makeJwt();
+    service = new SportsService(db as any, redis, config, jwtService);
   });
 
   describe("getCategories", () => {

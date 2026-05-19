@@ -1,8 +1,11 @@
 import { Injectable, Logger, HttpException, HttpStatus } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import { JwtService } from "@nestjs/jwt";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
+import { deriveServiceKey } from "@polyforge/shared-auth";
 import { Prisma } from "@prisma/client";
+import { randomUUID } from "crypto";
 import {
   SportsCategory,
   SPORTS_SERIES_TICKERS,
@@ -25,10 +28,28 @@ export class SportsService {
     private readonly prisma: PrismaService,
     private readonly redis: RedisService,
     private readonly config: ConfigService,
+    private readonly jwtService: JwtService,
   ) {
     this.orderServiceUrl =
       this.config.get<string>("ORDER_SERVICE_URL") ??
       "http://order-service:3007";
+  }
+
+  private getInternalAuthHeaders(): { Authorization: string } {
+    const token = this.jwtService.sign(
+      { sub: "api-service", jti: randomUUID() },
+      {
+        secret: deriveServiceKey(
+          this.config.getOrThrow<string>("INTERNAL_JWT_SECRET"),
+          "api-service",
+        ),
+        audience: "order-service",
+        issuer: "api-service",
+        expiresIn: "30s",
+        algorithm: "HS256",
+      },
+    );
+    return { Authorization: `Bearer ${token}` };
   }
 
   async getCategories(): Promise<
@@ -286,7 +307,10 @@ export class SportsService {
 
       const res = await fetch(
         `${this.orderServiceUrl}/internal/kalshi/sports/milestones?${params}`,
-        { signal: AbortSignal.timeout(10_000) },
+        {
+          headers: this.getInternalAuthHeaders(),
+          signal: AbortSignal.timeout(10_000),
+        },
       );
 
       if (!res.ok) {
@@ -322,7 +346,10 @@ export class SportsService {
     try {
       const res = await fetch(
         `${this.orderServiceUrl}/internal/kalshi/sports/live-data/${encodeURIComponent(milestoneId)}`,
-        { signal: AbortSignal.timeout(10_000) },
+        {
+          headers: this.getInternalAuthHeaders(),
+          signal: AbortSignal.timeout(10_000),
+        },
       );
 
       if (!res.ok) {
@@ -353,7 +380,10 @@ export class SportsService {
     try {
       const res = await fetch(
         `${this.orderServiceUrl}/internal/kalshi/sports/combos/${encodeURIComponent(collectionTicker)}`,
-        { signal: AbortSignal.timeout(10_000) },
+        {
+          headers: this.getInternalAuthHeaders(),
+          signal: AbortSignal.timeout(10_000),
+        },
       );
 
       if (!res.ok) {
@@ -400,7 +430,10 @@ export class SportsService {
 
       const res = await fetch(
         `${this.orderServiceUrl}/internal/kalshi/sports/combos?${params}`,
-        { signal: AbortSignal.timeout(10_000) },
+        {
+          headers: this.getInternalAuthHeaders(),
+          signal: AbortSignal.timeout(10_000),
+        },
       );
 
       if (!res.ok) {
@@ -433,7 +466,10 @@ export class SportsService {
         `${this.orderServiceUrl}/internal/kalshi/sports/combos/lookup`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...this.getInternalAuthHeaders(),
+          },
           body: JSON.stringify({ collectionTicker, selectedMarkets }),
           signal: AbortSignal.timeout(10_000),
         },
