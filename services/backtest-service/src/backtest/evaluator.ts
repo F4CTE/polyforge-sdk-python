@@ -356,9 +356,7 @@ export function checkTriggers(
       case "price_below_tick": {
         // Same as price_above/below for backtest purposes
         // Support legacy `price` field as fallback for live parity
-        const threshold = parseFloat(
-          String(cfg.threshold ?? cfg.price ?? 0),
-        );
+        const threshold = parseFloat(String(cfg.threshold ?? cfg.price ?? 0));
         if (block.type === "price_above_tick" && ps && ps.price > threshold)
           return true;
         if (block.type === "price_below_tick" && ps && ps.price < threshold)

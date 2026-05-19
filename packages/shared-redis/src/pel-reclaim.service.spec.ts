@@ -30,7 +30,7 @@ describe("PelReclaimService", () => {
       ]),
       xack,
     };
-    const handler = vi.fn().mockResolvedValue(undefined);
+    const handler = vi.fn().mockResolvedValue(true);
     const onReclaim = vi.fn();
 
     const svc = new PelReclaimService(makeRedis(client));
@@ -77,6 +77,75 @@ describe("PelReclaimService", () => {
     await vi.advanceTimersByTimeAsync(10_000);
 
     expect(xack).not.toHaveBeenCalled();
+  });
+
+  it("does not ACK when handler returns false", async () => {
+    const xack = vi.fn().mockResolvedValue(1);
+    const client = {
+      xautoclaim: vi
+        .fn()
+        .mockResolvedValue(["0-0", [["100-0", ["intentId", "i1"]]], []]),
+      xack,
+    };
+
+    const svc = new PelReclaimService(makeRedis(client));
+    svc.setIntervalMs(10_000);
+    svc.register({
+      stream: "s",
+      group: "g",
+      consumer: "c",
+      handler: vi.fn().mockResolvedValue(false),
+    });
+
+    await vi.advanceTimersByTimeAsync(10_000);
+
+    expect(xack).not.toHaveBeenCalled();
+  });
+
+  it("ACKs when handler returns undefined (backward-compatible void)", async () => {
+    const xack = vi.fn().mockResolvedValue(1);
+    const client = {
+      xautoclaim: vi
+        .fn()
+        .mockResolvedValue(["0-0", [["100-0", ["intentId", "i1"]]], []]),
+      xack,
+    };
+
+    const svc = new PelReclaimService(makeRedis(client));
+    svc.setIntervalMs(10_000);
+    svc.register({
+      stream: "s",
+      group: "g",
+      consumer: "c",
+      handler: vi.fn().mockResolvedValue(undefined),
+    });
+
+    await vi.advanceTimersByTimeAsync(10_000);
+
+    expect(xack).toHaveBeenCalledWith("s", "g", "100-0");
+  });
+
+  it("ACKs when handler returns true (explicit ACK)", async () => {
+    const xack = vi.fn().mockResolvedValue(1);
+    const client = {
+      xautoclaim: vi
+        .fn()
+        .mockResolvedValue(["0-0", [["100-0", ["intentId", "i1"]]], []]),
+      xack,
+    };
+
+    const svc = new PelReclaimService(makeRedis(client));
+    svc.setIntervalMs(10_000);
+    svc.register({
+      stream: "s",
+      group: "g",
+      consumer: "c",
+      handler: vi.fn().mockResolvedValue(true),
+    });
+
+    await vi.advanceTimersByTimeAsync(10_000);
+
+    expect(xack).toHaveBeenCalledWith("s", "g", "100-0");
   });
 
   it("does not call handler when no entries are reclaimed", async () => {

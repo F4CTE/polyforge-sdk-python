@@ -12,12 +12,16 @@ export interface PelReclaimTarget {
   /** Max entries to scan per cycle. */
   count?: number;
   /**
-   * Optional handler invoked once per reclaimed entry. When provided,
-   * a successful return triggers XACK so the entry is fully drained.
+   * Optional handler invoked once per reclaimed entry.
+   * Return `false` to keep the entry pending, or `true` / `undefined`
+   * (void) to ACK (drain) it. Returns without a value (void) are
+   * treated as ACK for backward compatibility with handlers that
+   * predate the selective-ACK contract.
+   *
    * Throws are caught and logged — the entry stays in PEL for the next
    * cycle so transient errors do not lose data.
    */
-  handler?: (entry: ReclaimedEntry) => Promise<void> | void;
+  handler?: (entry: ReclaimedEntry) => Promise<boolean | void> | boolean | void;
   /** Optional callback for metrics: fired with the count reclaimed per cycle. */
   onReclaim?: (reclaimedCount: number) => void;
 }
@@ -106,8 +110,10 @@ export class PelReclaimService implements OnModuleDestroy {
         if (target.handler) {
           for (const entry of result.entries) {
             try {
-              await target.handler(entry);
-              await client.xack(target.stream, target.group, entry.id);
+              const shouldAck = await target.handler(entry);
+              if (shouldAck !== false) {
+                await client.xack(target.stream, target.group, entry.id);
+              }
             } catch (err: unknown) {
               this.logger.error(
                 `pel-reclaim: handler failed for ${target.stream}/${target.group} entry ${entry.id}`,

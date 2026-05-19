@@ -77,6 +77,7 @@ export class StreamConsumerService implements OnModuleInit, OnModuleDestroy {
       minIdleMs: PEL_MIN_IDLE_MS,
       handler: async (entry) => {
         await this.processReclaimedEntry(entry.id, entry.fields);
+        return false;
       },
     });
     this.pelReclaim.register({
@@ -85,8 +86,16 @@ export class StreamConsumerService implements OnModuleInit, OnModuleDestroy {
       consumer: CONSUMER,
       handler: async (entry) => {
         const intent = this.parseCancellation(this.fieldsToArray(entry.fields));
-        if (!intent) return;
+        if (!intent) {
+          await this.redis
+            .getClient()
+            .xack(CANCELLATION_STREAM, GROUP, entry.id);
+          return false;
+        }
+
         await this.orders.processCancellation(intent);
+        await this.redis.getClient().xack(CANCELLATION_STREAM, GROUP, entry.id);
+        return false;
       },
     });
     try {
