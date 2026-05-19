@@ -35,14 +35,13 @@ describe('PolymarketUsCredentialsController', () => {
         validDto,
         'US',
         'Mozilla/5.0',
-        '203.0.113.10, 10.0.0.1',
         '10.0.0.2',
       );
       expect(service.import).toHaveBeenCalledWith(
         user.sub,
         validDto,
         'US',
-        '203.0.113.10',
+        '10.0.0.2',
         'Mozilla/5.0',
       );
     });
@@ -51,7 +50,6 @@ describe('PolymarketUsCredentialsController', () => {
       await controller.import(
         user,
         validDto,
-        undefined,
         undefined,
         undefined,
         undefined,

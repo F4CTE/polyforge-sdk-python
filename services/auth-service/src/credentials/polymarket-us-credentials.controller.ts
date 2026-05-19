@@ -62,15 +62,13 @@ export class PolymarketUsCredentialsController {
     @Body() dto: ImportPolymarketUsCredentialsDto,
     @Headers('x-country-code') countryCode: string | undefined,
     @Headers('user-agent') userAgent: string | undefined,
-    @Headers('x-forwarded-for') forwardedFor: string | undefined,
     @Ip() ip: string | undefined,
   ): Promise<void> {
-    const requestIp = forwardedFor?.split(',')[0]?.trim() || ip;
     await this.usCredentials.import(
       user.sub,
       dto,
       countryCode,
-      requestIp,
+      ip,
       userAgent,
     );
   }
