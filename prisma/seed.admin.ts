@@ -12,8 +12,16 @@
 
 import { randomBytes } from 'crypto';
 
-if (process.env.NODE_ENV && process.env.NODE_ENV !== 'development' && process.env.CI !== 'true') {
+if (process.env.NODE_ENV && process.env.NODE_ENV !== 'development') {
   console.error('ERROR: Seed scripts must only run in development environment');
+  process.exit(1);
+}
+
+if (process.env.CI === 'true' && process.env.CI_SEED_ALLOWED !== 'true') {
+  console.error(
+    'ERROR: Seed scripts in CI require CI_SEED_ALLOWED=true.\n' +
+    '       Set SEED_ADMIN_PASSWORD before running.',
+  );
   process.exit(1);
 }
 

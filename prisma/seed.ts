@@ -18,8 +18,19 @@
 
 import { randomBytes } from 'crypto';
 
-if (process.env.NODE_ENV && process.env.NODE_ENV !== 'development' && process.env.CI !== 'true') {
+if (process.env.NODE_ENV && process.env.NODE_ENV !== 'development') {
   console.error('ERROR: Seed scripts must only run in development environment');
+  process.exit(1);
+}
+
+// CI builds (deploy-and-e2e) must explicitly opt in.  The guard does not
+// prevent local `pnpm seed` (CI is unset there) but stops the deploy path
+// from running with hardcoded fallback passwords.
+if (process.env.CI === 'true' && process.env.CI_SEED_ALLOWED !== 'true') {
+  console.error(
+    'ERROR: Seed scripts in CI require CI_SEED_ALLOWED=true.\n' +
+    '       Set SEED_USER_PASSWORD and E2E_USER_PASSWORD before running.',
+  );
   process.exit(1);
 }
 
@@ -257,11 +268,15 @@ const scalperActions = [
 async function main() {
   console.log('🌱 Seeding user database...\n');
 
-  const seedPassword =
-    process.env.SEED_USER_PASSWORD ?? (process.env.CI === 'true' ? 'TestPass123!' : generateSeedPassword());
+  // Always require explicit SEED_USER_PASSWORD for known passwords.
+  // No hardcoded fallback — even in CI.  Set the var in ci.yml's deploy
+  // step if dev users need known passwords for manual QA.
+  const seedPassword = process.env.SEED_USER_PASSWORD ?? generateSeedPassword();
   console.log('🔑 Seed user password prepared and stored (not printed).');
-  if (!process.env.SEED_USER_PASSWORD && process.env.CI !== 'true') {
-    console.log('  Set SEED_USER_PASSWORD before running the seed if you need a known local password.');
+  if (!process.env.SEED_USER_PASSWORD) {
+    console.log(
+      '  Set SEED_USER_PASSWORD before running the seed if you need a known local password.',
+    );
   }
   console.log('');
 
@@ -269,14 +284,21 @@ async function main() {
   // E2E TEST USERS (fixed credentials, always seeded)
   // ───────────────────────────────────────────────
 
-  // Dedicated E2E test user for order/filter specs.
-  // Password is always TestPass123! regardless of CI flag.
+  // Dedicated E2E test user for specs.
+  // Password comes from E2E_USER_PASSWORD env var; in CI that is set by
+  // the deploy-and-e2e job in ci.yml.  Falls back to TestPass123! for
+  // local dev (pnpm seed) so that E2E specs can log in without extra env
+  // vars.  In CI without E2E_USER_PASSWORD the seed-wide password is used
+  // instead (random) — E2E_USER_PASSWORD is always set in ci.yml.
+  const e2ePassword =
+    process.env.E2E_USER_PASSWORD ??
+    (process.env.CI === 'true' ? seedPassword : 'TestPass123!');
   const aliceE2E = await prisma.user.upsert({
     where: { email: 'alice@e2e.dev.local' },
-    update: { passwordHash: await hashPassword('TestPass123!'), approved: true, approvedAt: new Date() },
+    update: { passwordHash: await hashPassword(e2ePassword), approved: true, approvedAt: new Date() },
     create: {
       email: 'alice@e2e.dev.local',
-      passwordHash: await hashPassword('TestPass123!'),
+      passwordHash: await hashPassword(e2ePassword),
       username: 'alice_e2e',
       displayName: 'Alice E2E',
       emailVerified: true,

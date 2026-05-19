@@ -11,7 +11,7 @@ import { apiLogin }     from '../helpers/api';
  * and key authenticated routes are accessible.
  *
  * They rely on the pre-seeded alice@e2e.dev.local user.
- * In CI (CI=true) the seed uses a fixed password; see prisma/seed.ts.
+ * In CI the deploy step sets E2E_USER_PASSWORD for the seed; see prisma/seed.ts.
  */
 
 const ALICE_EMAIL    = 'alice@e2e.dev.local';

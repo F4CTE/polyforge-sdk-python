@@ -457,8 +457,15 @@ jobs:
             echo "=== 7. Migrate + seed ==="
             npx prisma migrate deploy --schema prisma/schema.prisma --config prisma/prisma.config.ts
             npx prisma migrate deploy --schema prisma/schema.admin.prisma --config prisma/prisma.admin.config.ts
-            npx ts-node --transpile-only -P prisma/tsconfig.seed.json prisma/seed.ts
-            npx ts-node --transpile-only -P prisma/tsconfig.seed.json prisma/seed.admin.ts
+            # Seed must explicitly opt in via CI_SEED_ALLOWED; hardcoded fallback
+            # passwords are never used.  E2E_USER_PASSWORD is the only known
+            # password permitted — tests need a stable credential for the
+            # alice@e2e.dev.local fixture.
+            CI_SEED_ALLOWED=true \
+              E2E_USER_PASSWORD=TestPass123! \
+              npx ts-node --transpile-only -P prisma/tsconfig.seed.json prisma/seed.ts
+            CI_SEED_ALLOWED=true \
+              npx ts-node --transpile-only -P prisma/tsconfig.seed.json prisma/seed.admin.ts
 
             echo "=== 8. Flush throttle counters ==="
             docker exec polyforge-dev-redis-1 redis-cli -a "$REDIS_PASSWORD" --no-auth-warning SET config:invite_only false

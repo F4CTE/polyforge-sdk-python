@@ -45,8 +45,13 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 const crypto_1 = require("crypto");
-if (process.env.NODE_ENV && process.env.NODE_ENV !== 'development' && process.env.CI !== 'true') {
+if (process.env.NODE_ENV && process.env.NODE_ENV !== 'development') {
     console.error('ERROR: Seed scripts must only run in development environment');
+    process.exit(1);
+}
+if (process.env.CI === 'true' && process.env.CI_SEED_ALLOWED !== 'true') {
+    console.error('ERROR: Seed scripts in CI require CI_SEED_ALLOWED=true.\n' +
+        '       Set SEED_ADMIN_PASSWORD before running.');
     process.exit(1);
 }
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -60,8 +65,7 @@ const adminAdapter = new PrismaPg({ connectionString: process.env.ADMIN_DIRECT_D
 const prisma = new admin_client_1.PrismaClient({ adapter: adminAdapter });
 async function main() {
     console.log('🌱 Seeding admin database...\n');
-    const adminPassword =
-        process.env.SEED_ADMIN_PASSWORD ?? generateSeedPassword();
+    const adminPassword = process.env.SEED_ADMIN_PASSWORD ?? generateSeedPassword();
     console.log('🔑 Admin password prepared and stored (not printed).');
     if (!process.env.SEED_ADMIN_PASSWORD) {
         console.log('  Set SEED_ADMIN_PASSWORD before running seed:admin if you need a known local admin password.');
@@ -93,4 +97,3 @@ main()
     .finally(async () => {
     await prisma.$disconnect();
 });
-//# sourceMappingURL=seed.admin.js.map

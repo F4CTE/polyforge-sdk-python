@@ -22,6 +22,14 @@ if (process.env.NODE_ENV && process.env.NODE_ENV !== 'development') {
     console.error('ERROR: Seed scripts must only run in development environment');
     process.exit(1);
 }
+// CI builds (deploy-and-e2e) must explicitly opt in.  The guard does not
+// prevent local `pnpm seed` (CI is unset there) but stops the deploy path
+// from running with hardcoded fallback passwords.
+if (process.env.CI === 'true' && process.env.CI_SEED_ALLOWED !== 'true') {
+    console.error('ERROR: Seed scripts in CI require CI_SEED_ALLOWED=true.\n' +
+        '       Set SEED_USER_PASSWORD and E2E_USER_PASSWORD before running.');
+    process.exit(1);
+}
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { PrismaPg } = require('@prisma/adapter-pg');
 const client_1 = require(".prisma/client");
@@ -58,6 +66,9 @@ const IDS = {
     stratCrossDown: 'a1b2c3d4-0001-4000-8000-000000000002',
     stratScalper: 'a1b2c3d4-0001-4000-8000-000000000003',
     stratForked: 'a1b2c3d4-0001-4000-8000-000000000004',
+    // E2E-only strategies for alice@e2e.dev.local (used by backtest-comprehensive spec)
+    stratE2EMomentum: 'a1b2c3d4-0001-4000-8000-000000000091',
+    stratE2EScalper: 'a1b2c3d4-0001-4000-8000-000000000092',
     // Orders
     order1: 'b2c3d4e5-0002-4000-8000-000000000001',
     order2: 'b2c3d4e5-0002-4000-8000-000000000002',
@@ -230,20 +241,96 @@ const scalperActions = [
 // ─────────────────────────────────────────────────────────────────────────────
 async function main() {
     console.log('🌱 Seeding user database...\n');
-    const seedPassword =
-        process.env.SEED_USER_PASSWORD ?? (process.env.CI === 'true' ? 'TestPass123!' : generateSeedPassword());
+    // Always require explicit SEED_USER_PASSWORD for known passwords.
+    // No hardcoded fallback — even in CI.  Set the var in ci.yml's deploy
+    // step if dev users need known passwords for manual QA.
+    const seedPassword = process.env.SEED_USER_PASSWORD ?? generateSeedPassword();
     console.log('🔑 Seed user password prepared and stored (not printed).');
-    if (!process.env.SEED_USER_PASSWORD && process.env.CI !== 'true') {
+    if (!process.env.SEED_USER_PASSWORD) {
         console.log('  Set SEED_USER_PASSWORD before running the seed if you need a known local password.');
     }
     console.log('');
+    // ───────────────────────────────────────────────
+    // E2E TEST USERS (fixed credentials, always seeded)
+    // ───────────────────────────────────────────────
+    // Dedicated E2E test user for specs.
+    // Password comes from E2E_USER_PASSWORD env var; in CI that is set by
+    // the deploy-and-e2e job in ci.yml.  Falls back to TestPass123! for
+    // local dev (pnpm seed) so that E2E specs can log in without extra env
+    // vars.  In CI without E2E_USER_PASSWORD the seed-wide password is used
+    // instead (random) — E2E_USER_PASSWORD is always set in ci.yml.
+    const e2ePassword = process.env.E2E_USER_PASSWORD ??
+        (process.env.CI === 'true' ? seedPassword : 'TestPass123!');
+    const aliceE2E = await prisma.user.upsert({
+        where: { email: 'alice@e2e.dev.local' },
+        update: { passwordHash: await hashPassword(e2ePassword), approved: true, approvedAt: new Date() },
+        create: {
+            email: 'alice@e2e.dev.local',
+            passwordHash: await hashPassword(e2ePassword),
+            username: 'alice_e2e',
+            displayName: 'Alice E2E',
+            emailVerified: true,
+            emailVerifiedAt: daysAgo(1),
+            tosAcceptedAt: daysAgo(1),
+            approved: true,
+            approvedAt: daysAgo(1),
+            createdAt: daysAgo(1),
+            lastSeen: hoursAgo(1),
+        },
+    });
+    console.log('✓ E2E test user alice@e2e.dev.local seeded');
+    // Seed strategies for the E2E user so backtest-comprehensive tests can
+    // open the strategy dropdown and find at least one option.
+    await prisma.strategy.upsert({
+        where: { id: IDS.stratE2EMomentum },
+        update: {},
+        create: {
+            id: IDS.stratE2EMomentum,
+            userId: aliceE2E.id,
+            name: 'E2E Momentum',
+            description: 'Seed strategy for backtest E2E tests.',
+            visibility: 'PRIVATE',
+            execMode: 'EVENT',
+            triggers: momentumTrigger,
+            conditions: momentumConditions,
+            actions: momentumActions,
+            safety: momentumSafety,
+            status: 'PAUSED',
+            tags: ['e2e'],
+            version: 1,
+            createdAt: daysAgo(5),
+            updatedAt: daysAgo(1),
+        },
+    });
+    await prisma.strategy.upsert({
+        where: { id: IDS.stratE2EScalper },
+        update: {},
+        create: {
+            id: IDS.stratE2EScalper,
+            userId: aliceE2E.id,
+            name: 'E2E Scalper',
+            description: 'Second seed strategy for backtest E2E tests.',
+            visibility: 'PRIVATE',
+            execMode: 'EVENT',
+            triggers: crossDownTrigger,
+            conditions: [],
+            actions: crossDownActions,
+            safety: momentumSafety,
+            status: 'PAUSED',
+            tags: ['e2e'],
+            version: 1,
+            createdAt: daysAgo(3),
+            updatedAt: daysAgo(1),
+        },
+    });
+    console.log('✓ E2E strategies seeded for alice@e2e.dev.local');
     // ───────────────────────────────────────────────
     // USERS
     // ───────────────────────────────────────────────
     console.log('👤 Creating users...');
     const alice = await prisma.user.upsert({
         where: { email: 'alice@dev.local' },
-        update: { passwordHash: await hashPassword(seedPassword) },
+        update: { passwordHash: await hashPassword(seedPassword), approved: true, approvedAt: new Date() },
         create: {
             email: 'alice@dev.local',
             passwordHash: await hashPassword(seedPassword),
@@ -255,6 +342,8 @@ async function main() {
             emailVerified: true,
             emailVerifiedAt: daysAgo(30),
             tosAcceptedAt: daysAgo(30),
+            approved: true,
+            approvedAt: daysAgo(30),
             polymarketConnected: true,
             polymarketSigType: 1,
             polymarketAddress: '0xAliceDevAddress000000000000000000000001',
@@ -264,7 +353,7 @@ async function main() {
     });
     const bob = await prisma.user.upsert({
         where: { email: 'bob@dev.local' },
-        update: { passwordHash: await hashPassword(seedPassword) },
+        update: { passwordHash: await hashPassword(seedPassword), approved: true, approvedAt: new Date() },
         create: {
             email: 'bob@dev.local',
             passwordHash: await hashPassword(seedPassword),
@@ -276,13 +365,15 @@ async function main() {
             emailVerified: true,
             emailVerifiedAt: daysAgo(20),
             tosAcceptedAt: daysAgo(20),
+            approved: true,
+            approvedAt: daysAgo(20),
             createdAt: daysAgo(45),
             lastSeen: hoursAgo(3),
         },
     });
     const charlie = await prisma.user.upsert({
         where: { email: 'charlie@dev.local' },
-        update: { passwordHash: await hashPassword(seedPassword) },
+        update: { passwordHash: await hashPassword(seedPassword), approved: true, approvedAt: new Date() },
         create: {
             email: 'charlie@dev.local',
             passwordHash: await hashPassword(seedPassword),
@@ -292,6 +383,8 @@ async function main() {
             emailVerified: true,
             emailVerifiedAt: daysAgo(5),
             tosAcceptedAt: daysAgo(5),
+            approved: true,
+            approvedAt: daysAgo(5),
             createdAt: daysAgo(5),
             lastSeen: hoursAgo(12),
         },
@@ -299,7 +392,7 @@ async function main() {
     // carol — VERIFIED, paper trading only (no polymarket connection)
     const carol = await prisma.user.upsert({
         where: { email: 'carol@dev.local' },
-        update: { passwordHash: await hashPassword(seedPassword) },
+        update: { passwordHash: await hashPassword(seedPassword), approved: true, approvedAt: new Date() },
         create: {
             email: 'carol@dev.local',
             passwordHash: await hashPassword(seedPassword),
@@ -309,6 +402,8 @@ async function main() {
             emailVerified: true,
             emailVerifiedAt: daysAgo(7),
             tosAcceptedAt: daysAgo(7),
+            approved: true,
+            approvedAt: daysAgo(7),
             createdAt: daysAgo(7),
             lastSeen: hoursAgo(6),
         },
@@ -316,7 +411,7 @@ async function main() {
     // dave — VERIFIED but SUSPENDED
     const dave = await prisma.user.upsert({
         where: { email: 'dave@dev.local' },
-        update: { passwordHash: await hashPassword(seedPassword) },
+        update: { passwordHash: await hashPassword(seedPassword), approved: true, approvedAt: new Date() },
         create: {
             email: 'dave@dev.local',
             passwordHash: await hashPassword(seedPassword),
@@ -325,6 +420,8 @@ async function main() {
             emailVerified: true,
             emailVerifiedAt: daysAgo(14),
             tosAcceptedAt: daysAgo(14),
+            approved: true,
+            approvedAt: daysAgo(14),
             suspended: true,
             suspendedReason: 'Violation of terms of service (dev seed)',
             createdAt: daysAgo(14),
@@ -1227,7 +1324,7 @@ async function main() {
         // Since composite PK includes time and userId, and strategy-level snapshots share
         // the same time+userId, we need to insert them individually with raw SQL
         for (const snap of pnlSnapshots) {
-            await prisma.$executeRaw(client_1.Prisma.sql`INSERT INTO pnl_snapshots (time, "userId", "strategyId", pnl, "realizedPnl", "positionCount")
+            await prisma.$executeRaw(client_1.Prisma.sql `INSERT INTO pnl_snapshots (time, "userId", "strategyId", pnl, "realizedPnl", "positionCount")
          VALUES (${snap.time}, ${snap.userId}, ${snap.strategyId}, ${snap.pnl}, ${snap.realizedPnl}, ${snap.positionCount})
          ON CONFLICT DO NOTHING`);
         }
@@ -1677,4 +1774,3 @@ main()
     .finally(async () => {
     await prisma.$disconnect();
 });
-//# sourceMappingURL=seed.js.map

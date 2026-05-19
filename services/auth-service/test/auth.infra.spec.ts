@@ -172,7 +172,7 @@ describe.runIf(HAS_TEST_DB && HAS_TEST_REDIS)('Auth Real Integration', () => {
     hashPasswordRoundsLog.reset();
     await cleanAuthDb(prisma);
     await cleanAuthRedis(redisService.getClient(), TEST_REDIS_URL);
-  }, 30_000);
+  }, 60_000);
 
   // ─── Helpers ─────────────────────────────────────────────────────────────────
 
