@@ -1002,6 +1002,24 @@ describe("OrdersService", () => {
         response: { code: "TOKEN_NOT_FOUND" },
       });
     });
+
+    it("throws POSITION_SIZE_EXCEEDED when any order exceeds per-order beta limit", async () => {
+      db.user.findUniqueOrThrow.mockResolvedValue(
+        makeUser({ polymarketConnected: true }) as any,
+      );
+      db.order.aggregate.mockResolvedValue({ _sum: { size: 0 } } as any);
+
+      await expect(
+        service.placeBatch(
+          "user-uuid-1",
+          makeBatchDto([{ size: 50 }, { size: 999 }]) as any,
+        ),
+      ).rejects.toMatchObject({
+        response: { code: "POSITION_SIZE_EXCEEDED" },
+      });
+
+      expect(db.token.findMany).not.toHaveBeenCalled();
+    });
   });
 
   // ── cancelOrder ──────────────────────────────────────────────────────────

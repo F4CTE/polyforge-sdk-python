@@ -403,6 +403,19 @@ export class OrdersService {
       });
     }
 
+    const maxPositionSize = await this.betaLimits.getLimit(
+      "maxPositionSizeUsdc",
+    );
+    for (const order of dto.orders) {
+      const orderSize = Number(order.size);
+      if (orderSize > maxPositionSize) {
+        throw new UnprocessableEntityException({
+          code: "POSITION_SIZE_EXCEEDED",
+          message: `Beta limit: maximum position size is $${maxPositionSize} USDC per order.`,
+        });
+      }
+    }
+
     const totalSize = dto.orders.reduce((sum, o) => sum + Number(o.size), 0);
 
     const currentMonthlyVolume = await getMonthlyConfirmedVolume(
