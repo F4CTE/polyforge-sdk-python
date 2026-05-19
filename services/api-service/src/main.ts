@@ -193,7 +193,18 @@ async function bootstrap() {
   // Postman, SDK generators, and the admin builder stats page.
   // Written regardless of enableSwagger so CI/CD can use it for codegen.
   const outPath = path.join(__dirname, "..", "swagger.json");
-  fs.writeFileSync(outPath, JSON.stringify(document, null, 2), "utf8");
+  let swaggerWritten = false;
+  try {
+    fs.writeFileSync(outPath, JSON.stringify(document, null, 2), "utf8");
+    swaggerWritten = true;
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code !== "EROFS") {
+      throw err;
+    }
+    process.stderr.write(
+      `[api-service] Skipping swagger.json write on read-only filesystem (${outPath}).\n`,
+    );
+  }
 
   // ─── Public OpenAPI / Swagger UI ────────────────────────────────────────────
   // These routes are only available in non-production environments.
@@ -230,7 +241,9 @@ async function bootstrap() {
 
   await app.listen(PORT, "0.0.0.0");
   appLogger.log(`api-service listening on port ${PORT}`);
-  appLogger.log(`Swagger JSON written to ${outPath}`);
+  if (swaggerWritten) {
+    appLogger.log(`Swagger JSON written to ${outPath}`);
+  }
 }
 
 bootstrap().catch((err) => {
