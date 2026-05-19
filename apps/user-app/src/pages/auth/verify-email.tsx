@@ -6,10 +6,31 @@ import { AuthBackground } from '@/components/auth-background';
 import { Button } from '@polyforge/ui';
 
 type VerifyState = 'pending' | 'waiting' | 'verified' | 'error';
+const VERIFY_EMAIL_TOKEN_KEY = 'pf.auth.verifyEmailToken';
+
+function clearCachedVerifyToken(): void {
+  try {
+    window.sessionStorage.removeItem(VERIFY_EMAIL_TOKEN_KEY);
+  } catch {
+    // ignore storage failures
+  }
+  if (window.__PF_AUTH_TOKENS__) {
+    delete window.__PF_AUTH_TOKENS__[VERIFY_EMAIL_TOKEN_KEY];
+  }
+}
 
 export function Component() {
   const [searchParams] = useSearchParams();
-  const token = searchParams.get('token');
+  const tokenFromSearch = searchParams.get('token');
+  const [token, setToken] = useState<string>(() => {
+    const fromSearch = searchParams.get('token');
+    if (fromSearch) return fromSearch;
+    try {
+      return window.sessionStorage.getItem(VERIFY_EMAIL_TOKEN_KEY) ?? window.__PF_AUTH_TOKENS__?.[VERIFY_EMAIL_TOKEN_KEY] ?? '';
+    } catch {
+      return window.__PF_AUTH_TOKENS__?.[VERIFY_EMAIL_TOKEN_KEY] ?? '';
+    }
+  });
   const user = useAuthStore((s) => s.user);
   const patchUser = useAuthStore((s) => s.patchUser);
 
@@ -17,6 +38,20 @@ export function Component() {
   const [error, setError] = useState('');
   const [resending, setResending] = useState(false);
   const [resent, setResent] = useState(false);
+
+  useEffect(() => {
+    if (!tokenFromSearch) return;
+    setToken(tokenFromSearch);
+    try {
+      window.sessionStorage.setItem(VERIFY_EMAIL_TOKEN_KEY, tokenFromSearch);
+    } catch {
+      if (!window.__PF_AUTH_TOKENS__) window.__PF_AUTH_TOKENS__ = {};
+      window.__PF_AUTH_TOKENS__[VERIFY_EMAIL_TOKEN_KEY] = tokenFromSearch;
+    }
+    const url = new URL(window.location.href);
+    url.searchParams.delete('token');
+    window.history.replaceState(window.history.state, document.title, url.pathname + url.search + url.hash);
+  }, [tokenFromSearch]);
 
   useEffect(() => {
     if (!token) return;
@@ -34,16 +69,20 @@ export function Component() {
         if (cancelled) return;
         if (res.ok) {
           setState('verified');
+          clearCachedVerifyToken();
           patchUser({ emailVerified: true });
         } else {
           const err = await res.json();
+          if (res.status < 500 && res.status !== 429) {
+            clearCachedVerifyToken();
+          }
           setState('error');
           setError(err?.message ?? 'Verification link is invalid or expired.');
         }
       } catch {
         if (!cancelled) {
           setState('error');
-          setError('Verification link is invalid or expired.');
+          setError('Network error. Please refresh the page to retry.');
         }
       }
     }

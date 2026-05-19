@@ -1,12 +1,48 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import { Lock, Check, AlertCircle } from 'lucide-react';
 import { AuthBackground } from '@/components/auth-background';
 import { Button, Input } from '@polyforge/ui';
 
+const RESET_PASSWORD_TOKEN_KEY = 'pf.auth.resetPasswordToken';
+
+function clearCachedResetToken(): void {
+  try {
+    window.sessionStorage.removeItem(RESET_PASSWORD_TOKEN_KEY);
+  } catch {
+    // ignore storage failures
+  }
+  if (window.__PF_AUTH_TOKENS__) {
+    delete window.__PF_AUTH_TOKENS__[RESET_PASSWORD_TOKEN_KEY];
+  }
+}
+
 export function Component() {
   const [searchParams] = useSearchParams();
-  const token = searchParams.get('token') ?? '';
+  const tokenFromSearch = searchParams.get('token');
+  const [token, setToken] = useState<string>(() => {
+    const fromSearch = searchParams.get('token');
+    if (fromSearch) return fromSearch;
+    try {
+      return window.sessionStorage.getItem(RESET_PASSWORD_TOKEN_KEY) ?? window.__PF_AUTH_TOKENS__?.[RESET_PASSWORD_TOKEN_KEY] ?? '';
+    } catch {
+      return window.__PF_AUTH_TOKENS__?.[RESET_PASSWORD_TOKEN_KEY] ?? '';
+    }
+  });
+
+  useEffect(() => {
+    if (!tokenFromSearch) return;
+    setToken(tokenFromSearch);
+    try {
+      window.sessionStorage.setItem(RESET_PASSWORD_TOKEN_KEY, tokenFromSearch);
+    } catch {
+      if (!window.__PF_AUTH_TOKENS__) window.__PF_AUTH_TOKENS__ = {};
+      window.__PF_AUTH_TOKENS__[RESET_PASSWORD_TOKEN_KEY] = tokenFromSearch;
+    }
+    const url = new URL(window.location.href);
+    url.searchParams.delete('token');
+    window.history.replaceState(window.history.state, document.title, url.pathname + url.search + url.hash);
+  }, [tokenFromSearch]);
 
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -41,9 +77,13 @@ export function Component() {
         body: JSON.stringify({ token, newPassword: password }),
       });
       if (res.ok) {
+        clearCachedResetToken();
         setDone(true);
       } else {
         const err = await res.json();
+        if (res.status < 500 && res.status !== 429) {
+          clearCachedResetToken();
+        }
         setError(err?.message ?? 'Reset failed. Please request a new link.');
       }
     } catch {
