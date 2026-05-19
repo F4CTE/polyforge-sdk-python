@@ -1,4 +1,5 @@
 import { Module } from "@nestjs/common";
+import { LazyModuleLoader } from "@nestjs/core";
 import { ConfigService } from "@nestjs/config";
 import { VenueRouter, type RailMode } from "./venue-router";
 import { PolymarketAdapter } from "./polymarket-adapter";
@@ -13,17 +14,16 @@ import type { VenueAdapter } from "@polyforge/shared-types";
 import { getVenueConfig } from "@polyforge/shared-types";
 
 @Module({
-  imports: [ClobClientModule, KalshiClientModule, PolymarketUsClientModule],
+  imports: [ClobClientModule, KalshiClientModule],
   providers: [
     PolymarketAdapter,
-    PolymarketUsAdapter,
     {
       provide: VenueRouter,
-      useFactory: (
+      useFactory: async (
         clob: ClobClientService,
         config: ConfigService,
         kalshi: KalshiAdapterService,
-        polyUs: PolymarketUsClientService,
+        lazyModuleLoader: LazyModuleLoader,
       ) => {
         const adapters: VenueAdapter[] = [];
 
@@ -43,6 +43,10 @@ import { getVenueConfig } from "@polyforge/shared-types";
         const polyUsEnabled =
           config.get<string>("POLYMARKET_US_ENABLED") === "true";
         if (polyUsEnabled) {
+          const moduleRef = await lazyModuleLoader.load(
+            () => PolymarketUsClientModule,
+          );
+          const polyUs = moduleRef.get(PolymarketUsClientService);
           adapters.push(new PolymarketUsAdapter(polyUs));
         }
 
@@ -56,7 +60,7 @@ import { getVenueConfig } from "@polyforge/shared-types";
         ClobClientService,
         ConfigService,
         KalshiAdapterService,
-        PolymarketUsClientService,
+        LazyModuleLoader,
       ],
     },
   ],
