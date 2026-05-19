@@ -724,7 +724,7 @@ export class AuthService {
         kalshiConnected: false,
         polymarketUsConnected: false,
         country: null,
-        venuePreferences: undefined,
+        venuePreferences: Prisma.DbNull,
         deleted: true,
         deletedAt: new Date(),
       },

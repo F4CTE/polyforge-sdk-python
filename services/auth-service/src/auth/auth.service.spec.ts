@@ -9,6 +9,7 @@ import { MailService } from '../mail/mail.service';
 import { TotpService } from '../totp/totp.service';
 import { RedisService } from '@polyforge/shared-redis';
 import { PrismaService } from '@polyforge/shared-db';
+import { Prisma } from '@prisma/client';
 import { createMockMailService } from '../../test/helpers/mock-mail';
 import { userFactory } from '../../test/factories';
 
@@ -1215,6 +1216,7 @@ describe('AuthService', () => {
       expect(updateCall.data.totpSecret).toBeNull();
       expect(updateCall.data.totpEnabled).toBe(false);
       expect(updateCall.data.totpBackupCodes).toEqual([]);
+      expect(updateCall.data.venuePreferences).toBe(Prisma.DbNull);
       expect(updateCall.data.deleted).toBe(true);
       expect(updateCall.data.deletedAt).toBeInstanceOf(Date);
 
