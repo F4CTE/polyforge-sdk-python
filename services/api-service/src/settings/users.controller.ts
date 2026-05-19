@@ -8,7 +8,12 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
-import { JwtAuthGuard, CurrentUser } from "@polyforge/shared-auth";
+import {
+  JwtAuthGuard,
+  CurrentUser,
+  ApiKeyScopeGuard,
+  RequireScopes,
+} from "@polyforge/shared-auth";
 import { SettingsService } from "./settings.service";
 import { UpdateEventNotificationsDto } from "./dto/update-event-notifications.dto";
 import { UpdateVenuePreferencesDto } from "./dto/update-venue-preferences.dto";
@@ -23,6 +28,8 @@ export class UsersController {
   constructor(private readonly settings: SettingsService) {}
 
   @Get("me/following")
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes("READ")
   getFollowing(@CurrentUser() user: JwtPayload, @Query() query: PaginationDto) {
     return this.settings.getFollowing(user.sub, query.page, query.limit);
   }
