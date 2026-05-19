@@ -36,6 +36,21 @@ const REQUIRED_ENV = [
   "INTERNAL_JWT_SECRET",
 ];
 
+function getAllowedAdminCorsOrigins(): string[] {
+  return [
+    ...(process.env.ADMIN_CORS_ORIGINS?.split(",").map((s) => s.trim()) ?? []),
+    ...(process.env.NODE_ENV !== "production"
+      ? [
+          "http://localhost:4300",
+          "http://localhost:8080",
+          "http://127.0.0.1:8080",
+          "https://localhost:8443",
+          "https://polyforge-lab:8443",
+        ]
+      : []),
+  ];
+}
+
 function validateEnv() {
   const missing = REQUIRED_ENV.filter((k) => !process.env[k]);
   if (missing.length) {
@@ -108,19 +123,7 @@ async function bootstrap() {
   // CORS — admin subdomain only
   app.enableCors({
     origin: (origin, cb) => {
-      const allowed = [
-        ...(process.env.ADMIN_CORS_ORIGINS?.split(",").map((s) => s.trim()) ??
-          []),
-        ...(process.env.NODE_ENV !== "production"
-          ? [
-              "http://localhost:4300",
-              "http://localhost:8080",
-              "http://127.0.0.1:8080",
-              "https://localhost:8443",
-              "https://polyforge-lab:8443",
-            ]
-          : []),
-      ];
+      const allowed = getAllowedAdminCorsOrigins();
       if (!origin) {
         cb(null, false);
       } else if (allowed.includes(origin)) {
@@ -132,6 +135,13 @@ async function bootstrap() {
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
+  });
+
+  app.getHttpAdapter().getInstance().addHook("onRequest", async (request, reply) => {
+    const origin = request.headers.origin;
+    if (!origin) return;
+    if (getAllowedAdminCorsOrigins().includes(origin)) return;
+    reply.code(403).send({ message: "Origin not allowed" });
   });
 
   app.setGlobalPrefix("api/v1", {

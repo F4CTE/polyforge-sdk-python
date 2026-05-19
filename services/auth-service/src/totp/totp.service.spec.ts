@@ -359,6 +359,7 @@ describe('TotpService', () => {
     });
 
     it('fails closed (503) when Redis replay-key write errors during disable', async () => {
+      mockedVerifySync.mockReturnValueOnce({ valid: true } as any);
       const bcrypt = await import('bcrypt');
       const hash = await bcrypt.hash('correct_password', 10);
       const secret = generateSecret({ length: 20 });
@@ -371,8 +372,6 @@ describe('TotpService', () => {
       } as any);
       db.user.findUniqueOrThrow.mockResolvedValue(user as any);
       redis._ioClient.set.mockRejectedValueOnce(new Error('READONLY'));
-
-      mockedVerifySync.mockReturnValueOnce({ valid: true, delta: 0, epoch: Math.floor(Date.now() / 1000), timeStep: 0 });
 
       const logSpy = vi
         .spyOn((service as any).logger, 'error')
