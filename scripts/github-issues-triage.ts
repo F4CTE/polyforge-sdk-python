@@ -2,7 +2,7 @@
 /**
  * GitHub Issues Triage → Paperclip
  * Scans all PolyForge repos for open GitHub issues and creates
- * corresponding Paperclip tasks with workload-based agent assignment.
+ * corresponding Paperclip tasks (unassigned for manual triage).
  */
 
 const PAPERCLIP_API_URL = process.env.PAPERCLIP_API_URL ?? '';
@@ -50,18 +50,6 @@ const REPOS = [
   'F4CTE/polyforge-sdk-rust',
 ];
 
-const AGENTS = {
-  frontend: ['98ca42db-4a5e-4e4f-a1ff-d6c7d8805317'], // Daedalus
-  backend: [
-    '6ae0d7ed-b935-492f-b662-7a1d7e8998bb', // Vulcan
-    '3b41a18d-810c-4bce-b033-7c13f775b6ce', // Argus
-    '4c257d6f-6410-4b13-b80d-a165ffe54224', // Forge
-  ],
-  fallback: 'ea80efad-8336-46ef-a755-1f91a0a7360c', // Hephaestus
-};
-
-const FRONTEND_LABELS = ['frontend', 'ui', 'ux', 'design', 'angular', 'nextjs', 'css', 'tailwind'];
-
 interface GHIssue {
   number: number;
   title: string;
@@ -78,14 +66,6 @@ function mapPriority(labels: string[]): 'high' | 'medium' | 'low' {
   if (lower.includes('question') || lower.includes('documentation') || lower.includes('good first issue'))
     return 'low';
   return 'medium';
-}
-
-function isFrontend(labels: string[], title: string): boolean {
-  const lower = labels.map((l) => l.toLowerCase());
-  if (lower.some((l) => FRONTEND_LABELS.includes(l))) return true;
-  const titleLower = title.toLowerCase();
-  if (FRONTEND_LABELS.some((fl) => titleLower.includes(fl))) return true;
-  return false;
 }
 
 async function execGh(args: string[]): Promise<string> {
@@ -160,33 +140,8 @@ async function issueAlreadyExists(ghUrl: string): Promise<boolean> {
   return issues.some((i) => i.description?.includes(ghUrl));
 }
 
-async function getAgentWorkload(agentId: string): Promise<number> {
-  const res = await paperclipFetch(
-    `/api/companies/${requirePaperclipCompanyId()}/issues?assigneeAgentId=${agentId}&status=todo,in_progress`,
-  );
-  if (!res.ok) return 999;
-  const issues = (await res.json()) as Array<unknown>;
-  return issues.length;
-}
-
-async function pickAgent(pool: string[]): Promise<string> {
-  let minLoad = Infinity;
-  let chosen = pool[0];
-
-  for (const agentId of pool) {
-    const load = await getAgentWorkload(agentId);
-    if (load < minLoad) {
-      minLoad = load;
-      chosen = agentId;
-    }
-  }
-
-  return chosen;
-}
-
 async function createPaperclipIssue(
   ghIssue: GHIssue,
-  assigneeAgentId: string,
   priority: string,
 ): Promise<string | null> {
   const description = [
@@ -208,7 +163,6 @@ async function createPaperclipIssue(
       description,
       status: 'todo',
       priority,
-      assigneeAgentId,
       projectId: PROJECT_ID,
       goalId: GOAL_ID,
     }),
@@ -250,14 +204,10 @@ async function main() {
     }
 
     const priority = mapPriority(ghIssue.labels);
-    const frontend = isFrontend(ghIssue.labels, ghIssue.title);
-    const pool = frontend ? AGENTS.frontend : AGENTS.backend;
-    const assignee = await pickAgent(pool);
 
-    const identifier = await createPaperclipIssue(ghIssue, assignee, priority);
+    const identifier = await createPaperclipIssue(ghIssue, priority);
     if (identifier) {
-      const poolName = frontend ? 'frontend' : 'backend';
-      console.log(`[triage] Created ${identifier} for ${ghIssue.url} → ${poolName} agent`);
+      console.log(`[triage] Created ${identifier} for ${ghIssue.url} (unassigned for manual triage)`);
       created++;
     }
   }
