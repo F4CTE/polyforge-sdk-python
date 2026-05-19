@@ -1,6 +1,11 @@
 import { Controller, Get, Param, Query, UseGuards } from "@nestjs/common";
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
-import { JwtAuthGuard, CurrentUser } from "@polyforge/shared-auth";
+import {
+  ApiKeyScopeGuard,
+  CurrentUser,
+  JwtAuthGuard,
+  RequireScopes,
+} from "@polyforge/shared-auth";
 import { JwtPayload } from "@polyforge/shared-types";
 import { RewardsService } from "./rewards.service";
 
@@ -52,6 +57,8 @@ export class RewardsController {
   }
 
   @Get("user/sponsored-markets")
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes("READ")
   getUserSponsoredMarkets(@CurrentUser() user: JwtPayload) {
     return this.rewards.getUserSponsoredMarkets(user.sub);
   }
