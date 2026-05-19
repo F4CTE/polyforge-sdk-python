@@ -382,6 +382,7 @@ services:
       DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@pgbouncer:5432/polyforge?pgbouncer=true&connection_limit=1
       DIRECT_DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/polyforge
       REDIS_URL: redis://:${REDIS_PASSWORD:?REDIS_PASSWORD is required}@redis:6379
+      INTERNAL_JWT_SECRET: "${INTERNAL_JWT_SECRET:?INTERNAL_JWT_SECRET is required}"
       EMAIL_DRIVER: ${EMAIL_DRIVER:-mailhog}
       MAILHOG_HOST: ${MAILHOG_HOST:-mailhog}
       MAILHOG_PORT: ${MAILHOG_PORT:-1025}
