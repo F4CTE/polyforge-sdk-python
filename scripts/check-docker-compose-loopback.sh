@@ -191,10 +191,10 @@ function process_flow_inline_map(map) {
   # ports sequence for loopback host_ip binding.
   # Handles quoted keys ("host_ip":, 'host_ip':) and variable
   # substitution values ($VAR, ${VAR}) in target/published.
-  if (map ~ /["'\'']?host_ip["'\'']?:[[:space:]]*["'\'']?(127\.0\.0\.1|\[::1\]|::1)["'\'']?([^0-9a-f.:]|$)/) return
+  if (map ~ /["'\'']?host_ip["'\'']?:[[:space:]]*([!&*][^[:space:]]*[[:space:]]+)*["'\'']?(127\.0\.0\.1|\[::1\]|::1)["'\'']?([^0-9a-f.:]|$)/) return
   # No loopback — flag if target and published are present
-  _target_match = map ~ /["'\'']?target["'\'']?:[[:space:]]*["'\'']?[0-9$]/
-  _published_match = map ~ /["'\'']?published["'\'']?:[[:space:]]*["'\'']?[0-9$]/
+  _target_match = map ~ /["'\'']?target["'\'']?:[[:space:]]*([!&*][^[:space:]]*[[:space:]]+)*["'\'']?[0-9$]/
+  _published_match = map ~ /["'\'']?published["'\'']?:[[:space:]]*([!&*][^[:space:]]*[[:space:]]+)*["'\'']?[0-9$]/
   if (_target_match && _published_match) {
     printf "::error file=%s,line=%d::Flow-style inline long-syntax port mapping without loopback binding. Add host_ip: 127.0.0.1 or suppress with # nosemgrep: docker-compose-port-no-loopback(-flow-style). See https://github.com/F4CTE/PolyForge/issues/1310\n", file, flow_lineno
     exit_code = 1
@@ -332,7 +332,7 @@ in_ports && /^[[:space:]]+- +(name|target|published|host_ip|protocol|mode|app_pr
   # confused for a real binding.
   noncomment = $0
   sub(/[[:space:]]*#.*$/, "", noncomment)
-  has_host_ip = (noncomment ~ /^[[:space:]]+-[[:space:]]+host_ip:[[:space:]]*["'\'']?(127\.0\.0\.1|\[::1\]|::1)["'\'']?([^0-9a-f.:]|$)/)
+  has_host_ip = (noncomment ~ /^[[:space:]]+-[[:space:]]+host_ip:[[:space:]]*([!&*][^[:space:]]*[[:space:]]+)*["'\'']?(127\.0\.0\.1|\[::1\]|::1)["'\'']?([^0-9a-f.:]|$)/)
   suppressed = (prev_nosemgrep || $0 ~ /# nosemgrep:.*docker-compose-port-no-loopback(-long-syntax|-flow-style)?/)
   prev_nosemgrep = 0
   next
@@ -385,7 +385,7 @@ in_block {
       saw_published = ($0 ~ / published:/)
       noncomment = $0
       sub(/[[:space:]]*#.*$/, "", noncomment)
-      has_host_ip = (noncomment ~ /^[[:space:]]+-[[:space:]]+host_ip:[[:space:]]*["'\'']?(127\.0\.0\.1|\[::1\]|::1)["'\'']?([^0-9a-f.:]|$)/)
+      has_host_ip = (noncomment ~ /^[[:space:]]+-[[:space:]]+host_ip:[[:space:]]*([!&*][^[:space:]]*[[:space:]]+)*["'\'']?(127\.0\.0\.1|\[::1\]|::1)["'\'']?([^0-9a-f.:]|$)/)
       suppressed = ($0 ~ /# nosemgrep:.*docker-compose-port-no-loopback(-long-syntax|-flow-style)?/)
       next
     }
@@ -406,7 +406,7 @@ in_block {
     # Match loopback host_ip (127.0.0.1 / ::1) with optional single/double quotes.
     # Anchored to line-start so that comments, inline comments, and typos
     # (e.g. xhost_ip:) do not satisfy the guard.
-    if ($0 ~ /^[[:space:]]+host_ip:[[:space:]]*["'\'']?(127\.0\.0\.1|\[::1\]|::1)["'\'']?([^0-9a-f.:]|$)/) {
+    if ($0 ~ /^[[:space:]]+host_ip:[[:space:]]*([!&*][^[:space:]]*[[:space:]]+)*["'\'']?(127\.0\.0\.1|\[::1\]|::1)["'\'']?([^0-9a-f.:]|$)/) {
       has_host_ip = 1
     }
   }
@@ -470,12 +470,12 @@ in_ports && /^[[:space:]]+-[[:space:]]+/ && !in_block {
     # Check for loopback host_ip (IPv4 or IPv6) inside the inline map.
     # Handles both unquoted keys (host_ip: 127.0.0.1) and quoted keys
     # ("host_ip": "127.0.0.1", 'host_ip': '127.0.0.1').
-    if (val ~ /["'\'']?host_ip["'\'']?:[[:space:]]*["'\'']?(127\.0\.0\.1|\[::1\]|::1)["'\'']?([^0-9a-f.:]|$)/) { next }
+    if (val ~ /["'\'']?host_ip["'\'']?:[[:space:]]*([!&*][^[:space:]]*[[:space:]]+)*["'\'']?(127\.0\.0\.1|\[::1\]|::1)["'\'']?([^0-9a-f.:]|$)/) { next }
     # No loopback host_ip in inline map — flag if target and published exist.
     # Also handles quoted keys ("target": , 'target':) and variable
     # substitution values ($VAR, ${VAR}) that would otherwise silently bypass.
-    _target_match = val ~ /["'\'']?target["'\'']?:[[:space:]]*["'\'']?[0-9$]/
-    _published_match = val ~ /["'\'']?published["'\'']?:[[:space:]]*["'\'']?[0-9$]/
+    _target_match = val ~ /["'\'']?target["'\'']?:[[:space:]]*([!&*][^[:space:]]*[[:space:]]+)*["'\'']?[0-9$]/
+    _published_match = val ~ /["'\'']?published["'\'']?:[[:space:]]*([!&*][^[:space:]]*[[:space:]]+)*["'\'']?[0-9$]/
     if (_target_match && _published_match) {
       printf "::error file=%s,line=%d::Inline long-syntax port mapping without loopback binding. Add host_ip: 127.0.0.1 or suppress with # nosemgrep: docker-compose-port-no-loopback(-long-syntax). See https://github.com/F4CTE/PolyForge/issues/1310\n", file, NR
       exit_code = 1
