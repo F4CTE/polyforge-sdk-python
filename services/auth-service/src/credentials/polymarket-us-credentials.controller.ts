@@ -17,7 +17,12 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
-import { JwtAuthGuard, CurrentUser } from '@polyforge/shared-auth';
+import {
+  JwtAuthGuard,
+  CurrentUser,
+  ApiKeyScopeGuard,
+  RequireScopes,
+} from '@polyforge/shared-auth';
 import { JwtPayload } from '@polyforge/shared-types';
 import { throttleLimit } from '../common/throttle-limit';
 import { PolymarketUsCredentialsService } from './polymarket-us-credentials.service';
@@ -25,12 +30,13 @@ import { ImportPolymarketUsCredentialsDto } from './dto/import-polymarket-us-cre
 
 @ApiTags('Credentials')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, ApiKeyScopeGuard)
 @Controller('credentials/polymarket-us')
 export class PolymarketUsCredentialsController {
   constructor(private readonly usCredentials: PolymarketUsCredentialsService) {}
 
   @Post()
+  @RequireScopes('WRITE')
   @HttpCode(HttpStatus.NO_CONTENT)
   @Throttle({
     default: {
@@ -74,6 +80,7 @@ export class PolymarketUsCredentialsController {
   }
 
   @Delete()
+  @RequireScopes('WRITE')
   @HttpCode(HttpStatus.NO_CONTENT)
   @Throttle({
     default: {
