@@ -71,7 +71,6 @@ export class HealthController {
   }
 }
 
-@SkipThrottle()
 @ApiTags("Status")
 @Controller("status")
 export class StatusController {

@@ -4,6 +4,7 @@ import {
   InjectThrottlerOptions,
   InjectThrottlerStorage,
   ThrottlerGuard,
+  type ThrottlerRequest,
   type ThrottlerModuleOptions,
   type ThrottlerStorage,
 } from "@nestjs/throttler";
@@ -12,9 +13,22 @@ import { createHash } from "crypto";
 
 const APIKEY_OWNER_PREFIX = "apikey:owner:";
 const APIKEY_OWNER_TTL = 120; // seconds, > default throttler window
+const HTTP_TOO_MANY_REQUESTS = 429;
+const MAX_STATUS_FALLBACK_TRACKERS = 1024;
+
+type FallbackRateLimitState = {
+  totalHits: number;
+  expiresAt: number;
+  blockedUntil: number;
+};
 
 @Injectable()
 export class ApiKeyThrottlerGuard extends ThrottlerGuard {
+  private readonly statusFallbackHits = new Map<
+    string,
+    FallbackRateLimitState
+  >();
+
   constructor(
     @InjectThrottlerOptions() options: ThrottlerModuleOptions,
     @InjectThrottlerStorage() storageService: ThrottlerStorage,
@@ -147,18 +161,30 @@ export class ApiKeyThrottlerGuard extends ThrottlerGuard {
     const { req } = this.getRequestResponse(context);
     const weight = this.getRequestWeight(req as Record<string, unknown>);
 
-    if (weight <= 1) {
-      return super.handleRequest(requestProps);
-    }
+    try {
+      if (weight <= 1) {
+        return await super.handleRequest(requestProps);
+      }
 
-    // Call the base implementation once per batch item. Each call increments
-    // the counter by 1; when the limit is reached the base class throws
-    // ThrottlerException which propagates naturally.
-    for (let i = 0; i < weight; i++) {
-      await super.handleRequest(requestProps);
-    }
+      // Call the base implementation once per batch item. Each call increments
+      // the counter by 1; when the limit is reached the base class throws
+      // ThrottlerException which propagates naturally.
+      for (let i = 0; i < weight; i++) {
+        await super.handleRequest(requestProps);
+      }
 
-    return true;
+      return true;
+    } catch (error) {
+      if (this.isThrottleLimitError(error)) {
+        throw error;
+      }
+
+      if (this.isStatusRequest(req as Record<string, unknown>)) {
+        return this.handleStatusFallback(requestProps as ThrottlerRequest);
+      }
+
+      throw error;
+    }
   }
 
   /**
@@ -184,5 +210,117 @@ export class ApiKeyThrottlerGuard extends ThrottlerGuard {
       /* body may not be parsed yet — fall back to 1 */
     }
     return 1;
+  }
+
+  private isThrottleLimitError(error: unknown): boolean {
+    const status = (error as { getStatus?: () => number }).getStatus?.();
+    return status === HTTP_TOO_MANY_REQUESTS;
+  }
+
+  private isStatusRequest(req: Record<string, unknown>): boolean {
+    const method = String(req["method"] ?? "GET").toUpperCase();
+    if (method !== "GET" && method !== "HEAD") {
+      return false;
+    }
+
+    const pathCandidates = [
+      req["url"],
+      req["originalUrl"],
+      req["path"],
+      (req["routeOptions"] as { url?: unknown } | undefined)?.url,
+      (req["routeConfig"] as { url?: unknown } | undefined)?.url,
+      (req["route"] as { path?: unknown } | undefined)?.path,
+    ];
+
+    return pathCandidates
+      .filter((value): value is string => typeof value === "string")
+      .map((value) => {
+        const path = value.split("?")[0].replace(/\/+$/, "") || "/";
+        return path.startsWith("/") ? path : `/${path}`;
+      })
+      .some((path) => path === "/status" || path === "/api/v1/status");
+  }
+
+  private async handleStatusFallback(
+    requestProps: ThrottlerRequest,
+  ): Promise<boolean> {
+    const {
+      context,
+      limit,
+      ttl,
+      throttler,
+      blockDuration,
+      getTracker,
+      generateKey,
+    } = requestProps;
+    const { req } = this.getRequestResponse(context);
+    const tracker = await getTracker(req as Record<string, unknown>, context);
+    const throttlerName = throttler.name ?? "default";
+    const key = `status-fallback:${generateKey(
+      context,
+      tracker,
+      throttlerName,
+    )}`;
+    const now = Date.now();
+    const blockMs = blockDuration || ttl;
+    this.pruneStatusFallbackHits(now);
+
+    let state = this.statusFallbackHits.get(key);
+
+    if (!state || state.expiresAt <= now) {
+      state = { totalHits: 0, expiresAt: now + ttl, blockedUntil: 0 };
+    }
+
+    if (state.blockedUntil > now) {
+      await this.throwThrottlingException(context, {
+        limit,
+        ttl,
+        key,
+        tracker,
+        totalHits: state.totalHits,
+        timeToExpire: Math.max(0, state.expiresAt - now),
+        isBlocked: true,
+        timeToBlockExpire: state.blockedUntil - now,
+      });
+    }
+
+    state.totalHits += 1;
+    if (state.totalHits > limit) {
+      state.blockedUntil = now + blockMs;
+      this.statusFallbackHits.set(key, state);
+      this.boundStatusFallbackHits();
+      await this.throwThrottlingException(context, {
+        limit,
+        ttl,
+        key,
+        tracker,
+        totalHits: state.totalHits,
+        timeToExpire: Math.max(0, state.expiresAt - now),
+        isBlocked: true,
+        timeToBlockExpire: blockMs,
+      });
+    }
+
+    this.statusFallbackHits.set(key, state);
+    this.boundStatusFallbackHits();
+    return true;
+  }
+
+  private pruneStatusFallbackHits(now: number): void {
+    for (const [key, state] of this.statusFallbackHits) {
+      if (state.expiresAt <= now) {
+        this.statusFallbackHits.delete(key);
+      }
+    }
+  }
+
+  private boundStatusFallbackHits(): void {
+    while (this.statusFallbackHits.size > MAX_STATUS_FALLBACK_TRACKERS) {
+      const oldestKey = this.statusFallbackHits.keys().next().value as
+        | string
+        | undefined;
+      if (!oldestKey) return;
+      this.statusFallbackHits.delete(oldestKey);
+    }
   }
 }

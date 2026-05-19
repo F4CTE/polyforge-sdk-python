@@ -35,6 +35,18 @@ class TestApiKeyThrottlerGuard extends ApiKeyThrottlerGuard {
     return this.getTracker(req);
   }
 
+  handle(props: any): Promise<boolean> {
+    return this.handleRequest(props);
+  }
+
+  fallbackCacheSize(): number {
+    return (this as any).statusFallbackHits.size;
+  }
+
+  hasFallbackTrackerForIp(ip: string): boolean {
+    return (this as any).statusFallbackHits.has(`status-fallback:default:${ip}`);
+  }
+
   weight(req: Record<string, unknown>): number {
     return (this as any).getRequestWeight(req);
   }
@@ -47,6 +59,34 @@ class TestApiKeyThrottlerGuard extends ApiKeyThrottlerGuard {
 describe("ApiKeyThrottlerGuard", () => {
   function makeGuard() {
     return new TestApiKeyThrottlerGuard({} as any, {} as any, {} as any);
+  }
+
+  function makeGuardWithStorage(storage: Record<string, unknown>) {
+    return new TestApiKeyThrottlerGuard(
+      { throttlers: [{ ttl: 60000, limit: 2 }] } as any,
+      storage as any,
+      {} as any,
+    );
+  }
+
+  function makeRequestProps(req: Record<string, unknown>) {
+    const res = { header: vi.fn() };
+    return {
+      context: {
+        switchToHttp: () => ({
+          getRequest: () => req,
+          getResponse: () => res,
+        }),
+      },
+      limit: 2,
+      ttl: 60000,
+      blockDuration: 60000,
+      throttler: { name: "default" },
+      getTracker: (request: Record<string, unknown>) =>
+        Promise.resolve(String(request["ip"] ?? "")),
+      generateKey: (_context: unknown, tracker: string, name: string) =>
+        `${name}:${tracker}`,
+    };
   }
 
   it("receives base ThrottlerGuard dependencies through Nest DI", async () => {
@@ -481,5 +521,133 @@ describe("ApiKeyThrottlerGuard", () => {
     expect(
       guard.weight({ body: { orders: Array(10000).fill({ qty: 1 }) } }),
     ).toBe(100);
+  });
+
+  // ── /status throttler outage fallback ─
+
+  it("keeps /status reachable with a local limit when Redis throttler storage fails", async () => {
+    const storage = {
+      increment: vi.fn().mockRejectedValue(new Error("Redis unavailable")),
+    };
+    const guard = makeGuardWithStorage(storage);
+    await guard.onModuleInit();
+    const props = makeRequestProps({
+      method: "GET",
+      url: "/status",
+      ip: "203.0.113.50",
+    });
+
+    await expect(guard.handle(props as any)).resolves.toBe(true);
+    await expect(guard.handle(props as any)).resolves.toBe(true);
+    await expect(guard.handle(props as any)).rejects.toMatchObject({
+      status: 429,
+    });
+    expect(storage.increment).toHaveBeenCalledTimes(3);
+  });
+
+  it("keeps prefixed /api/v1/status reachable when Redis throttler storage fails", async () => {
+    const guard = makeGuardWithStorage({
+      increment: vi.fn().mockRejectedValue(new Error("Redis unavailable")),
+    });
+    await guard.onModuleInit();
+    const props = makeRequestProps({
+      method: "GET",
+      url: "/api/v1/status",
+      routeOptions: { url: "/api/v1/status" },
+      ip: "203.0.113.52",
+    });
+
+    await expect(guard.handle(props as any)).resolves.toBe(true);
+  });
+
+  it("prunes expired status fallback trackers during throttler storage failures", async () => {
+    vi.useFakeTimers();
+    try {
+      const guard = makeGuardWithStorage({
+        increment: vi.fn().mockRejectedValue(new Error("Redis unavailable")),
+      });
+      await guard.onModuleInit();
+
+      vi.setSystemTime(new Date("2026-05-19T10:00:00.000Z"));
+      await expect(
+        guard.handle(
+          makeRequestProps({
+            method: "GET",
+            url: "/status",
+            ip: "203.0.113.54",
+          }) as any,
+        ),
+      ).resolves.toBe(true);
+      expect(guard.fallbackCacheSize()).toBe(1);
+
+      vi.setSystemTime(new Date("2026-05-19T10:01:00.001Z"));
+      await expect(
+        guard.handle(
+          makeRequestProps({
+            method: "GET",
+            url: "/status",
+            ip: "203.0.113.55",
+          }) as any,
+        ),
+      ).resolves.toBe(true);
+
+      expect(guard.fallbackCacheSize()).toBe(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("bounds status fallback trackers during throttler storage failures", async () => {
+    const guard = makeGuardWithStorage({
+      increment: vi.fn().mockRejectedValue(new Error("Redis unavailable")),
+    });
+    await guard.onModuleInit();
+
+    for (let i = 0; i < 1025; i++) {
+      await expect(
+        guard.handle(
+          makeRequestProps({
+            method: "GET",
+            url: "/status",
+            ip: `203.0.113.${i}`,
+          }) as any,
+        ),
+      ).resolves.toBe(true);
+    }
+
+    expect(guard.fallbackCacheSize()).toBe(1024);
+    expect(guard.hasFallbackTrackerForIp("203.0.113.0")).toBe(false);
+    expect(guard.hasFallbackTrackerForIp("203.0.113.1024")).toBe(true);
+  });
+
+  it("rethrows Redis throttler storage failures for non-status routes", async () => {
+    const redisError = new Error("Redis unavailable");
+    const guard = makeGuardWithStorage({
+      increment: vi.fn().mockRejectedValue(redisError),
+    });
+    await guard.onModuleInit();
+    const props = makeRequestProps({
+      method: "GET",
+      url: "/markets",
+      ip: "203.0.113.51",
+    });
+
+    await expect(guard.handle(props as any)).rejects.toBe(redisError);
+  });
+
+  it("does not apply the status fallback to other status-suffixed routes", async () => {
+    const redisError = new Error("Redis unavailable");
+    const guard = makeGuardWithStorage({
+      increment: vi.fn().mockRejectedValue(redisError),
+    });
+    await guard.onModuleInit();
+    const props = makeRequestProps({
+      method: "GET",
+      url: "/api/v1/watchlist/market-1/status",
+      routeOptions: { url: "/api/v1/watchlist/:marketId/status" },
+      ip: "203.0.113.53",
+    });
+
+    await expect(guard.handle(props as any)).rejects.toBe(redisError);
   });
 });
