@@ -158,6 +158,9 @@ services:
   auth-service:
     image: "${ECR_REGISTRY}/polyforge-auth-service:${IMAGE_TAG}"
     <<: *common
+    environment:
+      INTERNAL_JWT_AUDIENCE: "${AUTH_SERVICE_INTERNAL_JWT_AUDIENCE:?AUTH_SERVICE_INTERNAL_JWT_AUDIENCE is required}"
+      INTERNAL_JWT_ISSUERS: "${AUTH_SERVICE_INTERNAL_JWT_ISSUERS:?AUTH_SERVICE_INTERNAL_JWT_ISSUERS is required}"
     read_only: true
     tmpfs:
       - /tmp:size=64m,noexec,nosuid
@@ -189,6 +192,9 @@ services:
   api-service:
     image: "${ECR_REGISTRY}/polyforge-api-service:${IMAGE_TAG}"
     <<: *common
+    environment:
+      INTERNAL_JWT_AUDIENCE: "${API_SERVICE_INTERNAL_JWT_AUDIENCE:?API_SERVICE_INTERNAL_JWT_AUDIENCE is required}"
+      INTERNAL_JWT_ISSUERS: "${API_SERVICE_INTERNAL_JWT_ISSUERS:?API_SERVICE_INTERNAL_JWT_ISSUERS is required}"
     read_only: true
     tmpfs:
       - /tmp:size=64m,noexec,nosuid
@@ -275,6 +281,9 @@ services:
   market-data-service:
     image: "${ECR_REGISTRY}/polyforge-market-data-service:${IMAGE_TAG}"
     <<: *common
+    environment:
+      INTERNAL_JWT_AUDIENCE: "${MARKET_DATA_SERVICE_INTERNAL_JWT_AUDIENCE:?MARKET_DATA_SERVICE_INTERNAL_JWT_AUDIENCE is required}"
+      INTERNAL_JWT_ISSUERS: "${MARKET_DATA_SERVICE_INTERNAL_JWT_ISSUERS:?MARKET_DATA_SERVICE_INTERNAL_JWT_ISSUERS is required}"
     read_only: true
     tmpfs:
       - /tmp:size=64m,noexec,nosuid
