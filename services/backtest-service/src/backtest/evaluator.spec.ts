@@ -1199,6 +1199,42 @@ describe("checkTriggers — TA blocks", () => {
       ];
       expect(checkTriggers(blocks, prices, makeHistory([0.5]))).toBe(false);
     });
+
+    it("does not fire when fast period is zero", () => {
+      const hist = Array.from({ length: 50 }, () => 0.5);
+      const prices = makePrices({ "tok-a": { price: 0.5 } });
+      const blocks: Block[] = [
+        {
+          type: "macd_crossover",
+          config: { tokenId: "tok-a", fastPeriod: 0, slowPeriod: 26 },
+        },
+      ];
+      expect(checkTriggers(blocks, prices, makeHistory(hist))).toBe(false);
+    });
+
+    it("does not fire when slow period is zero", () => {
+      const hist = Array.from({ length: 50 }, () => 0.5);
+      const prices = makePrices({ "tok-a": { price: 0.5 } });
+      const blocks: Block[] = [
+        {
+          type: "macd_crossover",
+          config: { tokenId: "tok-a", fastPeriod: 12, slowPeriod: 0 },
+        },
+      ];
+      expect(checkTriggers(blocks, prices, makeHistory(hist))).toBe(false);
+    });
+
+    it("does not fire when fast > slow (period reversal)", () => {
+      const hist = Array.from({ length: 50 }, (_, i) => 0.5 + i * 0.01);
+      const prices = makePrices({ "tok-a": { price: hist[hist.length - 1] } });
+      const blocks: Block[] = [
+        {
+          type: "macd_crossover",
+          config: { tokenId: "tok-a", fastPeriod: 26, slowPeriod: 12 },
+        },
+      ];
+      expect(checkTriggers(blocks, prices, makeHistory(hist))).toBe(false);
+    });
   });
 
   describe("bollinger_bands", () => {
@@ -1437,6 +1473,42 @@ describe("checkTriggers — TA blocks", () => {
         },
       ];
       expect(checkTriggers(blocks, prices, makeHistory([0.5]))).toBe(false);
+    });
+
+    it("does not fire with invalid fast period (zero)", () => {
+      const hist = Array.from({ length: 50 }, () => 0.5);
+      const prices = makePrices({ "tok-a": { price: 0.5 } });
+      const blocks: Block[] = [
+        {
+          type: "macd_signal_tick",
+          config: {
+            tokenId: "tok-a",
+            fastPeriod: 0,
+            slowPeriod: 26,
+            signalPeriod: 9,
+            signal: "line_cross",
+          },
+        },
+      ];
+      expect(checkTriggers(blocks, prices, makeHistory(hist))).toBe(false);
+    });
+
+    it("does not fire with fast > slow (period reversal)", () => {
+      const hist = Array.from({ length: 50 }, (_, i) => 0.5 + i * 0.01);
+      const prices = makePrices({ "tok-a": { price: hist[hist.length - 1] } });
+      const blocks: Block[] = [
+        {
+          type: "macd_signal_tick",
+          config: {
+            tokenId: "tok-a",
+            fastPeriod: 26,
+            slowPeriod: 12,
+            signalPeriod: 5,
+            signal: "line_cross",
+          },
+        },
+      ];
+      expect(checkTriggers(blocks, prices, makeHistory(hist))).toBe(false);
     });
   });
 

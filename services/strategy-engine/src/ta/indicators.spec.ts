@@ -186,6 +186,67 @@ describe("macd", () => {
     const result = macd(prices, 12, 26, 9);
     expect(Math.abs(result.macdLine)).toBeCloseTo(0, 6);
   });
+
+  // ── Period validation ──────────────────────────────────────────────────
+
+  describe("period validation", () => {
+    it("returns NaN for NaN fast period", () => {
+      const r = macd(linear(10, 0.5, 50), NaN, 26, 9);
+      expect(r.macdLine).toBeNaN();
+      expect(r.signalLine).toBeNaN();
+      expect(r.histogram).toBeNaN();
+    });
+
+    it("returns NaN for Infinity fast period", () => {
+      const r = macd(linear(10, 0.5, 50), Infinity, 26, 9);
+      expect(r.macdLine).toBeNaN();
+    });
+
+    it("returns NaN for -Infinity signal period", () => {
+      const r = macd(linear(10, 0.5, 50), 12, 26, -Infinity);
+      expect(r.macdLine).toBeNaN();
+    });
+
+    it("returns NaN for non-integer fast period", () => {
+      const r = macd(linear(10, 0.5, 50), 12.5, 26, 9);
+      expect(r.macdLine).toBeNaN();
+    });
+
+    it("returns NaN for non-integer slow period", () => {
+      const r = macd(linear(10, 0.5, 50), 12, 26.1, 9);
+      expect(r.macdLine).toBeNaN();
+    });
+
+    it("returns NaN for non-integer signal period", () => {
+      const r = macd(linear(10, 0.5, 50), 12, 26, 9.9);
+      expect(r.macdLine).toBeNaN();
+    });
+
+    it("returns NaN for zero fast period", () => {
+      const r = macd(linear(10, 0.5, 50), 0, 26, 9);
+      expect(r.macdLine).toBeNaN();
+    });
+
+    it("returns NaN for zero slow period", () => {
+      const r = macd(linear(10, 0.5, 50), 12, 0, 9);
+      expect(r.macdLine).toBeNaN();
+    });
+
+    it("returns NaN for zero signal period", () => {
+      const r = macd(linear(10, 0.5, 50), 12, 26, 0);
+      expect(r.macdLine).toBeNaN();
+    });
+
+    it("returns NaN for negative signal period", () => {
+      const r = macd(linear(10, 0.5, 50), 12, 26, -1);
+      expect(r.macdLine).toBeNaN();
+    });
+
+    it("returns NaN when fast > slow", () => {
+      const r = macd(linear(10, 0.5, 50), 26, 12, 9);
+      expect(r.macdLine).toBeNaN();
+    });
+  });
 });
 
 // ─── Bollinger Bands ──────────────────────────────────────────────────────────

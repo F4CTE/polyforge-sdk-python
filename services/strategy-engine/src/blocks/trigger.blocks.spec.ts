@@ -923,6 +923,24 @@ describe("MacdSignalTickBlock", () => {
     expect(res.reason).toMatch(/insufficient/);
   });
 
+  it("does not fire with invalid MACD periods", async () => {
+    const redis = makeZrangeRedis([0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2]);
+    const res = await MacdSignalTickBlock.evaluate(
+      block("macd_signal_tick", {
+        tokenId: "tok1",
+        fastPeriod: -1000000000,
+        slowPeriod: 5,
+        signalPeriod: 3,
+        signal: "line_cross",
+      }),
+      makeCtx(),
+      redis,
+      makePrisma(),
+    );
+    expect(res.fired).toBe(false);
+    expect(res.reason).toMatch(/invalid MACD periods/);
+  });
+
   it("does not fire with invalid config", async () => {
     const res = await MacdSignalTickBlock.evaluate(
       block("macd_signal_tick", {}),

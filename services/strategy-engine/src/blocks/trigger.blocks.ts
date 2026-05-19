@@ -379,6 +379,17 @@ export const MacdSignalTickBlock: BlockEvaluator = {
     const signal = String(params.signal ?? "");
 
     if (!tokenId || !signal) return { fired: false, reason: "invalid config" };
+    if (
+      !Number.isInteger(fastPeriod) ||
+      !Number.isInteger(slowPeriod) ||
+      !Number.isInteger(signalPeriod) ||
+      fastPeriod <= 0 ||
+      slowPeriod <= 0 ||
+      signalPeriod <= 0 ||
+      fastPeriod >= slowPeriod
+    ) {
+      return { fired: false, reason: "invalid MACD periods" };
+    }
 
     const count = slowPeriod + signalPeriod;
     const points = await readPriceWindow(redis, tokenId, count);

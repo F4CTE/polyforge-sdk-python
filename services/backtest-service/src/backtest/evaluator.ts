@@ -66,6 +66,20 @@ function _macdFull(
   signal = 9,
 ): { macdLine: number; signalLine: number; histogram: number } {
   const nan = { macdLine: NaN, signalLine: NaN, histogram: NaN };
+  if (
+    !Number.isFinite(fast) ||
+    !Number.isFinite(slow) ||
+    !Number.isFinite(signal) ||
+    !Number.isInteger(fast) ||
+    !Number.isInteger(slow) ||
+    !Number.isInteger(signal) ||
+    fast <= 0 ||
+    slow <= 0 ||
+    signal <= 0 ||
+    fast > slow
+  ) {
+    return nan;
+  }
   if (prices.length < slow + signal - 1) return nan;
 
   const macdSeries: number[] = [];
