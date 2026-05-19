@@ -345,37 +345,13 @@ export class AuthService implements OnModuleInit {
       );
     }
 
-    // SECURITY: Per-account password lockout after 5 failures (15-minute window)
-    const loginLockKey = `admin:login:fail:${admin.id}`;
-    const loginFailCount = parseInt(
-      (await this.redis.get(loginLockKey)) ?? "0",
-      10,
-    );
-    if (loginFailCount >= 5) {
-      throw new HttpException(
-        {
-          code: "ACCOUNT_LOCKED",
-          message: "Too many failed attempts. Try again in 15 minutes.",
-        },
-        HttpStatus.TOO_MANY_REQUESTS,
-      );
-    }
-
     const isValid = await bcrypt.compare(dto.password, admin.passwordHash);
     if (!isValid) {
-      // Increment failure counter
-      const client = this.redis.getClient();
-      const newCount = await client.incr(loginLockKey);
-      if (newCount === 1) await client.expire(loginLockKey, 900);
-
       throw new HttpException(
         { code: "INVALID_CREDENTIALS", message: "Invalid email or password" },
         HttpStatus.BAD_REQUEST,
       );
     }
-
-    // Clear login failure counter on successful password
-    await this.redis.del(loginLockKey).catch(() => {});
 
     // If TOTP is enabled, require a valid code
     if (admin.totpEnabled) {

@@ -373,7 +373,7 @@ describe("Admin Auth Integration", () => {
       expect(parseJson(res.body).code).toBe("TOTP_REQUIRED");
     });
 
-    it("returns 429 after 5 failed login attempts (account lockout)", async () => {
+    it("does not lock an admin out because of stale password failure counters", async () => {
       const ADMIN_ID = "lockout-admin-id";
       const lockoutAdmin: AdminRecord = {
         ...testAdmin,
@@ -393,11 +393,11 @@ describe("Admin Auth Integration", () => {
         payload: { email: lockoutAdmin.email, password: ADMIN_PASSWORD },
       });
 
-      expect(locked.statusCode).toBe(429);
-      expect(parseJson(locked.body).code).toBe("ACCOUNT_LOCKED");
+      expect(locked.statusCode).toBe(200);
+      expect(parseJson(locked.body).email).toBe(lockoutAdmin.email);
     });
 
-    it("clears lockout counter on successful login", async () => {
+    it("does not create a password lockout counter for failed logins", async () => {
       const recoverAdmin: AdminRecord = {
         ...testAdmin,
         id: "recover-admin-id",
