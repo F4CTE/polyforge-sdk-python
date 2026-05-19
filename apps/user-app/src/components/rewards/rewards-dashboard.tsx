@@ -108,7 +108,15 @@ export function RewardsDashboard() {
       const res = await fetch('/api/v1/rewards/user/sponsored-markets', {
         credentials: 'include',
       });
-      if (res.ok) setSponsoredMarkets(await res.json());
+      if (res.ok) {
+        const data: unknown = await res.json();
+        const markets = Array.isArray(data)
+          ? data
+          : (typeof data === 'object' && data !== null && 'markets' in data && Array.isArray((data as { markets?: unknown }).markets)
+              ? (data as { markets: SponsoredMarket[] }).markets
+              : []);
+        setSponsoredMarkets(markets);
+      }
     } catch {
       // silent — not a blocking error for the overall dashboard
     } finally {
