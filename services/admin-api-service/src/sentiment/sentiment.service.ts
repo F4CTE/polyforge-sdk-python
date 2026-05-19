@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "@polyforge/shared-db";
 
-type Period = "1h" | "24h" | "7d";
+export type Period = "1h" | "24h" | "7d";
 
 const PERIOD_MS: Record<Period, number> = {
   "1h": 3_600_000,
