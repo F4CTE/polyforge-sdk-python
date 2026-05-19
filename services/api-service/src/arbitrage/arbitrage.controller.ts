@@ -209,7 +209,8 @@ export class ArbitrageController {
   // ─── Arbitrage alerts ───────────────────────────────────────────────────
 
   @Get("alerts")
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ApiKeyScopeGuard)
+  @RequireScopes("READ")
   @ApiOperation({
     summary: "List user's active arbitrage alert subscriptions",
   })

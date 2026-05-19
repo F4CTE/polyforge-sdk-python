@@ -1,10 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { INTERCEPTORS_METADATA } from "@nestjs/common/constants";
+import { INTERCEPTORS_METADATA, GUARDS_METADATA } from "@nestjs/common/constants";
 import { validate } from "class-validator";
 import { plainToInstance } from "class-transformer";
 import { IdempotencyInterceptor } from "../common/interceptors/idempotency.interceptor";
 import { ArbitrageController } from "./arbitrage.controller";
 import { ExecuteArbDto } from "./dto/execute-arb.dto";
+import { ApiKeyScopeGuard, REQUIRED_SCOPES, JwtAuthGuard } from "@polyforge/shared-auth";
 
 const THROTTLER_LIMIT = "THROTTLER:LIMIT";
 const THROTTLER_TTL = "THROTTLER:TTL";
@@ -78,6 +79,44 @@ describe("ArbitrageController — execute/close hardening (POLA-1911)", () => {
     it("has @Throttle applied (60_000ms window)", () => {
       expectThrottleApplied(ArbitrageController.prototype.closePosition);
     });
+  });
+});
+
+describe("ArbitrageController — API key scope enforcement (POLA-5793)", () => {
+  const GUARDS = GUARDS_METADATA;
+
+  it("requires READ scope on listAlerts", () => {
+    const scopes = Reflect.getMetadata(
+      REQUIRED_SCOPES,
+      ArbitrageController.prototype.listAlerts,
+    );
+    expect(scopes).toEqual(["READ"]);
+  });
+
+  it("orders JwtAuthGuard before ApiKeyScopeGuard on listAlerts to prevent scope bypass", () => {
+    const guards: unknown[] =
+      Reflect.getMetadata(GUARDS, ArbitrageController.prototype.listAlerts) ?? [];
+    const jwtIdx = guards.indexOf(JwtAuthGuard);
+    const scopeIdx = guards.indexOf(ApiKeyScopeGuard);
+    expect(jwtIdx, "JwtAuthGuard must be present").toBeGreaterThanOrEqual(0);
+    expect(scopeIdx, "ApiKeyScopeGuard must be present").toBeGreaterThanOrEqual(0);
+    expect(jwtIdx, "JwtAuthGuard must evaluate before ApiKeyScopeGuard").toBeLessThan(scopeIdx);
+  });
+
+  it("requires WRITE scope on createAlert", () => {
+    const scopes = Reflect.getMetadata(
+      REQUIRED_SCOPES,
+      ArbitrageController.prototype.createAlert,
+    );
+    expect(scopes).toEqual(["WRITE"]);
+  });
+
+  it("requires WRITE scope on removeAlert", () => {
+    const scopes = Reflect.getMetadata(
+      REQUIRED_SCOPES,
+      ArbitrageController.prototype.removeAlert,
+    );
+    expect(scopes).toEqual(["WRITE"]);
   });
 });
 
