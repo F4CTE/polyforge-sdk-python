@@ -889,10 +889,25 @@ describe("MarketsService", () => {
   // ── createMarketAlert ─────────────────────────────────────────────────
 
   describe("createMarketAlert", () => {
+    // ── helper: mock $transaction to execute the callback with db as tx ──
+    function mockTransactionPassthrough() {
+      db.$transaction.mockImplementation(async (arg: any) => {
+        if (typeof arg === "function") {
+          return arg(db);
+        }
+        if (Array.isArray(arg)) {
+          return Promise.all(arg.map((op: any) => op));
+        }
+        return undefined;
+      });
+    }
+
     it("creates alert by resolving outcome to token", async () => {
+      mockTransactionPassthrough();
       db.token.findFirst.mockResolvedValue(
         makeToken({ id: "t-yes", marketId: "market-1", outcome: "YES" }),
       );
+      db.priceAlert.count.mockResolvedValue(0);
       db.priceAlert.create.mockResolvedValue(
         makePriceAlert({
           id: "alert-new",
@@ -922,6 +937,25 @@ describe("MarketsService", () => {
       });
     });
 
+    it("throws ALERT_LIMIT_REACHED when user already has 50 active alerts", async () => {
+      mockTransactionPassthrough();
+      db.token.findFirst.mockResolvedValue(
+        makeToken({ id: "t-yes", marketId: "market-1", outcome: "YES" }),
+      );
+      db.priceAlert.count.mockResolvedValue(50);
+
+      await expect(
+        service.createMarketAlert("market-1", "user-1", {
+          outcome: "YES",
+          condition: "above",
+          threshold: 0.5,
+        }),
+      ).rejects.toMatchObject({
+        response: { code: "ALERT_LIMIT_REACHED" },
+      });
+      expect(db.priceAlert.create).not.toHaveBeenCalled();
+    });
+
     it("throws NotFoundException when token for outcome does not exist", async () => {
       db.token.findFirst.mockResolvedValue(null);
 
@@ -932,6 +966,49 @@ describe("MarketsService", () => {
           threshold: 0.5,
         }),
       ).rejects.toThrow(NotFoundException);
+    });
+
+    it("retries serializable transaction conflicts and then succeeds", async () => {
+      db.token.findFirst.mockResolvedValue(
+        makeToken({ id: "t-yes", marketId: "market-1", outcome: "YES" }),
+      );
+      db.$transaction
+        .mockRejectedValueOnce({ code: "P2034" })
+        .mockRejectedValueOnce({ code: "P2034" })
+        .mockResolvedValueOnce(
+          makePriceAlert({
+            id: "alert-new",
+            userId: "user-1",
+            tokenId: "t-yes",
+            direction: "above",
+            price: 0.8,
+          }),
+        );
+
+      const result = await service.createMarketAlert("market-1", "user-1", {
+        outcome: "YES",
+        condition: "above",
+        threshold: 0.8,
+      });
+
+      expect(result.id).toBe("alert-new");
+      expect(db.$transaction).toHaveBeenCalledTimes(3);
+    });
+
+    it("throws after max retries for serializable conflicts", async () => {
+      db.token.findFirst.mockResolvedValue(
+        makeToken({ id: "t-yes", marketId: "market-1", outcome: "YES" }),
+      );
+      db.$transaction.mockRejectedValue({ code: "P2034" });
+
+      await expect(
+        service.createMarketAlert("market-1", "user-1", {
+          outcome: "YES",
+          condition: "above",
+          threshold: 0.5,
+        }),
+      ).rejects.toMatchObject({ code: "P2034" });
+      expect(db.$transaction).toHaveBeenCalledTimes(3);
     });
   });
 

@@ -9,10 +9,22 @@ import {
 } from "@nestjs/common";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
+import { Prisma } from "@prisma/client";
 import { EventsGateway } from "../gateway/events.gateway";
 import { CreateAlertDto } from "./dto/create-alert.dto";
 
 const MAX_ALERTS = 50;
+const MAX_SERIALIZABLE_RETRIES = 3;
+
+function isSerializationConflictError(error: unknown): boolean {
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    return (error as { code: string }).code === "P2034";
+  }
+  if (typeof error === "object" && error !== null && "code" in error) {
+    return (error as { code: unknown }).code === "P2034";
+  }
+  return false;
+}
 
 @Injectable()
 export class AlertsService implements OnModuleInit, OnModuleDestroy {
@@ -119,25 +131,43 @@ export class AlertsService implements OnModuleInit, OnModuleDestroy {
   }
 
   async create(userId: string, dto: CreateAlertDto): Promise<any> {
-    const count = await this.prisma.priceAlert.count({
-      where: { userId, triggered: false },
-    });
-    if (count >= MAX_ALERTS) {
-      throw new UnprocessableEntityException({
-        code: "ALERT_LIMIT_REACHED",
-        message: "Maximum 50 alerts allowed",
-      });
+    for (let attempt = 1; attempt <= MAX_SERIALIZABLE_RETRIES; attempt += 1) {
+      try {
+        return await this.prisma.$transaction(
+          async (tx) => {
+            const count = await tx.priceAlert.count({
+              where: { userId, triggered: false },
+            });
+            if (count >= MAX_ALERTS) {
+              throw new UnprocessableEntityException({
+                code: "ALERT_LIMIT_REACHED",
+                message: "Maximum 50 alerts allowed",
+              });
+            }
+
+            return tx.priceAlert.create({
+              data: {
+                userId,
+                tokenId: dto.tokenId,
+                direction: dto.direction,
+                price: dto.price,
+                persistent: dto.persistent ?? false,
+              },
+            });
+          },
+          { isolationLevel: "Serializable" },
+        );
+      } catch (error) {
+        if (
+          !isSerializationConflictError(error) ||
+          attempt === MAX_SERIALIZABLE_RETRIES
+        ) {
+          throw error;
+        }
+      }
     }
 
-    return this.prisma.priceAlert.create({
-      data: {
-        userId,
-        tokenId: dto.tokenId,
-        direction: dto.direction,
-        price: dto.price,
-        persistent: dto.persistent ?? false,
-      },
-    });
+    throw new Error("unreachable");
   }
 
   async remove(id: string, userId: string): Promise<void> {

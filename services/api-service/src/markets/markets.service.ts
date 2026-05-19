@@ -1,6 +1,7 @@
 import {
   Injectable,
   NotFoundException,
+  UnprocessableEntityException,
   OnModuleInit,
   Logger,
 } from "@nestjs/common";
@@ -16,6 +17,18 @@ import {
   VoteMarketSentimentDto,
 } from "./dto/market-query.dto";
 import { ClobReadService } from "../common/services/clob-read.service";
+
+const MAX_SERIALIZABLE_RETRIES = 3;
+
+function isSerializationConflictError(error: unknown): boolean {
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    return (error as { code: string }).code === "P2034";
+  }
+  if (typeof error === "object" && error !== null && "code" in error) {
+    return (error as { code: unknown }).code === "P2034";
+  }
+  return false;
+}
 
 @Injectable()
 export class MarketsService implements OnModuleInit {
@@ -594,23 +607,50 @@ export class MarketsService implements OnModuleInit {
       });
     }
 
-    const alert = await this.prisma.priceAlert.create({
-      data: {
-        userId,
-        tokenId: token.id,
-        direction: dto.condition,
-        price: dto.threshold,
-      },
-    });
+    let alert: { id: string; createdAt: Date };
+    for (let attempt = 1; attempt <= MAX_SERIALIZABLE_RETRIES; attempt += 1) {
+      try {
+        alert = await this.prisma.$transaction(
+          async (tx) => {
+            const count = await tx.priceAlert.count({
+              where: { userId, triggered: false },
+            });
+            if (count >= 50) {
+              throw new UnprocessableEntityException({
+                code: "ALERT_LIMIT_REACHED",
+                message: "Maximum 50 alerts allowed",
+              });
+            }
 
+            return tx.priceAlert.create({
+              data: {
+                userId,
+                tokenId: token.id,
+                direction: dto.condition,
+                price: dto.threshold,
+              },
+            });
+          },
+          { isolationLevel: "Serializable" },
+        );
+        break;
+      } catch (error) {
+        if (
+          !isSerializationConflictError(error) ||
+          attempt === MAX_SERIALIZABLE_RETRIES
+        ) {
+          throw error;
+        }
+      }
+    }
     return {
-      id: alert.id,
+      id: alert!.id,
       marketId,
       outcome: dto.outcome,
       condition: dto.condition,
       threshold: dto.threshold,
       triggered: false,
-      createdAt: alert.createdAt,
+      createdAt: alert!.createdAt,
     };
   }
 

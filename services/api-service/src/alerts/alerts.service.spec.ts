@@ -80,7 +80,21 @@ describe("AlertsService", () => {
   // ── create ────────────────────────────────────────────────────────────────
 
   describe("create", () => {
+    // ── helper: mock $transaction to execute the callback with db as tx ──
+    function mockTransactionPassthrough() {
+      db.$transaction.mockImplementation(async (arg: any) => {
+        if (typeof arg === "function") {
+          return arg(db);
+        }
+        if (Array.isArray(arg)) {
+          return Promise.all(arg.map((op: any) => op));
+        }
+        return undefined;
+      });
+    }
+
     it("creates and returns an alert when under the limit", async () => {
+      mockTransactionPassthrough();
       const dto = makeCreateAlertDto();
       const alert = makeAlert();
       db.priceAlert.count.mockResolvedValue(0);
@@ -104,6 +118,7 @@ describe("AlertsService", () => {
     });
 
     it("defaults persistent to false when not provided in dto", async () => {
+      mockTransactionPassthrough();
       const dto = makeCreateAlertDto({ persistent: undefined });
       const alert = makeAlert({ persistent: false });
       db.priceAlert.count.mockResolvedValue(5);
@@ -119,6 +134,7 @@ describe("AlertsService", () => {
     });
 
     it("stores persistent: true when explicitly set", async () => {
+      mockTransactionPassthrough();
       const dto = makeCreateAlertDto({ persistent: true });
       db.priceAlert.count.mockResolvedValue(1);
       db.priceAlert.create.mockResolvedValue(
@@ -135,6 +151,7 @@ describe("AlertsService", () => {
     });
 
     it("throws ALERT_LIMIT_REACHED (422) when user already has 50 alerts", async () => {
+      mockTransactionPassthrough();
       db.priceAlert.count.mockResolvedValue(50);
 
       await expect(
@@ -143,6 +160,7 @@ describe("AlertsService", () => {
     });
 
     it("throws ALERT_LIMIT_REACHED with correct error code", async () => {
+      mockTransactionPassthrough();
       db.priceAlert.count.mockResolvedValue(50);
 
       await expect(
@@ -153,6 +171,7 @@ describe("AlertsService", () => {
     });
 
     it("does NOT throw at exactly 49 alerts (boundary)", async () => {
+      mockTransactionPassthrough();
       db.priceAlert.count.mockResolvedValue(49);
       db.priceAlert.create.mockResolvedValue(makeAlert() as any);
 
@@ -162,6 +181,7 @@ describe("AlertsService", () => {
     });
 
     it("does NOT call prisma.create when the limit is reached", async () => {
+      mockTransactionPassthrough();
       db.priceAlert.count.mockResolvedValue(50);
 
       await service
@@ -169,6 +189,29 @@ describe("AlertsService", () => {
         .catch(() => {});
 
       expect(db.priceAlert.create).not.toHaveBeenCalled();
+    });
+
+    it("retries serializable transaction conflicts and then succeeds", async () => {
+      const dto = makeCreateAlertDto();
+      const alert = makeAlert();
+      db.$transaction
+        .mockRejectedValueOnce({ code: "P2034" })
+        .mockRejectedValueOnce({ code: "P2034" })
+        .mockResolvedValueOnce(alert as any);
+
+      const result = await service.create("user-uuid-1", dto);
+
+      expect(result).toEqual(alert);
+      expect(db.$transaction).toHaveBeenCalledTimes(3);
+    });
+
+    it("throws after max retries for serializable conflicts", async () => {
+      db.$transaction.mockRejectedValue({ code: "P2034" });
+
+      await expect(
+        service.create("user-uuid-1", makeCreateAlertDto()),
+      ).rejects.toMatchObject({ code: "P2034" });
+      expect(db.$transaction).toHaveBeenCalledTimes(3);
     });
   });
 
