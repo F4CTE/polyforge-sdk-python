@@ -19,6 +19,8 @@ export class AiController {
   constructor(private readonly ai: AiService) {}
 
   @Post("query")
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes("WRITE")
   @Throttle({
     default: {
       limit: process.env.NODE_ENV === "production" ? 20 : 10000,

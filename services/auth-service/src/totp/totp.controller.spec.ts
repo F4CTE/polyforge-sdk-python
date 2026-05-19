@@ -1,7 +1,19 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { UnauthorizedException } from '@nestjs/common';
+import { GUARDS_METADATA } from '@nestjs/common/constants';
 import { TotpController } from './totp.controller';
 import { TotpService } from './totp.service';
+
+const REQUIRED_SCOPES = 'requiredScopes';
+
+function expectSessionOnly(method: object) {
+  const guards = Reflect.getMetadata(GUARDS_METADATA, method) ?? [];
+
+  expect(guards.map((guard: { name?: string }) => guard.name)).toEqual([
+    'SessionOnlyGuard',
+  ]);
+  expect(Reflect.getMetadata(REQUIRED_SCOPES, method)).toBeUndefined();
+}
 
 describe('TotpController', () => {
   let controller: TotpController;
@@ -36,10 +48,18 @@ describe('TotpController', () => {
     expect(result).toMatchObject({ secret: 'SECRET' });
   });
 
+  it('setup requires a user session rather than a WRITE-scoped API key', () => {
+    expectSessionOnly(TotpController.prototype.setup);
+  });
+
   it('confirm delegates to totpService.confirm', async () => {
     const result = await controller.confirm(user, { code: '123456' });
     expect(totpService.confirm).toHaveBeenCalledWith(user.sub, '123456');
     expect(result).toMatchObject({ backupCodes: expect.any(Array) });
+  });
+
+  it('confirm requires a user session rather than a WRITE-scoped API key', () => {
+    expectSessionOnly(TotpController.prototype.confirm);
   });
 
   it('disable delegates to totpService.disable with password and totpCode', async () => {

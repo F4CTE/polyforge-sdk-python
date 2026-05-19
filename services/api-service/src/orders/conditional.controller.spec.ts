@@ -1,10 +1,14 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { INTERCEPTORS_METADATA } from "@nestjs/common/constants";
+import {
+  GUARDS_METADATA,
+  INTERCEPTORS_METADATA,
+} from "@nestjs/common/constants";
 import {
   NotFoundException,
   ForbiddenException,
   UnprocessableEntityException,
 } from "@nestjs/common";
+import { ApiKeyScopeGuard, REQUIRED_SCOPES } from "@polyforge/shared-auth";
 import { ConditionalController } from "./conditional.controller";
 import { IdempotencyInterceptor } from "../common/interceptors/idempotency.interceptor";
 import { createMockDb, MockDb } from "../../test/helpers/mock-db";
@@ -27,6 +31,13 @@ function expectRequiredIdempotencyKey(method: object) {
       }),
     ]),
   );
+}
+
+function expectRequiredScope(method: object, scope: string) {
+  const guards: unknown[] = Reflect.getMetadata(GUARDS_METADATA, method) ?? [];
+
+  expect(guards).toContain(ApiKeyScopeGuard);
+  expect(Reflect.getMetadata(REQUIRED_SCOPES, method)).toEqual([scope]);
 }
 
 // ─── Factories ────────────────────────────────────────────────────────────────
@@ -91,6 +102,10 @@ describe("ConditionalController", () => {
   describe("create", () => {
     it("requires Idempotency-Key", () => {
       expectRequiredIdempotencyKey(ConditionalController.prototype.create);
+    });
+
+    it("requires TRADE scope for API-key callers", () => {
+      expectRequiredScope(ConditionalController.prototype.create, "TRADE");
     });
 
     it("creates a conditional order and returns it", async () => {
@@ -336,6 +351,10 @@ describe("ConditionalController", () => {
   // ── cancel ───────────────────────────────────────────────────────────────
 
   describe("cancel", () => {
+    it("requires TRADE scope for API-key callers", () => {
+      expectRequiredScope(ConditionalController.prototype.cancel, "TRADE");
+    });
+
     it("cancels an order and returns the updated record", async () => {
       db.conditionalOrder.findUnique.mockResolvedValue(
         makeConditionalOrder() as any,

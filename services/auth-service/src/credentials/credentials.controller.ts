@@ -14,7 +14,12 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
-import { JwtAuthGuard, CurrentUser } from '@polyforge/shared-auth';
+import {
+  JwtAuthGuard,
+  CurrentUser,
+  ApiKeyScopeGuard,
+  RequireScopes,
+} from '@polyforge/shared-auth';
 import { JwtPayload } from '@polyforge/shared-types';
 import { throttleLimit } from '../common/throttle-limit';
 import { CredentialsService } from './credentials.service';
@@ -28,6 +33,8 @@ export class CredentialsController {
   constructor(private readonly credentialsService: CredentialsService) {}
 
   @Post()
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes('WRITE')
   @HttpCode(HttpStatus.NO_CONTENT)
   @Throttle({
     default: {
@@ -52,6 +59,8 @@ export class CredentialsController {
   }
 
   @Delete()
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes('WRITE')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
     summary: 'Delete Polymarket credentials and disconnect account',

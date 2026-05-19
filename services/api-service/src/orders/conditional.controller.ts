@@ -17,7 +17,12 @@ import {
 } from "@nestjs/common";
 import { ApiTags, ApiBearerAuth, ApiHeader } from "@nestjs/swagger";
 import { Throttle } from "@nestjs/throttler";
-import { JwtAuthGuard, CurrentUser } from "@polyforge/shared-auth";
+import {
+  ApiKeyScopeGuard,
+  CurrentUser,
+  JwtAuthGuard,
+  RequireScopes,
+} from "@polyforge/shared-auth";
 import { IsOptional, IsIn } from "class-validator";
 import { PrismaService } from "@polyforge/shared-db";
 import {
@@ -57,6 +62,8 @@ export class ConditionalController {
     schema: { type: "string", minLength: 8, maxLength: 128 },
   })
   @UseInterceptors(IdempotencyInterceptor)
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes("TRADE")
   async create(
     @CurrentUser() user: JwtPayload,
     @Body() dto: CreateConditionalOrderDto,
@@ -150,6 +157,8 @@ export class ConditionalController {
     },
   })
   @HttpCode(HttpStatus.OK)
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes("TRADE")
   async cancel(
     @CurrentUser() user: JwtPayload,
     @Param("id", ParseUUIDPipe) id: string,

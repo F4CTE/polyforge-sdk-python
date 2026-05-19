@@ -10,7 +10,13 @@ import {
 } from "@nestjs/common";
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
 import { Throttle } from "@nestjs/throttler";
-import { JwtAuthGuard, CurrentUser } from "@polyforge/shared-auth";
+import {
+  JwtAuthGuard,
+  CurrentUser,
+  ApiKeyScopeGuard,
+  RequireScopes,
+  SessionOnlyGuard,
+} from "@polyforge/shared-auth";
 import { ApiKeysService } from "./api-keys.service";
 import { CreateApiKeyDto } from "./dto/create-api-key.dto";
 import { JwtPayload } from "@polyforge/shared-types";
@@ -23,11 +29,13 @@ export class ApiKeysController {
   constructor(private readonly keys: ApiKeysService) {}
 
   @Get()
+  @UseGuards(SessionOnlyGuard)
   list(@CurrentUser() user: JwtPayload) {
     return this.keys.list(user.sub);
   }
 
   @Post()
+  @UseGuards(SessionOnlyGuard)
   @Throttle({
     default: {
       limit:
@@ -44,6 +52,8 @@ export class ApiKeysController {
   }
 
   @Delete(":id")
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes("WRITE")
   @Throttle({
     default: {
       limit: process.env.NODE_ENV === "production" ? 20 : 10000,

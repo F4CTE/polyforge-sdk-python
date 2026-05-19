@@ -16,7 +16,13 @@ import {
   ApiResponse,
   ApiBearerAuth,
 } from '@nestjs/swagger';
-import { JwtAuthGuard, CurrentUser } from '@polyforge/shared-auth';
+import {
+  JwtAuthGuard,
+  CurrentUser,
+  ApiKeyScopeGuard,
+  RequireScopes,
+  SessionOnlyGuard,
+} from '@polyforge/shared-auth';
 import { JwtPayload } from '@polyforge/shared-types';
 import { ApiKeysService } from './api-keys.service';
 import { CreateApiKeyDto } from './dto/create-api-key.dto';
@@ -29,6 +35,7 @@ export class ApiKeysController {
   constructor(private readonly apiKeysService: ApiKeysService) {}
 
   @Post()
+  @UseGuards(SessionOnlyGuard)
   @ApiOperation({ summary: 'Create a new API key' })
   @ApiResponse({
     status: 201,
@@ -41,6 +48,7 @@ export class ApiKeysController {
   }
 
   @Get()
+  @UseGuards(SessionOnlyGuard)
   @ApiOperation({ summary: 'List all API keys for the authenticated user' })
   @ApiResponse({
     status: 200,
@@ -51,6 +59,8 @@ export class ApiKeysController {
   }
 
   @Delete(':id')
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes('WRITE')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Revoke an API key' })
   @ApiResponse({ status: 200, description: 'API key revoked.' })

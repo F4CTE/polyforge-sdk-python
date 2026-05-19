@@ -9,7 +9,12 @@ import {
 } from "@nestjs/common";
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
 import { Throttle } from "@nestjs/throttler";
-import { JwtAuthGuard, CurrentUser } from "@polyforge/shared-auth";
+import {
+  JwtAuthGuard,
+  CurrentUser,
+  ApiKeyScopeGuard,
+  RequireScopes,
+} from "@polyforge/shared-auth";
 import { ProfileService } from "./profile.service";
 import { UpdateProfileDto } from "./dto/update-profile.dto";
 import { ChangePasswordDto } from "./dto/change-password.dto";
@@ -24,6 +29,8 @@ export class ProfileController {
   constructor(private readonly profile: ProfileService) {}
 
   @Patch("me")
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes("WRITE")
   updateMyProfile(
     @CurrentUser() user: JwtPayload,
     @Body() dto: UpdateProfileDto,
@@ -32,6 +39,8 @@ export class ProfileController {
   }
 
   @Post("password")
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes("WRITE")
   @Throttle({
     default: {
       limit: process.env.NODE_ENV === "production" ? 5 : 10000,
@@ -46,6 +55,8 @@ export class ProfileController {
   }
 
   @Patch("notifications")
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes("WRITE")
   updateNotifications(
     @CurrentUser() user: JwtPayload,
     @Body() dto: UpdateProfileNotificationsDto,
@@ -62,6 +73,8 @@ export class ProfileController {
   }
 
   @Post(":username/follow")
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes("WRITE")
   @Throttle({
     default: {
       limit: process.env.NODE_ENV === "production" ? 60 : 10000,

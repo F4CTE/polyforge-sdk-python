@@ -12,7 +12,11 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
-import { JwtAuthGuard, CurrentUser } from '@polyforge/shared-auth';
+import {
+  JwtAuthGuard,
+  CurrentUser,
+  SessionOnlyGuard,
+} from '@polyforge/shared-auth';
 import { JwtPayload } from '@polyforge/shared-types';
 import { throttleLimit } from '../common/throttle-limit';
 import { BotLinkService } from './bot-link.service';
@@ -26,6 +30,7 @@ export class BotLinkController {
 
   @Post()
   @HttpCode(HttpStatus.OK)
+  @UseGuards(SessionOnlyGuard)
   @Throttle({
     default: {
       limit: throttleLimit(10),

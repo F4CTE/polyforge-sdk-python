@@ -1,6 +1,11 @@
 import { Controller, Get, Post, UseGuards } from "@nestjs/common";
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
-import { JwtAuthGuard, CurrentUser } from "@polyforge/shared-auth";
+import {
+  JwtAuthGuard,
+  CurrentUser,
+  ApiKeyScopeGuard,
+  RequireScopes,
+} from "@polyforge/shared-auth";
 import { PaperService } from "./paper.service";
 import { JwtPayload } from "@polyforge/shared-types";
 
@@ -17,6 +22,8 @@ export class PaperController {
   }
 
   @Post("reset")
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes("WRITE")
   reset(@CurrentUser() user: JwtPayload) {
     return this.paper.reset(user.sub);
   }

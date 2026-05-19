@@ -16,8 +16,13 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
-import { JwtAuthGuard } from '@polyforge/shared-auth';
-import { CurrentUser } from '@polyforge/shared-auth';
+import {
+  JwtAuthGuard,
+  CurrentUser,
+  ApiKeyScopeGuard,
+  RequireScopes,
+  SessionOnlyGuard,
+} from '@polyforge/shared-auth';
 import { JwtPayload } from '@polyforge/shared-types';
 import { throttleLimit } from '../common/throttle-limit';
 import { TotpService } from './totp.service';
@@ -31,6 +36,7 @@ export class TotpController {
   constructor(private readonly totpService: TotpService) {}
 
   @Post('setup')
+  @UseGuards(SessionOnlyGuard)
   @ApiOperation({
     summary:
       'Start 2FA setup — returns secret, otpauth URI, and QR code data URL',
@@ -46,6 +52,7 @@ export class TotpController {
 
   @Post('confirm')
   @HttpCode(HttpStatus.OK)
+  @UseGuards(SessionOnlyGuard)
   @ApiOperation({
     summary:
       'Confirm 2FA setup — verifies the first TOTP code and returns 10 backup codes',
@@ -61,6 +68,8 @@ export class TotpController {
 
   @Post('backup-codes')
   @HttpCode(HttpStatus.OK)
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes('WRITE')
   @Throttle({
     default: {
       ttl: 3600000,
@@ -75,9 +84,14 @@ export class TotpController {
     description: '10 new backup codes. Previous codes are invalidated.',
   })
   @ApiResponse({ status: 400, description: 'TOTP_NOT_ENABLED.' })
-  async regenBackupCodes(@CurrentUser() user: JwtPayload, @Req() req: { apiKeyMeta?: unknown }) {
+  async regenBackupCodes(
+    @CurrentUser() user: JwtPayload,
+    @Req() req: { apiKeyMeta?: unknown },
+  ) {
     if (req.apiKeyMeta) {
-      throw new UnauthorizedException('API keys cannot regenerate backup codes');
+      throw new UnauthorizedException(
+        'API keys cannot regenerate backup codes',
+      );
     }
 
     return this.totpService.regenBackupCodes(user.sub);
@@ -85,6 +99,8 @@ export class TotpController {
 
   @Delete()
   @HttpCode(HttpStatus.OK)
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes('WRITE')
   @Throttle({
     default: {
       ttl: 3600000,

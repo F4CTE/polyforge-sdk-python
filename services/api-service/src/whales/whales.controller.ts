@@ -14,10 +14,10 @@ import {
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
 import { Throttle } from "@nestjs/throttler";
 import {
-  JwtAuthGuard,
-  CurrentUser,
-  RequireScopes,
   ApiKeyScopeGuard,
+  CurrentUser,
+  JwtAuthGuard,
+  RequireScopes,
 } from "@polyforge/shared-auth";
 import { WhalesService } from "./whales.service";
 import { SmartMoneyService } from "./smart-money.service";
@@ -110,12 +110,16 @@ export class WhalesController {
 
   @Post(":address/follow")
   @HttpCode(HttpStatus.OK)
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes("WRITE")
   follow(@CurrentUser() user: JwtPayload, @Param("address") address: string) {
     return this.whales.toggleFollow(user.sub, address);
   }
 
   @Post(":address/unfollow")
   @HttpCode(HttpStatus.OK)
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes("WRITE")
   unfollow(@CurrentUser() user: JwtPayload, @Param("address") address: string) {
     return this.whales.toggleFollow(user.sub, address);
   }

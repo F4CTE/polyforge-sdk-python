@@ -11,7 +11,12 @@ import {
 } from "@nestjs/common";
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
 import { Throttle } from "@nestjs/throttler";
-import { JwtAuthGuard, CurrentUser } from "@polyforge/shared-auth";
+import {
+  JwtAuthGuard,
+  CurrentUser,
+  ApiKeyScopeGuard,
+  RequireScopes,
+} from "@polyforge/shared-auth";
 import { WatchlistService } from "./watchlist.service";
 import { IsString } from "class-validator";
 import { JwtPayload } from "@polyforge/shared-types";
@@ -33,12 +38,16 @@ export class WatchlistController {
   }
 
   @Post()
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes("WRITE")
   @HttpCode(HttpStatus.CREATED)
   add(@CurrentUser() user: JwtPayload, @Body() dto: AddWatchlistDto) {
     return this.watchlist.add(user.sub, dto.marketId);
   }
 
   @Delete(":marketId")
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes("WRITE")
   @Throttle({
     default: {
       limit: process.env.NODE_ENV === "production" ? 60 : 10000,

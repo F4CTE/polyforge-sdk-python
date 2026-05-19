@@ -1,6 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { GUARDS_METADATA } from '@nestjs/common/constants';
 import { ApiKeysController } from './api-keys.controller';
 import { ApiKeysService } from './api-keys.service';
+
+const REQUIRED_SCOPES = 'requiredScopes';
 
 describe('ApiKeysController', () => {
   let controller: ApiKeysController;
@@ -38,6 +41,16 @@ describe('ApiKeysController', () => {
     expect(apiKeysService.create).toHaveBeenCalledWith(user.sub, dto);
   });
 
+  it('POST /api-keys is session-only and has no API-key scope metadata', () => {
+    const method = ApiKeysController.prototype.create;
+    const guards = Reflect.getMetadata(GUARDS_METADATA, method) ?? [];
+
+    expect(guards.map((guard: { name?: string }) => guard.name)).toEqual([
+      'SessionOnlyGuard',
+    ]);
+    expect(Reflect.getMetadata(REQUIRED_SCOPES, method)).toBeUndefined();
+  });
+
   it('POST /api-keys returns the service result including plaintext key', async () => {
     const dto = { name: 'My Key' };
 
@@ -51,6 +64,28 @@ describe('ApiKeysController', () => {
     await controller.list(user);
 
     expect(apiKeysService.list).toHaveBeenCalledWith(user.sub);
+  });
+
+  it('GET /api-keys is session-only and rejects API-key callers regardless of scope', () => {
+    const method = ApiKeysController.prototype.list;
+    const guards = Reflect.getMetadata(GUARDS_METADATA, method) ?? [];
+    const [Guard] = guards;
+
+    expect(guards.map((guard: { name?: string }) => guard.name)).toEqual([
+      'SessionOnlyGuard',
+    ]);
+    expect(Reflect.getMetadata(REQUIRED_SCOPES, method)).toBeUndefined();
+
+    const guard = new Guard();
+    expect(() =>
+      guard.canActivate({
+        switchToHttp: () => ({
+          getRequest: () => ({
+            apiKeyMeta: { keyId: 'key-1', scopes: ['READ', 'WRITE', 'TRADE'] },
+          }),
+        }),
+      } as any),
+    ).toThrow('This endpoint requires an authenticated user session');
   });
 
   it('DELETE /api-keys/:id delegates to service.revoke with correct id and userId', async () => {

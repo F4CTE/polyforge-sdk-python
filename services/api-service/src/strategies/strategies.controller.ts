@@ -201,6 +201,8 @@ export class StrategiesController {
 
   @Post("import")
   @HttpCode(HttpStatus.CREATED)
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes("STRATEGY")
   importStrategy(
     @CurrentUser() user: JwtPayload,
     @Body() dto: ImportStrategyDto,
@@ -251,6 +253,8 @@ export class StrategiesController {
 
   @Post(":id/fork")
   @HttpCode(HttpStatus.CREATED)
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes("STRATEGY")
   fork(
     @Param("id", ParseUUIDPipe) id: string,
     @CurrentUser() user: JwtPayload,
@@ -259,6 +263,8 @@ export class StrategiesController {
   }
 
   @Post(":id/like")
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes("WRITE")
   like(
     @Param("id", ParseUUIDPipe) id: string,
     @CurrentUser() user: JwtPayload,
@@ -276,6 +282,8 @@ export class StrategiesController {
 
   @Post(":id/comments")
   @HttpCode(HttpStatus.CREATED)
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes("WRITE")
   addComment(
     @Param("id", ParseUUIDPipe) id: string,
     @CurrentUser() user: JwtPayload,
@@ -292,6 +300,8 @@ export class StrategiesController {
     },
   })
   @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes("WRITE")
   deleteComment(
     @Param("strategyId", ParseUUIDPipe) strategyId: string,
     @Param("commentId", ParseUUIDPipe) commentId: string,
@@ -310,6 +320,8 @@ export class StrategiesController {
 
   @Post(":id/report")
   @HttpCode(HttpStatus.CREATED)
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes("WRITE")
   report(
     @Param("id", ParseUUIDPipe) id: string,
     @CurrentUser() user: JwtPayload,

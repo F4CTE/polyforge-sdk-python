@@ -1,7 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { GUARDS_METADATA } from '@nestjs/common/constants';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { userFactory } from '../../test/factories';
+
+const REQUIRED_SCOPES = 'requiredScopes';
 
 // ─── Stubs ────────────────────────────────────────────────────────────────────
 
@@ -100,6 +103,19 @@ describe('AuthController', () => {
       const result = await controller.me(jwtPayload);
       expect(result).toBe(expected);
       expect(authService.me).toHaveBeenCalledWith(user.id);
+    });
+  });
+
+  describe('DELETE account authz', () => {
+    it('runs JwtAuthGuard before ApiKeyScopeGuard and requires WRITE scope', () => {
+      const method = AuthController.prototype.deleteAccount;
+      const guards = Reflect.getMetadata(GUARDS_METADATA, method) ?? [];
+
+      expect(guards.map((guard: { name?: string }) => guard.name)).toEqual([
+        'JwtAuthGuard',
+        'ApiKeyScopeGuard',
+      ]);
+      expect(Reflect.getMetadata(REQUIRED_SCOPES, method)).toEqual(['WRITE']);
     });
   });
 

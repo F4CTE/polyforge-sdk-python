@@ -19,7 +19,12 @@ import {
 } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { FastifyReply, FastifyRequest } from 'fastify';
-import { JwtAuthGuard, CurrentUser } from '@polyforge/shared-auth';
+import {
+  JwtAuthGuard,
+  CurrentUser,
+  ApiKeyScopeGuard,
+  RequireScopes,
+} from '@polyforge/shared-auth';
 import { JwtPayload } from '@polyforge/shared-types';
 import { throttleLimit } from '../common/throttle-limit';
 import { AuthService } from './auth.service';
@@ -299,7 +304,8 @@ export class AuthController {
 
   @Delete('account')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ApiKeyScopeGuard)
+  @RequireScopes('WRITE')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete current user account (soft-delete)' })
   @ApiResponse({ status: 200, description: 'Account deleted successfully.' })

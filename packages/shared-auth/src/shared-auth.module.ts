@@ -7,6 +7,7 @@ import { InternalJwtGuard } from "./internal-jwt.guard";
 import { AdminJwtGuard } from "./admin-jwt.guard";
 import { RolesGuard } from "./roles.guard";
 import { ApiKeyScopeGuard } from "./api-key-scopes.guard";
+import { SessionOnlyGuard } from "./session-only.guard";
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { ApiKeyScopeGuard } from "./api-key-scopes.guard";
     AdminJwtGuard,
     RolesGuard,
     ApiKeyScopeGuard,
+    SessionOnlyGuard,
   ],
   exports: [
     JwtModule,
@@ -32,6 +34,7 @@ import { ApiKeyScopeGuard } from "./api-key-scopes.guard";
     AdminJwtGuard,
     RolesGuard,
     ApiKeyScopeGuard,
+    SessionOnlyGuard,
   ],
 })
 export class SharedAuthModule {}

@@ -16,6 +16,7 @@ export {
 export type { InternalJwtConfig } from "./internal-jwt-config";
 export { RequireScopes, REQUIRED_SCOPES } from "./api-key-scopes.decorator";
 export { ApiKeyScopeGuard } from "./api-key-scopes.guard";
+export { SessionOnlyGuard } from "./session-only.guard";
 export { deriveServiceKey } from "./hmac-key-derivation";
 export { rejectPlaceholderSecrets } from "./reject-placeholder-secrets";
 export { rejectInsecureCookies } from "./reject-insecure-cookies";

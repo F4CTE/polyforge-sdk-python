@@ -13,7 +13,12 @@ import {
   DefaultValuePipe,
 } from "@nestjs/common";
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
-import { JwtAuthGuard, CurrentUser } from "@polyforge/shared-auth";
+import {
+  ApiKeyScopeGuard,
+  CurrentUser,
+  JwtAuthGuard,
+  RequireScopes,
+} from "@polyforge/shared-auth";
 import { TicketsService } from "./tickets.service";
 import { CreateTicketDto } from "./dto/create-ticket.dto";
 import { CreateMessageDto } from "./dto/create-message.dto";
@@ -28,6 +33,8 @@ export class TicketsController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes("WRITE")
   create(@CurrentUser() user: JwtPayload, @Body() dto: CreateTicketDto) {
     return this.tickets.create(user.sub, user.username, dto);
   }
@@ -51,6 +58,8 @@ export class TicketsController {
 
   @Post(":id/messages")
   @HttpCode(HttpStatus.CREATED)
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes("WRITE")
   addMessage(
     @Param("id", ParseUUIDPipe) id: string,
     @CurrentUser() user: JwtPayload,

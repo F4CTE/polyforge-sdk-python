@@ -40,6 +40,8 @@ export class UsersController {
   }
 
   @Put("me/notification-preferences")
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes("WRITE")
   updateNotificationPreferences(
     @CurrentUser() user: JwtPayload,
     @Body() dto: UpdateEventNotificationsDto,
@@ -53,6 +55,8 @@ export class UsersController {
   }
 
   @Patch("me/venue-preferences")
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes("WRITE")
   updateVenuePreferences(
     @CurrentUser() user: JwtPayload,
     @Body() dto: UpdateVenuePreferencesDto,

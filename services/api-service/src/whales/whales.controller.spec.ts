@@ -1,12 +1,19 @@
 import { describe, it, expect } from "vitest";
 import { WhalesController } from "./whales.controller";
 import {
-  JwtAuthGuard,
   ApiKeyScopeGuard,
+  JwtAuthGuard,
   REQUIRED_SCOPES,
 } from "@polyforge/shared-auth";
 
 const GUARDS_KEY = "__guards__";
+
+function expectWriteScoped(method: object) {
+  const guards: unknown[] = Reflect.getMetadata(GUARDS_KEY, method) ?? [];
+
+  expect(guards).toContain(ApiKeyScopeGuard);
+  expect(Reflect.getMetadata(REQUIRED_SCOPES, method)).toEqual(["WRITE"]);
+}
 
 describe("WhalesController — auth guard coverage", () => {
   it("has JwtAuthGuard applied at class level", () => {
@@ -47,63 +54,19 @@ describe("WhalesController — auth guard coverage", () => {
     expect(WhalesController.prototype.unfollow).toBeDefined();
   });
 
+  it("requires WRITE scope for alert filter mutations", () => {
+    expectWriteScoped(WhalesController.prototype.upsertAlertFilter);
+    expectWriteScoped(WhalesController.prototype.deleteAlertFilter);
+  });
+
+  it("requires WRITE scope for follow mutations", () => {
+    expectWriteScoped(WhalesController.prototype.follow);
+    expectWriteScoped(WhalesController.prototype.unfollow);
+  });
+
   it("getFeed has @Throttle decorator", () => {
     const method = WhalesController.prototype.getFeed;
     const ttl: unknown = Reflect.getMetadata("THROTTLER:TTLdefault", method);
     expect(ttl, "@Throttle ttl must be set on getFeed").toBeDefined();
-  });
-
-  // ─── Alert filter mutation guard coverage ────────────────────────────
-
-  it("upsertAlertFilter has ApiKeyScopeGuard applied", () => {
-    const method = WhalesController.prototype.upsertAlertFilter;
-    expect(method).toBeDefined();
-
-    const methodGuards: unknown[] =
-      Reflect.getMetadata(GUARDS_KEY, method) ?? [];
-    const hasScopeGuard = methodGuards.some(
-      (g: any) =>
-        g === ApiKeyScopeGuard || g?.name === "ApiKeyScopeGuard",
-    );
-    expect(
-      hasScopeGuard,
-      "upsertAlertFilter must have ApiKeyScopeGuard applied",
-    ).toBe(true);
-  });
-
-  it("upsertAlertFilter requires WRITE scope", () => {
-    const method = WhalesController.prototype.upsertAlertFilter;
-    const scopes: string[] | undefined = Reflect.getMetadata(
-      REQUIRED_SCOPES,
-      method,
-    );
-    expect(scopes, "upsertAlertFilter must have required scopes").toBeDefined();
-    expect(scopes).toContain("WRITE");
-  });
-
-  it("deleteAlertFilter has ApiKeyScopeGuard applied", () => {
-    const method = WhalesController.prototype.deleteAlertFilter;
-    expect(method).toBeDefined();
-
-    const methodGuards: unknown[] =
-      Reflect.getMetadata(GUARDS_KEY, method) ?? [];
-    const hasScopeGuard = methodGuards.some(
-      (g: any) =>
-        g === ApiKeyScopeGuard || g?.name === "ApiKeyScopeGuard",
-    );
-    expect(
-      hasScopeGuard,
-      "deleteAlertFilter must have ApiKeyScopeGuard applied",
-    ).toBe(true);
-  });
-
-  it("deleteAlertFilter requires WRITE scope", () => {
-    const method = WhalesController.prototype.deleteAlertFilter;
-    const scopes: string[] | undefined = Reflect.getMetadata(
-      REQUIRED_SCOPES,
-      method,
-    );
-    expect(scopes, "deleteAlertFilter must have required scopes").toBeDefined();
-    expect(scopes).toContain("WRITE");
   });
 });

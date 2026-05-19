@@ -14,7 +14,12 @@ import {
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
 import { Throttle } from "@nestjs/throttler";
 import { IsOptional, IsString, IsNumberString } from "class-validator";
-import { JwtAuthGuard, CurrentUser } from "@polyforge/shared-auth";
+import {
+  ApiKeyScopeGuard,
+  CurrentUser,
+  JwtAuthGuard,
+  RequireScopes,
+} from "@polyforge/shared-auth";
 import { JwtPayload } from "@polyforge/shared-types";
 import {
   MarketplaceService,
@@ -74,6 +79,8 @@ export class MarketplaceController {
     },
   })
   @HttpCode(HttpStatus.CREATED)
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes("WRITE")
   createListing(
     @CurrentUser() user: JwtPayload,
     @Body() dto: CreateListingDto,
@@ -82,6 +89,8 @@ export class MarketplaceController {
   }
 
   @Patch(":id")
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes("WRITE")
   updateListing(
     @CurrentUser() user: JwtPayload,
     @Param("id", ParseUUIDPipe) id: string,
@@ -100,6 +109,8 @@ export class MarketplaceController {
     },
   })
   @HttpCode(HttpStatus.CREATED)
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes("TRADE")
   purchase(
     @CurrentUser() user: JwtPayload,
     @Param("id", ParseUUIDPipe) id: string,
@@ -109,6 +120,8 @@ export class MarketplaceController {
 
   @Post(":id/rate")
   @HttpCode(HttpStatus.OK)
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes("WRITE")
   rate(
     @CurrentUser() user: JwtPayload,
     @Param("id", ParseUUIDPipe) id: string,

@@ -14,7 +14,12 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
-import { JwtAuthGuard, CurrentUser } from '@polyforge/shared-auth';
+import {
+  JwtAuthGuard,
+  CurrentUser,
+  ApiKeyScopeGuard,
+  RequireScopes,
+} from '@polyforge/shared-auth';
 import { JwtPayload } from '@polyforge/shared-types';
 import { throttleLimit } from '../common/throttle-limit';
 import { KalshiCredentialsService } from './kalshi-credentials.service';
@@ -28,6 +33,8 @@ export class KalshiCredentialsController {
   constructor(private readonly kalshiCreds: KalshiCredentialsService) {}
 
   @Post()
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes('WRITE')
   @HttpCode(HttpStatus.NO_CONTENT)
   @Throttle({
     default: {
@@ -50,6 +57,8 @@ export class KalshiCredentialsController {
   }
 
   @Delete()
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes('WRITE')
   @HttpCode(HttpStatus.NO_CONTENT)
   @Throttle({
     default: {

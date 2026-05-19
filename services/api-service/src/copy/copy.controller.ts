@@ -13,7 +13,12 @@ import {
   ParseUUIDPipe,
 } from "@nestjs/common";
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
-import { JwtAuthGuard, CurrentUser } from "@polyforge/shared-auth";
+import {
+  JwtAuthGuard,
+  CurrentUser,
+  ApiKeyScopeGuard,
+  RequireScopes,
+} from "@polyforge/shared-auth";
 import { CopyService } from "./copy.service";
 import { CreateCopyDto } from "./dto/create-copy.dto";
 import { UpdateCopyDto } from "./dto/update-copy.dto";
@@ -28,7 +33,8 @@ export class CopyController {
   constructor(private readonly copy: CopyService) {}
 
   @Post()
-  @UseGuards(GeoBlockGuard)
+  @UseGuards(ApiKeyScopeGuard, GeoBlockGuard)
+  @RequireScopes("TRADE")
   create(@CurrentUser() user: JwtPayload, @Body() dto: CreateCopyDto) {
     return this.copy.create(user.sub, dto);
   }
@@ -47,6 +53,8 @@ export class CopyController {
   }
 
   @Patch(":id")
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes("TRADE")
   update(
     @CurrentUser() user: JwtPayload,
     @Param("id", ParseUUIDPipe) id: string,
@@ -56,6 +64,8 @@ export class CopyController {
   }
 
   @Post(":id/pause")
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes("TRADE")
   @HttpCode(HttpStatus.OK)
   pause(
     @CurrentUser() user: JwtPayload,
@@ -66,7 +76,8 @@ export class CopyController {
 
   @Post(":id/resume")
   @HttpCode(HttpStatus.OK)
-  @UseGuards(GeoBlockGuard)
+  @UseGuards(ApiKeyScopeGuard, GeoBlockGuard)
+  @RequireScopes("TRADE")
   resume(
     @CurrentUser() user: JwtPayload,
     @Param("id", ParseUUIDPipe) id: string,
@@ -75,6 +86,8 @@ export class CopyController {
   }
 
   @Delete(":id")
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes("TRADE")
   @HttpCode(HttpStatus.OK)
   stop(
     @CurrentUser() user: JwtPayload,
