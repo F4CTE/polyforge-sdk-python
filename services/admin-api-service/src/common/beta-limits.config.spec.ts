@@ -30,12 +30,7 @@ describe("BETA_LIMITS_DEFAULTS (envInt)", () => {
     expect(BETA_LIMITS_DEFAULTS.maxDailyStrategyExecutions).toBe(500);
   });
 
-  it("exposes marketDataRateLimitPerMinute (100 outside CI, 10000 in CI)", () => {
-    const inCI = process.env.CI === "true";
-    if (inCI) {
-      expect(BETA_LIMITS_DEFAULTS.marketDataRateLimitPerMinute).toBe(10_000);
-    } else {
-      expect(BETA_LIMITS_DEFAULTS.marketDataRateLimitPerMinute).toBe(100);
-    }
+  it("exposes marketDataRateLimitPerMinute by default", () => {
+    expect(BETA_LIMITS_DEFAULTS.marketDataRateLimitPerMinute).toBe(100);
   });
 });
