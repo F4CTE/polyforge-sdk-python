@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import {
   GameStatus,
+  SportsCategory,
   SPORTS_CATEGORY_LABELS,
   type SportEvent,
   type SportMarket,
@@ -54,6 +55,148 @@ function formatDateTime(d: string | null): string {
     hour: "numeric",
     minute: "2-digit",
   });
+}
+
+function asString(value: unknown): string | null {
+  return typeof value === "string" ? value : null;
+}
+
+function asNullableString(value: unknown): string | null {
+  if (value == null) return null;
+  return typeof value === "string" ? value : String(value);
+}
+
+function asBoolean(value: unknown): boolean {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "string") return value.toLowerCase() === "true";
+  return Boolean(value);
+}
+
+function normalizeSportMarket(
+  raw: unknown,
+  fallbackEventTicker: string,
+): SportMarket | null {
+  if (!raw || typeof raw !== "object") return null;
+  const m = raw as Record<string, unknown>;
+
+  const id =
+    asString(m.id) ?? asString(m.marketTicker) ?? asString(m.market_ticker);
+  const title = asString(m.title) ?? asString(m.name);
+  if (!id || !title) return null;
+
+  return {
+    id,
+    title,
+    category: asString(m.category) ?? "OTHER",
+    seriesSlug: asNullableString(m.seriesSlug ?? m.series_slug),
+    eventTicker:
+      asString(m.eventTicker) ??
+      asString(m.event_ticker) ??
+      fallbackEventTicker,
+    endDate: asNullableString(
+      m.endDate ?? m.end_date ?? m.closeTime ?? m.close_time,
+    ),
+    closed: asBoolean(m.closed ?? m.isClosed ?? m.is_closed),
+    volume24h: String(m.volume24h ?? m.volume_24h ?? "0"),
+    yesPrice: asNullableString(m.yesPrice ?? m.yes_price),
+    noPrice: asNullableString(m.noPrice ?? m.no_price),
+  };
+}
+
+function normalizeComboCollection(raw: unknown): ComboCollection | null {
+  if (!raw || typeof raw !== "object") return null;
+  const c = raw as Record<string, unknown>;
+
+  const collectionTicker =
+    asString(c.collectionTicker) ?? asString(c.collection_ticker);
+  const title = asString(c.title) ?? asString(c.name);
+  if (!collectionTicker || !title) return null;
+
+  return {
+    collectionTicker,
+    title,
+    description: asNullableString(c.description),
+    marketCount: Number(
+      c.marketCount ?? c.market_count ?? c.markets_count ?? 0,
+    ),
+    seriesTicker: asNullableString(c.seriesTicker ?? c.series_ticker),
+  };
+}
+
+function normalizeComboLookupResponse(
+  raw: unknown,
+): ComboLookupResponse | null {
+  if (!raw || typeof raw !== "object") return null;
+  const r = raw as Record<string, unknown>;
+  const eventTicker = asString(r.eventTicker) ?? asString(r.event_ticker);
+  const marketTicker = asString(r.marketTicker) ?? asString(r.market_ticker);
+  if (!eventTicker || !marketTicker) return null;
+  return { eventTicker, marketTicker };
+}
+
+function deriveCategory(rawCategory?: unknown): SportsCategory | null {
+  if (typeof rawCategory !== "string") return null;
+  const cat = rawCategory.toUpperCase();
+  const values = Object.values(SportsCategory);
+  if (values.includes(cat as SportsCategory)) return cat as SportsCategory;
+  return null;
+}
+
+function normalizeSportEvent(
+  raw: unknown,
+  eventTicker: string,
+  marketCount: number,
+  overrideCategory?: SportsCategory,
+  overrideSeriesTicker?: string,
+): SportEvent {
+  const defaults: SportEvent = {
+    eventTicker,
+    title: "Unknown Event",
+    category: SportsCategory.OTHER,
+    seriesTicker: "",
+    startTime: null,
+    endTime: null,
+    gameStatus: GameStatus.SCHEDULED,
+    marketCount,
+  };
+
+  if (!raw || typeof raw !== "object") return defaults;
+  const e = raw as Record<string, unknown>;
+
+  const startTime =
+    asNullableString(e.startDate ?? e.startTime ?? e.start_time) ??
+    defaults.startTime;
+  const endTime =
+    asNullableString(e.endDate ?? e.endTime ?? e.end_time) ?? defaults.endTime;
+
+  let gameStatus = defaults.gameStatus;
+  if (endTime && new Date(endTime) < new Date()) {
+    gameStatus = GameStatus.FINAL;
+  } else if (startTime && new Date(startTime) < new Date()) {
+    gameStatus = GameStatus.LIVE;
+  }
+
+  const seriesTicker =
+    asNullableString(e.seriesTicker ?? e.series_ticker) ??
+    overrideSeriesTicker ??
+    "";
+
+  let category: SportsCategory =
+    deriveCategory(e.category ?? e.category_ticker) ?? defaults.category;
+  if (category === SportsCategory.OTHER && overrideCategory) {
+    category = overrideCategory;
+  }
+
+  return {
+    eventTicker,
+    title: asString(e.title) ?? defaults.title,
+    category,
+    seriesTicker,
+    startTime,
+    endTime,
+    gameStatus,
+    marketCount,
+  };
 }
 
 /* ─── Milestone Timeline ─────────────────────────────────────────────── */
@@ -145,9 +288,18 @@ interface ComboLeg {
 interface ComboBrowserProps {
   collections: ComboCollection[];
   eventTicker: string;
+  markets: SportMarket[];
 }
 
-function ComboBrowser({ collections, eventTicker }: ComboBrowserProps) {
+function ComboBrowser({
+  collections,
+  eventTicker,
+  markets,
+}: ComboBrowserProps) {
+  const normalizedCollections = collections
+    .map((collection) => normalizeComboCollection(collection))
+    .filter((collection): collection is ComboCollection => collection !== null);
+
   const [selectedCollection, setSelectedCollection] =
     useState<ComboCollection | null>(null);
   const [legs, setLegs] = useState<ComboLeg[]>([]);
@@ -156,21 +308,27 @@ function ComboBrowser({ collections, eventTicker }: ComboBrowserProps) {
   );
   const [looking, setLooking] = useState(false);
 
-  if (collections.length === 0) return null;
+  if (normalizedCollections.length === 0) return null;
 
   function addLeg(market: SportMarket, side: "yes" | "no") {
     if (!selectedCollection) return;
-    if (legs.find((l) => l.marketTicker === market.id && l.side === side))
-      return;
-    setLegs((prev) => [
-      ...prev,
-      {
-        marketTicker: market.id,
-        eventTicker: market.eventTicker ?? eventTicker,
-        side,
-        title: market.title,
-      },
-    ]);
+    setLegs((prev) => {
+      const existingIdx = prev.findIndex((l) => l.marketTicker === market.id);
+      if (existingIdx >= 0) {
+        const updated = [...prev];
+        updated[existingIdx] = { ...updated[existingIdx], side };
+        return updated;
+      }
+      return [
+        ...prev,
+        {
+          marketTicker: market.id,
+          eventTicker: market.eventTicker ?? eventTicker,
+          side,
+          title: market.title,
+        },
+      ];
+    });
     setLookupResult(null);
   }
 
@@ -197,7 +355,12 @@ function ComboBrowser({ collections, eventTicker }: ComboBrowserProps) {
         }),
       });
       if (res.ok) {
-        setLookupResult(await res.json());
+        const data = normalizeComboLookupResponse(await res.json());
+        if (data) {
+          setLookupResult(data);
+        } else {
+          toast.error("Unexpected combo lookup response");
+        }
       } else {
         toast.error("Could not find a matching combo market");
       }
@@ -219,7 +382,7 @@ function ComboBrowser({ collections, eventTicker }: ComboBrowserProps) {
 
       {/* Collection picker */}
       <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none mb-4">
-        {collections.map((col) => (
+        {normalizedCollections.map((col) => (
           <button
             key={col.collectionTicker}
             type="button"
@@ -285,6 +448,16 @@ function ComboBrowser({ collections, eventTicker }: ComboBrowserProps) {
               Add at least 2 legs from the markets below to build a combo.
             </p>
           )}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {markets.map((market) => (
+              <EventMarketCard
+                key={`combo-${market.id}`}
+                market={market}
+                onAddLeg={addLeg}
+              />
+            ))}
+          </div>
 
           {legs.length >= 2 && (
             <div className="flex items-center gap-3">
@@ -379,21 +552,14 @@ export function Component() {
     async function load() {
       setLoading(true);
       try {
-        const [eventRes, marketsRes, milestonesRes, combosRes] =
-          await Promise.all([
-            fetch(`/api/v1/sports/events/${eventTicker}`, {
-              credentials: "include",
-            }),
-            fetch(`/api/v1/sports/markets?eventTicker=${eventTicker}`, {
-              credentials: "include",
-            }),
-            fetch(`/api/v1/sports/milestones?eventTicker=${eventTicker}`, {
-              credentials: "include",
-            }),
-            fetch(`/api/v1/sports/combos?eventTicker=${eventTicker}`, {
-              credentials: "include",
-            }),
-          ]);
+        const [eventRes, milestonesRes] = await Promise.all([
+          fetch(`/api/v1/sports/events/${eventTicker}`, {
+            credentials: "include",
+          }),
+          fetch(`/api/v1/sports/milestones?eventTicker=${eventTicker}`, {
+            credentials: "include",
+          }),
+        ]);
 
         if (!eventRes.ok) {
           if (!cancelled) setNotFound(true);
@@ -402,21 +568,59 @@ export function Component() {
 
         if (cancelled) return;
 
-        setEvent(await eventRes.json());
+        const eventData = await eventRes.json();
+        const normEventTicker = eventTicker as string;
+        const normalizedMarkets = Array.isArray(eventData.markets)
+          ? (eventData.markets as unknown[])
+              .map((market: unknown) =>
+                normalizeSportMarket(market, normEventTicker),
+              )
+              .filter(
+                (market): market is SportMarket =>
+                  market !== null && !market.closed,
+              )
+          : [];
 
-        if (marketsRes.ok) {
-          const data = await marketsRes.json();
-          setMarkets(Array.isArray(data) ? data : (data.data ?? []));
-        }
+        const categoryFromMarkets = normalizedMarkets
+          .map((m) => deriveCategory(m.category))
+          .find((c): c is SportsCategory => c !== null && c !== SportsCategory.OTHER);
+
+        const seriesTickerFromMarkets = normalizedMarkets
+          .map((m) => m.seriesSlug)
+          .find((s): s is string => typeof s === "string" && s.length > 0);
+
+        const normalizedEvent = normalizeSportEvent(
+          eventData.event,
+          normEventTicker,
+          normalizedMarkets.length,
+          categoryFromMarkets,
+          seriesTickerFromMarkets,
+        );
+
+        setEvent(normalizedEvent);
+        setMarkets(normalizedMarkets);
 
         if (milestonesRes.ok) {
           const data = await milestonesRes.json();
           setMilestones(Array.isArray(data) ? data : (data.data ?? []));
         }
 
-        if (combosRes.ok) {
-          const data = await combosRes.json();
-          setCombos(Array.isArray(data) ? data : (data.data ?? []));
+        if (normalizedEvent.seriesTicker) {
+          const combosRes = await fetch(
+            `/api/v1/sports/combos?seriesTicker=${encodeURIComponent(normalizedEvent.seriesTicker)}`,
+            { credentials: "include" },
+          );
+
+          if (cancelled) return;
+
+          if (combosRes.ok) {
+            const data = await combosRes.json();
+            setCombos(Array.isArray(data) ? data : (data.collections ?? data.data ?? []));
+          } else {
+            setCombos([]);
+          }
+        } else {
+          setCombos([]);
         }
       } catch {
         if (!cancelled) toast.error("Failed to load event");
@@ -532,7 +736,12 @@ export function Component() {
       {combos.length > 0 && (
         <>
           <div className="border-t border-default" />
-          <ComboBrowser collections={combos} eventTicker={event.eventTicker} />
+          <ComboBrowser
+            key={event.eventTicker}
+            collections={combos}
+            eventTicker={event.eventTicker}
+            markets={markets}
+          />
         </>
       )}
 
@@ -551,9 +760,10 @@ export function Component() {
 
 interface EventMarketCardProps {
   market: SportMarket;
+  onAddLeg?: (market: SportMarket, side: "yes" | "no") => void;
 }
 
-function EventMarketCard({ market }: EventMarketCardProps) {
+function EventMarketCard({ market, onAddLeg }: EventMarketCardProps) {
   const yesPrice = formatPrice(market.yesPrice);
   const noPrice = formatPrice(market.noPrice);
   const volume = formatVolume(market.volume24h);
@@ -576,6 +786,7 @@ function EventMarketCard({ market }: EventMarketCardProps) {
         <button
           type="button"
           disabled={market.closed}
+          onClick={() => onAddLeg?.(market, "yes")}
           aria-label={`Add YES leg for ${market.title}`}
           className="bg-gain/10 border border-gain/25 rounded-sm px-2 py-1.5 text-center group hover:bg-gain/20 disabled:opacity-50 disabled:cursor-default transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring"
         >
@@ -593,6 +804,7 @@ function EventMarketCard({ market }: EventMarketCardProps) {
         <button
           type="button"
           disabled={market.closed}
+          onClick={() => onAddLeg?.(market, "no")}
           aria-label={`Add NO leg for ${market.title}`}
           className="bg-loss/10 border border-loss/25 rounded-sm px-2 py-1.5 text-center group hover:bg-loss/20 disabled:opacity-50 disabled:cursor-default transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring"
         >
