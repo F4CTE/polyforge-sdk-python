@@ -12,7 +12,7 @@ import {
   parseFiniteDecimal,
   type VenueId,
 } from "@polyforge/shared-types";
-import { VenueRouter } from "../venue/venue-router";
+import { VenueRouter, type UserRailContext } from "../venue/venue-router";
 
 const MAX_BATCH_SIZE = 15;
 const MAX_ATTEMPTS = 3;
@@ -128,13 +128,14 @@ export class OrdersService {
     let orderId = intent.orderId ?? randomUUID();
     let skipDbCreate = false;
     const requestedVenue = intent.venue ?? "polymarket";
-    const targetVenue = await this.resolveTargetVenue(intent);
-    const prismaVenue = this.toPrismaVenue(targetVenue);
     const strategyId = this.normalizeStrategyId(intent.strategyId);
 
-    // Idempotency guard — check first so redelivered already-processed
-    // intents (including GTD orders whose expiration window has passed)
-    // are skipped rather than misclassified into the DLQ.
+    // Idempotency guard — must precede the rail-context lookup so that
+    // redelivered already-processed intents (including PENDING orders that
+    // need retry) are identified before the fail-closed gate.  A transient
+    // user-record lookup failure must not reject an existing order to the
+    // DLQ when the jurisdiction decision was already validated on creation.
+    let isRetry = false;
     const existingOrder = await this.prisma.order.findFirst({
       where: { intentId: intent.intentId },
       select: {
@@ -143,6 +144,7 @@ export class OrdersService {
         clobOrderId: true,
         venueOrderId: true,
         updatedAt: true,
+        venue: true,
       },
     });
     if (existingOrder) {
@@ -249,20 +251,23 @@ export class OrdersService {
 
           if (options?.reclaimed) {
             const counterKey = `reclaim:attempts:${intent.intentId}`;
-            const attempts = await this.redis.incr(counterKey).catch((redisErr) => {
-              this.logger.error(
-                {
-                  event: "RECLAIM_COUNTER_INCR_FAILED",
-                  orderId: existingOrder.id,
-                  intentId: intent.intentId,
-                  err: redisErr,
-                },
-                "Failed to increment reclaim attempt counter",
-              );
-              throw redisErr;
-            });
+            const redisClient = this.redis.getClient();
+            const attempts = await redisClient
+              .incr(counterKey)
+              .catch((redisErr: unknown) => {
+                this.logger.error(
+                  {
+                    event: "RECLAIM_COUNTER_INCR_FAILED",
+                    orderId: existingOrder.id,
+                    intentId: intent.intentId,
+                    err: redisErr,
+                  },
+                  "Failed to increment reclaim attempt counter",
+                );
+                throw redisErr;
+              });
             if (attempts === 1) {
-              await this.redis
+              await redisClient
                 .expire(counterKey, RECLAIM_COUNTER_TTL_SECONDS)
                 .catch(() => {});
             }
@@ -334,6 +339,7 @@ export class OrdersService {
                 await this.releaseOrderClaim(existingOrder.id);
                 orderId = existingOrder.id;
                 skipDbCreate = true;
+                isRetry = true;
                 // Fall through to GTD / numeric validations then CLOB submit below
               }
             } else {
@@ -348,15 +354,16 @@ export class OrdersService {
 
           if (claimAge > CLAIM_TIMEOUT_MS) {
             // For reclaimed entries, releaseOrderClaim was already called above
-            // and skipDbCreate / orderId are already set.  Only release for the
+            // (see the reclaimed block). Now we handle the
             // non-reclaimed path.
-            if (!skipDbCreate) {
+            if (!options?.reclaimed) {
               this.logger.warn(
                 `Order ${existingOrder.id} has stale SUBMITTED claim (${claimAge}ms, no sentinel, no venue ids) — reclaiming to PENDING`,
               );
               await this.releaseOrderClaim(existingOrder.id);
               orderId = existingOrder.id;
               skipDbCreate = true;
+              isRetry = true;
             }
             // Fall through to GTD / numeric / terms validations then CLOB submit
           } else {
@@ -429,6 +436,7 @@ export class OrdersService {
         );
         orderId = existingOrder.id;
         skipDbCreate = true;
+        isRetry = true;
         // Fall through to GTD / numeric / terms validations then CLOB submit
       } else {
         // Terminal state (LIVE, MATCHED, CANCELLED, etc.) —
@@ -439,6 +447,101 @@ export class OrdersService {
         return;
       }
     }
+
+    // Rail-context lookup and venue resolution.  Retried orders reuse the
+    // jurisdiction decision that was already validated and persisted on
+    // initial creation; a transient user-record lookup failure must not
+    // block a retry.  The persisted venue drives credential selection and
+    // routing so that a US order retried after a claim release continues
+    // with polymarket_us signing instead of falling back to the global rail.
+    let userRailContext: UserRailContext;
+    let targetVenue: VenueId | "best";
+    if (isRetry) {
+      userRailContext = {
+        country: null,
+        polymarketConnected: false,
+        lookupFailed: false,
+      };
+      targetVenue = this.fromPrismaVenue(existingOrder?.venue);
+    } else {
+      userRailContext = await this.getUserRailContext(intent.userId);
+
+      if (userRailContext.lookupFailed) {
+        this.logger.warn(
+          `Rail context lookup failed for user ${intent.userId} — rejecting order ${intent.intentId} (fail-closed)`,
+        );
+        await this.moveToDlq(intent, "RAIL_CONTEXT_LOOKUP_FAILED");
+        return;
+      }
+
+      // Fail-closed jurisdiction gate for the US rail: prevent ambiguous
+      // Polymarket intents from falling through to global when the user
+      // should be on the US rail.  Three scenarios:
+      //   1. Country context is missing but the user has US credentials
+      //      (can't verify location → fail-closed).
+      //   2. Country IS the US but the user lacks US credentials
+      //      (can't route to US rail → fail-closed).
+      //   3. Country context is missing, even if global Polymarket
+      //      credentials are connected. Unknown jurisdiction cannot safely
+      //      default to the global rail while the US rail is available.
+      // Explicit polymarket_us intents are allowed (the US-rail terms check
+      // handles auth) and kalshi intents are unrelated to this gate.
+      if (this.venueRouter && this.venueRouter.railMode !== "global") {
+        const isCountryUnknown = userRailContext.country === null;
+        const isUsCountry = userRailContext.country === "US";
+
+        const usGateBlocked =
+          isCountryUnknown ||
+          (isUsCountry && !userRailContext.polymarketUsConnected);
+
+        if (usGateBlocked) {
+          const ambiguousVenue =
+            !intent.venue ||
+            intent.venue === "polymarket" ||
+            intent.venue === "best";
+          if (ambiguousVenue) {
+            const hasUsAdapter = this.venueRouter
+              .getAdapters()
+              .some((a) => a.venueId === "polymarket_us");
+            if (hasUsAdapter) {
+              const reason = isCountryUnknown
+                ? "RAIL_CONTEXT_COUNTRY_UNKNOWN"
+                : "RAIL_CONTEXT_US_CREDENTIALS_MISSING";
+              const logMessage = isCountryUnknown
+                ? `Country context missing for user ${intent.userId} — rejecting order ${intent.intentId} (fail-closed)`
+                : `US country without credentials for user ${intent.userId} — rejecting order ${intent.intentId} (fail-closed)`;
+              this.logger.warn(logMessage);
+              await this.moveToDlq(intent, reason);
+              return;
+            }
+          }
+        }
+      }
+
+      targetVenue = await this.resolveTargetVenue(intent, userRailContext);
+
+      // Post-resolution US-rail compliance: if resolveTargetVenue returned
+      // global Polymarket for a US user who should be on the US rail,
+      // fail-closed.  This catches the case where resolveBest() falls back
+      // to global when the only US-eligible adapter fails.
+      if (
+        targetVenue === "polymarket" &&
+        this.venueRouter?.railMode !== "global" &&
+        userRailContext.country === "US" &&
+        userRailContext.polymarketUsConnected &&
+        this.venueRouter
+          ?.getAdapters()
+          .some((a) => a.venueId === "polymarket_us")
+      ) {
+        this.logger.warn(
+          `Best-venue resolution fell back to global rail for US user ${intent.userId} — rejecting order ${intent.intentId} (fail-closed)`,
+        );
+        await this.moveToDlq(intent, "RAIL_CONTEXT_US_RESOLUTION_FAILED");
+        return;
+      }
+    }
+
+    const prismaVenue = this.toPrismaVenue(targetVenue);
 
     if (this.isExpiredGtdIntent(intent)) {
       this.logger.warn(
@@ -479,9 +582,6 @@ export class OrdersService {
       this.logger.warn(
         `Blocked user ${intent.userId} for intent ${intent.intentId} — rejecting before order creation`,
       );
-      // Write to DLQ first so the stream message is considered processed
-      // before we cancel the order.  If the DLQ write fails the order
-      // stays in its current state and the stream message will be retried.
       await this.moveToDlq(intent, "USER_BLOCKED");
       if (skipDbCreate) {
         await this.markCancelled(orderId, intent.userId);
@@ -489,7 +589,7 @@ export class OrdersService {
       return;
     }
 
-    if (targetVenue === "polymarket_us") {
+    if (targetVenue === "polymarket_us" && !isRetry) {
       const hasAcceptedTerms = await this.hasCurrentUsRailTerms(intent.userId);
 
       if (!hasAcceptedTerms) {
@@ -567,10 +667,62 @@ export class OrdersService {
 
     try {
       if (this.venueRouter) {
-        const venue = targetVenue === "best" ? requestedVenue : targetVenue;
+        // Resolve "best" here so the per-venue signing/credential branches
+        // receive a concrete venue identifier.
+        let venue: VenueId | "best" = targetVenue;
+        if (venue === "best") {
+          const adapter = await this.venueRouter.resolveBest(
+            intent.tokenId,
+            undefined,
+            userRailContext,
+          );
+          venue = adapter.venueId;
+        }
+
+        // Post-resolution compliance: when "best" resolved to a concrete
+        // venue, re-validate US-terms and US-jurisdiction guards that the
+        // earlier targetVenue checks skipped because targetVenue was "best".
+        if (venue === "polymarket_us") {
+          const hasAcceptedTerms = await this.hasCurrentUsRailTerms(
+            intent.userId,
+          );
+          if (!hasAcceptedTerms) {
+            this.logger.warn(
+              `US rail terms required for best-resolved intent ${intent.intentId} — rejecting before submission`,
+            );
+            await this.releaseOrderClaim(orderId).catch(() => {});
+            await this.prisma.order
+              .update({
+                where: { id: orderId },
+                data: { status: OrderStatus.FAILED },
+              })
+              .catch(() => {});
+            await this.moveToDlq(intent, "US_RAIL_TERMS_REQUIRED");
+            return;
+          }
+        } else if (
+          venue === "polymarket" &&
+          this.venueRouter.railMode !== "global" &&
+          userRailContext.country === "US" &&
+          userRailContext.polymarketUsConnected
+        ) {
+          this.logger.warn(
+            `Best-venue resolution fell back to global rail for US user ${intent.userId} — rejecting order ${intent.intentId} (fail-closed)`,
+          );
+          await this.releaseOrderClaim(orderId).catch(() => {});
+          await this.prisma.order
+            .update({
+              where: { id: orderId },
+              data: { status: OrderStatus.FAILED },
+            })
+            .catch(() => {});
+          await this.moveToDlq(intent, "RAIL_CONTEXT_US_RESOLUTION_FAILED");
+          return;
+        }
+
         let authContext: Record<string, unknown> = {};
 
-        if (venue === "polymarket" || venue === "best") {
+        if (venue === "polymarket") {
           const signed = await this.signer.signOrder({
             userId: intent.userId,
             requestId: orderId,
@@ -600,16 +752,21 @@ export class OrdersService {
           authContext = { subaccount: intent.kalshiSubaccount };
         }
 
-        const resp = await this.venueRouter.route(venue, {
-          venueMarketId: intent.marketId,
-          venueOutcomeId: intent.tokenId,
-          side: intent.side,
-          size: intent.size,
-          price: intent.price,
-          orderType: intent.orderType,
-          expiration: intent.expiration,
-          authContext,
-        });
+        const resp = await this.venueRouter.route(
+          venue,
+          {
+            venueMarketId: intent.marketId,
+            venueOutcomeId: intent.tokenId,
+            side: intent.side,
+            size: intent.size,
+            price: intent.price,
+            orderType: intent.orderType,
+            expiration: intent.expiration,
+            authContext,
+          },
+          undefined,
+          userRailContext,
+        );
 
         venueOrderId = resp.venueOrderId;
         venueStatus = resp.status;
@@ -1088,21 +1245,74 @@ export class OrdersService {
 
   private async resolveTargetVenue(
     intent: OrderIntent,
+    userRailContext?: UserRailContext,
   ): Promise<VenueId | "best"> {
     const venue = intent.venue ?? "polymarket";
 
     if (!this.venueRouter) return venue;
 
+    // Resolve user rail context outside the venue fallback catch so that a
+    // transient lookup failure propagates to the caller instead of being
+    // silently swallowed and treated as a non-US jurisdiction.
+    const ctx =
+      userRailContext ?? (await this.getUserRailContext(intent.userId));
+    if (ctx.lookupFailed) {
+      throw new Error(
+        `User rail context lookup failed for user ${intent.userId}`,
+      );
+    }
+
     try {
       if (venue === "best") {
-        const adapter = await this.venueRouter.resolveBest(intent.tokenId);
+        const adapter = await this.venueRouter.resolveBest(
+          intent.tokenId,
+          undefined,
+          ctx,
+        );
         return adapter.venueId;
       }
 
-      return this.venueRouter.resolve(venue).venueId;
+      return this.venueRouter.resolve(venue, ctx).venueId;
     } catch {
+      if (venue === "best" && this.venueRouter) {
+        try {
+          const adapter = await this.venueRouter.resolveBest(intent.tokenId);
+          return adapter.venueId;
+        } catch {
+          return "polymarket";
+        }
+      }
       return venue;
     }
+  }
+
+  private async getUserRailContext(userId: string): Promise<UserRailContext> {
+    if (!(this.prisma as any)?.user?.findUnique) {
+      return {
+        country: null,
+        polymarketUsConnected: false,
+        polymarketConnected: false,
+        lookupFailed: true,
+      };
+    }
+
+    const user = await (this.prisma as any).user.findUnique({
+      where: { id: userId },
+      select: {
+        country: true,
+        polymarketUsConnected: true,
+        polymarketConnected: true,
+      },
+    });
+
+    const rawCountry = ((user as any)?.country as string | undefined) ?? null;
+
+    return {
+      country: rawCountry ? rawCountry.toUpperCase() : null,
+      polymarketUsConnected: Boolean((user as any)?.polymarketUsConnected),
+      polymarketConnected: Boolean((user as any)?.polymarketConnected),
+      lookupFailed: user === null,
+    };
   }
 
   private normalizeStrategyId(strategyId: string | undefined): string | null {

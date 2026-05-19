@@ -59,16 +59,20 @@ function makeMocks() {
     },
   } as any;
 
+  const redisClient = {
+    xlen: vi.fn().mockResolvedValue(1),
+    incr: vi.fn().mockResolvedValue(1),
+    expire: vi.fn().mockResolvedValue(1),
+  };
+
   const redis = {
     xadd: vi.fn().mockResolvedValue("1234567890-0"),
     set: vi.fn().mockResolvedValue("OK"),
     get: vi.fn().mockResolvedValue(null),
     del: vi.fn().mockResolvedValue(undefined),
-    incr: vi.fn().mockResolvedValue(1),
-    expire: vi.fn().mockResolvedValue(1),
-    getClient: vi.fn().mockReturnValue({
-      xlen: vi.fn().mockResolvedValue(1),
-    }),
+    incr: redisClient.incr,
+    expire: redisClient.expire,
+    getClient: vi.fn().mockReturnValue(redisClient),
   } as any;
 
   const signer = {
@@ -398,6 +402,7 @@ describe("OrdersService", () => {
         id: "existing-order-id",
         status: "PENDING",
         clobOrderId: null,
+        venue: "POLYMARKET",
       });
 
       const p = svc.processIntent(makeIntent());
@@ -808,10 +813,18 @@ describe("OrdersService", () => {
       prisma.user.findUnique.mockResolvedValue({
         usRailTermsAcceptedAt: null,
         usRailTermsVersion: null,
+        country: "US",
+        polymarketUsConnected: true,
       });
       const venueRouter = {
         resolve: vi.fn().mockReturnValue({ venueId: "polymarket_us" }),
         route: vi.fn(),
+        getAdapters: vi
+          .fn()
+          .mockReturnValue([
+            { venueId: "polymarket_us" },
+            { venueId: "polymarket" },
+          ]),
       } as any;
       svc = new OrdersService(prisma, redis, signer, clob, events, venueRouter);
 
@@ -831,12 +844,24 @@ describe("OrdersService", () => {
     });
 
     it("uses US credentials when an accepted default polymarket intent resolves to the US rail", async () => {
+      prisma.user.findUnique.mockResolvedValue({
+        usRailTermsAcceptedAt: new Date("2026-04-29T00:00:00.000Z"),
+        usRailTermsVersion: CURRENT_US_RAIL_TERMS_VERSION,
+        country: "US",
+        polymarketUsConnected: true,
+      });
       const venueRouter = {
         resolve: vi.fn().mockReturnValue({ venueId: "polymarket_us" }),
         route: vi.fn().mockResolvedValue({
           venueOrderId: "us-order-1",
           status: "LIVE",
         }),
+        getAdapters: vi
+          .fn()
+          .mockReturnValue([
+            { venueId: "polymarket_us" },
+            { venueId: "polymarket" },
+          ]),
       } as any;
       svc = new OrdersService(prisma, redis, signer, clob, events, venueRouter);
 
@@ -851,6 +876,236 @@ describe("OrdersService", () => {
         expect.objectContaining({
           authContext: expect.objectContaining({ venue: "polymarket_us" }),
         }),
+        undefined,
+        expect.objectContaining({ country: "US" }),
+      );
+    });
+
+    it("rejects untagged intents with missing country context when the US rail is available", async () => {
+      prisma.user.findUnique.mockResolvedValue({
+        usRailTermsAcceptedAt: new Date("2026-04-29T00:00:00.000Z"),
+        usRailTermsVersion: CURRENT_US_RAIL_TERMS_VERSION,
+        country: null,
+        polymarketUsConnected: true,
+      });
+      const venueRouter = {
+        resolve: vi.fn(),
+        route: vi.fn(),
+        getAdapters: vi
+          .fn()
+          .mockReturnValue([
+            { venueId: "polymarket_us" },
+            { venueId: "polymarket" },
+          ]),
+      } as any;
+      svc = new OrdersService(prisma, redis, signer, clob, events, venueRouter);
+
+      const p = svc.processIntent(makeIntent()); // untagged intent (no venue)
+      await vi.runAllTimersAsync();
+      await p;
+
+      expect(prisma.order.create).not.toHaveBeenCalled();
+      expect(signer.signOrder).not.toHaveBeenCalled();
+      expect(signer.getPolymarketUsCredentials).not.toHaveBeenCalled();
+      expect(venueRouter.route).not.toHaveBeenCalled();
+      expect(redis.xadd).toHaveBeenCalledWith(
+        "stream:orders:dlq",
+        expect.objectContaining({ reason: "RAIL_CONTEXT_COUNTRY_UNKNOWN" }),
+        10_000,
+      );
+    });
+
+    it("rejects untagged intents with missing country even when global polymarket is connected (Codex P1)", async () => {
+      prisma.user.findUnique.mockResolvedValue({
+        usRailTermsAcceptedAt: new Date("2026-04-29T00:00:00.000Z"),
+        usRailTermsVersion: CURRENT_US_RAIL_TERMS_VERSION,
+        country: null,
+        polymarketUsConnected: false,
+        polymarketConnected: true,
+      });
+      const venueRouter = {
+        resolve: vi.fn().mockReturnValue({ venueId: "polymarket" }),
+        route: vi.fn().mockResolvedValue({
+          venueOrderId: "clob-123",
+          status: "LIVE",
+        }),
+        getAdapters: vi
+          .fn()
+          .mockReturnValue([
+            { venueId: "polymarket_us" },
+            { venueId: "polymarket" },
+          ]),
+      } as any;
+      svc = new OrdersService(prisma, redis, signer, clob, events, venueRouter);
+
+      const p = svc.processIntent(makeIntent()); // untagged intent (no venue)
+      await vi.runAllTimersAsync();
+      await p;
+
+      expect(prisma.order.create).not.toHaveBeenCalled();
+      expect(signer.signOrder).not.toHaveBeenCalled();
+      expect(signer.getPolymarketUsCredentials).not.toHaveBeenCalled();
+      expect(venueRouter.route).not.toHaveBeenCalled();
+      expect(redis.xadd).toHaveBeenCalledWith(
+        "stream:orders:dlq",
+        expect.objectContaining({ reason: "RAIL_CONTEXT_COUNTRY_UNKNOWN" }),
+        10_000,
+      );
+    });
+
+    it("rejects untagged intents with missing country and no polymarket credentials when US rail is available (Codex P1)", async () => {
+      prisma.user.findUnique.mockResolvedValue({
+        usRailTermsAcceptedAt: new Date("2026-04-29T00:00:00.000Z"),
+        usRailTermsVersion: CURRENT_US_RAIL_TERMS_VERSION,
+        country: null,
+        polymarketUsConnected: false,
+        polymarketConnected: false,
+      });
+      const venueRouter = {
+        resolve: vi.fn(),
+        route: vi.fn(),
+        getAdapters: vi
+          .fn()
+          .mockReturnValue([
+            { venueId: "polymarket_us" },
+            { venueId: "polymarket" },
+          ]),
+      } as any;
+      svc = new OrdersService(prisma, redis, signer, clob, events, venueRouter);
+
+      const p = svc.processIntent(makeIntent()); // untagged intent (no venue)
+      await vi.runAllTimersAsync();
+      await p;
+
+      expect(prisma.order.create).not.toHaveBeenCalled();
+      expect(signer.signOrder).not.toHaveBeenCalled();
+      expect(signer.getPolymarketUsCredentials).not.toHaveBeenCalled();
+      expect(venueRouter.route).not.toHaveBeenCalled();
+      expect(redis.xadd).toHaveBeenCalledWith(
+        "stream:orders:dlq",
+        expect.objectContaining({ reason: "RAIL_CONTEXT_COUNTRY_UNKNOWN" }),
+        10_000,
+      );
+    });
+
+    it("rejects untagged intents for US users without US credentials when the US rail is available", async () => {
+      prisma.user.findUnique.mockResolvedValue({
+        usRailTermsAcceptedAt: new Date("2026-04-29T00:00:00.000Z"),
+        usRailTermsVersion: CURRENT_US_RAIL_TERMS_VERSION,
+        country: "US",
+        polymarketUsConnected: false,
+      });
+      const venueRouter = {
+        resolve: vi.fn(),
+        route: vi.fn(),
+        getAdapters: vi
+          .fn()
+          .mockReturnValue([
+            { venueId: "polymarket_us" },
+            { venueId: "polymarket" },
+          ]),
+      } as any;
+      svc = new OrdersService(prisma, redis, signer, clob, events, venueRouter);
+
+      const p = svc.processIntent(makeIntent()); // untagged intent (no venue)
+      await vi.runAllTimersAsync();
+      await p;
+
+      expect(prisma.order.create).not.toHaveBeenCalled();
+      expect(signer.signOrder).not.toHaveBeenCalled();
+      expect(signer.getPolymarketUsCredentials).not.toHaveBeenCalled();
+      expect(venueRouter.route).not.toHaveBeenCalled();
+      expect(redis.xadd).toHaveBeenCalledWith(
+        "stream:orders:dlq",
+        expect.objectContaining({
+          reason: "RAIL_CONTEXT_US_CREDENTIALS_MISSING",
+        }),
+        10_000,
+      );
+    });
+
+    it("rejects best-venue intents for US users when resolution falls back to global rail", async () => {
+      prisma.user.findUnique.mockResolvedValue({
+        usRailTermsAcceptedAt: new Date("2026-04-29T00:00:00.000Z"),
+        usRailTermsVersion: CURRENT_US_RAIL_TERMS_VERSION,
+        country: "US",
+        polymarketUsConnected: true,
+      });
+      const venueRouter = {
+        resolve: vi.fn(),
+        resolveBest: vi.fn().mockResolvedValue({ venueId: "polymarket" }),
+        route: vi.fn(),
+        getAdapters: vi
+          .fn()
+          .mockReturnValue([
+            { venueId: "polymarket_us" },
+            { venueId: "polymarket" },
+          ]),
+      } as any;
+      svc = new OrdersService(prisma, redis, signer, clob, events, venueRouter);
+
+      const p = svc.processIntent(makeIntent({ venue: "best" }));
+      await vi.runAllTimersAsync();
+      await p;
+
+      expect(prisma.order.create).not.toHaveBeenCalled();
+      expect(signer.signOrder).not.toHaveBeenCalled();
+      expect(venueRouter.route).not.toHaveBeenCalled();
+      expect(redis.xadd).toHaveBeenCalledWith(
+        "stream:orders:dlq",
+        expect.objectContaining({
+          reason: "RAIL_CONTEXT_US_RESOLUTION_FAILED",
+        }),
+        10_000,
+      );
+    });
+
+    it("propagates user rail context lookup errors instead of silently swallowing (Codex P1)", async () => {
+      vi.useRealTimers();
+      prisma.user.findUnique.mockRejectedValue(new Error("DB connection lost"));
+
+      await expect(svc.processIntent(makeIntent())).rejects.toThrow(
+        "DB connection lost",
+      );
+
+      expect(prisma.order.create).not.toHaveBeenCalled();
+      expect(signer.signOrder).not.toHaveBeenCalled();
+    });
+
+    it("retries a persisted US order with polymarket_us credentials instead of re-resolving to the global rail", async () => {
+      const venueRouter = {
+        route: vi.fn().mockResolvedValue({
+          venueOrderId: "us-retry-1",
+          status: "LIVE",
+        }),
+        getAdapters: vi.fn().mockReturnValue([]),
+      } as any;
+      svc = new OrdersService(prisma, redis, signer, clob, events, venueRouter);
+
+      // Existing PENDING order with US venue
+      prisma.order.findFirst.mockResolvedValue({
+        id: "existing-us-order",
+        status: "PENDING",
+        clobOrderId: null,
+        venueOrderId: null,
+        updatedAt: new Date(),
+        venue: "POLYMARKET_US",
+      });
+
+      const p = svc.processIntent(makeIntent()); // untagged intent
+      await vi.runAllTimersAsync();
+      await p;
+
+      // Should use US credentials for the retry, not global
+      expect(signer.signOrder).not.toHaveBeenCalled();
+      expect(signer.getPolymarketUsCredentials).toHaveBeenCalledWith("user-1");
+      expect(venueRouter.route).toHaveBeenCalledWith(
+        "polymarket_us",
+        expect.objectContaining({
+          authContext: expect.objectContaining({ venue: "polymarket_us" }),
+        }),
+        undefined,
+        expect.objectContaining({ country: null, lookupFailed: false }),
       );
     });
   });
@@ -916,6 +1171,7 @@ describe("OrdersService", () => {
             clobOrderId: null,
             venueOrderId: null,
             updatedAt: new Date(),
+            venue: "POLYMARKET",
           };
         }
         return null;
@@ -949,6 +1205,7 @@ describe("OrdersService", () => {
             clobOrderId: null,
             venueOrderId: null,
             updatedAt: new Date(),
+            venue: "POLYMARKET",
           };
         }
         return null;
@@ -1663,6 +1920,49 @@ describe("OrdersService", () => {
       expect(clob.submitOrder).toHaveBeenCalled();
     });
 
+    it("reuses persisted US venue on reclaimed stale SUBMITTED claim instead of re-resolving (Codex P2)", async () => {
+      const now = Date.now();
+      prisma.order.findFirst.mockResolvedValue({
+        id: "stale-order",
+        status: "SUBMITTED",
+        clobOrderId: null,
+        venueOrderId: null,
+        venue: "POLYMARKET_US",
+        updatedAt: new Date(now - 150_000),
+      });
+      redis.get.mockResolvedValue(null); // no sentinel
+
+      // Venue router would resolve untagged intent to global polymarket
+      const venueRouter = {
+        resolve: vi.fn().mockReturnValue({ venueId: "polymarket" }),
+        route: vi.fn().mockResolvedValue({
+          venueOrderId: "us-order-1",
+          status: "LIVE",
+        }),
+        getAdapters: vi
+          .fn()
+          .mockReturnValue([
+            { venueId: "polymarket_us" },
+            { venueId: "polymarket" },
+          ]),
+      } as any;
+      svc = new OrdersService(prisma, redis, signer, clob, events, venueRouter);
+
+      const p = svc.processIntent(makeIntent(), { reclaimed: true });
+      await vi.runAllTimersAsync();
+      await p;
+
+      // Should reuse the persisted US venue — signOrder (global) NOT called
+      expect(signer.signOrder).not.toHaveBeenCalled();
+      expect(signer.getPolymarketUsCredentials).toHaveBeenCalledWith("user-1");
+      expect(venueRouter.route).toHaveBeenCalledWith(
+        "polymarket_us",
+        expect.any(Object),
+        undefined,
+        expect.any(Object),
+      );
+    });
+
     it("processBatch succeeds when stale reclaimed claim releases and re-submits", async () => {
       const now = Date.now();
       prisma.order.findFirst.mockResolvedValue({
@@ -1845,7 +2145,9 @@ describe("OrdersService", () => {
       });
       redis.get.mockResolvedValue(null);
       redis.incr.mockResolvedValue(11); // > MAX_RECLAIM_ATTEMPTS
-      prisma.order.updateMany.mockRejectedValueOnce(new Error("DB transient error"));
+      prisma.order.updateMany.mockRejectedValueOnce(
+        new Error("DB transient error"),
+      );
 
       const p = svc.processIntent(makeIntent(), { reclaimed: true });
       const rejects = expect(p).rejects.toThrow("DB transient error");
@@ -1870,9 +2172,7 @@ describe("OrdersService", () => {
       prisma.order.updateMany.mockResolvedValueOnce({ count: 0 }); // row was already updated
 
       const p = svc.processIntent(makeIntent(), { reclaimed: true });
-      const rejects = expect(p).rejects.toThrow(
-        /FAILED transition raced/,
-      );
+      const rejects = expect(p).rejects.toThrow(/FAILED transition raced/);
       await vi.runAllTimersAsync();
       await rejects;
 
@@ -2072,7 +2372,7 @@ describe("OrdersService", () => {
       expect(prisma.order.create).not.toHaveBeenCalled();
       expect(redis.xadd).toHaveBeenCalledWith(
         "stream:orders:dlq",
-        expect.objectContaining({ reason: "USER_BLOCKED" }),
+        expect.objectContaining({ reason: "RAIL_CONTEXT_LOOKUP_FAILED" }),
         10_000,
       );
     });
@@ -2167,9 +2467,14 @@ describe("OrdersService", () => {
     });
 
     it("cancels order before submission when user becomes blocked after claim", async () => {
-      // First check (before DB create) — user is not blocked.
-      // Second check (after claim) — user has been suspended.
+      // First call: getUserRailContext — user exists with US country so rail gate passes.
+      // Second call (first isUserExecutionBlocked before DB create) — user is not blocked.
+      // Third call (second isUserExecutionBlocked after claim) — user has been suspended.
       prisma.user.findUnique
+        .mockResolvedValueOnce({
+          country: "US",
+          polymarketUsConnected: false,
+        })
         .mockResolvedValueOnce({
           suspended: false,
           deletedAt: null,

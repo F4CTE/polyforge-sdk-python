@@ -25,6 +25,10 @@ export interface UserRailContext {
   country?: string | null;
   /** True when the user has stored Polymarket US Ed25519 credentials. */
   polymarketUsConnected?: boolean;
+  /** True when the user has connected global Polymarket credentials. */
+  polymarketConnected?: boolean;
+  /** True when the Prisma user lookup failed — callers should fail closed. */
+  lookupFailed?: boolean;
 }
 
 @Injectable()
@@ -38,7 +42,7 @@ export class VenueRouter {
    */
   constructor(
     adapters: VenueAdapter[],
-    private readonly railMode: RailMode = "auto",
+    readonly railMode: RailMode = "auto",
   ) {
     for (const adapter of adapters) {
       this.registry.set(adapter.venueId, adapter);

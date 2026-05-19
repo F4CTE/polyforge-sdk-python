@@ -73,6 +73,7 @@ function mapVenue(
   if (!prismaVenue) return undefined;
   if (prismaVenue === "POLYMARKET") return "polymarket";
   if (prismaVenue === "KALSHI") return "kalshi";
+  if (prismaVenue === "POLYMARKET_US") return "polymarket_us";
   return undefined;
 }
 
