@@ -56,6 +56,12 @@ describe("RetentionController", () => {
 
       expect(service.getCohorts).toHaveBeenCalledWith(6);
     });
+
+    it("rejects out-of-range months", () => {
+      expect(() => controller.getCohorts("1000000")).toThrowError(
+        /months must be an integer between 1 and 24/i,
+      );
+    });
   });
 
   describe("getTrend", () => {
@@ -69,6 +75,18 @@ describe("RetentionController", () => {
       await controller.getTrend(undefined);
 
       expect(service.getTrend).toHaveBeenCalledWith(30);
+    });
+
+    it("rejects non-integer days", () => {
+      expect(() => controller.getTrend("30abc")).toThrowError(
+        /days must be an integer between 1 and 365/i,
+      );
+    });
+
+    it("rejects out-of-range days", () => {
+      expect(() => controller.getTrend("1000000")).toThrowError(
+        /days must be an integer between 1 and 365/i,
+      );
     });
   });
 });
