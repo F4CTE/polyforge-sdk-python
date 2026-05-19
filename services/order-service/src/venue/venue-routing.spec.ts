@@ -81,6 +81,9 @@ function makeMocks(polyAdapter: VenueAdapter, kalshiAdapter?: VenueAdapter) {
       update: vi.fn().mockResolvedValue({}),
       updateMany: vi.fn().mockResolvedValue({ count: 1 }),
     },
+    user: {
+      findUnique: vi.fn().mockResolvedValue({ deletedAt: null }),
+    },
   } as any;
 
   const redis = {

@@ -24,6 +24,7 @@ const MAX_RECLAIM_ATTEMPTS = 10;
 const RECLAIM_COUNTER_TTL_SECONDS = 1_800;
 const CLOB_ACCEPTED_PREFIX = "clob:accepted:";
 const CLOB_ACCEPTED_TTL_SECONDS = 86_400;
+const SUSPENDED_USER_KEY = (userId: string) => `suspended:${userId}`;
 
 export interface OrderIntent {
   intentId: string;
@@ -190,6 +191,19 @@ export class OrdersService {
             this.logger.warn(
               `Order ${existingOrder.id} already accepted by venue (sentinel found: ${clobAcceptedVenueOrderId}) — updating DB without re-submitting`,
             );
+            // Check blocked user before persisting venue ids so a crash
+            // between the write and the block check cannot produce an
+            // already-submitted-with-venue-ids record that bypasses the
+            // idempotency block gate on redelivery.
+            if (await this.isUserExecutionBlocked(intent.userId)) {
+              await this.processCancellation({
+                orderId: existingOrder.id,
+                userId: intent.userId,
+                venueOrderId: clobAcceptedVenueOrderId,
+              });
+              await this.redis.del(clobAcceptedKey).catch(() => {});
+              return;
+            }
             try {
               await this.prisma.order.update({
                 where: { id: existingOrder.id },
@@ -371,6 +385,19 @@ export class OrdersService {
           this.logger.warn(
             `Order ${existingOrder.id} already accepted by venue (sentinel found: ${clobAcceptedVenueOrderId}) — updating DB without re-submitting`,
           );
+          // Check blocked user before promoting to SUBMITTED so a crash
+          // between the write and the block check cannot produce an
+          // already-submitted-with-venue-ids record that bypasses the
+          // idempotency block gate on redelivery.
+          if (await this.isUserExecutionBlocked(intent.userId)) {
+            await this.processCancellation({
+              orderId: existingOrder.id,
+              userId: intent.userId,
+              venueOrderId: clobAcceptedVenueOrderId,
+            });
+            await this.redis.del(clobAcceptedKey).catch(() => {});
+            return;
+          }
           try {
             await this.prisma.order.update({
               where: { id: existingOrder.id },
@@ -382,17 +409,17 @@ export class OrdersService {
             });
             await this.redis.del(clobAcceptedKey).catch(() => {});
           } catch (err) {
-              this.logger.error(
-                {
-                  event: "CLOB_ACCEPTED_SENTINEL_DB_UPDATE_FAILED",
-                  orderId: existingOrder.id,
-                  venueOrderId: clobAcceptedVenueOrderId,
-                  intentId: intent.intentId,
-                  err,
-                },
-                "Failed to persist venue order id from sentinel (PENDING path) — throwing to keep sentinel and prevent stream ACK",
-              );
-              throw err;
+            this.logger.error(
+              {
+                event: "CLOB_ACCEPTED_SENTINEL_DB_UPDATE_FAILED",
+                orderId: existingOrder.id,
+                venueOrderId: clobAcceptedVenueOrderId,
+                intentId: intent.intentId,
+                err,
+              },
+              "Failed to persist venue order id from sentinel (PENDING path) — throwing to keep sentinel and prevent stream ACK",
+            );
+            throw err;
           }
           return;
         }
@@ -445,6 +472,20 @@ export class OrdersService {
         `Invalid numeric order intent ${intent.intentId} — rejecting before order creation`,
       );
       await this.moveToDlq(intent, "INVALID_NUMERIC_ORDER_INTENT");
+      return;
+    }
+
+    if (await this.isUserExecutionBlocked(intent.userId)) {
+      this.logger.warn(
+        `Blocked user ${intent.userId} for intent ${intent.intentId} — rejecting before order creation`,
+      );
+      // Write to DLQ first so the stream message is considered processed
+      // before we cancel the order.  If the DLQ write fails the order
+      // stays in its current state and the stream message will be retried.
+      await this.moveToDlq(intent, "USER_BLOCKED");
+      if (skipDbCreate) {
+        await this.markCancelled(orderId, intent.userId);
+      }
       return;
     }
 
@@ -509,6 +550,14 @@ export class OrdersService {
     if (!claimed) {
       this.logger.warn(
         `Order ${orderId} could not be claimed — likely already claimed by another processor`,
+      );
+      return;
+    }
+
+    if (await this.isUserExecutionBlocked(intent.userId)) {
+      await this.markCancelled(orderId, intent.userId);
+      this.logger.warn(
+        `Blocked user ${intent.userId} for intent ${intent.intentId} — cancelled before submission`,
       );
       return;
     }
@@ -1139,6 +1188,18 @@ export class OrdersService {
     });
 
     return hasAcceptedCurrentUsRailTerms(user);
+  }
+
+  private async isUserExecutionBlocked(userId: string): Promise<boolean> {
+    const [suspendedMarker, user] = await Promise.all([
+      this.redis.get(SUSPENDED_USER_KEY(userId)).catch(() => null),
+      this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { suspended: true, deleted: true, deletedAt: true },
+      }),
+    ]);
+
+    return Boolean(suspendedMarker) || !user || user.suspended === true || user.deleted === true || user.deletedAt != null;
   }
 
   private mapClobStatus(clobStatus: string): string {

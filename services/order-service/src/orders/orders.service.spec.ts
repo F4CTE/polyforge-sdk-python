@@ -1478,6 +1478,11 @@ describe("OrdersService", () => {
 
   describe("processIntent() — sentinel-based recovery for SUBMITTED orders", () => {
     it("backfills venue IDs from sentinel for SUBMITTED order without venue ids", async () => {
+      prisma.user.findUnique.mockResolvedValue({
+        suspended: false,
+        deleted: false,
+        deletedAt: null,
+      });
       prisma.order.findFirst.mockResolvedValue({
         id: "submitted-no-venue",
         status: "SUBMITTED",
@@ -1485,7 +1490,10 @@ describe("OrdersService", () => {
         venueOrderId: null,
         updatedAt: new Date(Date.now() - 60_000),
       });
-      redis.get.mockResolvedValue("clob-sentinel-123");
+      redis.get.mockImplementation((key: string) => {
+        if (key === "clob:accepted:intent-1") return Promise.resolve("clob-sentinel-123");
+        return Promise.resolve(null);
+      });
 
       const p = svc.processIntent(makeIntent());
       await vi.runAllTimersAsync();
@@ -1512,6 +1520,11 @@ describe("OrdersService", () => {
     });
 
     it("throws when sentinel backfill DB update fails (prevents stream ACK on non-reclaimed path)", async () => {
+      prisma.user.findUnique.mockResolvedValue({
+        suspended: false,
+        deleted: false,
+        deletedAt: null,
+      });
       prisma.order.findFirst.mockResolvedValue({
         id: "submitted-no-venue",
         status: "SUBMITTED",
@@ -1519,7 +1532,10 @@ describe("OrdersService", () => {
         venueOrderId: null,
         updatedAt: new Date(Date.now() - 60_000),
       });
-      redis.get.mockResolvedValue("clob-sentinel-123");
+      redis.get.mockImplementation((key: string) => {
+        if (key === "clob:accepted:intent-1") return Promise.resolve("clob-sentinel-123");
+        return Promise.resolve(null);
+      });
       prisma.order.update.mockRejectedValue(new Error("DB transient error"));
 
       const p = svc.processIntent(makeIntent());
@@ -1872,6 +1888,11 @@ describe("OrdersService", () => {
 
   describe("processIntent() — CLOB-accepted sentinel for PENDING orders", () => {
     it("skips re-submission for PENDING order when sentinel exists", async () => {
+      prisma.user.findUnique.mockResolvedValue({
+        suspended: false,
+        deleted: false,
+        deletedAt: null,
+      });
       prisma.order.findFirst.mockResolvedValue({
         id: "pending-order",
         status: "PENDING",
@@ -1879,7 +1900,10 @@ describe("OrdersService", () => {
         venueOrderId: null,
         updatedAt: new Date(),
       });
-      redis.get.mockResolvedValue("clob-sentinel-456");
+      redis.get.mockImplementation((key: string) => {
+        if (key === "clob:accepted:intent-1") return Promise.resolve("clob-sentinel-456");
+        return Promise.resolve(null);
+      });
 
       const p = svc.processIntent(makeIntent());
       await vi.runAllTimersAsync();
@@ -1902,6 +1926,11 @@ describe("OrdersService", () => {
     });
 
     it("throws when PENDING sentinel backfill DB update fails (prevents stream ACK on non-reclaimed path)", async () => {
+      prisma.user.findUnique.mockResolvedValue({
+        suspended: false,
+        deleted: false,
+        deletedAt: null,
+      });
       prisma.order.findFirst.mockResolvedValue({
         id: "pending-order",
         status: "PENDING",
@@ -1909,7 +1938,10 @@ describe("OrdersService", () => {
         venueOrderId: null,
         updatedAt: new Date(),
       });
-      redis.get.mockResolvedValue("clob-sentinel-456");
+      redis.get.mockImplementation((key: string) => {
+        if (key === "clob:accepted:intent-1") return Promise.resolve("clob-sentinel-456");
+        return Promise.resolve(null);
+      });
       prisma.order.update.mockRejectedValue(new Error("DB transient error"));
 
       const p = svc.processIntent(makeIntent());
@@ -1984,6 +2016,212 @@ describe("OrdersService", () => {
       expect(results.every((r) => r.status === "fulfilled")).toBe(true);
       // Only one submission to CLOB
       expect(clob.submitOrder).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  // ── processIntent — execution blocking ───────────────────────────────────
+
+  describe("processIntent() — execution blocking", () => {
+    it("blocks before DB create when user is suspended in DB", async () => {
+      prisma.user.findUnique.mockResolvedValue({
+        suspended: true,
+        deletedAt: null,
+        usRailTermsAcceptedAt: new Date("2026-04-29T00:00:00.000Z"),
+        usRailTermsVersion: CURRENT_US_RAIL_TERMS_VERSION,
+      });
+
+      const p = svc.processIntent(makeIntent());
+      await vi.runAllTimersAsync();
+      await p;
+
+      expect(prisma.order.create).not.toHaveBeenCalled();
+      expect(redis.xadd).toHaveBeenCalledWith(
+        "stream:orders:dlq",
+        expect.objectContaining({ reason: "USER_BLOCKED" }),
+        10_000,
+      );
+    });
+
+    it("blocks before DB create when user is deleted in DB", async () => {
+      prisma.user.findUnique.mockResolvedValue({
+        suspended: false,
+        deletedAt: new Date(),
+        usRailTermsAcceptedAt: new Date("2026-04-29T00:00:00.000Z"),
+        usRailTermsVersion: CURRENT_US_RAIL_TERMS_VERSION,
+      });
+
+      const p = svc.processIntent(makeIntent());
+      await vi.runAllTimersAsync();
+      await p;
+
+      expect(prisma.order.create).not.toHaveBeenCalled();
+      expect(redis.xadd).toHaveBeenCalledWith(
+        "stream:orders:dlq",
+        expect.objectContaining({ reason: "USER_BLOCKED" }),
+        10_000,
+      );
+    });
+
+    it("blocks before DB create when user does not exist", async () => {
+      prisma.user.findUnique.mockResolvedValue(null);
+
+      const p = svc.processIntent(makeIntent());
+      await vi.runAllTimersAsync();
+      await p;
+
+      expect(prisma.order.create).not.toHaveBeenCalled();
+      expect(redis.xadd).toHaveBeenCalledWith(
+        "stream:orders:dlq",
+        expect.objectContaining({ reason: "USER_BLOCKED" }),
+        10_000,
+      );
+    });
+
+    it("blocks before DB create when Redis suspended marker exists", async () => {
+      redis.get.mockResolvedValue("1");
+
+      const p = svc.processIntent(makeIntent());
+      await vi.runAllTimersAsync();
+      await p;
+
+      expect(prisma.order.create).not.toHaveBeenCalled();
+      expect(redis.xadd).toHaveBeenCalledWith(
+        "stream:orders:dlq",
+        expect.objectContaining({ reason: "USER_BLOCKED" }),
+        10_000,
+      );
+    });
+
+    it("writes DLQ then cancels existing PENDING order when user is blocked on retry/redelivery", async () => {
+      // Simulate skipDbCreate path: an existing PENDING order with no
+      // CLOB-accepted sentinel.  User becomes blocked before retry.
+      prisma.order.findFirst.mockResolvedValue({
+        id: "existing-order-1",
+        status: "PENDING",
+        clobOrderId: null,
+        venueOrderId: null,
+        updatedAt: new Date(),
+      });
+      // CLOB-accepted sentinel → null (no prior submission)
+      redis.get
+        .mockResolvedValueOnce(null) // clob:accepted:intent-1 → null
+        .mockResolvedValueOnce("1")  // suspended:user-1 → blocked
+        .mockResolvedValue(null);    // fallback
+      prisma.user.findUnique.mockResolvedValue({
+        suspended: true,
+        deletedAt: null,
+      });
+
+      const p = svc.processIntent(makeIntent());
+      await vi.runAllTimersAsync();
+      await p;
+
+      // Must write DLQ entry first so that a retry on transient Redis failure
+      // does not find the order already CANCELLED with no DLQ record.
+      expect(redis.xadd).toHaveBeenCalledWith(
+        "stream:orders:dlq",
+        expect.objectContaining({ reason: "USER_BLOCKED" }),
+        10_000,
+      );
+      // Must cancel the existing order after the DLQ write is durable
+      expect(prisma.order.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: "existing-order-1" },
+          data: expect.objectContaining({
+            status: "CANCELLED",
+            clobStatus: "CANCELLED",
+          }),
+        }),
+      );
+      expect(events.emitOrderCancelled).toHaveBeenCalled();
+      // Must NOT create a new row
+      expect(prisma.order.create).not.toHaveBeenCalled();
+    });
+
+    it("does not cancel existing order when DLQ write fails, preserving retry", async () => {
+      prisma.order.findFirst.mockResolvedValue({
+        id: "existing-order-2",
+        status: "PENDING",
+        clobOrderId: null,
+        venueOrderId: null,
+        updatedAt: new Date(),
+      });
+      redis.get
+        .mockResolvedValueOnce(null) // clob:accepted:intent-1 → null
+        .mockResolvedValueOnce("1")  // suspended:user-1 → blocked
+        .mockResolvedValue(null);    // fallback
+      prisma.user.findUnique.mockResolvedValue({
+        suspended: true,
+        deletedAt: null,
+      });
+      redis.xadd.mockRejectedValue(new Error("Redis down"));
+
+      const p = svc.processIntent(makeIntent());
+      const rejection = expect(p).rejects.toThrow("Redis down");
+      await vi.runAllTimersAsync();
+      await rejection;
+
+      // Order must NOT be cancelled — the DLQ write failed, so we keep the
+      // order retryable so the next attempt can retry the DLQ write.
+      expect(prisma.order.update).not.toHaveBeenCalled();
+    });
+
+    it("cancels order before submission when user becomes blocked after claim", async () => {
+      // First check (before DB create) — user is not blocked.
+      // Second check (after claim) — user has been suspended.
+      prisma.user.findUnique
+        .mockResolvedValueOnce({
+          suspended: false,
+          deletedAt: null,
+        })
+        .mockResolvedValueOnce({
+          suspended: true,
+          deletedAt: null,
+        });
+      redis.get.mockResolvedValue(null);
+
+      const p = svc.processIntent(makeIntent());
+      await vi.runAllTimersAsync();
+      await p;
+
+      expect(prisma.order.create).toHaveBeenCalled();
+      expect(prisma.order.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            status: "CANCELLED",
+            clobStatus: "CANCELLED",
+          }),
+        }),
+      );
+      expect(events.emitOrderCancelled).toHaveBeenCalled();
+      expect(signer.signOrder).not.toHaveBeenCalled();
+      expect(clob.submitOrder).not.toHaveBeenCalled();
+    });
+
+    it("allows happy-path execution when user is not blocked", async () => {
+      prisma.user.findUnique.mockResolvedValue({
+        suspended: false,
+        deletedAt: null,
+        usRailTermsAcceptedAt: new Date("2026-04-29T00:00:00.000Z"),
+        usRailTermsVersion: CURRENT_US_RAIL_TERMS_VERSION,
+      });
+      redis.get.mockResolvedValue(null);
+
+      const p = svc.processIntent(makeIntent());
+      await vi.runAllTimersAsync();
+      await p;
+
+      expect(prisma.order.create).toHaveBeenCalled();
+      expect(prisma.order.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ status: "LIVE" }),
+        }),
+      );
+      expect(redis.xadd).not.toHaveBeenCalledWith(
+        "stream:orders:dlq",
+        expect.objectContaining({ reason: "USER_BLOCKED" }),
+        10_000,
+      );
     });
   });
 });

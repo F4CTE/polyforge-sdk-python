@@ -155,13 +155,18 @@ export class UsersService {
 
     const updated = user.suspended
       ? user
-      : await this.prisma.user.update({
-          where: { id },
-          data: {
-            suspended: true,
-            suspendedReason: dto.reason,
-          },
-        });
+      : await this.prisma.user
+          .update({
+            where: { id },
+            data: {
+              suspended: true,
+              suspendedReason: dto.reason,
+            },
+          })
+          .catch(async (err) => {
+            await this.redis.del(SUSPENDED_USER_KEY(id)).catch(() => {});
+            throw err;
+          });
 
     return {
       suspended: true,
@@ -389,19 +394,28 @@ export class UsersService {
   }
 
   private async replaySuspendSideEffects(userId: string): Promise<void> {
-    await this.stopStrategyRunners(userId);
-    await this.publishOrderCancellations(userId);
-    await this.prisma.apiKey.updateMany({
-      where: { userId, revoked: false },
-      data: { revoked: true, revokedAt: new Date() },
-    });
+    // Set the Redis suspended marker FIRST so queued order intents
+    // are blocked immediately even before side-effects complete.
+    // If any subsequent step fails the marker is rolled back so that
+    // a failed suspend does not permanently block the user.
     await this.redis.set(SUSPENDED_USER_KEY(userId), String(Date.now()));
-    await this.revokeRefreshTokensForUser(userId);
-    await this.redis.xadd("stream:events", {
-      type: "USER_SUSPENDED",
-      userId,
-      ts: String(Date.now()),
-    });
+    try {
+      await this.stopStrategyRunners(userId);
+      await this.publishOrderCancellations(userId);
+      await this.prisma.apiKey.updateMany({
+        where: { userId, revoked: false },
+        data: { revoked: true, revokedAt: new Date() },
+      });
+      await this.revokeRefreshTokensForUser(userId);
+      await this.redis.xadd("stream:events", {
+        type: "USER_SUSPENDED",
+        userId,
+        ts: String(Date.now()),
+      });
+    } catch (err) {
+      await this.redis.del(SUSPENDED_USER_KEY(userId)).catch(() => {});
+      throw err;
+    }
   }
 
   private async revokeRefreshTokensForUser(userId: string): Promise<void> {

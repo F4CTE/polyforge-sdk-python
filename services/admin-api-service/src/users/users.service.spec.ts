@@ -396,6 +396,23 @@ describe("UsersService", () => {
         response: { code: "NOT_FOUND" },
       });
     });
+
+    it("rolls back the suspended marker when a side-effect fails", async () => {
+      const user = makeUser({ suspended: false });
+      prisma.user.findUnique.mockResolvedValue(user as any);
+      prisma.strategy.findMany.mockResolvedValue([{ id: "s1" }]);
+      (fetch as any).mockRejectedValueOnce(new Error("strategy engine down"));
+
+      await expect(
+        service.suspend("user-1", { reason: "test" }),
+      ).rejects.toThrow("strategy engine down");
+
+      // The suspended marker must be deleted so the user is not
+      // permanently blocked by a failed suspend request.
+      expect(redis.del).toHaveBeenCalledWith("suspended:user-1");
+      // The DB row must NOT be updated to suspended: true
+      expect(prisma.user.update).not.toHaveBeenCalled();
+    });
   });
 
   // ── unsuspend ─────────────────────────────────────────────────────────────
