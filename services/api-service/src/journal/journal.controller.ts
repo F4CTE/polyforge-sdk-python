@@ -1,7 +1,12 @@
 import { Controller, Get, Query, UseGuards } from "@nestjs/common";
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
 import { IsOptional, IsString, IsIn } from "class-validator";
-import { JwtAuthGuard, CurrentUser } from "@polyforge/shared-auth";
+import {
+  JwtAuthGuard,
+  CurrentUser,
+  ApiKeyScopeGuard,
+  RequireScopes,
+} from "@polyforge/shared-auth";
 import { JwtPayload } from "@polyforge/shared-types";
 import { PaginationDto } from "../common/dto/pagination.dto";
 import { JournalService } from "./journal.service";
@@ -22,6 +27,8 @@ export class JournalController {
   constructor(private readonly journal: JournalService) {}
 
   @Get()
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes("READ")
   list(@CurrentUser() user: JwtPayload, @Query() query: JournalQueryDto) {
     return this.journal.list(user.sub, query);
   }
