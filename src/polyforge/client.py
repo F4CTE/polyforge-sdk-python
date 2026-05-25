@@ -2456,7 +2456,7 @@ class PolyforgeClient:
             timeout=httpx.Timeout(self._stream_timeout, connect=10.0),
         ) as response:
             _raise_for_status(response)
-            for line in _iter_sse_lines(response.iter_raw(chunk_size=_SSE_RAW_CHUNK_SIZE)):
+            for line in _iter_sse_lines(response.iter_bytes(chunk_size=_SSE_RAW_CHUNK_SIZE)):
                 event = _parse_strategy_sse_line(line)
                 if event is not None:
                     yield event
@@ -5946,7 +5946,7 @@ class AsyncPolyforgeClient:
             timeout=httpx.Timeout(self._stream_timeout, connect=10.0),
         ) as response:
             _raise_for_status(response)
-            async for line in _aiter_sse_lines(response.aiter_raw(chunk_size=_SSE_RAW_CHUNK_SIZE)):
+            async for line in _aiter_sse_lines(response.aiter_bytes(chunk_size=_SSE_RAW_CHUNK_SIZE)):
                 event = _parse_strategy_sse_line(line)
                 if event is not None:
                     yield event
