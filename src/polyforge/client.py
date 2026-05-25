@@ -2744,7 +2744,7 @@ class PolyforgeClient:
         }
         if limit_price is not None:
             _validate_financial_param("limit_price", limit_price)
-            body["limitPrice"] = limit_price
+            body["limitPrice"] = str(limit_price)
         return _parse(
             ConditionalOrder,
             self._post(
@@ -5976,7 +5976,7 @@ class AsyncPolyforgeClient:
         }
         if limit_price is not None:
             _validate_financial_param("limit_price", limit_price)
-            body["limitPrice"] = limit_price
+            body["limitPrice"] = str(limit_price)
         return _parse(
             ConditionalOrder,
             await self._post(
