@@ -7,6 +7,7 @@ import pytest
 from polyforge.client import (
     PolyforgeClient,
     AsyncPolyforgeClient,
+    _MAX_SSE_LINE_BYTES,
     _parse,
     _parse_pagination,
     _raise_for_status,
@@ -6049,6 +6050,118 @@ class TestSseStreamTimeout:
         source = inspect.getsource(AsyncPolyforgeClient.watch_strategy)
         assert "self._stream_timeout" in source
         assert "httpx.Timeout" in source
+
+    def test_sync_watch_strategy_rejects_overlong_sse_line(self):
+        """watch_strategy must not buffer an unterminated SSE line indefinitely."""
+        overlong = b"data: " + (b"x" * _MAX_SSE_LINE_BYTES)
+        transport = httpx.MockTransport(
+            lambda request: httpx.Response(
+                200,
+                stream=httpx.ByteStream(overlong),
+                headers={"content-type": "text/event-stream"},
+            )
+        )
+        client = PolyforgeClient(api_key="test-key")
+        client._client = httpx.Client(
+            base_url="https://api.polyforge.io",
+            headers={"Authorization": "Bearer test-key"},
+            transport=transport,
+        )
+        with pytest.raises(PolyforgeError, match="SSE event line exceeded"):
+            next(client.watch_strategy("strat-1"))
+        client.close()
+
+    def test_sync_watch_strategy_yields_valid_sse_event(self):
+        """watch_strategy still parses normal SSE data lines."""
+        body = (
+            b'data: {"type":"CONNECTED","strategyId":"strat-1",'
+            b'"data":{"ok":true},"timestamp":123}\n\n'
+        )
+        transport = httpx.MockTransport(
+            lambda request: httpx.Response(
+                200,
+                stream=httpx.ByteStream(body),
+                headers={"content-type": "text/event-stream"},
+            )
+        )
+        client = PolyforgeClient(api_key="test-key")
+        client._client = httpx.Client(
+            base_url="https://api.polyforge.io",
+            headers={"Authorization": "Bearer test-key"},
+            transport=transport,
+        )
+        event = next(client.watch_strategy("strat-1"))
+        assert event.type == "CONNECTED"
+        assert event.strategy_id == "strat-1"
+        assert event.data == {"ok": True}
+        assert event.timestamp == 123
+        client.close()
+
+    def test_async_watch_strategy_rejects_overlong_sse_line(self):
+        """async watch_strategy must not buffer an unterminated SSE line indefinitely."""
+        import asyncio
+
+        async def _run():
+            overlong = b"data: " + (b"x" * _MAX_SSE_LINE_BYTES)
+
+            class AsyncBytes(httpx.AsyncByteStream):
+                async def __aiter__(self):
+                    yield overlong
+
+            transport = httpx.MockTransport(
+                lambda request: httpx.Response(
+                    200,
+                    stream=AsyncBytes(),
+                    headers={"content-type": "text/event-stream"},
+                )
+            )
+            client = AsyncPolyforgeClient(api_key="test-key")
+            client._client = httpx.AsyncClient(
+                base_url="https://api.polyforge.io",
+                headers={"Authorization": "Bearer test-key"},
+                transport=transport,
+            )
+            with pytest.raises(PolyforgeError, match="SSE event line exceeded"):
+                await anext(client.watch_strategy("strat-1"))
+            await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_watch_strategy_yields_valid_sse_event(self):
+        """async watch_strategy still parses normal SSE data lines."""
+        import asyncio
+
+        async def _run():
+            body = (
+                b'data: {"type":"CONNECTED","strategyId":"strat-1",'
+                b'"data":{"ok":true},"timestamp":123}\n\n'
+            )
+
+            class AsyncBytes(httpx.AsyncByteStream):
+                async def __aiter__(self):
+                    yield body
+
+            transport = httpx.MockTransport(
+                lambda request: httpx.Response(
+                    200,
+                    stream=AsyncBytes(),
+                    headers={"content-type": "text/event-stream"},
+                )
+            )
+            client = AsyncPolyforgeClient(api_key="test-key")
+            client._client = httpx.AsyncClient(
+                base_url="https://api.polyforge.io",
+                headers={"Authorization": "Bearer test-key"},
+                transport=transport,
+            )
+            event = await anext(client.watch_strategy("strat-1"))
+            assert event.type == "CONNECTED"
+            assert event.strategy_id == "strat-1"
+            assert event.data == {"ok": True}
+            assert event.timestamp == 123
+            await client.close()
+
+        asyncio.run(_run())
 
 
 # ---------------------------------------------------------------------------

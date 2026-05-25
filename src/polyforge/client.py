@@ -2456,26 +2456,10 @@ class PolyforgeClient:
             timeout=httpx.Timeout(self._stream_timeout, connect=10.0),
         ) as response:
             _raise_for_status(response)
-            for line in response.iter_lines():
-                if not line.startswith("data: "):
-                    continue
-                raw = line[6:].strip()
-                if not raw:
-                    continue
-                try:
-                    payload = _json.loads(raw)
-                    # Validate expected fields before yielding
-                    if not isinstance(payload.get("type"), str):
-                        continue
-                    yield StrategyEvent(
-                        type=payload["type"],
-                        strategy_id=payload.get("strategyId", ""),
-                        data=payload.get("data"),
-                        timestamp=payload.get("timestamp", 0),
-                    )
-                except _json.JSONDecodeError:
-                    _log.warning("Malformed SSE event: failed to parse JSON")
-                    continue
+            for line in _iter_sse_lines(response.iter_raw(chunk_size=_SSE_RAW_CHUNK_SIZE)):
+                event = _parse_strategy_sse_line(line)
+                if event is not None:
+                    yield event
 
     # -- Paper Trading --
 
@@ -5962,26 +5946,10 @@ class AsyncPolyforgeClient:
             timeout=httpx.Timeout(self._stream_timeout, connect=10.0),
         ) as response:
             _raise_for_status(response)
-            async for line in response.aiter_lines():
-                if not line.startswith("data: "):
-                    continue
-                raw = line[6:].strip()
-                if not raw:
-                    continue
-                try:
-                    payload = _json.loads(raw)
-                    # Validate expected fields before yielding
-                    if not isinstance(payload.get("type"), str):
-                        continue
-                    yield StrategyEvent(
-                        type=payload["type"],
-                        strategy_id=payload.get("strategyId", ""),
-                        data=payload.get("data"),
-                        timestamp=payload.get("timestamp", 0),
-                    )
-                except _json.JSONDecodeError:
-                    _log.warning("Malformed SSE event: failed to parse JSON")
-                    continue
+            async for line in _aiter_sse_lines(response.aiter_raw(chunk_size=_SSE_RAW_CHUNK_SIZE)):
+                event = _parse_strategy_sse_line(line)
+                if event is not None:
+                    yield event
 
     # -- Paper Trading --
 
@@ -7546,3 +7514,80 @@ class AsyncPolyforgeClient:
 
     async def __aexit__(self, *args: Any) -> None:
         await self.close()
+
+
+_MAX_SSE_LINE_BYTES = 64 * 1024
+_SSE_RAW_CHUNK_SIZE = 4096
+
+
+def _sse_line_too_long_error() -> PolyforgeError:
+    return PolyforgeError(
+        f"SSE event line exceeded {_MAX_SSE_LINE_BYTES} bytes",
+        code="SSE_LINE_TOO_LONG",
+        suggestion="The server sent an invalid event stream line.",
+    )
+
+
+def _iter_sse_lines(chunks: Iterator[bytes]) -> Iterator[str]:
+    pending = bytearray()
+    for chunk in chunks:
+        if not chunk:
+            continue
+        start = 0
+        while start < len(chunk):
+            newline_index = chunk.find(b"\n", start)
+            end = len(chunk) if newline_index == -1 else newline_index
+            segment = chunk[start:end]
+            if len(pending) + len(segment) > _MAX_SSE_LINE_BYTES:
+                raise _sse_line_too_long_error()
+            pending.extend(segment)
+            if newline_index == -1:
+                break
+            yield pending.decode("utf-8", errors="replace").rstrip("\r")
+            pending.clear()
+            start = newline_index + 1
+    if pending:
+        yield pending.decode("utf-8", errors="replace").rstrip("\r")
+
+
+async def _aiter_sse_lines(chunks: AsyncIterator[bytes]) -> AsyncIterator[str]:
+    pending = bytearray()
+    async for chunk in chunks:
+        if not chunk:
+            continue
+        start = 0
+        while start < len(chunk):
+            newline_index = chunk.find(b"\n", start)
+            end = len(chunk) if newline_index == -1 else newline_index
+            segment = chunk[start:end]
+            if len(pending) + len(segment) > _MAX_SSE_LINE_BYTES:
+                raise _sse_line_too_long_error()
+            pending.extend(segment)
+            if newline_index == -1:
+                break
+            yield pending.decode("utf-8", errors="replace").rstrip("\r")
+            pending.clear()
+            start = newline_index + 1
+    if pending:
+        yield pending.decode("utf-8", errors="replace").rstrip("\r")
+
+
+def _parse_strategy_sse_line(line: str) -> StrategyEvent | None:
+    if not line.startswith("data: "):
+        return None
+    raw = line[6:].strip()
+    if not raw:
+        return None
+    try:
+        payload = _json.loads(raw)
+    except _json.JSONDecodeError:
+        _log.warning("Malformed SSE event: failed to parse JSON")
+        return None
+    if not isinstance(payload.get("type"), str):
+        return None
+    return StrategyEvent(
+        type=payload["type"],
+        strategy_id=payload.get("strategyId", ""),
+        data=payload.get("data"),
+        timestamp=payload.get("timestamp", 0),
+    )
