@@ -10,6 +10,7 @@ from polyforge.errors import (
     ServerError,
 )
 from polyforge.models import (
+    AccuracyLeaderboardEntry,
     ActionDefinition,
     ActionParameter,
     ActionsSchema,
@@ -108,6 +109,7 @@ from polyforge.models import (
     VenueComparison,
     VenueComparisonDetail,
     VenuePreferences,
+    UserPreferences,
     SupportTicket,
     TicketMessage,
     CorrelationCategoriesReport,
@@ -140,6 +142,7 @@ __all__ = [
     "StrategyVisibility",
     "StrategyExecMode",
     # Models
+    "AccuracyLeaderboardEntry",
     "AiQueryResponse",
     "Alert",
     "ArbCloseResponse",
@@ -227,6 +230,7 @@ __all__ = [
     "VenueComparison",
     "VenueComparisonDetail",
     "VenuePreferences",
+    "UserPreferences",
     "WatchlistItem",
     "Webhook",
     "WebhookTestResult",
@@ -252,4 +256,4 @@ __all__ = [
     "VenueFeeEstimate",
 ]
 
-__version__ = "1.0.0"
+__version__ = "2.0.0"
