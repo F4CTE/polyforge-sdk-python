@@ -2456,7 +2456,7 @@ class PolyforgeClient:
             timeout=httpx.Timeout(self._stream_timeout, connect=10.0),
         ) as response:
             _raise_for_status(response)
-            for line in _iter_sse_lines(response.iter_bytes(chunk_size=_SSE_RAW_CHUNK_SIZE)):
+            for line in _iter_sse_lines(response.iter_bytes()):
                 event = _parse_strategy_sse_line(line)
                 if event is not None:
                     yield event
@@ -5946,7 +5946,7 @@ class AsyncPolyforgeClient:
             timeout=httpx.Timeout(self._stream_timeout, connect=10.0),
         ) as response:
             _raise_for_status(response)
-            async for line in _aiter_sse_lines(response.aiter_bytes(chunk_size=_SSE_RAW_CHUNK_SIZE)):
+            async for line in _aiter_sse_lines(response.aiter_bytes()):
                 event = _parse_strategy_sse_line(line)
                 if event is not None:
                     yield event
@@ -7517,7 +7517,6 @@ class AsyncPolyforgeClient:
 
 
 _MAX_SSE_LINE_BYTES = 64 * 1024
-_SSE_RAW_CHUNK_SIZE = 4096
 
 
 def _sse_line_too_long_error() -> PolyforgeError:
@@ -7530,46 +7529,80 @@ def _sse_line_too_long_error() -> PolyforgeError:
 
 def _iter_sse_lines(chunks: Iterator[bytes]) -> Iterator[str]:
     pending = bytearray()
+    skip_next_lf = False
     for chunk in chunks:
         if not chunk:
             continue
         start = 0
+        if skip_next_lf:
+            if chunk.startswith(b"\n"):
+                start = 1
+            skip_next_lf = False
         while start < len(chunk):
-            newline_index = chunk.find(b"\n", start)
-            end = len(chunk) if newline_index == -1 else newline_index
+            cr_index = chunk.find(b"\r", start)
+            lf_index = chunk.find(b"\n", start)
+            if cr_index == -1:
+                delimiter_index = lf_index
+            elif lf_index == -1:
+                delimiter_index = cr_index
+            else:
+                delimiter_index = min(cr_index, lf_index)
+            end = len(chunk) if delimiter_index == -1 else delimiter_index
             segment = chunk[start:end]
             if len(pending) + len(segment) > _MAX_SSE_LINE_BYTES:
                 raise _sse_line_too_long_error()
             pending.extend(segment)
-            if newline_index == -1:
+            if delimiter_index == -1:
                 break
-            yield pending.decode("utf-8", errors="replace").rstrip("\r")
+            yield pending.decode("utf-8", errors="replace")
             pending.clear()
-            start = newline_index + 1
+            start = delimiter_index + 1
+            if chunk[delimiter_index] == 13:
+                if start < len(chunk) and chunk[start] == 10:
+                    start += 1
+                else:
+                    skip_next_lf = True
     if pending:
-        yield pending.decode("utf-8", errors="replace").rstrip("\r")
+        yield pending.decode("utf-8", errors="replace")
 
 
 async def _aiter_sse_lines(chunks: AsyncIterator[bytes]) -> AsyncIterator[str]:
     pending = bytearray()
+    skip_next_lf = False
     async for chunk in chunks:
         if not chunk:
             continue
         start = 0
+        if skip_next_lf:
+            if chunk.startswith(b"\n"):
+                start = 1
+            skip_next_lf = False
         while start < len(chunk):
-            newline_index = chunk.find(b"\n", start)
-            end = len(chunk) if newline_index == -1 else newline_index
+            cr_index = chunk.find(b"\r", start)
+            lf_index = chunk.find(b"\n", start)
+            if cr_index == -1:
+                delimiter_index = lf_index
+            elif lf_index == -1:
+                delimiter_index = cr_index
+            else:
+                delimiter_index = min(cr_index, lf_index)
+            end = len(chunk) if delimiter_index == -1 else delimiter_index
             segment = chunk[start:end]
             if len(pending) + len(segment) > _MAX_SSE_LINE_BYTES:
                 raise _sse_line_too_long_error()
             pending.extend(segment)
-            if newline_index == -1:
+            if delimiter_index == -1:
                 break
-            yield pending.decode("utf-8", errors="replace").rstrip("\r")
+            yield pending.decode("utf-8", errors="replace")
             pending.clear()
-            start = newline_index + 1
+            start = delimiter_index + 1
+            if chunk[delimiter_index] == 13:
+                if start < len(chunk) and chunk[start] == 10:
+                    start += 1
+                else:
+                    skip_next_lf = True
     if pending:
-        yield pending.decode("utf-8", errors="replace").rstrip("\r")
+        yield pending.decode("utf-8", errors="replace")
 
 
 def _parse_strategy_sse_line(line: str) -> StrategyEvent | None:

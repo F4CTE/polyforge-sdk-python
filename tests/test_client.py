@@ -9,6 +9,8 @@ from polyforge.client import (
     PolyforgeClient,
     AsyncPolyforgeClient,
     _MAX_SSE_LINE_BYTES,
+    _aiter_sse_lines,
+    _iter_sse_lines,
     _parse,
     _parse_pagination,
     _raise_for_status,
@@ -6127,6 +6129,26 @@ class TestSseStreamTimeout:
         assert event.timestamp == 123
         client.close()
 
+    def test_sync_watch_strategy_uses_prompt_decoded_byte_chunks(self):
+        """watch_strategy must not buffer SSE events behind a fixed chunk_size."""
+        import inspect
+
+        source = inspect.getsource(PolyforgeClient.watch_strategy)
+        assert "iter_bytes()" in source
+        assert "iter_bytes(chunk_size" not in source
+
+    def test_sync_sse_reader_splits_cr_delimited_events(self):
+        """The bounded SSE reader must accept CR-only line delimiters."""
+        body = (
+            b'data: {"type":"CONNECTED","strategyId":"strat-1",'
+            b'"data":{"cr":true},"timestamp":123}\r\r'
+        )
+        lines = list(_iter_sse_lines(iter([body])))
+        assert lines == [
+            'data: {"type":"CONNECTED","strategyId":"strat-1","data":{"cr":true},"timestamp":123}',
+            "",
+        ]
+
     def test_async_watch_strategy_rejects_overlong_sse_line(self):
         """async watch_strategy must not buffer an unterminated SSE line indefinitely."""
         import asyncio
@@ -6190,6 +6212,35 @@ class TestSseStreamTimeout:
             assert event.data == {"ok": True}
             assert event.timestamp == 123
             await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_watch_strategy_uses_prompt_decoded_byte_chunks(self):
+        """async watch_strategy must not buffer SSE events behind a fixed chunk_size."""
+        import inspect
+
+        source = inspect.getsource(AsyncPolyforgeClient.watch_strategy)
+        assert "aiter_bytes()" in source
+        assert "aiter_bytes(chunk_size" not in source
+
+    def test_async_sse_reader_splits_cr_delimited_events(self):
+        """The async bounded SSE reader must accept CR-only line delimiters."""
+        import asyncio
+
+        async def chunks():
+            yield (
+                b'data: {"type":"CONNECTED","strategyId":"strat-1",'
+                b'"data":{"cr":true},"timestamp":123}\r\r'
+            )
+
+        async def _run():
+            lines = []
+            async for line in _aiter_sse_lines(chunks()):
+                lines.append(line)
+            assert lines == [
+                'data: {"type":"CONNECTED","strategyId":"strat-1","data":{"cr":true},"timestamp":123}',
+                "",
+            ]
 
         asyncio.run(_run())
 
