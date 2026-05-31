@@ -2890,9 +2890,77 @@ class TestConditionalOrders:
         source = inspect.getsource(PolyforgeClient.create_conditional_order)
         assert "_validate_financial_param" in source
 
+    def test_sync_create_conditional_order_sends_limit_price_as_string(self):
+        """create_conditional_order() must send limitPrice as a number string."""
+        from unittest.mock import MagicMock
+
+        client = PolyforgeClient(api_key="test-key")
+        client._post = MagicMock(return_value={
+            "id": "co-1",
+            "marketId": "m-1",
+            "tokenId": "tok",
+            "type": "STOP_LOSS",
+            "side": "SELL",
+            "outcome": "YES",
+            "size": "1",
+            "triggerPrice": "0.4",
+            "limitPrice": "0.45",
+            "status": "PENDING",
+        })
+
+        client.create_conditional_order(
+            "m-1",
+            "tok",
+            "STOP_LOSS",
+            "SELL",
+            "YES",
+            1.0,
+            0.4,
+            limit_price=0.45,
+        )
+
+        assert client._post.call_args.kwargs["json"]["limitPrice"] == "0.45"
+        client.close()
+
     def test_async_create_conditional_order_exists(self):
         """AsyncPolyforgeClient must have create_conditional_order."""
         assert hasattr(AsyncPolyforgeClient, "create_conditional_order")
+
+    def test_async_create_conditional_order_sends_limit_price_as_string(self):
+        """Async create_conditional_order() must send limitPrice as a number string."""
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            client._post = AsyncMock(return_value={
+                "id": "co-1",
+                "marketId": "m-1",
+                "tokenId": "tok",
+                "type": "STOP_LOSS",
+                "side": "SELL",
+                "outcome": "YES",
+                "size": "1",
+                "triggerPrice": "0.4",
+                "limitPrice": "0.45",
+                "status": "PENDING",
+            })
+
+            await client.create_conditional_order(
+                "m-1",
+                "tok",
+                "STOP_LOSS",
+                "SELL",
+                "YES",
+                1.0,
+                0.4,
+                limit_price=0.45,
+            )
+
+            assert client._post.call_args.kwargs["json"]["limitPrice"] == "0.45"
+            await client.close()
+
+        asyncio.run(_run())
 
     # -- get_conditional_order --
 
