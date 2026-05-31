@@ -1059,6 +1059,8 @@ class ConditionalOrder:
     size: str = ""
     trigger_price: str = ""
     limit_price: str | None = None
+    trailing_pct: str | None = None
+    expires_at: str | None = None
     status: str = ""
     triggered_at: str | None = None
     created_at: str = ""

@@ -2686,11 +2686,15 @@ class TestAlertCrud:
             outcome="YES",
             size="10",
             trigger_price="0.50",
+            trailing_pct="0.05",
+            expires_at="2026-06-01T12:00:00Z",
             status="PENDING",
         )
         assert order.id == "co-1"
         assert order.market_id == "m-1"
         assert order.trigger_price == "0.50"
+        assert order.trailing_pct == "0.05"
+        assert order.expires_at == "2026-06-01T12:00:00Z"
         assert order.limit_price is None
 
     def test_conditional_order_defaults(self):
@@ -2700,6 +2704,8 @@ class TestAlertCrud:
         assert order.status == ""
         assert order.triggered_at is None
         assert order.limit_price is None
+        assert order.trailing_pct is None
+        assert order.expires_at is None
 
     def test_portfolio_pnl_model_fields(self):
         """PortfolioPnl must have all expected fields."""
@@ -2878,6 +2884,37 @@ class TestConditionalOrders:
         for name in ("market_id", "token_id", "type", "side", "outcome", "size", "trigger_price"):
             assert name in param_names, f"Missing param: {name}"
         assert "limit_price" in param_names
+        assert "trailing_pct" in param_names
+        assert "expires_at" in param_names
+
+    def test_sync_create_conditional_order_sends_trailing_pct_and_expires_at(self):
+        """create_conditional_order() must serialize trailing stop and expiry fields."""
+        from unittest.mock import MagicMock
+
+        client = PolyforgeClient(api_key="test-key")
+        client._post = MagicMock(return_value={
+            "id": "co-1",
+            "trailingPct": "0.05",
+            "expiresAt": "2026-06-01T12:00:00Z",
+        })
+
+        order = client.create_conditional_order(
+            "m-1",
+            "tok",
+            "TRAILING_STOP",
+            "SELL",
+            "YES",
+            1.0,
+            0.4,
+            trailing_pct=0.05,
+            expires_at="2026-06-01T12:00:00Z",
+        )
+
+        assert client._post.call_args.kwargs["json"]["trailingPct"] == "0.05"
+        assert client._post.call_args.kwargs["json"]["expiresAt"] == "2026-06-01T12:00:00Z"
+        assert order.trailing_pct == "0.05"
+        assert order.expires_at == "2026-06-01T12:00:00Z"
+        client.close()
 
     def test_sync_create_conditional_order_path(self):
         """create_conditional_order() must POST to /api/v1/orders/conditional."""
@@ -2962,6 +2999,39 @@ class TestConditionalOrders:
             )
 
             assert client._post.call_args.kwargs["json"]["limitPrice"] == "0.45"
+            await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_create_conditional_order_sends_trailing_pct_and_expires_at(self):
+        """Async create_conditional_order() must serialize trailing stop and expiry fields."""
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            client._post = AsyncMock(return_value={
+                "id": "co-1",
+                "trailingPct": "0.05",
+                "expiresAt": "2026-06-01T12:00:00Z",
+            })
+
+            order = await client.create_conditional_order(
+                "m-1",
+                "tok",
+                "TRAILING_STOP",
+                "SELL",
+                "YES",
+                1.0,
+                0.4,
+                trailing_pct=0.05,
+                expires_at="2026-06-01T12:00:00Z",
+            )
+
+            assert client._post.call_args.kwargs["json"]["trailingPct"] == "0.05"
+            assert client._post.call_args.kwargs["json"]["expiresAt"] == "2026-06-01T12:00:00Z"
+            assert order.trailing_pct == "0.05"
+            assert order.expires_at == "2026-06-01T12:00:00Z"
             await client.close()
 
         asyncio.run(_run())
