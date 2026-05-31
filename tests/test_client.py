@@ -1,5 +1,6 @@
 """Basic smoke tests for PolyforgeClient."""
 
+import gzip
 import json
 
 import httpx
@@ -7,6 +8,9 @@ import pytest
 from polyforge.client import (
     PolyforgeClient,
     AsyncPolyforgeClient,
+    _MAX_SSE_LINE_BYTES,
+    _aiter_sse_lines,
+    _iter_sse_lines,
     _parse,
     _parse_pagination,
     _raise_for_status,
@@ -6049,6 +6053,256 @@ class TestSseStreamTimeout:
         source = inspect.getsource(AsyncPolyforgeClient.watch_strategy)
         assert "self._stream_timeout" in source
         assert "httpx.Timeout" in source
+
+    def test_sync_watch_strategy_rejects_overlong_sse_line(self):
+        """watch_strategy must not buffer an unterminated SSE line indefinitely."""
+        overlong = b"data: " + (b"x" * _MAX_SSE_LINE_BYTES)
+        transport = httpx.MockTransport(
+            lambda request: httpx.Response(
+                200,
+                stream=httpx.ByteStream(overlong),
+                headers={"content-type": "text/event-stream"},
+            )
+        )
+        client = PolyforgeClient(api_key="test-key")
+        client._client = httpx.Client(
+            base_url="https://api.polyforge.io",
+            headers={"Authorization": "Bearer test-key"},
+            transport=transport,
+        )
+        with pytest.raises(PolyforgeError, match="SSE event line exceeded"):
+            next(client.watch_strategy("strat-1"))
+        client.close()
+
+    def test_sync_watch_strategy_yields_valid_sse_event(self):
+        """watch_strategy still parses normal SSE data lines."""
+        body = (
+            b'data: {"type":"CONNECTED","strategyId":"strat-1",'
+            b'"data":{"ok":true},"timestamp":123}\n\n'
+        )
+        transport = httpx.MockTransport(
+            lambda request: httpx.Response(
+                200,
+                stream=httpx.ByteStream(body),
+                headers={"content-type": "text/event-stream"},
+            )
+        )
+        client = PolyforgeClient(api_key="test-key")
+        client._client = httpx.Client(
+            base_url="https://api.polyforge.io",
+            headers={"Authorization": "Bearer test-key"},
+            transport=transport,
+        )
+        event = next(client.watch_strategy("strat-1"))
+        assert event.type == "CONNECTED"
+        assert event.strategy_id == "strat-1"
+        assert event.data == {"ok": True}
+        assert event.timestamp == 123
+        client.close()
+
+    def test_sync_watch_strategy_decodes_compressed_sse_event(self):
+        """watch_strategy must frame decoded response bytes, not compressed wire bytes."""
+        body = gzip.compress(
+            b'data: {"type":"CONNECTED","strategyId":"strat-1",'
+            b'"data":{"compressed":true},"timestamp":123}\n\n'
+        )
+        transport = httpx.MockTransport(
+            lambda request: httpx.Response(
+                200,
+                stream=httpx.ByteStream(body),
+                headers={
+                    "content-type": "text/event-stream",
+                    "content-encoding": "gzip",
+                },
+            )
+        )
+        client = PolyforgeClient(api_key="test-key")
+        client._client = httpx.Client(
+            base_url="https://api.polyforge.io",
+            headers={"Authorization": "Bearer test-key"},
+            transport=transport,
+        )
+        event = next(client.watch_strategy("strat-1"))
+        assert event.type == "CONNECTED"
+        assert event.strategy_id == "strat-1"
+        assert event.data == {"compressed": True}
+        assert event.timestamp == 123
+        client.close()
+
+    def test_sync_watch_strategy_uses_prompt_decoded_byte_chunks(self):
+        """watch_strategy must not buffer SSE events behind a fixed chunk_size."""
+        import inspect
+
+        source = inspect.getsource(PolyforgeClient.watch_strategy)
+        assert "iter_bytes()" in source
+        assert "iter_bytes(chunk_size" not in source
+
+    def test_sync_sse_reader_splits_cr_delimited_events(self):
+        """The bounded SSE reader must accept CR-only line delimiters."""
+        body = (
+            b'data: {"type":"CONNECTED","strategyId":"strat-1",'
+            b'"data":{"cr":true},"timestamp":123}\r\r'
+        )
+        lines = list(_iter_sse_lines(iter([body])))
+        assert lines == [
+            'data: {"type":"CONNECTED","strategyId":"strat-1","data":{"cr":true},"timestamp":123}',
+            "",
+        ]
+
+    def test_sync_sse_reader_keeps_lf_after_mid_chunk_cr(self):
+        """A CR delimiter must not consume a later chunk's real LF delimiter."""
+        lines = list(_iter_sse_lines(iter([b"data: one\rdata: two", b"\n\n"])))
+        assert lines == ["data: one", "data: two", ""]
+
+    def test_async_watch_strategy_rejects_overlong_sse_line(self):
+        """async watch_strategy must not buffer an unterminated SSE line indefinitely."""
+        import asyncio
+
+        async def _run():
+            overlong = b"data: " + (b"x" * _MAX_SSE_LINE_BYTES)
+
+            class AsyncBytes(httpx.AsyncByteStream):
+                async def __aiter__(self):
+                    yield overlong
+
+            transport = httpx.MockTransport(
+                lambda request: httpx.Response(
+                    200,
+                    stream=AsyncBytes(),
+                    headers={"content-type": "text/event-stream"},
+                )
+            )
+            client = AsyncPolyforgeClient(api_key="test-key")
+            client._client = httpx.AsyncClient(
+                base_url="https://api.polyforge.io",
+                headers={"Authorization": "Bearer test-key"},
+                transport=transport,
+            )
+            with pytest.raises(PolyforgeError, match="SSE event line exceeded"):
+                await anext(client.watch_strategy("strat-1"))
+            await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_watch_strategy_yields_valid_sse_event(self):
+        """async watch_strategy still parses normal SSE data lines."""
+        import asyncio
+
+        async def _run():
+            body = (
+                b'data: {"type":"CONNECTED","strategyId":"strat-1",'
+                b'"data":{"ok":true},"timestamp":123}\n\n'
+            )
+
+            class AsyncBytes(httpx.AsyncByteStream):
+                async def __aiter__(self):
+                    yield body
+
+            transport = httpx.MockTransport(
+                lambda request: httpx.Response(
+                    200,
+                    stream=AsyncBytes(),
+                    headers={"content-type": "text/event-stream"},
+                )
+            )
+            client = AsyncPolyforgeClient(api_key="test-key")
+            client._client = httpx.AsyncClient(
+                base_url="https://api.polyforge.io",
+                headers={"Authorization": "Bearer test-key"},
+                transport=transport,
+            )
+            event = await anext(client.watch_strategy("strat-1"))
+            assert event.type == "CONNECTED"
+            assert event.strategy_id == "strat-1"
+            assert event.data == {"ok": True}
+            assert event.timestamp == 123
+            await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_watch_strategy_uses_prompt_decoded_byte_chunks(self):
+        """async watch_strategy must not buffer SSE events behind a fixed chunk_size."""
+        import inspect
+
+        source = inspect.getsource(AsyncPolyforgeClient.watch_strategy)
+        assert "aiter_bytes()" in source
+        assert "aiter_bytes(chunk_size" not in source
+
+    def test_async_sse_reader_splits_cr_delimited_events(self):
+        """The async bounded SSE reader must accept CR-only line delimiters."""
+        import asyncio
+
+        async def chunks():
+            yield (
+                b'data: {"type":"CONNECTED","strategyId":"strat-1",'
+                b'"data":{"cr":true},"timestamp":123}\r\r'
+            )
+
+        async def _run():
+            lines = []
+            async for line in _aiter_sse_lines(chunks()):
+                lines.append(line)
+            assert lines == [
+                'data: {"type":"CONNECTED","strategyId":"strat-1","data":{"cr":true},"timestamp":123}',
+                "",
+            ]
+
+        asyncio.run(_run())
+
+    def test_async_sse_reader_keeps_lf_after_mid_chunk_cr(self):
+        """A CR delimiter must not consume a later chunk's real LF delimiter."""
+        import asyncio
+
+        async def chunks():
+            yield b"data: one\rdata: two"
+            yield b"\n\n"
+
+        async def _run():
+            lines = []
+            async for line in _aiter_sse_lines(chunks()):
+                lines.append(line)
+            assert lines == ["data: one", "data: two", ""]
+
+        asyncio.run(_run())
+
+    def test_async_watch_strategy_decodes_compressed_sse_event(self):
+        """async watch_strategy must frame decoded response bytes, not compressed wire bytes."""
+        import asyncio
+
+        async def _run():
+            body = gzip.compress(
+                b'data: {"type":"CONNECTED","strategyId":"strat-1",'
+                b'"data":{"compressed":true},"timestamp":123}\n\n'
+            )
+
+            class AsyncBytes(httpx.AsyncByteStream):
+                async def __aiter__(self):
+                    yield body
+
+            transport = httpx.MockTransport(
+                lambda request: httpx.Response(
+                    200,
+                    stream=AsyncBytes(),
+                    headers={
+                        "content-type": "text/event-stream",
+                        "content-encoding": "gzip",
+                    },
+                )
+            )
+            client = AsyncPolyforgeClient(api_key="test-key")
+            client._client = httpx.AsyncClient(
+                base_url="https://api.polyforge.io",
+                headers={"Authorization": "Bearer test-key"},
+                transport=transport,
+            )
+            event = await anext(client.watch_strategy("strat-1"))
+            assert event.type == "CONNECTED"
+            assert event.strategy_id == "strat-1"
+            assert event.data == {"compressed": True}
+            assert event.timestamp == 123
+            await client.close()
+
+        asyncio.run(_run())
 
 
 # ---------------------------------------------------------------------------
