@@ -7558,10 +7558,10 @@ def _iter_sse_lines(chunks: Iterator[bytes]) -> Iterator[str]:
             pending.clear()
             start = delimiter_index + 1
             if chunk[delimiter_index] == 13:
-                if start < len(chunk) and chunk[start] == 10:
-                    start += 1
-                else:
+                if start == len(chunk):
                     skip_next_lf = True
+                elif chunk[start] == 10:
+                    start += 1
     if pending:
         yield pending.decode("utf-8", errors="replace")
 
@@ -7597,10 +7597,10 @@ async def _aiter_sse_lines(chunks: AsyncIterator[bytes]) -> AsyncIterator[str]:
             pending.clear()
             start = delimiter_index + 1
             if chunk[delimiter_index] == 13:
-                if start < len(chunk) and chunk[start] == 10:
-                    start += 1
-                else:
+                if start == len(chunk):
                     skip_next_lf = True
+                elif chunk[start] == 10:
+                    start += 1
     if pending:
         yield pending.decode("utf-8", errors="replace")
 

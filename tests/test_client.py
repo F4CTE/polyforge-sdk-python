@@ -6149,6 +6149,11 @@ class TestSseStreamTimeout:
             "",
         ]
 
+    def test_sync_sse_reader_keeps_lf_after_mid_chunk_cr(self):
+        """A CR delimiter must not consume a later chunk's real LF delimiter."""
+        lines = list(_iter_sse_lines(iter([b"data: one\rdata: two", b"\n\n"])))
+        assert lines == ["data: one", "data: two", ""]
+
     def test_async_watch_strategy_rejects_overlong_sse_line(self):
         """async watch_strategy must not buffer an unterminated SSE line indefinitely."""
         import asyncio
@@ -6241,6 +6246,22 @@ class TestSseStreamTimeout:
                 'data: {"type":"CONNECTED","strategyId":"strat-1","data":{"cr":true},"timestamp":123}',
                 "",
             ]
+
+        asyncio.run(_run())
+
+    def test_async_sse_reader_keeps_lf_after_mid_chunk_cr(self):
+        """A CR delimiter must not consume a later chunk's real LF delimiter."""
+        import asyncio
+
+        async def chunks():
+            yield b"data: one\rdata: two"
+            yield b"\n\n"
+
+        async def _run():
+            lines = []
+            async for line in _aiter_sse_lines(chunks()):
+                lines.append(line)
+            assert lines == ["data: one", "data: two", ""]
 
         asyncio.run(_run())
 
