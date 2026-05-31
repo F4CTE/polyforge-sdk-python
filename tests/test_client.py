@@ -2697,6 +2697,32 @@ class TestAlertCrud:
         assert order.expires_at == "2026-06-01T12:00:00Z"
         assert order.limit_price is None
 
+    def test_conditional_order_preserves_positional_field_order(self):
+        """Existing positional construction must keep status and timestamps aligned."""
+        order = ConditionalOrder(
+            "co-1",
+            "m-1",
+            "t-1",
+            "STOP_LOSS",
+            "SELL",
+            "YES",
+            "10",
+            "0.50",
+            "0.45",
+            "PENDING",
+            "2026-05-31T12:00:00Z",
+            "2026-05-31T11:00:00Z",
+            "2026-05-31T11:30:00Z",
+        )
+
+        assert order.limit_price == "0.45"
+        assert order.status == "PENDING"
+        assert order.triggered_at == "2026-05-31T12:00:00Z"
+        assert order.created_at == "2026-05-31T11:00:00Z"
+        assert order.updated_at == "2026-05-31T11:30:00Z"
+        assert order.trailing_pct is None
+        assert order.expires_at is None
+
     def test_conditional_order_defaults(self):
         """ConditionalOrder defaults should be sensible."""
         order = ConditionalOrder()
