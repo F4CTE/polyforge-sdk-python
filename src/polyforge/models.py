@@ -1063,6 +1063,8 @@ class ConditionalOrder:
     triggered_at: str | None = None
     created_at: str = ""
     updated_at: str = ""
+    trailing_pct: str | None = None
+    expires_at: str | None = None
 
 
 # ---------------------------------------------------------------------------
