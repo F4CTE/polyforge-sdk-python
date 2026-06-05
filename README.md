@@ -27,7 +27,8 @@ with PolyforgeClient(api_key="pk_live_...") as client:
 
     # Check portfolio
     portfolio = client.get_portfolio()
-    print(f"Total value: ${portfolio.total_value:,.2f}")
+    print(f"Unrealized PnL: {portfolio.total_unrealized_pnl}")
+    print(f"Realized PnL: {portfolio.total_realized_pnl}")
 ```
 
 ### Asynchronous
