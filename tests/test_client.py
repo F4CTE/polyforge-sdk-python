@@ -553,15 +553,13 @@ class TestModelParsing:
     def test_portfolio_model_instantiation(self):
         """Should instantiate Portfolio model."""
         portfolio = Portfolio(
-            total_value=10000.0,
-            available_balance=5000.0,
-            unrealized_pnl=300.0,
-            realized_pnl=200.0,
+            total_unrealized_pnl="300.000000",
+            total_realized_pnl="200.000000",
         )
-        assert portfolio.total_value == 10000.0
-        assert portfolio.available_balance == 5000.0
-        assert portfolio.unrealized_pnl == 300.0
-        assert portfolio.realized_pnl == 200.0
+        assert portfolio.total_unrealized_pnl == "300.000000"
+        assert portfolio.total_realized_pnl == "200.000000"
+        assert isinstance(portfolio.total_unrealized_pnl, str)
+        assert isinstance(portfolio.total_realized_pnl, str)
 
     def test_market_with_defaults(self):
         """Should use default values for Market fields."""
@@ -573,10 +571,49 @@ class TestModelParsing:
     def test_portfolio_with_defaults(self):
         """Should use default values for Portfolio fields."""
         portfolio = Portfolio()
-        assert portfolio.total_value == 0.0
-        assert portfolio.available_balance == 0.0
-        assert portfolio.unrealized_pnl == 0.0
-        assert portfolio.realized_pnl == 0.0
+        assert portfolio.total_unrealized_pnl == ""
+        assert portfolio.total_realized_pnl == ""
+        assert portfolio.positions == []
+
+    def test_portfolio_has_only_platform_summary_fields(self):
+        """Portfolio must not expose fields absent from GET /api/v1/portfolio."""
+        import dataclasses
+
+        field_names = {f.name for f in dataclasses.fields(Portfolio)}
+        assert "total_unrealized_pnl" in field_names
+        assert "total_realized_pnl" in field_names
+        assert "positions" in field_names
+        assert "total_value" not in field_names
+        assert "available_balance" not in field_names
+        assert "unrealized_pnl" not in field_names
+        assert "realized_pnl" not in field_names
+        assert "updated_at" not in field_names
+
+    def test_portfolio_parses_platform_response(self):
+        """_parse must map platform camelCase PnL totals without coercing them."""
+        api_response = {
+            "positions": [
+                {
+                    "id": "pos-1",
+                    "marketId": "market-1",
+                    "tokenId": "token-yes",
+                    "outcome": "YES",
+                    "size": "10.000000",
+                    "unrealizedPnl": "1.250000",
+                    "realizedPnl": "0.500000",
+                },
+            ],
+            "totalUnrealizedPnl": "1.250000",
+            "totalRealizedPnl": "0.500000",
+        }
+        portfolio = _parse(Portfolio, api_response)
+        assert portfolio.total_unrealized_pnl == "1.250000"
+        assert portfolio.total_realized_pnl == "0.500000"
+        assert isinstance(portfolio.total_unrealized_pnl, str)
+        assert isinstance(portfolio.total_realized_pnl, str)
+        assert portfolio.positions[0].market_id == "market-1"
+        assert portfolio.positions[0].token_id == "token-yes"
+        assert portfolio.positions[0].unrealized_pnl == "1.250000"
 
     def test_strategy_with_defaults(self):
         """Should use default values for Strategy fields."""

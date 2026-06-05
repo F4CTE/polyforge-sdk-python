@@ -219,14 +219,15 @@ class Position:
 
 @dataclass
 class Portfolio:
-    """Aggregate portfolio state."""
+    """Aggregate portfolio state.
 
-    total_value: float = 0.0
-    available_balance: float = 0.0
-    unrealized_pnl: float = 0.0
-    realized_pnl: float = 0.0
+    PnL totals are typed as ``str`` because the platform returns decimal
+    strings to preserve precision.
+    """
+
+    total_unrealized_pnl: str = ""
+    total_realized_pnl: str = ""
     positions: list[Position] = field(default_factory=list)
-    updated_at: str = ""
 
 
 @dataclass
