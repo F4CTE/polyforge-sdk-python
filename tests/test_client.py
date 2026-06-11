@@ -8373,7 +8373,7 @@ class TestMiscUtilityEnumValidation:
         try:
             with pytest.raises(ValueError, match="confidence"):
                 client.vote_market_sentiment(
-                    "m1", direction="YES", confidence=50.5,
+                    "m1", direction="YES", confidence=50.5,  # type: ignore[reportArgumentType]
                 )
         finally:
             client.close()
@@ -10740,7 +10740,7 @@ class TestVoteMarketSentimentValidation:
         client = self._client_with(lambda req: httpx.Response(200, json=_sentiment_response))
         try:
             with pytest.raises(ValueError, match="confidence"):
-                client.vote_market_sentiment("m1", confidence=50.5)
+                client.vote_market_sentiment("m1", confidence=50.5)  # type: ignore[reportArgumentType]
         finally:
             client.close()
 
@@ -10852,7 +10852,6 @@ class TestVoteMarketSentimentRequestPayload:
             client.vote_market_sentiment("m1", confidence=1)
             assert captured["body"]["confidence"] == 1
 
-            captured["body"] = None
             client.vote_market_sentiment("m1", confidence=100)
             assert captured["body"]["confidence"] == 100
         finally:
@@ -10867,14 +10866,17 @@ class TestVoteMarketSentimentRequestPayload:
             captured["body"] = json.loads(request.content)
             return httpx.Response(200, json=_sentiment_response)
 
-        client = self._async_client_with(handler)
-        try:
-            import asyncio
-            asyncio.run(client.vote_market_sentiment("m1"))
-            assert captured["method"] == "POST"
-            assert captured["body"] == {"direction": "YES", "confidence": 50}
-        finally:
-            client.close()
+        async def _run():
+            client = self._async_client_with(handler)
+            try:
+                await client.vote_market_sentiment("m1")
+                assert captured["method"] == "POST"
+                assert captured["body"] == {"direction": "YES", "confidence": 50}
+            finally:
+                await client.close()
+
+        import asyncio
+        asyncio.run(_run())
 
     def test_async_vote_market_sentiment_custom_values(self):
         """AsyncPolyforgeClient.vote_market_sentiment sends custom direction/confidence."""
@@ -10884,10 +10886,13 @@ class TestVoteMarketSentimentRequestPayload:
             captured["body"] = json.loads(request.content)
             return httpx.Response(200, json=_sentiment_response)
 
-        client = self._async_client_with(handler)
-        try:
-            import asyncio
-            asyncio.run(client.vote_market_sentiment("m1", direction="NO", confidence=80))
-            assert captured["body"] == {"direction": "NO", "confidence": 80}
-        finally:
-            client.close()
+        async def _run():
+            client = self._async_client_with(handler)
+            try:
+                await client.vote_market_sentiment("m1", direction="NO", confidence=80)
+                assert captured["body"] == {"direction": "NO", "confidence": 80}
+            finally:
+                await client.close()
+
+        import asyncio
+        asyncio.run(_run())
