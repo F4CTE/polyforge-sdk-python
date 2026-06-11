@@ -96,6 +96,8 @@ RUN rm /etc/nginx/conf.d/default.conf
 # Copy production nginx config, includes, and entrypoint
 COPY services/gateway/nginx.prod.conf /etc/nginx/nginx.conf
 COPY services/gateway/landing-security-headers.conf /etc/nginx/conf.d/landing-security-headers.conf
+COPY services/gateway/user-app-security-headers.conf /etc/nginx/conf.d/user-app-security-headers.conf
+COPY services/gateway/admin-app-security-headers.conf /etc/nginx/conf.d/admin-app-security-headers.conf
 COPY services/gateway/docker-entrypoint.sh /docker-entrypoint.sh
 
 # Copy built Angular apps from previous stages
