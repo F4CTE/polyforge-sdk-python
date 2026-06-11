@@ -442,6 +442,7 @@ def _validate_enum(name: str, value: str, allowed: frozenset[str]) -> None:
 
 _VALID_MODES = frozenset({"live", "paper"})
 _VALID_SIDES = frozenset({"BUY", "SELL"})
+_VALID_SENTIMENT_DIRECTIONS = frozenset({"YES", "NO"})
 _VALID_OUTCOMES = frozenset({"YES", "NO"})
 _VALID_ORDER_TYPES = frozenset({"GTC", "GTD", "FOK", "FAK", "POST_ONLY"})
 _VALID_SMART_ORDER_TYPES = frozenset({"TWAP", "DCA", "BRACKET", "OCO"})
@@ -457,7 +458,6 @@ _VALID_ORDER_MOODS = frozenset(
     {"CONFIDENT", "UNCERTAIN", "FOMO", "DISCIPLINED", "REVENGE"}
 )
 _VALID_COMBO_LEG_OUTCOMES = frozenset({"yes", "no"})
-_VALID_SENTIMENT_DIRECTIONS = frozenset({"BUY", "SELL"})
 
 
 def _validate_financial_param(name: str, value: float) -> None:
@@ -4239,8 +4239,8 @@ class PolyforgeClient:
         self,
         market_id: str,
         *,
-        direction: str,
-        confidence: float,
+        direction: str = "YES",
+        confidence: int = 50,
     ) -> MarketSentimentReport:
         """Submit (or refresh) the current user's sentiment for a market.
 
@@ -4248,30 +4248,28 @@ class PolyforgeClient:
         currently returns the same payload shape as the GET variant.
 
         Args:
-            market_id: The market to vote on.
-            direction: ``BUY`` or ``SELL``.
-            confidence: Confidence level (0-100).
+            market_id: The market id to vote on.
+            direction: ``"YES"`` or ``"NO"``. Defaults to ``"YES"``.
+            confidence: Integer confidence in ``[1, 100]``. Defaults to ``50``.
+
+        Raises:
+            ValueError: if direction is not ``"YES"`` or ``"NO"``, or
+                confidence is not an integer in ``[1, 100]``.
         """
         _validate_enum("direction", direction, _VALID_SENTIMENT_DIRECTIONS)
-        if isinstance(confidence, bool) or not isinstance(confidence, (int, float)):
-            raise TypeError(
-                f"confidence must be a number, got {type(confidence).__name__}"
+        if not isinstance(confidence, int) or isinstance(confidence, bool):
+            raise ValueError(
+                f"confidence must be an integer in [1, 100], got {confidence!r}"
             )
-        if isinstance(confidence, float):
-            if math.isnan(confidence):
-                raise ValueError("confidence must not be NaN")
-            if math.isinf(confidence):
-                raise ValueError("confidence must not be Infinity")
-        if confidence < 0:
-            raise ValueError(f"confidence must be non-negative, got {confidence}")
-        if confidence > 100:
-            raise ValueError(f"confidence must not exceed 100, got {confidence}")
-        body: dict[str, Any] = {"direction": direction, "confidence": confidence}
+        if confidence < 1 or confidence > 100:
+            raise ValueError(
+                f"confidence must be an integer in [1, 100], got {confidence}"
+            )
         return _parse(
             MarketSentimentReport,
             self._post(
                 f"/api/v1/markets/{_encode_path(market_id)}/sentiment",
-                json=body,
+                json={"direction": direction, "confidence": confidence},
             ),
         )
 
@@ -7413,30 +7411,34 @@ class AsyncPolyforgeClient:
         self,
         market_id: str,
         *,
-        direction: str,
-        confidence: float,
+        direction: str = "YES",
+        confidence: int = 50,
     ) -> MarketSentimentReport:
-        """Async variant of :meth:`PolyforgeClient.vote_market_sentiment`."""
+        """Async variant of :meth:`PolyforgeClient.vote_market_sentiment`.
+
+        Args:
+            market_id: The market id to vote on.
+            direction: ``"YES"`` or ``"NO"``. Defaults to ``"YES"``.
+            confidence: Integer confidence in ``[1, 100]``. Defaults to ``50``.
+
+        Raises:
+            ValueError: if direction is not ``"YES"`` or ``"NO"``, or
+                confidence is not an integer in ``[1, 100]``.
+        """
         _validate_enum("direction", direction, _VALID_SENTIMENT_DIRECTIONS)
-        if isinstance(confidence, bool) or not isinstance(confidence, (int, float)):
-            raise TypeError(
-                f"confidence must be a number, got {type(confidence).__name__}"
+        if not isinstance(confidence, int) or isinstance(confidence, bool):
+            raise ValueError(
+                f"confidence must be an integer in [1, 100], got {confidence!r}"
             )
-        if isinstance(confidence, float):
-            if math.isnan(confidence):
-                raise ValueError("confidence must not be NaN")
-            if math.isinf(confidence):
-                raise ValueError("confidence must not be Infinity")
-        if confidence < 0:
-            raise ValueError(f"confidence must be non-negative, got {confidence}")
-        if confidence > 100:
-            raise ValueError(f"confidence must not exceed 100, got {confidence}")
-        body: dict[str, Any] = {"direction": direction, "confidence": confidence}
+        if confidence < 1 or confidence > 100:
+            raise ValueError(
+                f"confidence must be an integer in [1, 100], got {confidence}"
+            )
         return _parse(
             MarketSentimentReport,
             await self._post(
                 f"/api/v1/markets/{_encode_path(market_id)}/sentiment",
-                json=body,
+                json={"direction": direction, "confidence": confidence},
             ),
         )
 
