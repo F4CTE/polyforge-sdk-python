@@ -10674,3 +10674,242 @@ class TestRootExports:
         assert not missing, (
             f"Names in __all__ but not accessible as polyforge.<name>: {', '.join(missing)}"
         )
+
+
+# ---------------------------------------------------------------------------
+# ── vote_market_sentiment: direction, confidence, and request body ──────────
+
+_sentiment_response = {
+    "data": {
+        "marketId": "m1",
+        "direction": "YES",
+        "confidence": 50,
+        "votedAt": "2026-06-11T12:00:00Z",
+    }
+}
+
+
+class TestVoteMarketSentimentValidation:
+    """Direction and confidence validation for vote_market_sentiment."""
+
+    def _client_with(self, handler):
+        transport = httpx.MockTransport(handler)
+        client = PolyforgeClient(api_key="test", api_url="http://localhost:9999")
+        client._client = httpx.Client(
+            base_url="http://localhost:9999",
+            headers={"Authorization": "Bearer test"},
+            transport=transport,
+        )
+        return client
+
+    def test_rejects_invalid_direction(self):
+        client = self._client_with(lambda req: httpx.Response(200, json=_sentiment_response))
+        try:
+            with pytest.raises(ValueError, match="direction"):
+                client.vote_market_sentiment("m1", direction="BUY")
+            with pytest.raises(ValueError, match="direction"):
+                client.vote_market_sentiment("m1", direction="SELL")
+            with pytest.raises(ValueError, match="direction"):
+                client.vote_market_sentiment("m1", direction="BULLISH")
+        finally:
+            client.close()
+
+    def test_accepts_yes_direction(self):
+        captured = {}
+
+        def handler(request):
+            captured["body"] = json.loads(request.content)
+            return httpx.Response(200, json=_sentiment_response)
+
+        client = self._client_with(handler)
+        try:
+            client.vote_market_sentiment("m1", direction="YES")
+            assert captured["body"]["direction"] == "YES"
+        finally:
+            client.close()
+
+    def test_accepts_no_direction(self):
+        captured = {}
+
+        def handler(request):
+            captured["body"] = json.loads(request.content)
+            return httpx.Response(200, json=_sentiment_response)
+
+        client = self._client_with(handler)
+        try:
+            client.vote_market_sentiment("m1", direction="NO")
+            assert captured["body"]["direction"] == "NO"
+        finally:
+            client.close()
+
+    def test_rejects_out_of_range_confidence_low(self):
+        client = self._client_with(lambda req: httpx.Response(200, json=_sentiment_response))
+        try:
+            with pytest.raises(ValueError, match="confidence"):
+                client.vote_market_sentiment("m1", confidence=0)
+        finally:
+            client.close()
+
+    def test_rejects_out_of_range_confidence_high(self):
+        client = self._client_with(lambda req: httpx.Response(200, json=_sentiment_response))
+        try:
+            with pytest.raises(ValueError, match="confidence"):
+                client.vote_market_sentiment("m1", confidence=101)
+        finally:
+            client.close()
+
+    def test_rejects_float_confidence(self):
+        client = self._client_with(lambda req: httpx.Response(200, json=_sentiment_response))
+        try:
+            with pytest.raises(ValueError, match="confidence"):
+                client.vote_market_sentiment("m1", confidence=50.5)
+        finally:
+            client.close()
+
+    def test_rejects_bool_confidence(self):
+        client = self._client_with(lambda req: httpx.Response(200, json=_sentiment_response))
+        try:
+            with pytest.raises(ValueError, match="confidence"):
+                client.vote_market_sentiment("m1", confidence=True)
+            with pytest.raises(ValueError, match="confidence"):
+                client.vote_market_sentiment("m1", confidence=False)
+        finally:
+            client.close()
+
+    def test_accepts_boundary_confidence_1(self):
+        captured = {}
+
+        def handler(request):
+            captured["body"] = json.loads(request.content)
+            return httpx.Response(200, json=_sentiment_response)
+
+        client = self._client_with(handler)
+        try:
+            client.vote_market_sentiment("m1", confidence=1)
+            assert captured["body"]["confidence"] == 1
+        finally:
+            client.close()
+
+    def test_accepts_boundary_confidence_100(self):
+        captured = {}
+
+        def handler(request):
+            captured["body"] = json.loads(request.content)
+            return httpx.Response(200, json=_sentiment_response)
+
+        client = self._client_with(handler)
+        try:
+            client.vote_market_sentiment("m1", confidence=100)
+            assert captured["body"]["confidence"] == 100
+        finally:
+            client.close()
+
+
+class TestVoteMarketSentimentRequestPayload:
+    """Verify vote_market_sentiment sends direction/confidence JSON body."""
+
+    def _client_with(self, handler):
+        transport = httpx.MockTransport(handler)
+        client = PolyforgeClient(api_key="test", api_url="http://localhost:9999")
+        client._client = httpx.Client(
+            base_url="http://localhost:9999",
+            headers={"Authorization": "Bearer test"},
+            transport=transport,
+        )
+        return client
+
+    @staticmethod
+    def _async_client_with(handler):
+        transport = httpx.MockTransport(handler)
+        client = AsyncPolyforgeClient(api_key="test", api_url="http://localhost:9999")
+        client._client = httpx.AsyncClient(
+            base_url="http://localhost:9999",
+            headers={"Authorization": "Bearer test"},
+            transport=transport,
+        )
+        return client
+
+    def test_default_direction_and_confidence(self):
+        """vote_market_sentiment sends direction=YES, confidence=50 by default."""
+        captured = {}
+
+        def handler(request):
+            captured["method"] = request.method
+            captured["body"] = json.loads(request.content)
+            return httpx.Response(200, json=_sentiment_response)
+
+        client = self._client_with(handler)
+        try:
+            client.vote_market_sentiment("m1")
+            assert captured["method"] == "POST"
+            assert captured["body"] == {"direction": "YES", "confidence": 50}
+        finally:
+            client.close()
+
+    def test_custom_direction_and_confidence(self):
+        """vote_market_sentiment sends the provided direction and confidence."""
+        captured = {}
+
+        def handler(request):
+            captured["body"] = json.loads(request.content)
+            return httpx.Response(200, json=_sentiment_response)
+
+        client = self._client_with(handler)
+        try:
+            client.vote_market_sentiment("m1", direction="NO", confidence=75)
+            assert captured["body"] == {"direction": "NO", "confidence": 75}
+        finally:
+            client.close()
+
+    def test_confidence_boundaries_in_payload(self):
+        """Boundary confidence values are included in the request body."""
+        captured = {}
+
+        def handler(request):
+            captured["body"] = json.loads(request.content)
+            return httpx.Response(200, json=_sentiment_response)
+
+        client = self._client_with(handler)
+        try:
+            client.vote_market_sentiment("m1", confidence=1)
+            assert captured["body"]["confidence"] == 1
+
+            captured["body"] = None
+            client.vote_market_sentiment("m1", confidence=100)
+            assert captured["body"]["confidence"] == 100
+        finally:
+            client.close()
+
+    def test_async_vote_market_sentiment_sends_body(self):
+        """AsyncPolyforgeClient.vote_market_sentiment sends direction/confidence JSON body."""
+        captured = {}
+
+        async def handler(request):
+            captured["method"] = request.method
+            captured["body"] = json.loads(request.content)
+            return httpx.Response(200, json=_sentiment_response)
+
+        client = self._async_client_with(handler)
+        try:
+            import asyncio
+            asyncio.run(client.vote_market_sentiment("m1"))
+            assert captured["method"] == "POST"
+            assert captured["body"] == {"direction": "YES", "confidence": 50}
+        finally:
+            client.close()
+
+    def test_async_vote_market_sentiment_custom_values(self):
+        """AsyncPolyforgeClient.vote_market_sentiment sends custom direction/confidence."""
+        captured = {}
+
+        async def handler(request):
+            captured["body"] = json.loads(request.content)
+            return httpx.Response(200, json=_sentiment_response)
+
+        client = self._async_client_with(handler)
+        try:
+            import asyncio
+            asyncio.run(client.vote_market_sentiment("m1", direction="NO", confidence=80))
+            assert captured["body"] == {"direction": "NO", "confidence": 80}
+        finally:
+            client.close()
