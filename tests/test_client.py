@@ -10896,3 +10896,135 @@ class TestVoteMarketSentimentRequestPayload:
 
         import asyncio
         asyncio.run(_run())
+class TestMcpStrategyMethods:
+    """Verify the 6 MCP strategy methods exist on both sync and async clients."""
+
+    MCP_SYNC_METHODS = [
+        "get_strategy_health",
+        "validate_strategy_blocks",
+        "list_strategy_block_types",
+        "get_block_schema",
+        "preview_strategy_update",
+        "explain_strategy_decision",
+    ]
+
+    MCP_ASYNC_METHODS = [
+        "get_strategy_health",
+        "validate_strategy_blocks",
+        "list_strategy_block_types",
+        "get_block_schema",
+        "preview_strategy_update",
+        "explain_strategy_decision",
+    ]
+
+    @pytest.mark.parametrize("method", MCP_SYNC_METHODS)
+    def test_sync_method_exists(self, method):
+        assert hasattr(PolyforgeClient, method)
+        assert callable(getattr(PolyforgeClient, method))
+
+    @pytest.mark.parametrize("method", MCP_ASYNC_METHODS)
+    def test_async_method_exists(self, method):
+        assert hasattr(AsyncPolyforgeClient, method)
+        assert callable(getattr(AsyncPolyforgeClient, method))
+
+
+class TestMcpModels:
+    """Verify new MCP model classes exist and are accessible."""
+
+    def test_strategy_health_model(self):
+        from polyforge.models import StrategyHealth
+
+        health = StrategyHealth()
+        assert health.fill_rate is None
+        assert health.avg_latency_ms == 0.0
+        assert health.error_count_24h == 0
+
+    def test_strategy_block_validation_result_model(self):
+        from polyforge.models import StrategyBlockValidationResult
+
+        result = StrategyBlockValidationResult()
+        assert result.valid is False
+        assert result.issues == []
+        assert result.warnings == []
+
+    def test_strategy_block_type_model(self):
+        from polyforge.models import StrategyBlockType
+
+        block_type = StrategyBlockType()
+        assert block_type.type == ""
+        assert block_type.label == ""
+        assert block_type.deprecated is False
+
+    def test_strategy_block_schema_model(self):
+        from polyforge.models import StrategyBlockSchema
+
+        schema = StrategyBlockSchema()
+        assert schema.type == ""
+        assert schema.schema == {}
+
+    def test_strategy_update_preview_model(self):
+        from polyforge.models import StrategyUpdatePreview
+
+        preview = StrategyUpdatePreview()
+        assert preview.strategy == {}
+        assert preview.diff == {}
+
+    def test_strategy_decision_explanation_model(self):
+        from polyforge.models import StrategyDecisionExplanation
+
+        explanation = StrategyDecisionExplanation()
+        assert explanation.summary == ""
+        assert explanation.rationale == []
+
+    def test_all_mcp_models_exported_from_package(self):
+        import polyforge
+
+        required = [
+            "StrategyHealth",
+            "StrategyBlockValidationResult",
+            "StrategyBlockType",
+            "StrategyBlockSchema",
+            "StrategyUpdatePreview",
+            "StrategyDecisionExplanation",
+            "StrategyBlockValidationIssue",
+        ]
+        for name in required:
+            assert hasattr(polyforge, name), f"{name} not exported from polyforge package"
+
+
+class TestMcpEndpointPaths:
+    """Verify MCP methods use the correct API endpoint paths."""
+
+    def test_get_strategy_health_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_strategy_health)
+        assert "health" in source
+        assert "strategies/" in source
+
+    def test_validate_strategy_blocks_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.validate_strategy_blocks)
+        assert "validate-blocks" in source
+
+    def test_list_strategy_block_types_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.list_strategy_block_types)
+        assert "block-types" in source
+
+    def test_get_block_schema_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.get_block_schema)
+        assert "block-types" in source
+        assert "schema" in source
+
+    def test_preview_strategy_update_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.preview_strategy_update)
+        assert "preview-update" in source
+        assert "strategies/" in source
+
+    def test_explain_strategy_decision_path(self):
+        import inspect
+        source = inspect.getsource(PolyforgeClient.explain_strategy_decision)
+        assert "explain-decision" in source
+        assert "strategies/" in source
