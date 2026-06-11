@@ -458,7 +458,6 @@ _VALID_ORDER_MOODS = frozenset(
     {"CONFIDENT", "UNCERTAIN", "FOMO", "DISCIPLINED", "REVENGE"}
 )
 _VALID_COMBO_LEG_OUTCOMES = frozenset({"yes", "no"})
-_VALID_SENTIMENT_DIRECTIONS = frozenset({"BUY", "SELL"})
 
 
 def _validate_financial_param(name: str, value: float) -> None:

@@ -8353,7 +8353,7 @@ class TestMiscUtilityEnumValidation:
         try:
             with pytest.raises(ValueError, match="direction"):
                 client.vote_market_sentiment(
-                    "m1", direction="HOLD", confidence=50,
+                    "m1", direction="BUY", confidence=50,
                 )
         finally:
             client.close()
@@ -8361,39 +8361,29 @@ class TestMiscUtilityEnumValidation:
     def test_vote_market_sentiment_rejects_bool_confidence(self):
         client = PolyforgeClient(api_key="test")
         try:
-            with pytest.raises(TypeError, match="number"):
+            with pytest.raises(ValueError, match="confidence"):
                 client.vote_market_sentiment(
-                    "m1", direction="BUY", confidence=True,
+                    "m1", direction="YES", confidence=True,
                 )
         finally:
             client.close()
 
-    def test_vote_market_sentiment_rejects_nan_confidence(self):
+    def test_vote_market_sentiment_rejects_float_confidence(self):
         client = PolyforgeClient(api_key="test")
         try:
-            with pytest.raises(ValueError, match="NaN"):
+            with pytest.raises(ValueError, match="confidence"):
                 client.vote_market_sentiment(
-                    "m1", direction="BUY", confidence=float("nan"),
+                    "m1", direction="YES", confidence=50.5,
                 )
         finally:
             client.close()
 
-    def test_vote_market_sentiment_rejects_inf_confidence(self):
+    def test_vote_market_sentiment_rejects_zero_confidence(self):
         client = PolyforgeClient(api_key="test")
         try:
-            with pytest.raises(ValueError, match="Infinity"):
+            with pytest.raises(ValueError, match="confidence"):
                 client.vote_market_sentiment(
-                    "m1", direction="BUY", confidence=float("inf"),
-                )
-        finally:
-            client.close()
-
-    def test_vote_market_sentiment_rejects_negative_confidence(self):
-        client = PolyforgeClient(api_key="test")
-        try:
-            with pytest.raises(ValueError, match="non-negative"):
-                client.vote_market_sentiment(
-                    "m1", direction="BUY", confidence=-1,
+                    "m1", direction="YES", confidence=0,
                 )
         finally:
             client.close()
@@ -8401,21 +8391,9 @@ class TestMiscUtilityEnumValidation:
     def test_vote_market_sentiment_rejects_confidence_above_100(self):
         client = PolyforgeClient(api_key="test")
         try:
-            with pytest.raises(ValueError, match="exceed 100"):
+            with pytest.raises(ValueError, match="confidence"):
                 client.vote_market_sentiment(
-                    "m1", direction="SELL", confidence=101,
-                )
-        finally:
-            client.close()
-
-    def test_vote_market_sentiment_rejects_huge_int_confidence(self):
-        """math.isnan/isinf on huge ints raises OverflowError — range check
-        must fire first to avoid a low-level exception."""
-        client = PolyforgeClient(api_key="test")
-        try:
-            with pytest.raises(ValueError, match="exceed 100"):
-                client.vote_market_sentiment(
-                    "m1", direction="BUY", confidence=10**400,
+                    "m1", direction="NO", confidence=101,
                 )
         finally:
             client.close()
@@ -8749,20 +8727,20 @@ class TestMiscUtilityEndpointRoundtrips:
                 captured["body"] = request.content
             return httpx.Response(200, json={
                 "yesPercent": 60, "noPercent": 40, "totalVotes": 5,
-                "userVote": {"direction": "BUY", "confidence": 85},
+                "userVote": {"direction": "YES", "confidence": 85},
             })
         client = self._client_with(handler)
         try:
             report = client.get_market_sentiment_report("m1")
             assert captured["method"] == "GET"
             assert report.user_vote is not None
-            assert report.user_vote.direction == "BUY"
+            assert report.user_vote.direction == "YES"
 
             voted = client.vote_market_sentiment(
-                "m1", direction="BUY", confidence=85,
+                "m1", direction="YES", confidence=85,
             )
             assert captured["method"] == "POST"
-            assert captured["body"] == {"direction": "BUY", "confidence": 85}
+            assert captured["body"] == {"direction": "YES", "confidence": 85}
             assert voted.total_votes == 5
             assert voted.user_vote is not None
             assert voted.user_vote.confidence == 85
@@ -8781,7 +8759,7 @@ class TestMiscUtilityEndpointRoundtrips:
                 captured["body"] = json.loads(request.content)
                 return httpx.Response(200, json={
                     "yesPercent": 60, "noPercent": 40, "totalVotes": 5,
-                    "userVote": {"direction": "BUY", "confidence": 0.8},
+                    "userVote": {"direction": "YES", "confidence": 50},
                 })
 
         async def _run():
@@ -8792,10 +8770,10 @@ class TestMiscUtilityEndpointRoundtrips:
                     transport=_AsyncCaptureTransport(),
                 )
                 report = await client.vote_market_sentiment(
-                    "m1", direction="SELL", confidence=50,
+                    "m1", direction="NO", confidence=50,
                 )
                 assert captured["method"] == "POST"
-                assert captured["body"] == {"direction": "SELL", "confidence": 50}
+                assert captured["body"] == {"direction": "NO", "confidence": 50}
                 assert report.total_votes == 5
 
         asyncio.run(_run())
@@ -9094,17 +9072,17 @@ class TestMiscUtilityEndpointsAsync:
                 captured["body"] = json.loads(request.content)
             return httpx.Response(200, json={
                 "yesPercent": 60, "noPercent": 40, "totalVotes": 5,
-                "userVote": {"direction": "BUY", "confidence": 0.8},
+                "userVote": {"direction": "YES", "confidence": 80},
             })
 
         async def _run():
             client = self._async_client_with(handler)
             try:
                 voted = await client.vote_market_sentiment(
-                    "m1", direction="BUY", confidence=80,
+                    "m1", direction="YES", confidence=80,
                 )
                 assert captured["method"] == "POST"
-                assert captured["body"] == {"direction": "BUY", "confidence": 80}
+                assert captured["body"] == {"direction": "YES", "confidence": 80}
                 assert voted.total_votes == 5
             finally:
                 await client.close()
