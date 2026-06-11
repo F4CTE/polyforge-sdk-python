@@ -10654,229 +10654,7 @@ class TestRootExports:
         )
 
 
-# ---------------------------------------------------------------------------
-# ── vote_market_sentiment: direction, confidence, and request body ──────────
-
-_sentiment_response = {
-    "data": {
-        "marketId": "m1",
-        "direction": "YES",
-        "confidence": 50,
-        "votedAt": "2026-06-11T12:00:00Z",
-    }
-}
-
-
-class TestVoteMarketSentimentValidation:
-    """Direction and confidence validation for vote_market_sentiment."""
-
-    def _client_with(self, handler):
-        transport = httpx.MockTransport(handler)
-        client = PolyforgeClient(api_key="test", api_url="http://localhost:9999")
-        client._client = httpx.Client(
-            base_url="http://localhost:9999",
-            headers={"Authorization": "Bearer test"},
-            transport=transport,
-        )
-        return client
-
-    def test_rejects_invalid_direction(self):
-        client = self._client_with(lambda req: httpx.Response(200, json=_sentiment_response))
-        try:
-            with pytest.raises(ValueError, match="direction"):
-                client.vote_market_sentiment("m1", direction="BUY")
-            with pytest.raises(ValueError, match="direction"):
-                client.vote_market_sentiment("m1", direction="SELL")
-            with pytest.raises(ValueError, match="direction"):
-                client.vote_market_sentiment("m1", direction="BULLISH")
-        finally:
-            client.close()
-
-    def test_accepts_yes_direction(self):
-        captured = {}
-
-        def handler(request):
-            captured["body"] = json.loads(request.content)
-            return httpx.Response(200, json=_sentiment_response)
-
-        client = self._client_with(handler)
-        try:
-            client.vote_market_sentiment("m1", direction="YES")
-            assert captured["body"]["direction"] == "YES"
-        finally:
-            client.close()
-
-    def test_accepts_no_direction(self):
-        captured = {}
-
-        def handler(request):
-            captured["body"] = json.loads(request.content)
-            return httpx.Response(200, json=_sentiment_response)
-
-        client = self._client_with(handler)
-        try:
-            client.vote_market_sentiment("m1", direction="NO")
-            assert captured["body"]["direction"] == "NO"
-        finally:
-            client.close()
-
-    def test_rejects_out_of_range_confidence_low(self):
-        client = self._client_with(lambda req: httpx.Response(200, json=_sentiment_response))
-        try:
-            with pytest.raises(ValueError, match="confidence"):
-                client.vote_market_sentiment("m1", confidence=0)
-        finally:
-            client.close()
-
-    def test_rejects_out_of_range_confidence_high(self):
-        client = self._client_with(lambda req: httpx.Response(200, json=_sentiment_response))
-        try:
-            with pytest.raises(ValueError, match="confidence"):
-                client.vote_market_sentiment("m1", confidence=101)
-        finally:
-            client.close()
-
-    def test_rejects_float_confidence(self):
-        client = self._client_with(lambda req: httpx.Response(200, json=_sentiment_response))
-        try:
-            with pytest.raises(ValueError, match="confidence"):
-                client.vote_market_sentiment("m1", confidence=50.5)  # type: ignore[reportArgumentType]
-        finally:
-            client.close()
-
-    def test_rejects_bool_confidence(self):
-        client = self._client_with(lambda req: httpx.Response(200, json=_sentiment_response))
-        try:
-            with pytest.raises(ValueError, match="confidence"):
-                client.vote_market_sentiment("m1", confidence=True)
-            with pytest.raises(ValueError, match="confidence"):
-                client.vote_market_sentiment("m1", confidence=False)
-        finally:
-            client.close()
-
-    def test_accepts_boundary_confidence_1(self):
-        captured = {}
-
-        def handler(request):
-            captured["body"] = json.loads(request.content)
-            return httpx.Response(200, json=_sentiment_response)
-
-        client = self._client_with(handler)
-        try:
-            client.vote_market_sentiment("m1", confidence=1)
-            assert captured["body"]["confidence"] == 1
-        finally:
-            client.close()
-
-    def test_accepts_boundary_confidence_100(self):
-        captured = {}
-
-        def handler(request):
-            captured["body"] = json.loads(request.content)
-            return httpx.Response(200, json=_sentiment_response)
-
-        client = self._client_with(handler)
-        try:
-            client.vote_market_sentiment("m1", confidence=100)
-            assert captured["body"]["confidence"] == 100
-        finally:
-            client.close()
-
-
-class TestVoteMarketSentimentRequestPayload:
-    """Verify vote_market_sentiment sends direction/confidence JSON body."""
-
-    def _client_with(self, handler):
-        transport = httpx.MockTransport(handler)
-        client = PolyforgeClient(api_key="test", api_url="http://localhost:9999")
-        client._client = httpx.Client(
-            base_url="http://localhost:9999",
-            headers={"Authorization": "Bearer test"},
-            transport=transport,
-        )
-        return client
-
-    @staticmethod
-    def _async_client_with(handler):
-        transport = httpx.MockTransport(handler)
-        client = AsyncPolyforgeClient(api_key="test", api_url="http://localhost:9999")
-        client._client = httpx.AsyncClient(
-            base_url="http://localhost:9999",
-            headers={"Authorization": "Bearer test"},
-            transport=transport,
-        )
-        return client
-
-    def test_default_direction_and_confidence(self):
-        """vote_market_sentiment sends direction=YES, confidence=50 by default."""
-        captured = {}
-
-        def handler(request):
-            captured["method"] = request.method
-            captured["body"] = json.loads(request.content)
-            return httpx.Response(200, json=_sentiment_response)
-
-        client = self._client_with(handler)
-        try:
-            client.vote_market_sentiment("m1")
-            assert captured["method"] == "POST"
-            assert captured["body"] == {"direction": "YES", "confidence": 50}
-        finally:
-            client.close()
-
-    def test_custom_direction_and_confidence(self):
-        """vote_market_sentiment sends the provided direction and confidence."""
-        captured = {}
-
-        def handler(request):
-            captured["body"] = json.loads(request.content)
-            return httpx.Response(200, json=_sentiment_response)
-
-        client = self._client_with(handler)
-        try:
-            client.vote_market_sentiment("m1", direction="NO", confidence=75)
-            assert captured["body"] == {"direction": "NO", "confidence": 75}
-        finally:
-            client.close()
-
-    def test_confidence_boundaries_in_payload(self):
-        """Boundary confidence values are included in the request body."""
-        captured = {}
-
-        def handler(request):
-            captured["body"] = json.loads(request.content)
-            return httpx.Response(200, json=_sentiment_response)
-
-        client = self._client_with(handler)
-        try:
-            client.vote_market_sentiment("m1", confidence=1)
-            assert captured["body"]["confidence"] == 1
-
-            client.vote_market_sentiment("m1", confidence=100)
-            assert captured["body"]["confidence"] == 100
-        finally:
-            client.close()
-
-    def test_async_vote_market_sentiment_sends_body(self):
-        """AsyncPolyforgeClient.vote_market_sentiment sends direction/confidence JSON body."""
-        captured = {}
-
-        async def handler(request):
-            captured["method"] = request.method
-            captured["body"] = json.loads(request.content)
-            return httpx.Response(200, json=_sentiment_response)
-
-        async def _run():
-            client = self._async_client_with(handler)
-            try:
-                await client.vote_market_sentiment("m1")
-                assert captured["method"] == "POST"
-                assert captured["body"] == {"direction": "YES", "confidence": 50}
-            finally:
-                await client.close()
-
-        import asyncio
-        asyncio.run(_run())
+       asyncio.run(_run())
 
     def test_async_vote_market_sentiment_custom_values(self):
         """AsyncPolyforgeClient.vote_market_sentiment sends custom direction/confidence."""
@@ -10895,4 +10673,525 @@ class TestVoteMarketSentimentRequestPayload:
                 await client.close()
 
         import asyncio
+=======
+class TestVoteMarketSentiment:
+    """Tests for vote_market_sentiment direction and confidence parameters."""
+
+    # -- sync client --
+
+    def test_sync_vote_market_sentiment_default_direction(self):
+        from unittest.mock import MagicMock
+
+        client = PolyforgeClient(api_key="test-key")
+        client._post = MagicMock(return_value={})
+        client.vote_market_sentiment("mkt-1")
+        args, kwargs = client._post.call_args
+        assert kwargs["json"]["direction"] == "YES"
+        assert kwargs["json"]["confidence"] == 50
+        client.close()
+
+    def test_sync_vote_market_sentiment_custom_direction_yes(self):
+        from unittest.mock import MagicMock
+
+        client = PolyforgeClient(api_key="test-key")
+        client._post = MagicMock(return_value={})
+        client.vote_market_sentiment("mkt-1", direction="YES")
+        args, kwargs = client._post.call_args
+        assert kwargs["json"]["direction"] == "YES"
+        client.close()
+
+    def test_sync_vote_market_sentiment_custom_direction_no(self):
+        from unittest.mock import MagicMock
+
+        client = PolyforgeClient(api_key="test-key")
+        client._post = MagicMock(return_value={})
+        client.vote_market_sentiment("mkt-1", direction="NO")
+        args, kwargs = client._post.call_args
+        assert kwargs["json"]["direction"] == "NO"
+        client.close()
+
+    def test_sync_vote_market_sentiment_rejects_invalid_direction(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="must be one of"):
+            client.vote_market_sentiment("mkt-1", direction="MAYBE")
+        client.close()
+
+    def test_sync_vote_market_sentiment_default_confidence(self):
+        from unittest.mock import MagicMock
+
+        client = PolyforgeClient(api_key="test-key")
+        client._post = MagicMock(return_value={})
+        client.vote_market_sentiment("mkt-1")
+        args, kwargs = client._post.call_args
+        assert kwargs["json"]["confidence"] == 50
+        client.close()
+
+    def test_sync_vote_market_sentiment_custom_confidence(self):
+        from unittest.mock import MagicMock
+
+        client = PolyforgeClient(api_key="test-key")
+        client._post = MagicMock(return_value={})
+        client.vote_market_sentiment("mkt-1", confidence=75)
+        args, kwargs = client._post.call_args
+        assert kwargs["json"]["confidence"] == 75
+        client.close()
+
+    def test_sync_vote_market_sentiment_rejects_confidence_below_range(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="must be an integer in \\[1, 100\\]"):
+            client.vote_market_sentiment("mkt-1", confidence=0)
+        client.close()
+
+    def test_sync_vote_market_sentiment_rejects_confidence_above_range(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="must be an integer in \\[1, 100\\]"):
+            client.vote_market_sentiment("mkt-1", confidence=101)
+        client.close()
+
+    def test_sync_vote_market_sentiment_rejects_confidence_float(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="must be an integer in \\[1, 100\\]"):
+            client.vote_market_sentiment("mkt-1", confidence=50.5)
+        client.close()
+
+    def test_sync_vote_market_sentiment_rejects_confidence_bool(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="must be an integer in \\[1, 100\\]"):
+            client.vote_market_sentiment("mkt-1", confidence=True)
+        client.close()
+
+    def test_sync_vote_market_sentiment_rejects_confidence_string(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="must be an integer in \\[1, 100\\]"):
+            client.vote_market_sentiment("mkt-1", confidence="50")
+        client.close()
+
+    def test_sync_vote_market_sentiment_accepts_boundary_confidence(self):
+        from unittest.mock import MagicMock
+
+        client = PolyforgeClient(api_key="test-key")
+        client._post = MagicMock(return_value={})
+        client.vote_market_sentiment("mkt-1", confidence=1)
+        args, kwargs = client._post.call_args
+        assert kwargs["json"]["confidence"] == 1
+        client._post.reset_mock()
+        client.vote_market_sentiment("mkt-1", confidence=100)
+        args, kwargs = client._post.call_args
+        assert kwargs["json"]["confidence"] == 100
+        client.close()
+
+    def test_sync_vote_market_sentiment_sends_correct_path(self):
+        from unittest.mock import MagicMock
+
+        client = PolyforgeClient(api_key="test-key")
+        client._post = MagicMock(return_value={})
+        client.vote_market_sentiment("a1b2c3d4")
+        args, kwargs = client._post.call_args
+        assert args[0] == "/api/v1/markets/a1b2c3d4/sentiment"
+        client.close()
+
+    # -- async client --
+
+    def test_async_vote_market_sentiment_default_direction(self):
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            client._post = AsyncMock(return_value={})
+            await client.vote_market_sentiment("mkt-1")
+            args, kwargs = client._post.call_args
+            assert kwargs["json"]["direction"] == "YES"
+            assert kwargs["json"]["confidence"] == 50
+            await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_vote_market_sentiment_custom_direction_no(self):
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            client._post = AsyncMock(return_value={})
+            await client.vote_market_sentiment("mkt-1", direction="NO")
+            args, kwargs = client._post.call_args
+            assert kwargs["json"]["direction"] == "NO"
+            await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_vote_market_sentiment_rejects_invalid_direction(self):
+        import asyncio
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            with pytest.raises(ValueError, match="must be one of"):
+                await client.vote_market_sentiment("mkt-1", direction="MAYBE")
+            await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_vote_market_sentiment_rejects_confidence_below_range(self):
+        import asyncio
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            with pytest.raises(ValueError, match="must be an integer in \\[1, 100\\]"):
+                await client.vote_market_sentiment("mkt-1", confidence=0)
+            await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_vote_market_sentiment_rejects_confidence_above_range(self):
+        import asyncio
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            with pytest.raises(ValueError, match="must be an integer in \\[1, 100\\]"):
+                await client.vote_market_sentiment("mkt-1", confidence=101)
+            await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_vote_market_sentiment_sends_correct_path(self):
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            client._post = AsyncMock(return_value={})
+            await client.vote_market_sentiment("x9y8z7")
+            args, kwargs = client._post.call_args
+            assert args[0] == "/api/v1/markets/x9y8z7/sentiment"
+            await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_vote_market_sentiment_sends_json_body(self):
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            client._post = AsyncMock(return_value={})
+            await client.vote_market_sentiment("mkt-1", direction="NO", confidence=90)
+            args, kwargs = client._post.call_args
+            assert kwargs["json"]["direction"] == "NO"
+            assert kwargs["json"]["confidence"] == 90
+            await client.close()
+
+        asyncio.run(_run())
+
+
+class TestVoteMarketSentiment:
+    """Tests for vote_market_sentiment direction and confidence parameters."""
+
+    # -- sync client --
+
+    def test_sync_vote_market_sentiment_default_direction(self):
+        from unittest.mock import MagicMock
+
+        client = PolyforgeClient(api_key="test-key")
+        client._post = MagicMock(return_value={})
+        client.vote_market_sentiment("mkt-1")
+        args, kwargs = client._post.call_args
+        assert kwargs["json"]["direction"] == "YES"
+        assert kwargs["json"]["confidence"] == 50
+        client.close()
+
+    def test_sync_vote_market_sentiment_custom_direction_yes(self):
+        from unittest.mock import MagicMock
+
+        client = PolyforgeClient(api_key="test-key")
+        client._post = MagicMock(return_value={})
+        client.vote_market_sentiment("mkt-1", direction="YES")
+        args, kwargs = client._post.call_args
+        assert kwargs["json"]["direction"] == "YES"
+        client.close()
+
+    def test_sync_vote_market_sentiment_custom_direction_no(self):
+        from unittest.mock import MagicMock
+
+        client = PolyforgeClient(api_key="test-key")
+        client._post = MagicMock(return_value={})
+        client.vote_market_sentiment("mkt-1", direction="NO")
+        args, kwargs = client._post.call_args
+        assert kwargs["json"]["direction"] == "NO"
+        client.close()
+
+    def test_sync_vote_market_sentiment_rejects_invalid_direction(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="must be one of"):
+            client.vote_market_sentiment("mkt-1", direction="MAYBE")
+        client.close()
+
+    def test_sync_vote_market_sentiment_default_confidence(self):
+        from unittest.mock import MagicMock
+
+        client = PolyforgeClient(api_key="test-key")
+        client._post = MagicMock(return_value={})
+        client.vote_market_sentiment("mkt-1")
+        args, kwargs = client._post.call_args
+        assert kwargs["json"]["confidence"] == 50
+        client.close()
+
+    def test_sync_vote_market_sentiment_custom_confidence(self):
+        from unittest.mock import MagicMock
+
+        client = PolyforgeClient(api_key="test-key")
+        client._post = MagicMock(return_value={})
+        client.vote_market_sentiment("mkt-1", confidence=75)
+        args, kwargs = client._post.call_args
+        assert kwargs["json"]["confidence"] == 75
+        client.close()
+
+    def test_sync_vote_market_sentiment_rejects_confidence_below_range(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="must be an integer in \\[1, 100\\]"):
+            client.vote_market_sentiment("mkt-1", confidence=0)
+        client.close()
+
+    def test_sync_vote_market_sentiment_rejects_confidence_above_range(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="must be an integer in \\[1, 100\\]"):
+            client.vote_market_sentiment("mkt-1", confidence=101)
+        client.close()
+
+    def test_sync_vote_market_sentiment_rejects_confidence_float(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="must be an integer in \\[1, 100\\]"):
+            client.vote_market_sentiment("mkt-1", confidence=50.5)
+        client.close()
+
+    def test_sync_vote_market_sentiment_rejects_confidence_bool(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="must be an integer in \\[1, 100\\]"):
+            client.vote_market_sentiment("mkt-1", confidence=True)
+        client.close()
+
+    def test_sync_vote_market_sentiment_rejects_confidence_string(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="must be an integer in \\[1, 100\\]"):
+            client.vote_market_sentiment("mkt-1", confidence="50")
+        client.close()
+
+    def test_sync_vote_market_sentiment_accepts_boundary_confidence(self):
+        from unittest.mock import MagicMock
+
+        client = PolyforgeClient(api_key="test-key")
+        client._post = MagicMock(return_value={})
+        client.vote_market_sentiment("mkt-1", confidence=1)
+        args, kwargs = client._post.call_args
+        assert kwargs["json"]["confidence"] == 1
+        client._post.reset_mock()
+        client.vote_market_sentiment("mkt-1", confidence=100)
+        args, kwargs = client._post.call_args
+        assert kwargs["json"]["confidence"] == 100
+        client.close()
+
+    def test_sync_vote_market_sentiment_sends_correct_path(self):
+        from unittest.mock import MagicMock
+
+        client = PolyforgeClient(api_key="test-key")
+        client._post = MagicMock(return_value={})
+        client.vote_market_sentiment("a1b2c3d4")
+        args, kwargs = client._post.call_args
+        assert args[0] == "/api/v1/markets/a1b2c3d4/sentiment"
+        client.close()
+
+    # -- async client --
+
+    def test_async_vote_market_sentiment_default_direction(self):
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            client._post = AsyncMock(return_value={})
+            await client.vote_market_sentiment("mkt-1")
+            args, kwargs = client._post.call_args
+            assert kwargs["json"]["direction"] == "YES"
+            assert kwargs["json"]["confidence"] == 50
+            await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_vote_market_sentiment_custom_direction_no(self):
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            client._post = AsyncMock(return_value={})
+            await client.vote_market_sentiment("mkt-1", direction="NO")
+            args, kwargs = client._post.call_args
+            assert kwargs["json"]["direction"] == "NO"
+            await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_vote_market_sentiment_rejects_invalid_direction(self):
+        import asyncio
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            with pytest.raises(ValueError, match="must be one of"):
+                await client.vote_market_sentiment("mkt-1", direction="MAYBE")
+            await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_vote_market_sentiment_rejects_confidence_below_range(self):
+        import asyncio
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            with pytest.raises(ValueError, match="must be an integer in \\[1, 100\\]"):
+                await client.vote_market_sentiment("mkt-1", confidence=0)
+            await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_vote_market_sentiment_rejects_confidence_above_range(self):
+        import asyncio
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            with pytest.raises(ValueError, match="must be an integer in \\[1, 100\\]"):
+                await client.vote_market_sentiment("mkt-1", confidence=101)
+            await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_vote_market_sentiment_sends_correct_path(self):
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            client._post = AsyncMock(return_value={})
+            await client.vote_market_sentiment("x9y8z7")
+            args, kwargs = client._post.call_args
+            assert args[0] == "/api/v1/markets/x9y8z7/sentiment"
+            await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_vote_market_sentiment_sends_json_body(self):
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            client._post = AsyncMock(return_value={})
+            await client.vote_market_sentiment("mkt-1", direction="NO", confidence=90)
+            args, kwargs = client._post.call_args
+            assert kwargs["json"]["direction"] == "NO"
+            assert kwargs["json"]["confidence"] == 90
+            await client.close()
+
+        asyncio.run(_run())
+
+
+class TestVoteMarketSentiment:
+    """Tests for vote_market_sentiment direction and confidence parameters."""
+
+    def test_sync_vote_market_sentiment_default_values(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._post = MagicMock(return_value={})
+        client.vote_market_sentiment("mkt-1")
+        args, kwargs = client._post.call_args
+        assert kwargs["json"]["direction"] == "YES"
+        assert kwargs["json"]["confidence"] == 50
+        client.close()
+
+    def test_sync_vote_market_sentiment_custom_direction(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._post = MagicMock(return_value={})
+        client.vote_market_sentiment("mkt-1", direction="NO")
+        args, kwargs = client._post.call_args
+        assert kwargs["json"]["direction"] == "NO"
+        client.close()
+
+    def test_sync_vote_market_sentiment_rejects_invalid_direction(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="must be one of"):
+            client.vote_market_sentiment("mkt-1", direction="MAYBE")
+        client.close()
+
+    def test_sync_vote_market_sentiment_custom_confidence(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._post = MagicMock(return_value={})
+        client.vote_market_sentiment("mkt-1", confidence=75)
+        args, kwargs = client._post.call_args
+        assert kwargs["json"]["confidence"] == 75
+        client.close()
+
+    def test_sync_vote_market_sentiment_rejects_confidence_zero(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="must be an integer in \\[1, 100\\]"):
+            client.vote_market_sentiment("mkt-1", confidence=0)
+        client.close()
+
+    def test_sync_vote_market_sentiment_rejects_confidence_101(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="must be an integer in \\[1, 100\\]"):
+            client.vote_market_sentiment("mkt-1", confidence=101)
+        client.close()
+
+    def test_async_vote_market_sentiment_default_values(self):
+        import asyncio
+        from unittest.mock import AsyncMock
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            client._post = AsyncMock(return_value={})
+            await client.vote_market_sentiment("mkt-1")
+            args, kwargs = client._post.call_args
+            assert kwargs["json"]["direction"] == "YES"
+            assert kwargs["json"]["confidence"] == 50
+            await client.close()
+        asyncio.run(_run())
+
+    def test_async_vote_market_sentiment_custom_direction(self):
+        import asyncio
+        from unittest.mock import AsyncMock
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            client._post = AsyncMock(return_value={})
+            await client.vote_market_sentiment("mkt-1", direction="NO")
+            args, kwargs = client._post.call_args
+            assert kwargs["json"]["direction"] == "NO"
+            await client.close()
+        asyncio.run(_run())
+
+    def test_async_vote_market_sentiment_rejects_invalid_direction(self):
+        import asyncio
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            with pytest.raises(ValueError, match="must be one of"):
+                await client.vote_market_sentiment("mkt-1", direction="MAYBE")
+            await client.close()
+        asyncio.run(_run())
+
+    def test_async_vote_market_sentiment_rejects_confidence_zero(self):
+        import asyncio
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            with pytest.raises(ValueError, match="must be an integer in \\[1, 100\\]"):
+                await client.vote_market_sentiment("mkt-1", confidence=0)
+            await client.close()
+        asyncio.run(_run())
+
+    def test_async_vote_market_sentiment_rejects_confidence_101(self):
+        import asyncio
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            with pytest.raises(ValueError, match="must be an integer in \\[1, 100\\]"):
+                await client.vote_market_sentiment("mkt-1", confidence=101)
+            await client.close()
+>>>>>>> fea34610 (fix(sdk-python): add vote_market_sentiment tests and clean worktree gitlinks)
         asyncio.run(_run())
