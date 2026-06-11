@@ -10775,3 +10775,60 @@ class TestVoteMarketSentiment:
             await client.close()
 >>>>>>> fea34610 (fix(sdk-python): add vote_market_sentiment tests and clean worktree gitlinks)
         asyncio.run(_run())
+
+    def test_sync_vote_market_sentiment_rejects_confidence_bool(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="must be an integer in \\[1, 100\\]"):
+            client.vote_market_sentiment("mkt-1", confidence=True)
+        client.close()
+
+    def test_sync_vote_market_sentiment_accepts_confidence_1(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._post = MagicMock(return_value={})
+        client.vote_market_sentiment("mkt-1", confidence=1)
+        args, kwargs = client._post.call_args
+        assert kwargs["json"]["confidence"] == 1
+        client.close()
+
+    def test_sync_vote_market_sentiment_accepts_confidence_100(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._post = MagicMock(return_value={})
+        client.vote_market_sentiment("mkt-1", confidence=100)
+        args, kwargs = client._post.call_args
+        assert kwargs["json"]["confidence"] == 100
+        client.close()
+
+    def test_async_vote_market_sentiment_rejects_confidence_bool(self):
+        import asyncio
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            with pytest.raises(ValueError, match="must be an integer in \\[1, 100\\]"):
+                await client.vote_market_sentiment("mkt-1", confidence=True)
+            await client.close()
+        asyncio.run(_run())
+
+    def test_async_vote_market_sentiment_accepts_confidence_1(self):
+        import asyncio
+        from unittest.mock import AsyncMock
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            client._post = AsyncMock(return_value={})
+            await client.vote_market_sentiment("mkt-1", confidence=1)
+            args, kwargs = client._post.call_args
+            assert kwargs["json"]["confidence"] == 1
+            await client.close()
+        asyncio.run(_run())
+
+    def test_async_vote_market_sentiment_accepts_confidence_100(self):
+        import asyncio
+        from unittest.mock import AsyncMock
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            client._post = AsyncMock(return_value={})
+            await client.vote_market_sentiment("mkt-1", confidence=100)
+            args, kwargs = client._post.call_args
+            assert kwargs["json"]["confidence"] == 100
+            await client.close()
+        asyncio.run(_run())
