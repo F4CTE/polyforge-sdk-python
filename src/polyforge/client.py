@@ -440,6 +440,7 @@ def _validate_enum(name: str, value: str, allowed: frozenset[str]) -> None:
 
 _VALID_MODES = frozenset({"live", "paper"})
 _VALID_SIDES = frozenset({"BUY", "SELL"})
+_VALID_SENTIMENT_DIRECTIONS = frozenset({"YES", "NO"})
 _VALID_OUTCOMES = frozenset({"YES", "NO"})
 _VALID_ORDER_TYPES = frozenset({"GTC", "GTD", "FOK", "FAK", "POST_ONLY"})
 _VALID_SPORTS_SORTS = frozenset({"volume", "closing_soon", "newest"})
@@ -4056,15 +4057,42 @@ class PolyforgeClient:
             self._get(f"/api/v1/markets/{_encode_path(market_id)}/sentiment"),
         )
 
-    def vote_market_sentiment(self, market_id: str) -> MarketSentimentReport:
+    def vote_market_sentiment(
+        self,
+        market_id: str,
+        *,
+        direction: str = "YES",
+        confidence: int = 50,
+    ) -> MarketSentimentReport:
         """Submit (or refresh) the current user's sentiment for a market.
 
         Mirrors ``POST /api/v1/markets/:marketId/sentiment``. The controller
         currently returns the same payload shape as the GET variant.
+
+        Args:
+            market_id: The market id to vote on.
+            direction: ``"YES"`` or ``"NO"``. Defaults to ``"YES"``.
+            confidence: Integer confidence in ``[1, 100]``. Defaults to ``50``.
+
+        Raises:
+            ValueError: if direction is not ``"YES"`` or ``"NO"``, or
+                confidence is not an integer in ``[1, 100]``.
         """
+        _validate_enum("direction", direction, _VALID_SENTIMENT_DIRECTIONS)
+        if not isinstance(confidence, int) or isinstance(confidence, bool):
+            raise ValueError(
+                f"confidence must be an integer in [1, 100], got {confidence!r}"
+            )
+        if confidence < 1 or confidence > 100:
+            raise ValueError(
+                f"confidence must be an integer in [1, 100], got {confidence}"
+            )
         return _parse(
             MarketSentimentReport,
-            self._post(f"/api/v1/markets/{_encode_path(market_id)}/sentiment"),
+            self._post(
+                f"/api/v1/markets/{_encode_path(market_id)}/sentiment",
+                json={"direction": direction, "confidence": confidence},
+            ),
         )
 
     def update_order_journal(
@@ -7067,13 +7095,37 @@ class AsyncPolyforgeClient:
         )
 
     async def vote_market_sentiment(
-        self, market_id: str
+        self,
+        market_id: str,
+        *,
+        direction: str = "YES",
+        confidence: int = 50,
     ) -> MarketSentimentReport:
-        """Async variant of :meth:`PolyforgeClient.vote_market_sentiment`."""
+        """Async variant of :meth:`PolyforgeClient.vote_market_sentiment`.
+
+        Args:
+            market_id: The market id to vote on.
+            direction: ``"YES"`` or ``"NO"``. Defaults to ``"YES"``.
+            confidence: Integer confidence in ``[1, 100]``. Defaults to ``50``.
+
+        Raises:
+            ValueError: if direction is not ``"YES"`` or ``"NO"``, or
+                confidence is not an integer in ``[1, 100]``.
+        """
+        _validate_enum("direction", direction, _VALID_SENTIMENT_DIRECTIONS)
+        if not isinstance(confidence, int) or isinstance(confidence, bool):
+            raise ValueError(
+                f"confidence must be an integer in [1, 100], got {confidence!r}"
+            )
+        if confidence < 1 or confidence > 100:
+            raise ValueError(
+                f"confidence must be an integer in [1, 100], got {confidence}"
+            )
         return _parse(
             MarketSentimentReport,
             await self._post(
-                f"/api/v1/markets/{_encode_path(market_id)}/sentiment"
+                f"/api/v1/markets/{_encode_path(market_id)}/sentiment",
+                json={"direction": direction, "confidence": confidence},
             ),
         )
 
