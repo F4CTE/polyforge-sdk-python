@@ -186,6 +186,98 @@ class StrategyStatusResponse:
     stopped_at: str = ""
 
 
+@dataclass
+class StrategyBlockValidationIssue:
+    """A single validation issue found in strategy blocks.
+
+    Mirrors the backend ``@IsIn()`` enum gate and ``class-validator`` severity
+    levels used by the ``POST /api/v1/strategies/validate-blocks`` endpoint.
+    """
+
+    path: str = ""
+    message: str = ""
+    code: str = ""
+    severity: str = ""  # 'error' | 'warning' | 'info'
+    block_id: str = ""
+    block_type: str = ""
+    suggestion: str = ""
+
+
+@dataclass
+class StrategyBlockValidationResult:
+    """Validation result returned by the strategy-blocks endpoint."""
+
+    valid: bool = False
+    issues: list[StrategyBlockValidationIssue] = field(default_factory=list)
+    warnings: list[StrategyBlockValidationIssue] = field(default_factory=list)
+    normalized_blocks: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
+class StrategyBlockType:
+    """A supported strategy block type as returned by ``GET /api/v1/strategies/block-types``."""
+
+    type: str = ""
+    label: str = ""
+    category: str = ""
+    description: str = ""
+    version: str = ""
+    deprecated: bool = False
+    tags: list[str] = field(default_factory=list)
+
+
+@dataclass
+class StrategyBlockSchema:
+    """JSON schema for a specific strategy block type."""
+
+    type: str = ""
+    schema: dict[str, Any] = field(default_factory=dict)
+    ui_schema: dict[str, Any] = field(default_factory=dict)
+    defaults: dict[str, Any] = field(default_factory=dict)
+    examples: list[dict[str, Any]] = field(default_factory=list)
+
+
+@dataclass
+class StrategyHealth:
+    """Execution health metrics for a strategy (MCP contract).
+
+    Mirrors the ``GET /api/v1/strategies/:id/health`` response shape.
+    """
+
+    fill_rate: float | None = None
+    avg_latency_ms: float = 0.0
+    error_count_24h: int = 0
+    slippage_bps: float = 0.0
+    win_rate: float | None = None
+    total_pnl: float | None = None
+    max_drawdown: float | None = None
+    total_orders: int = 0
+    filled_orders: int = 0
+    last_updated: str | None = None
+
+
+@dataclass
+class StrategyUpdatePreview:
+    """Preview of a strategy update returned by the ``preview-update`` endpoint."""
+
+    strategy: dict[str, Any] = field(default_factory=dict)
+    validation: dict[str, Any] = field(default_factory=dict)
+    diff: dict[str, Any] = field(default_factory=dict)
+    estimated_impact: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
+class StrategyDecisionExplanation:
+    """Explanation of a strategy decision returned by the ``explain-decision`` endpoint."""
+
+    summary: str = ""
+    rationale: list[str] = field(default_factory=list)
+    confidence: float | None = None
+    inputs: dict[str, Any] = field(default_factory=dict)
+    decision: dict[str, Any] = field(default_factory=dict)
+    related_events: list[dict[str, Any]] = field(default_factory=list)
+
+
 # StrategyTemplate is an alias for Strategy — the platform endpoint
 # ``GET /api/v1/strategies/templates`` returns full Strategy objects
 # (rows where ``template = true``).  Kept as an alias for backward compat.
@@ -357,19 +449,14 @@ class CopyConfig:
 
 @dataclass
 class WatchlistItem:
-    """A market on the user's watchlist.
-
-    Note: field names ``volume24h`` and ``price_delta24h`` match the API's
-    camelCase keys after ``_camel_to_snake`` conversion (digits do not
-    trigger an underscore insertion).
-    """
+    """A market on the user's watchlist."""
 
     market_id: str = ""
     slug: str = ""
     title: str = ""
     current_price: float = 0.0
-    volume24h: float = 0.0
-    price_delta24h: float = 0.0
+    volume_24h: float = 0.0
+    price_delta_24h: float = 0.0
     watched: bool = True
 
 
