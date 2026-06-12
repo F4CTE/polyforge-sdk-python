@@ -2286,16 +2286,16 @@ class TestWatchlistItem:
             slug="will-x-happen",
             title="Will X happen?",
             current_price=0.65,
-            volume24h=12345.0,
-            price_delta24h=-0.03,
+            volume_24h=12345.0,
+            price_delta_24h=-0.03,
             watched=True,
         )
         assert item.market_id == "mkt-1"
         assert item.slug == "will-x-happen"
         assert item.title == "Will X happen?"
         assert item.current_price == 0.65
-        assert item.volume24h == 12345.0
-        assert item.price_delta24h == -0.03
+        assert item.volume_24h == 12345.0
+        assert item.price_delta_24h == -0.03
         assert item.watched is True
 
     def test_watchlist_item_defaults(self):
@@ -2305,8 +2305,8 @@ class TestWatchlistItem:
         assert item.slug == ""
         assert item.title == ""
         assert item.current_price == 0.0
-        assert item.volume24h == 0.0
-        assert item.price_delta24h == 0.0
+        assert item.volume_24h == 0.0
+        assert item.price_delta_24h == 0.0
         assert item.watched is True
 
     def test_watchlist_item_parse(self):
@@ -2323,8 +2323,8 @@ class TestWatchlistItem:
         item = _parse(WatchlistItem, raw)
         assert item.market_id == "mkt-1"
         assert item.current_price == 0.72
-        assert item.volume24h == 5000.0
-        assert item.price_delta24h == 0.05
+        assert item.volume_24h == 5000.0
+        assert item.price_delta_24h == 0.05
 
 
 class TestWatchlistMethods:

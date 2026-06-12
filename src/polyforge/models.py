@@ -449,19 +449,14 @@ class CopyConfig:
 
 @dataclass
 class WatchlistItem:
-    """A market on the user's watchlist.
-
-    Note: field names ``volume24h`` and ``price_delta24h`` match the API's
-    camelCase keys after ``_camel_to_snake`` conversion (digits do not
-    trigger an underscore insertion).
-    """
+    """A market on the user's watchlist."""
 
     market_id: str = ""
     slug: str = ""
     title: str = ""
     current_price: float = 0.0
-    volume24h: float = 0.0
-    price_delta24h: float = 0.0
+    volume_24h: float = 0.0
+    price_delta_24h: float = 0.0
     watched: bool = True
 
 
