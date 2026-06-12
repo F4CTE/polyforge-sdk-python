@@ -287,7 +287,9 @@ def _parse_my_referrals_response(raw: dict[str, Any]) -> MyReferralsResponse:
 
 def _camel_to_snake(name: str) -> str:
     """Convert camelCase to snake_case (e.g. 'baseToken' -> 'base_token')."""
-    return re.sub(r"(?<=[a-z0-9])([A-Z])", r"_\1", name).lower()
+    name = re.sub(r"(?<=[a-z0-9])([A-Z])", r"_\1", name)
+    name = re.sub(r"(?<=[a-zA-Z])([0-9])", r"_\1", name)
+    return name.lower()
 
 
 def _snake_to_camel(name: str) -> str:

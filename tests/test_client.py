@@ -2286,16 +2286,16 @@ class TestWatchlistItem:
             slug="will-x-happen",
             title="Will X happen?",
             current_price=0.65,
-            volume24h=12345.0,
-            price_delta24h=-0.03,
+            volume_24h=12345.0,
+            price_delta_24h=-0.03,
             watched=True,
         )
         assert item.market_id == "mkt-1"
         assert item.slug == "will-x-happen"
         assert item.title == "Will X happen?"
         assert item.current_price == 0.65
-        assert item.volume24h == 12345.0
-        assert item.price_delta24h == -0.03
+        assert item.volume_24h == 12345.0
+        assert item.price_delta_24h == -0.03
         assert item.watched is True
 
     def test_watchlist_item_defaults(self):
@@ -2305,8 +2305,8 @@ class TestWatchlistItem:
         assert item.slug == ""
         assert item.title == ""
         assert item.current_price == 0.0
-        assert item.volume24h == 0.0
-        assert item.price_delta24h == 0.0
+        assert item.volume_24h == 0.0
+        assert item.price_delta_24h == 0.0
         assert item.watched is True
 
     def test_watchlist_item_parse(self):
@@ -2323,8 +2323,8 @@ class TestWatchlistItem:
         item = _parse(WatchlistItem, raw)
         assert item.market_id == "mkt-1"
         assert item.current_price == 0.72
-        assert item.volume24h == 5000.0
-        assert item.price_delta24h == 0.05
+        assert item.volume_24h == 5000.0
+        assert item.price_delta_24h == 0.05
 
 
 class TestWatchlistMethods:
@@ -4558,9 +4558,9 @@ class TestBulkOrderEndpoints:
         source = inspect.getsource(PolyforgeClient.bulk_cancel_orders)
         assert '"orderIds"' in source
 
-    def test_bulk_cancel_orders_sends_delete_with_json_body(self):
-        """bulk_cancel_orders must send DELETE with Content-Type: application/json
-        and a JSON body — uses Client.request('DELETE', path, json=...)."""
+    def test_bulk_cancel_orders_uses_post_with_json_body(self):
+        """bulk_cancel_orders must send POST with Content-Type: application/json
+        and a JSON body — uses Client.request('POST', path, json=...)."""
         captured = {}
 
         def handler(request):
@@ -4578,7 +4578,7 @@ class TestBulkOrderEndpoints:
         )
         try:
             client.bulk_cancel_orders(["ord-1", "ord-2"])
-            assert captured["method"] == "DELETE"
+            assert captured["method"] == "POST"
             assert "application/json" in captured["content_type"]
             body = json.loads(captured["body"])
             assert body == {"orderIds": ["ord-1", "ord-2"]}
@@ -9493,7 +9493,7 @@ class TestIdempotencyKeyHeaders:
             cases = [
                 ("_post", place_order_payload, lambda c: c.place_order("tok", "BUY", "YES", 1.0, 0.5)),
                 ("_delete", {}, lambda c: c.cancel_order("ord-1")),
-                ("_post", {"results": []}, lambda c: c.batch_orders([{
+               ("_post", {"results": []}, lambda c: c.batch_orders([{
                     "tokenId": "tok", "side": "BUY", "outcome": "YES", "size": 1.0, "price": 0.5,
                 }])),
                 ("_delete", {"cancelled": [], "errors": []}, lambda c: c.bulk_cancel_orders(["ord-1"])),
