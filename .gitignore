@@ -13,3 +13,11 @@ build/
 
 # Graphify knowledge graph artifacts
 graphify-out/
+
+# Paperclip worktree and runtime artifacts (local control-plane state)
+# Prevents committing .paperclip/worktrees gitlinks and .paperclip-runtime bridges
+.paperclip/
+
+# Paperclip worktree and runtime artifacts (local control-plane state)
+# Prevents committing .paperclip/worktrees gitlinks and .paperclip-runtime bridges
+.paperclip/
