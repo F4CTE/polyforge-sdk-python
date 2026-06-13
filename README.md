@@ -115,6 +115,24 @@ asyncio.run(main())
 
 **Common event types:** `CONNECTED` · `STRATEGY_STARTED` · `STRATEGY_STOPPED` · `STRATEGY_PAUSED` · `STRATEGY_RESUMED` · `STRATEGY_ERROR` · `ORDER_SUBMITTED` · `ORDER_PLACED` · `ORDER_PARTIAL` · `ORDER_FILLED` · `ORDER_FAILED` · `ORDER_ERROR` · `ORDER_CANCELLED` · `BACKTEST_PROGRESS` · `BACKTEST_COMPLETED` · `BACKTEST_FAILED`
 
+### WebSocket Gateway
+
+Use `PolyforgeWebSocketClient` for the native `/ws` gateway when you need price ticks, whale trades, or broadcast notifications.
+
+```python
+from polyforge import PolyforgeWebSocketClient
+
+with PolyforgeWebSocketClient(token="jwt-token") as ws:
+    ws.subscribe_prices(["token-yes", "token-no"])
+    ws.subscribe_whales()
+
+    for event in ws.iter_events():
+        if event.type in ("PRICE_UPDATE", "WHALE_TRADE", "NOTIFICATION"):
+            print(event)
+```
+
+The client sends the token as the gateway's `pf_token` cookie by default. Set `auth_mode="query"` only when you need compatibility with an older gateway client path.
+
 ### Portfolio & Orders
 
 | Method | Description |
