@@ -2714,6 +2714,8 @@ class PolyforgeClient:
         trigger_price: float,
         *,
         limit_price: float | None = None,
+        trailing_pct: float | None = None,
+        expires_at: str | None = None,
         idempotency_key: str | None = None,
     ) -> ConditionalOrder:
         """Create a conditional order.
@@ -2727,6 +2729,8 @@ class PolyforgeClient:
             size: Order size.
             trigger_price: Price at which the order triggers.
             limit_price: Optional limit price for the triggered order.
+            trailing_pct: Optional trailing percentage for trailing-stop orders.
+            expires_at: Optional ISO-8601 expiration timestamp.
 
         Returns:
             The created :class:`ConditionalOrder`.
@@ -2745,6 +2749,11 @@ class PolyforgeClient:
         if limit_price is not None:
             _validate_financial_param("limit_price", limit_price)
             body["limitPrice"] = limit_price
+        if trailing_pct is not None:
+            _validate_financial_param("trailing_pct", trailing_pct)
+            body["trailingPct"] = str(trailing_pct)
+        if expires_at is not None:
+            body["expiresAt"] = expires_at
         return _parse(
             ConditionalOrder,
             self._post(
@@ -5946,6 +5955,8 @@ class AsyncPolyforgeClient:
         trigger_price: float,
         *,
         limit_price: float | None = None,
+        trailing_pct: float | None = None,
+        expires_at: str | None = None,
         idempotency_key: str | None = None,
     ) -> ConditionalOrder:
         """Create a conditional order.
@@ -5959,6 +5970,8 @@ class AsyncPolyforgeClient:
             size: Order size.
             trigger_price: Price at which the order triggers.
             limit_price: Optional limit price for the triggered order.
+            trailing_pct: Optional trailing percentage for trailing-stop orders.
+            expires_at: Optional ISO-8601 expiration timestamp.
 
         Returns:
             The created :class:`ConditionalOrder`.
@@ -5977,6 +5990,11 @@ class AsyncPolyforgeClient:
         if limit_price is not None:
             _validate_financial_param("limit_price", limit_price)
             body["limitPrice"] = limit_price
+        if trailing_pct is not None:
+            _validate_financial_param("trailing_pct", trailing_pct)
+            body["trailingPct"] = str(trailing_pct)
+        if expires_at is not None:
+            body["expiresAt"] = expires_at
         return _parse(
             ConditionalOrder,
             await self._post(

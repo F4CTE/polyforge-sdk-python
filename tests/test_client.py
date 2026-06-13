@@ -2382,12 +2382,16 @@ class TestAlertCrud:
             outcome="YES",
             size="10",
             trigger_price="0.50",
+            trailing_pct="2.5",
+            expires_at="2026-01-02T03:04:05Z",
             status="PENDING",
         )
         assert order.id == "co-1"
         assert order.market_id == "m-1"
         assert order.trigger_price == "0.50"
         assert order.limit_price is None
+        assert order.trailing_pct == "2.5"
+        assert order.expires_at == "2026-01-02T03:04:05Z"
 
     def test_conditional_order_defaults(self):
         """ConditionalOrder defaults should be sensible."""
@@ -2396,6 +2400,26 @@ class TestAlertCrud:
         assert order.status == ""
         assert order.triggered_at is None
         assert order.limit_price is None
+        assert order.trailing_pct is None
+        assert order.expires_at is None
+
+    def test_conditional_order_parses_trailing_pct_and_expires_at(self):
+        """ConditionalOrder should parse platform camelCase expiry/trailing fields."""
+        order = _parse(ConditionalOrder, {
+            "id": "co-1",
+            "marketId": "m-1",
+            "tokenId": "t-1",
+            "type": "TRAILING_STOP",
+            "side": "SELL",
+            "outcome": "YES",
+            "size": "10",
+            "triggerPrice": "0.50",
+            "trailingPct": "2.5",
+            "expiresAt": "2026-01-02T03:04:05Z",
+            "status": "PENDING",
+        })
+        assert order.trailing_pct == "2.5"
+        assert order.expires_at == "2026-01-02T03:04:05Z"
 
     def test_portfolio_pnl_model_fields(self):
         """PortfolioPnl must have all expected fields."""
@@ -2574,6 +2598,8 @@ class TestConditionalOrders:
         for name in ("market_id", "token_id", "type", "side", "outcome", "size", "trigger_price"):
             assert name in param_names, f"Missing param: {name}"
         assert "limit_price" in param_names
+        assert "trailing_pct" in param_names
+        assert "expires_at" in param_names
 
     def test_sync_create_conditional_order_path(self):
         """create_conditional_order() must POST to /api/v1/orders/conditional."""
@@ -2590,9 +2616,91 @@ class TestConditionalOrders:
         source = inspect.getsource(PolyforgeClient.create_conditional_order)
         assert "_validate_financial_param" in source
 
+    def test_sync_create_conditional_order_sends_trailing_pct_and_expires_at(self):
+        """create_conditional_order() must expose trailingPct and expiresAt."""
+        from unittest.mock import MagicMock
+
+        client = PolyforgeClient(api_key="test-key")
+        client._post = MagicMock(return_value={
+            "id": "co-1",
+            "marketId": "m-1",
+            "tokenId": "tok",
+            "type": "TRAILING_STOP",
+            "side": "SELL",
+            "outcome": "YES",
+            "size": "1",
+            "triggerPrice": "0.4",
+            "trailingPct": "2.5",
+            "expiresAt": "2026-01-02T03:04:05Z",
+            "status": "PENDING",
+        })
+
+        result = client.create_conditional_order(
+            "m-1",
+            "tok",
+            "TRAILING_STOP",
+            "SELL",
+            "YES",
+            1.0,
+            0.4,
+            trailing_pct=2.5,
+            expires_at="2026-01-02T03:04:05Z",
+            idempotency_key="conditional-123",
+        )
+
+        body = client._post.call_args.kwargs["json"]
+        assert body["trailingPct"] == "2.5"
+        assert body["expiresAt"] == "2026-01-02T03:04:05Z"
+        assert result.trailing_pct == "2.5"
+        assert result.expires_at == "2026-01-02T03:04:05Z"
+        client.close()
+
     def test_async_create_conditional_order_exists(self):
         """AsyncPolyforgeClient must have create_conditional_order."""
         assert hasattr(AsyncPolyforgeClient, "create_conditional_order")
+
+    def test_async_create_conditional_order_sends_trailing_pct_and_expires_at(self):
+        """Async create_conditional_order() must expose trailingPct and expiresAt."""
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            client._post = AsyncMock(return_value={
+                "id": "co-1",
+                "marketId": "m-1",
+                "tokenId": "tok",
+                "type": "TRAILING_STOP",
+                "side": "SELL",
+                "outcome": "YES",
+                "size": "1",
+                "triggerPrice": "0.4",
+                "trailingPct": "2.5",
+                "expiresAt": "2026-01-02T03:04:05Z",
+                "status": "PENDING",
+            })
+
+            result = await client.create_conditional_order(
+                "m-1",
+                "tok",
+                "TRAILING_STOP",
+                "SELL",
+                "YES",
+                1.0,
+                0.4,
+                trailing_pct=2.5,
+                expires_at="2026-01-02T03:04:05Z",
+                idempotency_key="conditional-123",
+            )
+
+            body = client._post.call_args.kwargs["json"]
+            assert body["trailingPct"] == "2.5"
+            assert body["expiresAt"] == "2026-01-02T03:04:05Z"
+            assert result.trailing_pct == "2.5"
+            assert result.expires_at == "2026-01-02T03:04:05Z"
+            await client.close()
+
+        asyncio.run(_run())
 
     # -- get_conditional_order --
 
