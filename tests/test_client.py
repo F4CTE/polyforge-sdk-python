@@ -4249,6 +4249,20 @@ class TestPolymarketPortfolioEndpoints:
         params = set(sig.parameters.keys())
         assert "activity_type" in params
 
+    def test_get_polymarket_activity_accepts_pagination_params(self):
+        import inspect
+        sig = inspect.signature(PolyforgeClient.get_polymarket_activity)
+        params = set(sig.parameters.keys())
+        assert "offset" in params
+        assert "limit" in params
+
+    def test_async_get_polymarket_activity_accepts_pagination_params(self):
+        import inspect
+        sig = inspect.signature(AsyncPolyforgeClient.get_polymarket_activity)
+        params = set(sig.parameters.keys())
+        assert "offset" in params
+        assert "limit" in params
+
     def test_get_polymarket_portfolio_reads_entries_wrapper(self):
         def handler(request):
             assert request.url.path == "/api/v1/portfolio/polymarket/portfolio"
@@ -4314,6 +4328,41 @@ class TestPolymarketPortfolioEndpoints:
             assert activities[0].amount == "12.5"
         finally:
             client.close()
+
+    def test_get_polymarket_activity_sends_offset_and_limit(self):
+        captured = {}
+
+        def handler(request):
+            captured["params"] = dict(request.url.params)
+            assert request.url.path == "/api/v1/portfolio/polymarket/activity"
+            return httpx.Response(200, json={"activities": []})
+
+        client = self._client_with(handler)
+        try:
+            client.get_polymarket_activity(offset=40, limit=20)
+            assert captured["params"] == {"offset": "40", "limit": "20"}
+        finally:
+            client.close()
+
+    def test_async_get_polymarket_activity_sends_offset_and_limit(self):
+        import asyncio
+
+        captured = {}
+
+        def handler(request):
+            captured["params"] = dict(request.url.params)
+            assert request.url.path == "/api/v1/portfolio/polymarket/activity"
+            return httpx.Response(200, json={"activities": []})
+
+        async def _run():
+            client = self._async_client_with(handler)
+            try:
+                await client.get_polymarket_activity(offset=60, limit=30)
+            finally:
+                await client.close()
+
+        asyncio.run(_run())
+        assert captured["params"] == {"offset": "60", "limit": "30"}
 
     def test_async_polymarket_wrappers_match_sync_fields(self):
         import asyncio

@@ -2815,15 +2815,23 @@ class PolyforgeClient:
         items = data if isinstance(data, list) else data.get("entries", data.get("data", []))
         return [_parse(PolymarketEarningsEntry, e) for e in items]
 
-    def get_polymarket_activity(self, *, activity_type: str | None = None) -> list[PolymarketActivity]:
+    def get_polymarket_activity(
+        self,
+        *,
+        activity_type: str | None = None,
+        offset: int | None = None,
+        limit: int | None = None,
+    ) -> list[PolymarketActivity]:
         """Fetch on-chain activity for the connected Polymarket wallet.
 
         Args:
             activity_type: Optional activity type filter (e.g. ``"TRADE"``, ``"REDEEM"``).
+            offset: Number of activity entries to skip for pagination.
+            limit: Maximum number of activity entries to return.
         """
         data = self._get(
             "/api/v1/portfolio/polymarket/activity",
-            params=_strip_none({"type": activity_type}),
+            params=_strip_none({"type": activity_type, "offset": offset, "limit": limit}),
         )
         items = data if isinstance(data, list) else data.get("activities", data.get("data", []))
         return [_parse(PolymarketActivity, a) for a in items]
@@ -6047,15 +6055,23 @@ class AsyncPolyforgeClient:
         items = data if isinstance(data, list) else data.get("entries", data.get("data", []))
         return [_parse(PolymarketEarningsEntry, e) for e in items]
 
-    async def get_polymarket_activity(self, *, activity_type: str | None = None) -> list[PolymarketActivity]:
+    async def get_polymarket_activity(
+        self,
+        *,
+        activity_type: str | None = None,
+        offset: int | None = None,
+        limit: int | None = None,
+    ) -> list[PolymarketActivity]:
         """Fetch on-chain activity for the connected Polymarket wallet.
 
         Args:
             activity_type: Optional activity type filter (e.g. ``"TRADE"``, ``"REDEEM"``).
+            offset: Number of activity entries to skip for pagination.
+            limit: Maximum number of activity entries to return.
         """
         data = await self._get(
             "/api/v1/portfolio/polymarket/activity",
-            params=_strip_none({"type": activity_type}),
+            params=_strip_none({"type": activity_type, "offset": offset, "limit": limit}),
         )
         items = data if isinstance(data, list) else data.get("activities", data.get("data", []))
         return [_parse(PolymarketActivity, a) for a in items]
