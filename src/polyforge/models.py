@@ -499,14 +499,14 @@ class Webhook:
     url: str = ""
     events: list[str] = field(default_factory=list)
     secret: str = ""
-    enabled: bool = True
+    active: bool = True
     created_at: str = ""
 
     def __repr__(self) -> str:
         return (
             f"Webhook(id={self.id!r}, url={self.url!r}, "
             f"secret='***', events={self.events!r}, "
-            f"enabled={self.enabled!r})"
+            f"active={self.active!r})"
         )
 
 

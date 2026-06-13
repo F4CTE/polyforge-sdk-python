@@ -68,6 +68,7 @@ from polyforge.models import (
     UserRewardsTotal,
     UserSponsoredMarkets,
     WatchlistItem,
+    Webhook,
     WebhookEvent,
     WebhookTestResult,
     WhaleTrade,
@@ -2430,6 +2431,34 @@ class TestWebhookTestResult:
         result = WebhookTestResult()
         assert result.success is False
         assert result.status_code == 0
+
+
+class TestWebhookModel:
+    """Tests for Webhook model platform compatibility."""
+
+    def test_webhook_active_field_populates_from_platform(self):
+        """Webhook.dataclass uses active to match platform response field name (#300)."""
+        webhook = _parse(Webhook, {
+            "id": "wh_123",
+            "url": "https://example.com/hook",
+            "events": ["ORDER_FILLED"],
+            "active": False,
+            "createdAt": "2026-06-01T00:00:00Z",
+        })
+
+        assert webhook.active is False
+        assert webhook.active == False
+
+    def test_webhook_active_defaults_true(self):
+        """Webhook.active defaults to True when platform omits the field."""
+        webhook = _parse(Webhook, {
+            "id": "wh_456",
+            "url": "https://example.com/hook",
+            "events": ["ORDER_FILLED"],
+            "createdAt": "2026-06-01T00:00:00Z",
+        })
+
+        assert webhook.active is True
 
 
 class TestWebhookMutationMethods:
