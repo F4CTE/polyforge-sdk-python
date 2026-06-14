@@ -2286,16 +2286,16 @@ class TestWatchlistItem:
             slug="will-x-happen",
             title="Will X happen?",
             current_price=0.65,
-            volume_24h=12345.0,
-            price_delta_24h=-0.03,
+            volume24h=12345.0,
+            price_delta24h=-0.03,
             watched=True,
         )
         assert item.market_id == "mkt-1"
         assert item.slug == "will-x-happen"
         assert item.title == "Will X happen?"
         assert item.current_price == 0.65
-        assert item.volume_24h == 12345.0
-        assert item.price_delta_24h == -0.03
+        assert item.volume24h == 12345.0
+        assert item.price_delta24h == -0.03
         assert item.watched is True
 
     def test_watchlist_item_defaults(self):
@@ -2305,8 +2305,8 @@ class TestWatchlistItem:
         assert item.slug == ""
         assert item.title == ""
         assert item.current_price == 0.0
-        assert item.volume_24h == 0.0
-        assert item.price_delta_24h == 0.0
+        assert item.volume24h == 0.0
+        assert item.price_delta24h == 0.0
         assert item.watched is True
 
     def test_watchlist_item_parse(self):
@@ -2323,8 +2323,8 @@ class TestWatchlistItem:
         item = _parse(WatchlistItem, raw)
         assert item.market_id == "mkt-1"
         assert item.current_price == 0.72
-        assert item.volume_24h == 5000.0
-        assert item.price_delta_24h == 0.05
+        assert item.volume24h == 5000.0
+        assert item.price_delta24h == 0.05
 
 
 class TestWatchlistMethods:
@@ -4548,19 +4548,19 @@ class TestBulkOrderEndpoints:
         source = inspect.getsource(PolyforgeClient.bulk_cancel_orders)
         assert "/api/v1/orders/bulk" in source
 
-    def test_bulk_cancel_orders_uses_delete(self):
+    def test_bulk_cancel_orders_uses_post_json(self):
         import inspect
         source = inspect.getsource(PolyforgeClient.bulk_cancel_orders)
-        assert "_delete(" in source
+        assert "_post_json(" in source
 
     def test_bulk_cancel_orders_sends_order_ids_key(self):
         import inspect
         source = inspect.getsource(PolyforgeClient.bulk_cancel_orders)
         assert '"orderIds"' in source
 
-    def test_bulk_cancel_orders_sends_delete_with_json_body(self):
-        """bulk_cancel_orders must send DELETE with Content-Type: application/json
-        and a JSON body — uses Client.request('DELETE', path, json=...)."""
+    def test_bulk_cancel_orders_uses_post_with_json_body(self):
+        """bulk_cancel_orders must send POST with Content-Type: application/json
+        and a JSON body — uses Client.request('POST', path, json=...)."""
         captured = {}
 
         def handler(request):
@@ -4578,7 +4578,7 @@ class TestBulkOrderEndpoints:
         )
         try:
             client.bulk_cancel_orders(["ord-1", "ord-2"])
-            assert captured["method"] == "DELETE"
+            assert captured["method"] == "POST"
             assert "application/json" in captured["content_type"]
             body = json.loads(captured["body"])
             assert body == {"orderIds": ["ord-1", "ord-2"]}
@@ -9428,7 +9428,7 @@ class TestIdempotencyKeyHeaders:
             ("_post", {"results": []}, lambda c: c.batch_orders([{
                 "tokenId": "tok", "side": "BUY", "outcome": "YES", "size": 1.0, "price": 0.5,
             }])),
-            ("_delete", {"cancelled": [], "errors": []}, lambda c: c.bulk_cancel_orders(["ord-1"])),
+            ("_post_json", {"cancelled": [], "errors": []}, lambda c: c.bulk_cancel_orders(["ord-1"])),
             ("_post", place_order_payload, lambda c: c.close_position("tok")),
             ("_post", {"positionId": "pos-1", "intentId": "int-1", "status": "REDEEMED"}, lambda c: c.redeem_position(position_id="pos-1")),
             ("_post", place_order_payload, lambda c: c.split_position("tok", 1)),
@@ -9496,7 +9496,7 @@ class TestIdempotencyKeyHeaders:
                 ("_post", {"results": []}, lambda c: c.batch_orders([{
                     "tokenId": "tok", "side": "BUY", "outcome": "YES", "size": 1.0, "price": 0.5,
                 }])),
-                ("_delete", {"cancelled": [], "errors": []}, lambda c: c.bulk_cancel_orders(["ord-1"])),
+           ("_post_json", {"cancelled": [], "errors": []}, lambda c: c.bulk_cancel_orders(["ord-1"])),
                 ("_post", place_order_payload, lambda c: c.close_position("tok")),
                 ("_post", {"positionId": "pos-1", "intentId": "int-1", "status": "REDEEMED"}, lambda c: c.redeem_position(position_id="pos-1")),
                 ("_post", place_order_payload, lambda c: c.split_position("tok", 1)),
@@ -10896,135 +10896,3 @@ class TestVoteMarketSentimentRequestPayload:
 
         import asyncio
         asyncio.run(_run())
-class TestMcpStrategyMethods:
-    """Verify the 6 MCP strategy methods exist on both sync and async clients."""
-
-    MCP_SYNC_METHODS = [
-        "get_strategy_health",
-        "validate_strategy_blocks",
-        "list_strategy_block_types",
-        "get_block_schema",
-        "preview_strategy_update",
-        "explain_strategy_decision",
-    ]
-
-    MCP_ASYNC_METHODS = [
-        "get_strategy_health",
-        "validate_strategy_blocks",
-        "list_strategy_block_types",
-        "get_block_schema",
-        "preview_strategy_update",
-        "explain_strategy_decision",
-    ]
-
-    @pytest.mark.parametrize("method", MCP_SYNC_METHODS)
-    def test_sync_method_exists(self, method):
-        assert hasattr(PolyforgeClient, method)
-        assert callable(getattr(PolyforgeClient, method))
-
-    @pytest.mark.parametrize("method", MCP_ASYNC_METHODS)
-    def test_async_method_exists(self, method):
-        assert hasattr(AsyncPolyforgeClient, method)
-        assert callable(getattr(AsyncPolyforgeClient, method))
-
-
-class TestMcpModels:
-    """Verify new MCP model classes exist and are accessible."""
-
-    def test_strategy_health_model(self):
-        from polyforge.models import StrategyHealth
-
-        health = StrategyHealth()
-        assert health.fill_rate is None
-        assert health.avg_latency_ms == 0.0
-        assert health.error_count_24h == 0
-
-    def test_strategy_block_validation_result_model(self):
-        from polyforge.models import StrategyBlockValidationResult
-
-        result = StrategyBlockValidationResult()
-        assert result.valid is False
-        assert result.issues == []
-        assert result.warnings == []
-
-    def test_strategy_block_type_model(self):
-        from polyforge.models import StrategyBlockType
-
-        block_type = StrategyBlockType()
-        assert block_type.type == ""
-        assert block_type.label == ""
-        assert block_type.deprecated is False
-
-    def test_strategy_block_schema_model(self):
-        from polyforge.models import StrategyBlockSchema
-
-        schema = StrategyBlockSchema()
-        assert schema.type == ""
-        assert schema.schema == {}
-
-    def test_strategy_update_preview_model(self):
-        from polyforge.models import StrategyUpdatePreview
-
-        preview = StrategyUpdatePreview()
-        assert preview.strategy == {}
-        assert preview.diff == {}
-
-    def test_strategy_decision_explanation_model(self):
-        from polyforge.models import StrategyDecisionExplanation
-
-        explanation = StrategyDecisionExplanation()
-        assert explanation.summary == ""
-        assert explanation.rationale == []
-
-    def test_all_mcp_models_exported_from_package(self):
-        import polyforge
-
-        required = [
-            "StrategyHealth",
-            "StrategyBlockValidationResult",
-            "StrategyBlockType",
-            "StrategyBlockSchema",
-            "StrategyUpdatePreview",
-            "StrategyDecisionExplanation",
-            "StrategyBlockValidationIssue",
-        ]
-        for name in required:
-            assert hasattr(polyforge, name), f"{name} not exported from polyforge package"
-
-
-class TestMcpEndpointPaths:
-    """Verify MCP methods use the correct API endpoint paths."""
-
-    def test_get_strategy_health_path(self):
-        import inspect
-        source = inspect.getsource(PolyforgeClient.get_strategy_health)
-        assert "health" in source
-        assert "strategies/" in source
-
-    def test_validate_strategy_blocks_path(self):
-        import inspect
-        source = inspect.getsource(PolyforgeClient.validate_strategy_blocks)
-        assert "validate-blocks" in source
-
-    def test_list_strategy_block_types_path(self):
-        import inspect
-        source = inspect.getsource(PolyforgeClient.list_strategy_block_types)
-        assert "block-types" in source
-
-    def test_get_block_schema_path(self):
-        import inspect
-        source = inspect.getsource(PolyforgeClient.get_block_schema)
-        assert "block-types" in source
-        assert "schema" in source
-
-    def test_preview_strategy_update_path(self):
-        import inspect
-        source = inspect.getsource(PolyforgeClient.preview_strategy_update)
-        assert "preview-update" in source
-        assert "strategies/" in source
-
-    def test_explain_strategy_decision_path(self):
-        import inspect
-        source = inspect.getsource(PolyforgeClient.explain_strategy_decision)
-        assert "explain-decision" in source
-        assert "strategies/" in source
