@@ -76,6 +76,9 @@ asyncio.run(main())
 | `stop_strategy(strategy_id)` | Stop a running strategy |
 | `get_strategy_templates()` | List pre-built strategy templates |
 | `export_strategy(strategy_id)` | Export strategy configuration as a dict |
+| `get_strategy_capabilities()` | Discover server-supported strategy builder capabilities |
+| `get_strategy_design_patterns()` | Discover strategy design pattern guidance |
+| `get_strategy_examples()` | Fetch example strategy definitions for tooling |
 | `watch_strategy(strategy_id)` | Stream live execution events via SSE |
 
 ### Live Execution Watching

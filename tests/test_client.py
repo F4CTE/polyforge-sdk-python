@@ -3517,6 +3517,90 @@ class TestDiscoveryAndRanking:
         assert "/api/v1/leaderboard" in source
 
 
+class TestStrategyCapabilityDiscovery:
+    """Tests for strategy capability discovery endpoints (#298)."""
+
+    def test_sync_strategy_capability_methods_exist(self):
+        for method in (
+            "get_strategy_capabilities",
+            "get_strategy_design_patterns",
+            "get_strategy_examples",
+        ):
+            assert callable(getattr(PolyforgeClient, method, None))
+
+    def test_async_strategy_capability_methods_exist(self):
+        for method in (
+            "get_strategy_capabilities",
+            "get_strategy_design_patterns",
+            "get_strategy_examples",
+        ):
+            assert callable(getattr(AsyncPolyforgeClient, method, None))
+
+    def test_sync_strategy_capability_paths(self):
+        import inspect
+
+        assert "/api/v1/strategies/capabilities" in inspect.getsource(
+            PolyforgeClient.get_strategy_capabilities
+        )
+        assert "/api/v1/strategies/design-patterns" in inspect.getsource(
+            PolyforgeClient.get_strategy_design_patterns
+        )
+        assert "/api/v1/strategies/examples" in inspect.getsource(
+            PolyforgeClient.get_strategy_examples
+        )
+
+    def test_async_strategy_capability_paths(self):
+        import inspect
+
+        assert "/api/v1/strategies/capabilities" in inspect.getsource(
+            AsyncPolyforgeClient.get_strategy_capabilities
+        )
+        assert "/api/v1/strategies/design-patterns" in inspect.getsource(
+            AsyncPolyforgeClient.get_strategy_design_patterns
+        )
+        assert "/api/v1/strategies/examples" in inspect.getsource(
+            AsyncPolyforgeClient.get_strategy_examples
+        )
+
+    def test_sync_strategy_capability_methods_return_raw_manifest(self):
+        seen_paths = []
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            seen_paths.append(request.url.path)
+            return httpx.Response(
+                200,
+                json={"version": "1.0", "path": request.url.path},
+            )
+
+        transport = httpx.MockTransport(handler)
+        client = PolyforgeClient(api_key="test", api_url="http://localhost:9999")
+        client._client = httpx.Client(
+            base_url="http://localhost:9999",
+            headers={"Authorization": "Bearer test"},
+            transport=transport,
+        )
+        try:
+            assert (
+                client.get_strategy_capabilities()["path"]
+                == "/api/v1/strategies/capabilities"
+            )
+            assert (
+                client.get_strategy_design_patterns()["path"]
+                == "/api/v1/strategies/design-patterns"
+            )
+            assert (
+                client.get_strategy_examples()["path"]
+                == "/api/v1/strategies/examples"
+            )
+        finally:
+            client.close()
+        assert seen_paths == [
+            "/api/v1/strategies/capabilities",
+            "/api/v1/strategies/design-patterns",
+            "/api/v1/strategies/examples",
+        ]
+
+
 class TestPaperTrading:
     """Tests for get_paper_summary and reset_paper_account."""
 
