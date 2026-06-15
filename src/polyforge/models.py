@@ -455,8 +455,8 @@ class WatchlistItem:
     slug: str = ""
     title: str = ""
     current_price: float = 0.0
-    volume_24h: float = 0.0
-    price_delta_24h: float = 0.0
+    volume24h: float = 0.0
+    price_delta24h: float = 0.0
     watched: bool = True
 
 
@@ -499,14 +499,14 @@ class Webhook:
     url: str = ""
     events: list[str] = field(default_factory=list)
     secret: str = ""
-    enabled: bool = True
+    active: bool = True
     created_at: str = ""
 
     def __repr__(self) -> str:
         return (
             f"Webhook(id={self.id!r}, url={self.url!r}, "
             f"secret='***', events={self.events!r}, "
-            f"enabled={self.enabled!r})"
+            f"active={self.active!r})"
         )
 
 
@@ -1147,6 +1147,8 @@ class ConditionalOrder:
     size: str = ""
     trigger_price: str = ""
     limit_price: str | None = None
+    trailing_pct: str | None = None
+    expires_at: str | None = None
     status: str = ""
     triggered_at: str | None = None
     created_at: str = ""
