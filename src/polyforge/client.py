@@ -109,16 +109,9 @@ from polyforge.models import (
     SpreadSummary,
     Strategy,
     StrategyBlock,
-    StrategyBlockSchema,
-    StrategyBlockType,
-    StrategyBlockValidationIssue,
-    StrategyBlockValidationResult,
-    StrategyDecisionExplanation,
     StrategyEvent,
-    StrategyHealth,
     StrategyStatusResponse,
     StrategyTemplate,
-    StrategyUpdatePreview,
     SystemHealthPublic,
     SystemHealthAuthenticated,
     TickSizeInfo,
@@ -172,13 +165,6 @@ _MODEL_REGISTRY: dict[str, type] = {
     "StrategyBlock": StrategyBlock,
     "StrategyStatusResponse": StrategyStatusResponse,
     "StrategyTemplate": StrategyTemplate,
-    "StrategyBlockValidationIssue": StrategyBlockValidationIssue,
-    "StrategyBlockValidationResult": StrategyBlockValidationResult,
-    "StrategyBlockType": StrategyBlockType,
-    "StrategyBlockSchema": StrategyBlockSchema,
-    "StrategyHealth": StrategyHealth,
-    "StrategyUpdatePreview": StrategyUpdatePreview,
-    "StrategyDecisionExplanation": StrategyDecisionExplanation,
     "Portfolio": Portfolio,
     "Position": Position,
     "Order": Order,
@@ -294,9 +280,7 @@ def _parse_my_referrals_response(raw: dict[str, Any]) -> MyReferralsResponse:
 
 def _camel_to_snake(name: str) -> str:
     """Convert camelCase to snake_case (e.g. 'baseToken' -> 'base_token')."""
-    name = re.sub(r"(?<=[a-z0-9])([A-Z])", r"_\1", name)
-    name = re.sub(r"(?<=[a-zA-Z])([0-9])", r"_\1", name)
-    return name.lower()
+    return re.sub(r"(?<=[a-z0-9])([A-Z])", r"_\1", name).lower()
 
 
 def _snake_to_camel(name: str) -> str:
@@ -2476,105 +2460,6 @@ class PolyforgeClient:
                 event = _parse_strategy_sse_line(line)
                 if event is not None:
                     yield event
-
-    # -- MCP / Strategy Health & Validation --
-
-    def get_strategy_health(self, strategy_id: str) -> StrategyHealth:
-        """Get execution health metrics for a strategy.
-
-        Returns health data including fill rate, latency, error count,
-        slippage, win rate, PnL, and drawdown.
-
-        Args:
-            strategy_id: The strategy UUID.
-
-        Returns:
-            A :class:`StrategyHealth` dataclass with the health metrics.
-        """
-        return _parse(StrategyHealth, self._get(f"/api/v1/strategies/{_encode_path(strategy_id)}/health"))
-
-    def validate_strategy_blocks(self, params: dict[str, Any]) -> StrategyBlockValidationResult:
-        """Validate strategy block configuration without creating or updating.
-
-        Sends triggers, conditions, actions, safety, logic_blocks, and
-        calc_blocks to the backend for structural and semantic validation.
-
-        Args:
-            params: A dict with keys matching ``StrategyBlocksPayload``:
-                ``triggers``, ``conditions``, ``actions``, ``safety``,
-                ``logicBlocks``, ``calcBlocks``, ``variables``, ``canvas``,
-                ``marketId``, ``marketSlots``.
-
-        Returns:
-            A :class:`StrategyBlockValidationResult` with ``valid``, ``issues``,
-            ``warnings``, and ``normalizedBlocks``.
-        """
-        return _parse(StrategyBlockValidationResult, self._post("/api/v1/strategies/validate-blocks", json=params))
-
-    def list_strategy_block_types(self) -> list[StrategyBlockType]:
-        """List supported strategy block types.
-
-        Returns:
-            A list of :class:`StrategyBlockType` entries describing each
-            supported block type (trigger, condition, action, safety, logic, calc).
-        """
-        raw = self._get("/api/v1/strategies/block-types")
-        items = raw if isinstance(raw, list) else raw.get("data", [])
-        return [_parse(StrategyBlockType, b) for b in items]
-
-    def get_block_schema(self, block_type: str) -> StrategyBlockSchema:
-        """Get the JSON schema for a specific strategy block type.
-
-        Args:
-            block_type: The block type identifier (e.g. ``"trigger"``, ``"condition"``).
-
-        Returns:
-            A :class:`StrategyBlockSchema` with the JSON schema, UI schema,
-            defaults, and examples for the block type.
-        """
-        return _parse(StrategyBlockSchema, self._get(f"/api/v1/strategies/block-types/{_encode_path(block_type)}/schema"))
-
-    def preview_strategy_update(
-        self,
-        strategy_id: str,
-        params: dict[str, Any],
-    ) -> StrategyUpdatePreview:
-        """Preview a strategy update with validation and estimated impact.
-
-        Args:
-            strategy_id: The strategy to preview updates for.
-            params: A dict with ``update`` (the update payload) and optional
-                ``dryRun`` flag.
-
-        Returns:
-            A :class:`StrategyUpdatePreview` with the updated strategy shape,
-            validation results, diff, and estimated impact.
-        """
-        return _parse(
-            StrategyUpdatePreview,
-            self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/preview-update", json=params),
-        )
-
-    def explain_strategy_decision(
-        self,
-        strategy_id: str,
-        params: dict[str, Any],
-    ) -> StrategyDecisionExplanation:
-        """Explain why a strategy made a decision for an event or order.
-
-        Args:
-            strategy_id: The strategy UUID.
-            params: A dict with ``eventId``, ``orderId``, ``timestamp``, and/or
-                ``context`` describing the decision to explain.
-
-        Returns:
-            A :class:`StrategyDecisionExplanation` with summary, rationale,
-            confidence, inputs, the decision itself, and related events.
-        """
-        return _parse(
-            StrategyDecisionExplanation,
-            self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/explain-decision", json=params),
-        )
 
     # -- Paper Trading --
 
@@ -6072,48 +5957,6 @@ class AsyncPolyforgeClient:
                 event = _parse_strategy_sse_line(line)
                 if event is not None:
                     yield event
-
-    # -- MCP / Strategy Health & Validation --
-
-    async def get_strategy_health(self, strategy_id: str) -> StrategyHealth:
-        """Get execution health metrics for a strategy (async)."""
-        return _parse(StrategyHealth, await self._get(f"/api/v1/strategies/{_encode_path(strategy_id)}/health"))
-
-    async def validate_strategy_blocks(self, params: dict[str, Any]) -> StrategyBlockValidationResult:
-        """Validate strategy block configuration without creating or updating (async)."""
-        return _parse(StrategyBlockValidationResult, await self._post("/api/v1/strategies/validate-blocks", json=params))
-
-    async def list_strategy_block_types(self) -> list[StrategyBlockType]:
-        """List supported strategy block types (async)."""
-        raw = await self._get("/api/v1/strategies/block-types")
-        items = raw if isinstance(raw, list) else raw.get("data", [])
-        return [_parse(StrategyBlockType, b) for b in items]
-
-    async def get_block_schema(self, block_type: str) -> StrategyBlockSchema:
-        """Get the JSON schema for a specific strategy block type (async)."""
-        return _parse(StrategyBlockSchema, await self._get(f"/api/v1/strategies/block-types/{_encode_path(block_type)}/schema"))
-
-    async def preview_strategy_update(
-        self,
-        strategy_id: str,
-        params: dict[str, Any],
-    ) -> StrategyUpdatePreview:
-        """Preview a strategy update with validation and estimated impact (async)."""
-        return _parse(
-            StrategyUpdatePreview,
-            await self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/preview-update", json=params),
-        )
-
-    async def explain_strategy_decision(
-        self,
-        strategy_id: str,
-        params: dict[str, Any],
-    ) -> StrategyDecisionExplanation:
-        """Explain why a strategy made a decision for an event or order (async)."""
-        return _parse(
-            StrategyDecisionExplanation,
-            await self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/explain-decision", json=params),
-        )
 
     # -- Paper Trading --
 

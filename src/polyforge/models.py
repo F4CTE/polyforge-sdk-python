@@ -455,8 +455,8 @@ class WatchlistItem:
     slug: str = ""
     title: str = ""
     current_price: float = 0.0
-    volume_24h: float = 0.0
-    price_delta_24h: float = 0.0
+    volume24h: float = 0.0
+    price_delta24h: float = 0.0
     watched: bool = True
 
 
