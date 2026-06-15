@@ -6923,6 +6923,36 @@ class TestTicketMethods:
             source = inspect.getsource(getattr(AsyncPolyforgeClient, method_name))
             assert "await" in source, f"async {method_name} not using await"
 
+    def test_support_ticket_status_is_plain_str_field(self):
+        from typing import get_type_hints
+        import polyforge.models as models
+        from polyforge.models import SupportTicket
+
+        assert get_type_hints(SupportTicket)["status"] is str
+        assert not hasattr(models, "TicketStatus")
+
+    @pytest.mark.parametrize("status", ["OPEN", "WAITING_ON_VENDOR", "custom-state"])
+    def test_parse_support_ticket_accepts_any_status_string(self, status):
+        from polyforge.models import SupportTicket
+
+        ticket = _parse(
+            SupportTicket,
+            {
+                "id": "t1",
+                "subject": "Help",
+                "category": "GENERAL",
+                "priority": "MEDIUM",
+                "status": status,
+                "body": "content",
+                "messages": [],
+                "createdAt": "2024-01-01",
+                "updatedAt": "2024-01-01",
+            },
+        )
+
+        assert ticket.status == status
+        assert isinstance(ticket.status, str)
+
     def test_sync_list_tickets(self):
         from unittest.mock import MagicMock
         from polyforge.models import SupportTicket
@@ -6935,6 +6965,30 @@ class TestTicketMethods:
         assert len(result.data) == 1
         assert isinstance(result.data[0], SupportTicket)
         assert result.data[0].subject == "Help"
+        client.close()
+
+    def test_sync_list_tickets_emits_unknown_status_string(self):
+        from unittest.mock import MagicMock
+
+        client = PolyforgeClient(api_key="test-key")
+        client._get = MagicMock(return_value={
+            "data": [{
+                "id": "t1",
+                "subject": "Help",
+                "category": "GENERAL",
+                "priority": "MEDIUM",
+                "status": "WAITING_ON_VENDOR",
+                "body": "Need help",
+                "messages": [],
+                "createdAt": "2024-01-01",
+                "updatedAt": "2024-01-01",
+            }],
+            "pagination": {"total": 1, "page": 1, "limit": 20, "totalPages": 1},
+        })
+
+        result = client.list_tickets()
+
+        assert result.data[0].status == "WAITING_ON_VENDOR"
         client.close()
 
     def test_sync_create_ticket(self):
