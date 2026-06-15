@@ -174,6 +174,7 @@ class Strategy:
     blocks: list[StrategyBlock] = field(default_factory=list)
     created_at: str = ""
     updated_at: str = ""
+    kalshi_subaccount: str | None = None
 
 
 @dataclass
@@ -183,6 +184,98 @@ class StrategyStatusResponse:
     status: str = ""
     started_at: str = ""
     stopped_at: str = ""
+
+
+@dataclass
+class StrategyBlockValidationIssue:
+    """A single validation issue found in strategy blocks.
+
+    Mirrors the backend ``@IsIn()`` enum gate and ``class-validator`` severity
+    levels used by the ``POST /api/v1/strategies/validate-blocks`` endpoint.
+    """
+
+    path: str = ""
+    message: str = ""
+    code: str = ""
+    severity: str = ""  # 'error' | 'warning' | 'info'
+    block_id: str = ""
+    block_type: str = ""
+    suggestion: str = ""
+
+
+@dataclass
+class StrategyBlockValidationResult:
+    """Validation result returned by the strategy-blocks endpoint."""
+
+    valid: bool = False
+    issues: list[StrategyBlockValidationIssue] = field(default_factory=list)
+    warnings: list[StrategyBlockValidationIssue] = field(default_factory=list)
+    normalized_blocks: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
+class StrategyBlockType:
+    """A supported strategy block type as returned by ``GET /api/v1/strategies/block-types``."""
+
+    type: str = ""
+    label: str = ""
+    category: str = ""
+    description: str = ""
+    version: str = ""
+    deprecated: bool = False
+    tags: list[str] = field(default_factory=list)
+
+
+@dataclass
+class StrategyBlockSchema:
+    """JSON schema for a specific strategy block type."""
+
+    type: str = ""
+    schema: dict[str, Any] = field(default_factory=dict)
+    ui_schema: dict[str, Any] = field(default_factory=dict)
+    defaults: dict[str, Any] = field(default_factory=dict)
+    examples: list[dict[str, Any]] = field(default_factory=list)
+
+
+@dataclass
+class StrategyHealth:
+    """Execution health metrics for a strategy (MCP contract).
+
+    Mirrors the ``GET /api/v1/strategies/:id/health`` response shape.
+    """
+
+    fill_rate: float | None = None
+    avg_latency_ms: float = 0.0
+    error_count_24h: int = 0
+    slippage_bps: float = 0.0
+    win_rate: float | None = None
+    total_pnl: float | None = None
+    max_drawdown: float | None = None
+    total_orders: int = 0
+    filled_orders: int = 0
+    last_updated: str | None = None
+
+
+@dataclass
+class StrategyUpdatePreview:
+    """Preview of a strategy update returned by the ``preview-update`` endpoint."""
+
+    strategy: dict[str, Any] = field(default_factory=dict)
+    validation: dict[str, Any] = field(default_factory=dict)
+    diff: dict[str, Any] = field(default_factory=dict)
+    estimated_impact: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
+class StrategyDecisionExplanation:
+    """Explanation of a strategy decision returned by the ``explain-decision`` endpoint."""
+
+    summary: str = ""
+    rationale: list[str] = field(default_factory=list)
+    confidence: float | None = None
+    inputs: dict[str, Any] = field(default_factory=dict)
+    decision: dict[str, Any] = field(default_factory=dict)
+    related_events: list[dict[str, Any]] = field(default_factory=list)
 
 
 # StrategyTemplate is an alias for Strategy — the platform endpoint
@@ -218,14 +311,15 @@ class Position:
 
 @dataclass
 class Portfolio:
-    """Aggregate portfolio state."""
+    """Aggregate portfolio state.
 
-    total_value: float = 0.0
-    available_balance: float = 0.0
-    unrealized_pnl: float = 0.0
-    realized_pnl: float = 0.0
+    PnL totals are typed as ``str`` because the platform returns decimal
+    strings to preserve precision.
+    """
+
+    total_unrealized_pnl: str = ""
+    total_realized_pnl: str = ""
     positions: list[Position] = field(default_factory=list)
-    updated_at: str = ""
 
 
 @dataclass
@@ -355,12 +449,7 @@ class CopyConfig:
 
 @dataclass
 class WatchlistItem:
-    """A market on the user's watchlist.
-
-    Note: field names ``volume24h`` and ``price_delta24h`` match the API's
-    camelCase keys after ``_camel_to_snake`` conversion (digits do not
-    trigger an underscore insertion).
-    """
+    """A market on the user's watchlist."""
 
     market_id: str = ""
     slug: str = ""
@@ -410,14 +499,14 @@ class Webhook:
     url: str = ""
     events: list[str] = field(default_factory=list)
     secret: str = ""
-    enabled: bool = True
+    active: bool = True
     created_at: str = ""
 
     def __repr__(self) -> str:
         return (
             f"Webhook(id={self.id!r}, url={self.url!r}, "
             f"secret='***', events={self.events!r}, "
-            f"enabled={self.enabled!r})"
+            f"active={self.active!r})"
         )
 
 
@@ -909,6 +998,24 @@ class AccuracyScore:
 
 
 @dataclass
+class AccuracyLeaderboardEntry:
+    """A single entry in the accuracy leaderboard, ranked by win-rate.
+
+    The platform returns ``pnl`` and ``winRate`` as decimal strings to
+    preserve precision.
+    """
+
+    rank: int = 0
+    user_id: str = ""
+    username: str = ""
+    display_name: Optional[str] = None
+    avatar_url: Optional[str] = None
+    pnl: str = ""
+    win_rate: str = ""
+    trade_count: int = 0
+
+
+@dataclass
 class PortfolioReview:
     review: str = ""
     suggestions: List[str] = field(default_factory=list)
@@ -1046,6 +1153,8 @@ class ConditionalOrder:
     triggered_at: str | None = None
     created_at: str = ""
     updated_at: str = ""
+    trailing_pct: str | None = None
+    expires_at: str | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -1563,6 +1672,9 @@ class VenuePreferences:
     single_platform_mode: bool = False
 
 
+UserPreferences = VenuePreferences
+
+
 # ---------------------------------------------------------------------------
 # Support Tickets
 # ---------------------------------------------------------------------------
@@ -1811,6 +1923,7 @@ class SystemHealthAuthenticated:
     redis: dict[str, Any] | None = None
     queue_depth: int | None = None
     services: dict[str, Any] | None = None
+
 
 # ---------------------------------------------------------------------------
 # GDPR Personal Data Export

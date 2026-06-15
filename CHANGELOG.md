@@ -21,7 +21,7 @@ available on both `PolyforgeClient` and `AsyncPolyforgeClient`:
 - `delete_market_alert(market_id, alert_id)` → `None`
 - `get_market_history(market_id, *, period)` → `list[MarketHistoryPoint]` — hourly YES/NO price history (`1d`/`7d`/`30d`/`90d`)
 - `get_market_sentiment_report(market_id)` → `MarketSentimentReport` — aggregate sentiment (distinct from `get_market_sentiment()` which mirrors `/news/sentiment/:id`)
-- `vote_market_sentiment(market_id)` → `MarketSentimentReport`
+- `vote_market_sentiment(market_id, *, direction, confidence)` → `MarketSentimentReport`
 - `update_order_journal(order_id, *, mood, note)` → `Order` — `PATCH`-only on the platform; no `GET` variant exists
 - `list_combo_collections(*, series_ticker, limit, cursor)` → `dict[str, Any]`
 - `get_combo_collection(ticker)` → `dict[str, Any]`
@@ -170,6 +170,21 @@ new methods closing cross-SDK compatibility gaps, available on both
 
 New dataclass: `SystemHealthAuthenticated` (re-exported from `polyforge`).
 
+**Smart order validation (POLA-4991)** — client-side guard for `place_smart_order`
+type, slices, and intervalMinutes, mirroring `class-validator` bounds in
+`PlaceSmartOrderDto` on the platform:
+
+- **enum validation**: `type` must be one of `{"TWAP", "DCA", "BRACKET", "OCO"}`,
+  enforced via `_validate_enum` in both sync and async clients.
+- **slices range**: must be an integer in `[2, 100]`, enforced via inline
+  `isinstance` check and range guard in both sync and async clients.
+- **interval_minutes range**: must be an integer in `[1, 10080]` (1 minute to
+  7 days), enforced via inline `isinstance` check and range guard in both
+  sync and async clients.
+
+Each guard rejects bad input before any network call, matching the cross-SDK
+validation contracts exposed by the TypeScript SDK.
+
 ### Changed
 
 **Arb close-sweep semantics documented (POLA-1957)** — updated docstrings across
@@ -206,6 +221,17 @@ public-profile badge surfaces to match the MCP and Rust SDK naming:
 The deprecated sync and async method aliases remain callable for one minor
 release and emit `DeprecationWarning`; deprecated referral type names remain
 importable for the same window.
+
+### Fixed
+
+**vote_market_sentiment was sending empty POST body (POLA-4897)** — the
+``vote_market_sentiment`` method (sync and async) previously accepted only a
+``market_id`` and sent an empty JSON body, which the platform rejects. The
+signature now requires `direction` (``BUY`` | ``SELL``) and ``confidence``
+(0-100) as keyword arguments, mirroring the TS SDK's ``VoteMarketSentimentParams``
+contract. Client-side validation rejects invalid directions, non-numeric
+confidence, booleans (``True``/``False``), NaN, Infinity, negative values, and
+values above 100.
 
 ## [2.0.0] — 2026-04-16
 

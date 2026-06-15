@@ -1,5 +1,6 @@
 """Basic smoke tests for PolyforgeClient."""
 
+import gzip
 import json
 
 import httpx
@@ -7,6 +8,9 @@ import pytest
 from polyforge.client import (
     PolyforgeClient,
     AsyncPolyforgeClient,
+    _MAX_SSE_LINE_BYTES,
+    _aiter_sse_lines,
+    _iter_sse_lines,
     _parse,
     _parse_pagination,
     _raise_for_status,
@@ -33,6 +37,7 @@ from polyforge.models import (
     KNOWN_STRATEGY_EVENTS,
     JournalEntry,
     Market,
+    MarketMatch,
     MatchSyncResult,
     SystemHealthPublic,
     SystemHealthAuthenticated,
@@ -63,6 +68,7 @@ from polyforge.models import (
     UserRewardsTotal,
     UserSponsoredMarkets,
     WatchlistItem,
+    Webhook,
     WebhookEvent,
     WebhookTestResult,
     WhaleTrade,
@@ -548,15 +554,13 @@ class TestModelParsing:
     def test_portfolio_model_instantiation(self):
         """Should instantiate Portfolio model."""
         portfolio = Portfolio(
-            total_value=10000.0,
-            available_balance=5000.0,
-            unrealized_pnl=300.0,
-            realized_pnl=200.0,
+            total_unrealized_pnl="300.000000",
+            total_realized_pnl="200.000000",
         )
-        assert portfolio.total_value == 10000.0
-        assert portfolio.available_balance == 5000.0
-        assert portfolio.unrealized_pnl == 300.0
-        assert portfolio.realized_pnl == 200.0
+        assert portfolio.total_unrealized_pnl == "300.000000"
+        assert portfolio.total_realized_pnl == "200.000000"
+        assert isinstance(portfolio.total_unrealized_pnl, str)
+        assert isinstance(portfolio.total_realized_pnl, str)
 
     def test_market_with_defaults(self):
         """Should use default values for Market fields."""
@@ -568,10 +572,49 @@ class TestModelParsing:
     def test_portfolio_with_defaults(self):
         """Should use default values for Portfolio fields."""
         portfolio = Portfolio()
-        assert portfolio.total_value == 0.0
-        assert portfolio.available_balance == 0.0
-        assert portfolio.unrealized_pnl == 0.0
-        assert portfolio.realized_pnl == 0.0
+        assert portfolio.total_unrealized_pnl == ""
+        assert portfolio.total_realized_pnl == ""
+        assert portfolio.positions == []
+
+    def test_portfolio_has_only_platform_summary_fields(self):
+        """Portfolio must not expose fields absent from GET /api/v1/portfolio."""
+        import dataclasses
+
+        field_names = {f.name for f in dataclasses.fields(Portfolio)}
+        assert "total_unrealized_pnl" in field_names
+        assert "total_realized_pnl" in field_names
+        assert "positions" in field_names
+        assert "total_value" not in field_names
+        assert "available_balance" not in field_names
+        assert "unrealized_pnl" not in field_names
+        assert "realized_pnl" not in field_names
+        assert "updated_at" not in field_names
+
+    def test_portfolio_parses_platform_response(self):
+        """_parse must map platform camelCase PnL totals without coercing them."""
+        api_response = {
+            "positions": [
+                {
+                    "id": "pos-1",
+                    "marketId": "market-1",
+                    "tokenId": "token-yes",
+                    "outcome": "YES",
+                    "size": "10.000000",
+                    "unrealizedPnl": "1.250000",
+                    "realizedPnl": "0.500000",
+                },
+            ],
+            "totalUnrealizedPnl": "1.250000",
+            "totalRealizedPnl": "0.500000",
+        }
+        portfolio = _parse(Portfolio, api_response)
+        assert portfolio.total_unrealized_pnl == "1.250000"
+        assert portfolio.total_realized_pnl == "0.500000"
+        assert isinstance(portfolio.total_unrealized_pnl, str)
+        assert isinstance(portfolio.total_realized_pnl, str)
+        assert portfolio.positions[0].market_id == "market-1"
+        assert portfolio.positions[0].token_id == "token-yes"
+        assert portfolio.positions[0].unrealized_pnl == "1.250000"
 
     def test_strategy_with_defaults(self):
         """Should use default values for Strategy fields."""
@@ -987,6 +1030,21 @@ class TestPlatformContractCompliance:
         assert '"mode"' in source or "'mode'" in source, "start_strategy() must send 'mode' field"
         assert "paperMode" not in source, "start_strategy() must not send obsolete 'paperMode' field"
 
+    def test_strategy_exec_mode_exported_from_package(self):
+        """StrategyExecMode must be importable from the polyforge package root (#262)."""
+        from polyforge import StrategyExecMode
+        assert StrategyExecMode is not None
+
+    def test_support_ticket_exported_from_package(self):
+        """SupportTicket must be importable from the polyforge package root (#262)."""
+        from polyforge import SupportTicket
+        assert SupportTicket is not None
+
+    def test_user_preferences_exported_from_package(self):
+        """UserPreferences must be importable from the polyforge package root (#262)."""
+        from polyforge import UserPreferences
+        assert UserPreferences is not None
+
 
 class TestFinancialParamValidation:
     """Test _validate_financial_param rejects dangerous values (#88)."""
@@ -1098,6 +1156,7 @@ class TestPlaceOrderValidation:
             client.place_smart_order(
                 type="TWAP", token_id="tok", side="BUY",
                 outcome="YES", total_size=float("inf"),
+                slices=5, interval_minutes=10,
             )
         client.close()
 
@@ -1106,7 +1165,221 @@ class TestPlaceOrderValidation:
         with pytest.raises(ValueError, match="must not be NaN"):
             client.place_smart_order(
                 type="TWAP", token_id="tok", side="BUY",
-                outcome="YES", total_size=10.0, limit_price=float("nan"),
+                outcome="YES", total_size=10.0,
+                slices=5, interval_minutes=10, limit_price=float("nan"),
+            )
+        client.close()
+
+    def test_place_smart_order_rejects_invalid_type(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="must be one of"):
+            client.place_smart_order(
+                type="INVALID", token_id="tok", side="BUY",
+                outcome="YES", total_size=10.0,
+            )
+        client.close()
+
+    def test_place_smart_order_rejects_invalid_side(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="must be one of"):
+            client.place_smart_order(
+                type="TWAP", token_id="tok", side="HOLD",
+                outcome="YES", total_size=10.0,
+            )
+        client.close()
+
+    def test_place_smart_order_rejects_invalid_outcome(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="must be one of"):
+            client.place_smart_order(
+                type="TWAP", token_id="tok", side="BUY",
+                outcome="MAYBE", total_size=10.0,
+            )
+        client.close()
+
+    def test_place_smart_order_rejects_invalid_slices_below_range(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="slices must be between 2 and 100"):
+            client.place_smart_order(
+                type="TWAP", token_id="tok", side="BUY",
+                outcome="YES", total_size=10.0, slices=1, interval_minutes=10,
+            )
+        client.close()
+
+    def test_place_smart_order_rejects_invalid_slices_above_range(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="slices must be between 2 and 100"):
+            client.place_smart_order(
+                type="TWAP", token_id="tok", side="BUY",
+                outcome="YES", total_size=10.0, slices=101, interval_minutes=10,
+            )
+        client.close()
+
+    def test_place_smart_order_rejects_invalid_slices_negative(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="slices must be between 2 and 100"):
+            client.place_smart_order(
+                type="TWAP", token_id="tok", side="BUY",
+                outcome="YES", total_size=10.0, slices=-1, interval_minutes=10,
+            )
+        client.close()
+
+    def test_place_smart_order_rejects_invalid_interval_minutes_below_range(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="interval_minutes must be between 1 and 10080"):
+            client.place_smart_order(
+                type="TWAP", token_id="tok", side="BUY",
+                outcome="YES", total_size=10.0, slices=2, interval_minutes=0,
+            )
+        client.close()
+
+    def test_place_smart_order_rejects_invalid_interval_minutes_above_range(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="interval_minutes must be between 1 and 10080"):
+            client.place_smart_order(
+                type="TWAP", token_id="tok", side="BUY",
+                outcome="YES", total_size=10.0, slices=2, interval_minutes=10081,
+            )
+        client.close()
+
+    def test_place_smart_order_rejects_invalid_interval_minutes_negative(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="interval_minutes must be between 1 and 10080"):
+            client.place_smart_order(
+                type="TWAP", token_id="tok", side="BUY",
+                outcome="YES", total_size=10.0, slices=2, interval_minutes=-5,
+            )
+        client.close()
+
+    def test_place_smart_order_rejects_fractional_slices(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(TypeError, match="slices must be an integer"):
+            client.place_smart_order(
+                type="TWAP", token_id="tok", side="BUY",
+                outcome="YES", total_size=10.0, slices=2.5, interval_minutes=10,  # type: ignore[arg-type]
+            )
+        client.close()
+
+    def test_place_smart_order_rejects_fractional_interval_minutes(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(TypeError, match="interval_minutes must be an integer"):
+            client.place_smart_order(
+                type="TWAP", token_id="tok", side="BUY",
+                outcome="YES", total_size=10.0, slices=5, interval_minutes=1.5,  # type: ignore[arg-type]
+            )
+        client.close()
+
+    def test_place_smart_order_rejects_total_size_below_1(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="total_size must be at least 1"):
+            client.place_smart_order(
+                type="TWAP", token_id="tok", side="BUY",
+                outcome="YES", total_size=0.5, slices=5, interval_minutes=10,
+            )
+        client.close()
+
+    def test_place_smart_order_rejects_total_size_negative(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="must be positive"):
+            client.place_smart_order(
+                type="TWAP", token_id="tok", side="BUY",
+                outcome="YES", total_size=-1.0, slices=5, interval_minutes=10,
+            )
+        client.close()
+
+    def test_place_smart_order_rejects_limit_price_below_range(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="must be between 0.001 and 0.999"):
+            client.place_smart_order(
+                type="TWAP", token_id="tok", side="BUY",
+                outcome="YES", total_size=10.0, slices=5, interval_minutes=10,
+                limit_price=0.0,
+            )
+        client.close()
+
+    def test_place_smart_order_rejects_limit_price_above_range(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="must be between 0.001 and 0.999"):
+            client.place_smart_order(
+                type="TWAP", token_id="tok", side="BUY",
+                outcome="YES", total_size=10.0, slices=5, interval_minutes=10,
+                limit_price=1.0,
+            )
+        client.close()
+
+    def test_place_smart_order_rejects_price_negative(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="must be between 0.001 and 0.999"):
+            client.place_smart_order(
+                type="BRACKET", token_id="tok", side="BUY",
+                outcome="YES", total_size=10.0,
+                entry_price=0.5, take_profit_price=0.8, stop_loss_price=-0.1,
+            )
+        client.close()
+
+    def test_place_smart_order_twap_requires_slices(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="slices is required for TWAP/DCA orders"):
+            client.place_smart_order(
+                type="TWAP", token_id="tok", side="BUY",
+                outcome="YES", total_size=10.0, interval_minutes=10,
+            )
+        client.close()
+
+    def test_place_smart_order_twap_requires_interval_minutes(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="interval_minutes is required for TWAP/DCA orders"):
+            client.place_smart_order(
+                type="TWAP", token_id="tok", side="BUY",
+                outcome="YES", total_size=10.0, slices=5,
+            )
+        client.close()
+
+    def test_place_smart_order_bracket_requires_entry_price(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="entry_price is required for BRACKET orders"):
+            client.place_smart_order(
+                type="BRACKET", token_id="tok", side="BUY",
+                outcome="YES", total_size=10.0,
+                take_profit_price=0.8, stop_loss_price=0.2,
+            )
+        client.close()
+
+    def test_place_smart_order_bracket_requires_take_profit_price(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="take_profit_price is required for BRACKET orders"):
+            client.place_smart_order(
+                type="BRACKET", token_id="tok", side="BUY",
+                outcome="YES", total_size=10.0,
+                entry_price=0.5, stop_loss_price=0.2,
+            )
+        client.close()
+
+    def test_place_smart_order_bracket_requires_stop_loss_price(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="stop_loss_price is required for BRACKET orders"):
+            client.place_smart_order(
+                type="BRACKET", token_id="tok", side="BUY",
+                outcome="YES", total_size=10.0,
+                entry_price=0.5, take_profit_price=0.8,
+            )
+        client.close()
+
+    def test_place_smart_order_oco_requires_price_a(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="price_a is required for OCO orders"):
+            client.place_smart_order(
+                type="OCO", token_id="tok", side="BUY",
+                outcome="YES", total_size=10.0, price_b=0.5,
+            )
+        client.close()
+
+    def test_place_smart_order_oco_requires_price_b(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="price_b is required for OCO orders"):
+            client.place_smart_order(
+                type="OCO", token_id="tok", side="BUY",
+                outcome="YES", total_size=10.0, price_a=0.5,
             )
         client.close()
 
@@ -1149,11 +1422,77 @@ class TestAsyncPlaceOrderValidation:
         source = inspect.getsource(AsyncPolyforgeClient.split_position)
         assert '"amount"' in source or "'amount'" in source
 
-    def test_async_place_smart_order_calls_validate(self):
-        """Async place_smart_order must call _validate_financial_param for total_size."""
-        import inspect
-        source = inspect.getsource(AsyncPolyforgeClient.place_smart_order)
-        assert '_validate_financial_param("total_size"' in source
+    def test_async_place_smart_order_rejects_invalid_type(self):
+        """Async place_smart_order should reject unknown smart-order types."""
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            client._post = AsyncMock()
+            try:
+                with pytest.raises(ValueError, match='type must be one of'):
+                    await client.place_smart_order(
+                        type="INVALID",
+                        token_id="tok",
+                        side="BUY",
+                        outcome="YES",
+                        total_size=10.0,
+                    )
+                client._post.assert_not_called()
+            finally:
+                await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_place_smart_order_twap_requires_slices(self):
+        """Async place_smart_order should enforce TWAP/DCA slices requirements."""
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            client._post = AsyncMock()
+            try:
+                with pytest.raises(ValueError, match="slices is required for TWAP/DCA orders"):
+                    await client.place_smart_order(
+                        type="TWAP",
+                        token_id="tok",
+                        side="BUY",
+                        outcome="YES",
+                        total_size=10.0,
+                        interval_minutes=5,
+                    )
+                client._post.assert_not_called()
+            finally:
+                await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_place_smart_order_rejects_invalid_slices_below_range(self):
+        """Async place_smart_order should enforce the slices min/max range."""
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            client._post = AsyncMock()
+            try:
+                with pytest.raises(ValueError, match="slices must be between 2 and 100"):
+                    await client.place_smart_order(
+                        type="TWAP",
+                        token_id="tok",
+                        side="BUY",
+                        outcome="YES",
+                        total_size=10.0,
+                        slices=1,
+                        interval_minutes=1,
+                    )
+                client._post.assert_not_called()
+            finally:
+                await client.close()
+
+        asyncio.run(_run())
 
     def test_async_provide_liquidity_calls_validate(self):
         """Async provide_liquidity must call _validate_financial_param for amount_usdc (#26)."""
@@ -1312,6 +1651,7 @@ class TestCreateStrategyParams:
         assert "tags" in params
         assert "variables" in params
         assert "canvas" in params
+        assert "kalshi_subaccount" in params
 
     def test_async_create_strategy_accepts_block_params(self):
         """Async create_strategy() must also accept the expanded params."""
@@ -1323,6 +1663,7 @@ class TestCreateStrategyParams:
         assert "triggers" in params
         assert "actions" in params
         assert "tags" in params
+        assert "kalshi_subaccount" in params
 
     def test_create_strategy_sends_camel_case_fields(self):
         """create_strategy() must send camelCase field names to the API."""
@@ -1336,6 +1677,7 @@ class TestCreateStrategyParams:
         assert '"actions"' in source
         assert '"safety"' in source
         assert '"tags"' in source
+        assert '"kalshiSubaccount"' in source
 
 
 class TestUpdateStrategyParams:
@@ -1350,7 +1692,7 @@ class TestUpdateStrategyParams:
             "name", "description", "market_id", "visibility", "exec_mode",
             "tick_ms", "triggers", "conditions", "actions", "safety",
             "logic_blocks", "calc_blocks", "tags", "variables", "canvas",
-            "market_slots",
+            "market_slots", "kalshi_subaccount",
         ):
             assert expected in params, f"missing param: {expected}"
 
@@ -1363,7 +1705,7 @@ class TestUpdateStrategyParams:
             "name", "description", "market_id", "visibility", "exec_mode",
             "tick_ms", "triggers", "conditions", "actions", "safety",
             "logic_blocks", "calc_blocks", "tags", "variables", "canvas",
-            "market_slots",
+            "market_slots", "kalshi_subaccount",
         ):
             assert expected in params, f"missing async param: {expected}"
 
@@ -1375,7 +1717,7 @@ class TestUpdateStrategyParams:
             '"visibility"', '"execMode"', '"tickMs"', '"triggers"',
             '"conditions"', '"actions"', '"safety"', '"logicBlocks"',
             '"calcBlocks"', '"tags"', '"variables"', '"canvas"',
-            '"marketSlots"',
+            '"marketSlots"', '"kalshiSubaccount"',
         ):
             assert camel in source, f"missing camelCase key: {camel}"
 
@@ -2091,6 +2433,34 @@ class TestWebhookTestResult:
         assert result.status_code == 0
 
 
+class TestWebhookModel:
+    """Tests for Webhook model platform compatibility."""
+
+    def test_webhook_active_field_populates_from_platform(self):
+        """Webhook.dataclass uses active to match platform response field name (#300)."""
+        webhook = _parse(Webhook, {
+            "id": "wh_123",
+            "url": "https://example.com/hook",
+            "events": ["ORDER_FILLED"],
+            "active": False,
+            "createdAt": "2026-06-01T00:00:00Z",
+        })
+
+        assert webhook.active is False
+        assert webhook.active == False
+
+    def test_webhook_active_defaults_true(self):
+        """Webhook.active defaults to True when platform omits the field."""
+        webhook = _parse(Webhook, {
+            "id": "wh_456",
+            "url": "https://example.com/hook",
+            "events": ["ORDER_FILLED"],
+            "createdAt": "2026-06-01T00:00:00Z",
+        })
+
+        assert webhook.active is True
+
+
 class TestWebhookMutationMethods:
     """Tests for webhook delete and test methods (#55)."""
 
@@ -2382,16 +2752,44 @@ class TestAlertCrud:
             outcome="YES",
             size="10",
             trigger_price="0.50",
-            trailing_pct="2.5",
-            expires_at="2026-01-02T03:04:05Z",
+            trailing_pct="0.05",
+            expires_at="2026-06-01T12:00:00Z",
             status="PENDING",
         )
         assert order.id == "co-1"
         assert order.market_id == "m-1"
         assert order.trigger_price == "0.50"
+        assert order.trailing_pct == "0.05"
+        assert order.expires_at == "2026-06-01T12:00:00Z"
         assert order.limit_price is None
         assert order.trailing_pct == "2.5"
         assert order.expires_at == "2026-01-02T03:04:05Z"
+
+    def test_conditional_order_preserves_positional_field_order(self):
+        """Existing positional construction must keep status and timestamps aligned."""
+        order = ConditionalOrder(
+            "co-1",
+            "m-1",
+            "t-1",
+            "STOP_LOSS",
+            "SELL",
+            "YES",
+            "10",
+            "0.50",
+            "0.45",
+            "PENDING",
+            "2026-05-31T12:00:00Z",
+            "2026-05-31T11:00:00Z",
+            "2026-05-31T11:30:00Z",
+        )
+
+        assert order.limit_price == "0.45"
+        assert order.status == "PENDING"
+        assert order.triggered_at == "2026-05-31T12:00:00Z"
+        assert order.created_at == "2026-05-31T11:00:00Z"
+        assert order.updated_at == "2026-05-31T11:30:00Z"
+        assert order.trailing_pct is None
+        assert order.expires_at is None
 
     def test_conditional_order_defaults(self):
         """ConditionalOrder defaults should be sensible."""
@@ -2402,24 +2800,6 @@ class TestAlertCrud:
         assert order.limit_price is None
         assert order.trailing_pct is None
         assert order.expires_at is None
-
-    def test_conditional_order_parses_trailing_pct_and_expires_at(self):
-        """ConditionalOrder should parse platform camelCase expiry/trailing fields."""
-        order = _parse(ConditionalOrder, {
-            "id": "co-1",
-            "marketId": "m-1",
-            "tokenId": "t-1",
-            "type": "TRAILING_STOP",
-            "side": "SELL",
-            "outcome": "YES",
-            "size": "10",
-            "triggerPrice": "0.50",
-            "trailingPct": "2.5",
-            "expiresAt": "2026-01-02T03:04:05Z",
-            "status": "PENDING",
-        })
-        assert order.trailing_pct == "2.5"
-        assert order.expires_at == "2026-01-02T03:04:05Z"
 
     def test_portfolio_pnl_model_fields(self):
         """PortfolioPnl must have all expected fields."""
@@ -2498,7 +2878,7 @@ class TestAlertCrud:
 
         source = inspect.getsource(PolyforgeClient.delete_alert)
         assert "/api/v1/alerts/" in source
-        assert "_delete" in source
+        assert "_delete(" in source
         assert "_encode_path" in source
 
     # -- Async client: create_alert / delete_alert --
@@ -2525,7 +2905,7 @@ class TestAlertCrud:
 
         source = inspect.getsource(AsyncPolyforgeClient.delete_alert)
         assert "/api/v1/alerts/" in source
-        assert "_delete" in source
+        assert "_delete(" in source
 
     # -- Regression: price must be sent as string (#162 / POLA-332) --
 
@@ -2601,6 +2981,35 @@ class TestConditionalOrders:
         assert "trailing_pct" in param_names
         assert "expires_at" in param_names
 
+    def test_sync_create_conditional_order_sends_trailing_pct_and_expires_at(self):
+        """create_conditional_order() must serialize trailing stop and expiry fields."""
+        from unittest.mock import MagicMock
+
+        client = PolyforgeClient(api_key="test-key")
+        client._post = MagicMock(return_value={
+            "id": "co-1",
+            "trailingPct": "0.05",
+            "expiresAt": "2026-06-01T12:00:00Z",
+        })
+
+        order = client.create_conditional_order(
+            "m-1",
+            "tok",
+            "TRAILING_STOP",
+            "SELL",
+            "YES",
+            1.0,
+            0.4,
+            trailing_pct=0.05,
+            expires_at="2026-06-01T12:00:00Z",
+        )
+
+        assert client._post.call_args.kwargs["json"]["trailingPct"] == "0.05"
+        assert client._post.call_args.kwargs["json"]["expiresAt"] == "2026-06-01T12:00:00Z"
+        assert order.trailing_pct == "0.05"
+        assert order.expires_at == "2026-06-01T12:00:00Z"
+        client.close()
+
     def test_sync_create_conditional_order_path(self):
         """create_conditional_order() must POST to /api/v1/orders/conditional."""
         import inspect
@@ -2616,8 +3025,8 @@ class TestConditionalOrders:
         source = inspect.getsource(PolyforgeClient.create_conditional_order)
         assert "_validate_financial_param" in source
 
-    def test_sync_create_conditional_order_sends_trailing_pct_and_expires_at(self):
-        """create_conditional_order() must expose trailingPct and expiresAt."""
+    def test_sync_create_conditional_order_sends_limit_price_as_string(self):
+        """create_conditional_order() must send limitPrice as a number string."""
         from unittest.mock import MagicMock
 
         client = PolyforgeClient(api_key="test-key")
@@ -2625,42 +3034,35 @@ class TestConditionalOrders:
             "id": "co-1",
             "marketId": "m-1",
             "tokenId": "tok",
-            "type": "TRAILING_STOP",
+            "type": "STOP_LOSS",
             "side": "SELL",
             "outcome": "YES",
             "size": "1",
             "triggerPrice": "0.4",
-            "trailingPct": "2.5",
-            "expiresAt": "2026-01-02T03:04:05Z",
+            "limitPrice": "0.45",
             "status": "PENDING",
         })
 
-        result = client.create_conditional_order(
+        client.create_conditional_order(
             "m-1",
             "tok",
-            "TRAILING_STOP",
+            "STOP_LOSS",
             "SELL",
             "YES",
             1.0,
             0.4,
-            trailing_pct=2.5,
-            expires_at="2026-01-02T03:04:05Z",
-            idempotency_key="conditional-123",
+            limit_price=0.45,
         )
 
-        body = client._post.call_args.kwargs["json"]
-        assert body["trailingPct"] == "2.5"
-        assert body["expiresAt"] == "2026-01-02T03:04:05Z"
-        assert result.trailing_pct == "2.5"
-        assert result.expires_at == "2026-01-02T03:04:05Z"
+        assert client._post.call_args.kwargs["json"]["limitPrice"] == "0.45"
         client.close()
 
     def test_async_create_conditional_order_exists(self):
         """AsyncPolyforgeClient must have create_conditional_order."""
         assert hasattr(AsyncPolyforgeClient, "create_conditional_order")
 
-    def test_async_create_conditional_order_sends_trailing_pct_and_expires_at(self):
-        """Async create_conditional_order() must expose trailingPct and expiresAt."""
+    def test_async_create_conditional_order_sends_limit_price_as_string(self):
+        """Async create_conditional_order() must send limitPrice as a number string."""
         import asyncio
         from unittest.mock import AsyncMock
 
@@ -2670,17 +3072,45 @@ class TestConditionalOrders:
                 "id": "co-1",
                 "marketId": "m-1",
                 "tokenId": "tok",
-                "type": "TRAILING_STOP",
+                "type": "STOP_LOSS",
                 "side": "SELL",
                 "outcome": "YES",
                 "size": "1",
                 "triggerPrice": "0.4",
-                "trailingPct": "2.5",
-                "expiresAt": "2026-01-02T03:04:05Z",
+                "limitPrice": "0.45",
                 "status": "PENDING",
             })
 
-            result = await client.create_conditional_order(
+            await client.create_conditional_order(
+                "m-1",
+                "tok",
+                "STOP_LOSS",
+                "SELL",
+                "YES",
+                1.0,
+                0.4,
+                limit_price=0.45,
+            )
+
+            assert client._post.call_args.kwargs["json"]["limitPrice"] == "0.45"
+            await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_create_conditional_order_sends_trailing_pct_and_expires_at(self):
+        """Async create_conditional_order() must serialize trailing stop and expiry fields."""
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test-key")
+            client._post = AsyncMock(return_value={
+                "id": "co-1",
+                "trailingPct": "0.05",
+                "expiresAt": "2026-06-01T12:00:00Z",
+            })
+
+            order = await client.create_conditional_order(
                 "m-1",
                 "tok",
                 "TRAILING_STOP",
@@ -2688,16 +3118,14 @@ class TestConditionalOrders:
                 "YES",
                 1.0,
                 0.4,
-                trailing_pct=2.5,
-                expires_at="2026-01-02T03:04:05Z",
-                idempotency_key="conditional-123",
+                trailing_pct=0.05,
+                expires_at="2026-06-01T12:00:00Z",
             )
 
-            body = client._post.call_args.kwargs["json"]
-            assert body["trailingPct"] == "2.5"
-            assert body["expiresAt"] == "2026-01-02T03:04:05Z"
-            assert result.trailing_pct == "2.5"
-            assert result.expires_at == "2026-01-02T03:04:05Z"
+            assert client._post.call_args.kwargs["json"]["trailingPct"] == "0.05"
+            assert client._post.call_args.kwargs["json"]["expiresAt"] == "2026-06-01T12:00:00Z"
+            assert order.trailing_pct == "0.05"
+            assert order.expires_at == "2026-06-01T12:00:00Z"
             await client.close()
 
         asyncio.run(_run())
@@ -2748,7 +3176,7 @@ class TestConditionalOrders:
 
         source = inspect.getsource(PolyforgeClient.cancel_conditional_order)
         assert "/api/v1/orders/conditional/" in source
-        assert "_delete" in source
+        assert "_delete(" in source
         assert "_encode_path" in source
 
     def test_async_cancel_conditional_order_exists(self):
@@ -3120,6 +3548,90 @@ class TestDiscoveryAndRanking:
         assert "/api/v1/leaderboard" in source
 
 
+class TestStrategyCapabilityDiscovery:
+    """Tests for strategy capability discovery endpoints (#298)."""
+
+    def test_sync_strategy_capability_methods_exist(self):
+        for method in (
+            "get_strategy_capabilities",
+            "get_strategy_design_patterns",
+            "get_strategy_examples",
+        ):
+            assert callable(getattr(PolyforgeClient, method, None))
+
+    def test_async_strategy_capability_methods_exist(self):
+        for method in (
+            "get_strategy_capabilities",
+            "get_strategy_design_patterns",
+            "get_strategy_examples",
+        ):
+            assert callable(getattr(AsyncPolyforgeClient, method, None))
+
+    def test_sync_strategy_capability_paths(self):
+        import inspect
+
+        assert "/api/v1/strategies/capabilities" in inspect.getsource(
+            PolyforgeClient.get_strategy_capabilities
+        )
+        assert "/api/v1/strategies/design-patterns" in inspect.getsource(
+            PolyforgeClient.get_strategy_design_patterns
+        )
+        assert "/api/v1/strategies/examples" in inspect.getsource(
+            PolyforgeClient.get_strategy_examples
+        )
+
+    def test_async_strategy_capability_paths(self):
+        import inspect
+
+        assert "/api/v1/strategies/capabilities" in inspect.getsource(
+            AsyncPolyforgeClient.get_strategy_capabilities
+        )
+        assert "/api/v1/strategies/design-patterns" in inspect.getsource(
+            AsyncPolyforgeClient.get_strategy_design_patterns
+        )
+        assert "/api/v1/strategies/examples" in inspect.getsource(
+            AsyncPolyforgeClient.get_strategy_examples
+        )
+
+    def test_sync_strategy_capability_methods_return_raw_manifest(self):
+        seen_paths = []
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            seen_paths.append(request.url.path)
+            return httpx.Response(
+                200,
+                json={"version": "1.0", "path": request.url.path},
+            )
+
+        transport = httpx.MockTransport(handler)
+        client = PolyforgeClient(api_key="test", api_url="http://localhost:9999")
+        client._client = httpx.Client(
+            base_url="http://localhost:9999",
+            headers={"Authorization": "Bearer test"},
+            transport=transport,
+        )
+        try:
+            assert (
+                client.get_strategy_capabilities()["path"]
+                == "/api/v1/strategies/capabilities"
+            )
+            assert (
+                client.get_strategy_design_patterns()["path"]
+                == "/api/v1/strategies/design-patterns"
+            )
+            assert (
+                client.get_strategy_examples()["path"]
+                == "/api/v1/strategies/examples"
+            )
+        finally:
+            client.close()
+        assert seen_paths == [
+            "/api/v1/strategies/capabilities",
+            "/api/v1/strategies/design-patterns",
+            "/api/v1/strategies/examples",
+        ]
+
+
 class TestPaperTrading:
     """Tests for get_paper_summary and reset_paper_account."""
 
@@ -3465,13 +3977,13 @@ class TestWhaleLeaderboardAlertFilterActions:
         import inspect
         source = inspect.getsource(PolyforgeClient.delete_whale_alert_filter)
         assert "/api/v1/whales/alerts/filter" in source
-        assert "_delete" in source
+        assert "_delete(" in source
 
     def test_async_delete_whale_alert_filter_path(self):
         import inspect
         source = inspect.getsource(AsyncPolyforgeClient.delete_whale_alert_filter)
         assert "/api/v1/whales/alerts/filter" in source
-        assert "_delete" in source
+        assert "_delete(" in source
 
     # -- get_actions --
 
@@ -3783,14 +4295,14 @@ class TestCopyTradingCrud:
         import inspect
         source = inspect.getsource(PolyforgeClient.delete_copy_config)
         assert "/api/v1/copy/" in source
-        assert "_delete" in source
+        assert "_delete(" in source
         assert "_encode_path" in source
 
     def test_async_delete_copy_config_path(self):
         import inspect
         source = inspect.getsource(AsyncPolyforgeClient.delete_copy_config)
         assert "/api/v1/copy/" in source
-        assert "_delete" in source
+        assert "_delete(" in source
 
     # -- get_copy_trades --
 
@@ -3848,6 +4360,7 @@ class TestNewModels:
         assert trade.id == ""
         assert trade.side == ""
         assert trade.pnl == ""
+
 
 
 class TestStrategySocialVersioningEventLog:
@@ -3944,7 +4457,7 @@ class TestApiKeyManagement:
     def test_revoke_api_key_uses_delete_method(self):
         import inspect
         source = inspect.getsource(PolyforgeClient.revoke_api_key)
-        assert "_delete" in source
+        assert "_delete(" in source
         assert "/api/v1/api-keys/" in source
 
 
@@ -4153,12 +4666,66 @@ class TestBulkOrderEndpoints:
     def test_bulk_cancel_orders_uses_post_json(self):
         import inspect
         source = inspect.getsource(PolyforgeClient.bulk_cancel_orders)
-        assert "_post_json" in source
+        assert "_post_json(" in source
 
     def test_bulk_cancel_orders_sends_order_ids_key(self):
         import inspect
         source = inspect.getsource(PolyforgeClient.bulk_cancel_orders)
         assert '"orderIds"' in source
+
+    def test_bulk_cancel_orders_uses_post_with_json_body(self):
+        """bulk_cancel_orders must send POST with Content-Type: application/json
+        and a JSON body — uses Client.request('POST', path, json=...)."""
+        captured = {}
+
+        def handler(request):
+            captured["method"] = request.method
+            captured["content_type"] = request.headers.get("content-type", "")
+            captured["body"] = request.content
+            return httpx.Response(200, json={"cancelled": [], "errors": []})
+
+        transport = httpx.MockTransport(handler)
+        client = PolyforgeClient(api_key="test", api_url="http://localhost:9999")
+        client._client = httpx.Client(
+            base_url="http://localhost:9999",
+            headers={"Authorization": "Bearer test"},
+            transport=transport,
+        )
+        try:
+            client.bulk_cancel_orders(["ord-1", "ord-2"])
+            assert captured["method"] == "POST"
+            assert "application/json" in captured["content_type"]
+            body = json.loads(captured["body"])
+            assert body == {"orderIds": ["ord-1", "ord-2"]}
+        finally:
+            client.close()
+
+    def test_delete_method_without_body_uses_plain_delete(self):
+        """DELETE without json body must use Client.delete() — no Content-Type
+        header, no request body. Regression for Codex P1: _delete must NOT always
+        pass json=json to Client.request()."""
+        captured = {}
+
+        def handler(request):
+            captured["method"] = request.method
+            captured["content_type"] = request.headers.get("content-type", "")
+            captured["has_body"] = bool(request.content)
+            return httpx.Response(200, json={"orderId": "ord-1", "intentId": "int-1", "status": "CANCELLED"})
+
+        transport = httpx.MockTransport(handler)
+        client = PolyforgeClient(api_key="test", api_url="http://localhost:9999")
+        client._client = httpx.Client(
+            base_url="http://localhost:9999",
+            headers={"Authorization": "Bearer test"},
+            transport=transport,
+        )
+        try:
+            client.cancel_order("ord-1")
+            assert captured["method"] == "DELETE"
+            assert "application/json" not in captured["content_type"]
+            assert not captured["has_body"]
+        finally:
+            client.close()
 
     def test_batch_orders_validates_minimum(self):
         client = PolyforgeClient(api_key="test")
@@ -4456,7 +5023,7 @@ class TestPolymarketPortfolioEndpoints:
         asyncio.run(_run())
 
 
-class TestNewModels:
+class TestNewModelsPOLA476:
     """Tests for new model classes (POLA-476)."""
 
     def test_news_article_model_fields(self):
@@ -4571,6 +5138,7 @@ class TestNewModels:
 
     def test_new_models_exported_from_package(self):
         from polyforge import (
+            AccuracyLeaderboardEntry,
             Badge,
             BatchOrderItem,
             BatchOrderResult,
@@ -4588,6 +5156,7 @@ class TestNewModels:
             TopTraderEntry,
         )
         assert all(m is not None for m in [
+            AccuracyLeaderboardEntry,
             Badge, BatchOrderItem, BatchOrderResult, BulkCancelError, BulkCancelResult,
             ClobBook, ClobPriceHistory, MidpointInfo, NewsArticle,
             PolymarketActivity, PolymarketEarningsEntry, PolymarketPortfolioEntry,
@@ -4647,6 +5216,18 @@ class TestNewModels:
         assert entry.username == "trader1"
         assert entry.display_name == "Trader One"
         assert entry.total_trades == 250
+
+    def test_accuracy_leaderboard_entry_defaults(self):
+        from polyforge.models import AccuracyLeaderboardEntry
+        entry = AccuracyLeaderboardEntry()
+        assert entry.rank == 0
+        assert entry.user_id == ""
+        assert entry.username == ""
+        assert entry.display_name is None
+        assert entry.avatar_url is None
+        assert entry.pnl == ""
+        assert entry.win_rate == ""
+        assert entry.trade_count == 0
 
 
 class TestRedeemPosition:
@@ -4922,6 +5503,7 @@ class TestRewardsMethods:
             "min_size": "100",
         })
         result = client.get_market_rewards_detail(market_id="some-market")
+        assert result is not None
         assert result.condition_id == "0xabc"
         assert result.rate_per_day == "50.0"
         client._get.assert_called_once_with("/api/v1/rewards/market/some-market")
@@ -5047,6 +5629,57 @@ class TestCrossVenueArbitrage:
 
         asyncio.run(_run())
 
+    def test_create_market_match(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._post = MagicMock(return_value={
+            "id": "match-1",
+            "polymarketId": "p1",
+            "kalshiId": "k1",
+            "verified": False,
+            "confidence": 0.92,
+            "matchMethod": "manual",
+            "createdAt": "2026-04-24T00:00:00Z",
+            "updatedAt": "2026-04-24T00:00:00Z",
+        })
+        result = client.create_market_match("p1", "k1")
+        assert isinstance(result, MarketMatch)
+        assert result.id == "match-1"
+        assert result.polymarket_id == "p1"
+        assert result.kalshi_id == "k1"
+        assert not result.verified
+        client._post.assert_called_once_with("/api/v1/arbitrage/matches", json={"polymarketId": "p1", "kalshiId": "k1"})
+        client.close()
+
+    def test_verify_market_match(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._post = MagicMock(return_value={
+            "id": "match-1",
+            "polymarketId": "p1",
+            "kalshiId": "k1",
+            "verified": True,
+            "confidence": 0.92,
+            "matchMethod": "auto",
+            "createdAt": "2026-04-24T00:00:00Z",
+            "updatedAt": "2026-04-24T00:00:00Z",
+        })
+        result = client.verify_market_match("match-1")
+        assert isinstance(result, MarketMatch)
+        assert result.id == "match-1"
+        assert result.verified
+        client._post.assert_called_once_with("/api/v1/arbitrage/matches/match-1/verify")
+        client.close()
+
+    def test_delete_market_match(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._delete = MagicMock(return_value=None)
+        result = client.delete_market_match("match-1")
+        assert result is None
+        client._delete.assert_called_once_with("/api/v1/arbitrage/matches/match-1")
+        client.close()
+
     def test_sync_get_spread_comparison(self):
         from unittest.mock import MagicMock
         client = PolyforgeClient(api_key="test-key")
@@ -5060,6 +5693,7 @@ class TestCrossVenueArbitrage:
         result = client.get_spread_comparison()
         assert len(result) == 1
         assert result[0].yes_spread_pct == 10.0
+        assert result[0].polymarket is not None
         assert result[0].polymarket.market_id == "p1"
         client.close()
 
@@ -5127,7 +5761,9 @@ class TestCrossVenueArbitrage:
         result = client.get_cross_venue_comparison("m1")
         assert result.match_id == "m1"
         assert result.spread_pct == 10.0
+        assert result.polymarket is not None
         assert result.polymarket.market_id == "p1"
+        assert result.kalshi is not None
         assert result.kalshi.yes_price == 0.5
         assert result.verified is True
         client._get.assert_called_once_with("/api/v1/arbitrage/cross-venue/m1/comparison")
@@ -5169,6 +5805,9 @@ class TestCrossVenueArbitrage:
             "get_market_matches",
             "get_market_match",
             "sync_market_matches",
+            "create_market_match",
+            "verify_market_match",
+            "delete_market_match",
             "get_spread_comparison",
             "get_arbitrage_history",
             "get_arbitrage_alerts",
@@ -5303,15 +5942,15 @@ class TestPublicHealthEndpoint:
         original_send = client._client.send
 
         captured_req = {}
-        def _fake_send(req, **kw):
-            captured_req["method"] = req.method
-            captured_req["url"] = str(req.url)
-            captured_req["headers"] = dict(req.headers)
+        def _fake_send(request, **kw):
+            captured_req["method"] = request.method
+            captured_req["url"] = str(request.url)
+            captured_req["headers"] = dict(request.headers)
             r = httpx.Response(200, json={"status": "ok"})
-            r.request = req
+            r.request = request
             return r
 
-        client._client.send = _fake_send
+        client._client.send = _fake_send  # type: ignore[assignment]
         try:
             result = client._get_no_auth("/health")
             assert result == {"status": "ok"}
@@ -5331,13 +5970,13 @@ class TestPublicHealthEndpoint:
         original_send = client._client.send
         stripped_headers = {}
 
-        def _fake_send(req, **kw):
-            stripped_headers.update({k.lower(): v for k, v in req.headers.items()})
+        def _fake_send(request, **kw):
+            stripped_headers.update({k.lower(): v for k, v in request.headers.items()})
             r = httpx.Response(200, json={"status": "ok"})
-            r.request = req
+            r.request = request
             return r
 
-        client._client.send = _fake_send
+        client._client.send = _fake_send  # type: ignore[assignment]
         try:
             client._get_no_auth("/health")
             assert "authorization" not in stripped_headers, \
@@ -5349,7 +5988,7 @@ class TestPublicHealthEndpoint:
     def test_get_health_preserves_zero_uptime(self):
         """Zero uptime must be preserved, not dropped by falsy-or parsing."""
         client = PolyforgeClient(api_key="test-key")
-        client._get_no_auth = lambda _path: {
+        client._get_no_auth = lambda path: {
             "status": "starting",
             "service": "api-service",
             "version": "2.0.0",
@@ -5363,13 +6002,44 @@ class TestPublicHealthEndpoint:
     def test_get_health_preserves_int_zero_uptime(self):
         """Integer zero uptime must be preserved, not dropped by falsy-or parsing."""
         client = PolyforgeClient(api_key="test-key")
-        client._get_no_auth = lambda _path: {
+        client._get_no_auth = lambda path: {
             "status": "starting",
             "uptime": 0,
         }
         result = client.get_health()
         assert result.uptime == 0, \
             f"Integer zero uptime should be preserved, got {result.uptime!r}"
+        client.close()
+
+    def test_async_get_health_authenticated_is_coroutine(self):
+        import inspect
+        assert hasattr(AsyncPolyforgeClient, "get_health_authenticated"), \
+            "AsyncPolyforgeClient missing get_health_authenticated"
+        source = inspect.getsource(AsyncPolyforgeClient.get_health_authenticated)
+        assert "await" in source, "async get_health_authenticated not using await"
+
+
+class TestHealthEndpointAuthCoroutine:
+    """Tests for the authenticated health-check coroutine signature."""
+
+    def test_sync_get_health_authenticated(self):
+        from unittest.mock import MagicMock
+        client = PolyforgeClient(api_key="test-key")
+        client._get = MagicMock(return_value={
+            "status": "operational",
+            "service": "api-service",
+            "version": "2.0.0",
+            "uptime": 3600.0,
+            "db": {"connections": 5, "status": "ok"},
+            "redis": {"memoryUsageMb": 128, "status": "ok"},
+            "queueDepth": 0,
+        })
+        result = client.get_health_authenticated()
+        assert isinstance(result, SystemHealthAuthenticated)
+        assert result.status == "operational"
+        assert result.service == "api-service"
+        assert result.db == {"connections": 5, "status": "ok"}
+        client._get.assert_called_once_with("/api/v1/status")
         client.close()
 
     def test_async_get_health_authenticated_is_coroutine(self):
@@ -5631,6 +6301,256 @@ class TestSseStreamTimeout:
         source = inspect.getsource(AsyncPolyforgeClient.watch_strategy)
         assert "self._stream_timeout" in source
         assert "httpx.Timeout" in source
+
+    def test_sync_watch_strategy_rejects_overlong_sse_line(self):
+        """watch_strategy must not buffer an unterminated SSE line indefinitely."""
+        overlong = b"data: " + (b"x" * _MAX_SSE_LINE_BYTES)
+        transport = httpx.MockTransport(
+            lambda request: httpx.Response(
+                200,
+                stream=httpx.ByteStream(overlong),
+                headers={"content-type": "text/event-stream"},
+            )
+        )
+        client = PolyforgeClient(api_key="test-key")
+        client._client = httpx.Client(
+            base_url="https://api.polyforge.io",
+            headers={"Authorization": "Bearer test-key"},
+            transport=transport,
+        )
+        with pytest.raises(PolyforgeError, match="SSE event line exceeded"):
+            next(client.watch_strategy("strat-1"))
+        client.close()
+
+    def test_sync_watch_strategy_yields_valid_sse_event(self):
+        """watch_strategy still parses normal SSE data lines."""
+        body = (
+            b'data: {"type":"CONNECTED","strategyId":"strat-1",'
+            b'"data":{"ok":true},"timestamp":123}\n\n'
+        )
+        transport = httpx.MockTransport(
+            lambda request: httpx.Response(
+                200,
+                stream=httpx.ByteStream(body),
+                headers={"content-type": "text/event-stream"},
+            )
+        )
+        client = PolyforgeClient(api_key="test-key")
+        client._client = httpx.Client(
+            base_url="https://api.polyforge.io",
+            headers={"Authorization": "Bearer test-key"},
+            transport=transport,
+        )
+        event = next(client.watch_strategy("strat-1"))
+        assert event.type == "CONNECTED"
+        assert event.strategy_id == "strat-1"
+        assert event.data == {"ok": True}
+        assert event.timestamp == 123
+        client.close()
+
+    def test_sync_watch_strategy_decodes_compressed_sse_event(self):
+        """watch_strategy must frame decoded response bytes, not compressed wire bytes."""
+        body = gzip.compress(
+            b'data: {"type":"CONNECTED","strategyId":"strat-1",'
+            b'"data":{"compressed":true},"timestamp":123}\n\n'
+        )
+        transport = httpx.MockTransport(
+            lambda request: httpx.Response(
+                200,
+                stream=httpx.ByteStream(body),
+                headers={
+                    "content-type": "text/event-stream",
+                    "content-encoding": "gzip",
+                },
+            )
+        )
+        client = PolyforgeClient(api_key="test-key")
+        client._client = httpx.Client(
+            base_url="https://api.polyforge.io",
+            headers={"Authorization": "Bearer test-key"},
+            transport=transport,
+        )
+        event = next(client.watch_strategy("strat-1"))
+        assert event.type == "CONNECTED"
+        assert event.strategy_id == "strat-1"
+        assert event.data == {"compressed": True}
+        assert event.timestamp == 123
+        client.close()
+
+    def test_sync_watch_strategy_uses_prompt_decoded_byte_chunks(self):
+        """watch_strategy must not buffer SSE events behind a fixed chunk_size."""
+        import inspect
+
+        source = inspect.getsource(PolyforgeClient.watch_strategy)
+        assert "iter_bytes()" in source
+        assert "iter_bytes(chunk_size" not in source
+
+    def test_sync_sse_reader_splits_cr_delimited_events(self):
+        """The bounded SSE reader must accept CR-only line delimiters."""
+        body = (
+            b'data: {"type":"CONNECTED","strategyId":"strat-1",'
+            b'"data":{"cr":true},"timestamp":123}\r\r'
+        )
+        lines = list(_iter_sse_lines(iter([body])))
+        assert lines == [
+            'data: {"type":"CONNECTED","strategyId":"strat-1","data":{"cr":true},"timestamp":123}',
+            "",
+        ]
+
+    def test_sync_sse_reader_keeps_lf_after_mid_chunk_cr(self):
+        """A CR delimiter must not consume a later chunk's real LF delimiter."""
+        lines = list(_iter_sse_lines(iter([b"data: one\rdata: two", b"\n\n"])))
+        assert lines == ["data: one", "data: two", ""]
+
+    def test_async_watch_strategy_rejects_overlong_sse_line(self):
+        """async watch_strategy must not buffer an unterminated SSE line indefinitely."""
+        import asyncio
+
+        async def _run():
+            overlong = b"data: " + (b"x" * _MAX_SSE_LINE_BYTES)
+
+            class AsyncBytes(httpx.AsyncByteStream):
+                async def __aiter__(self):
+                    yield overlong
+
+            transport = httpx.MockTransport(
+                lambda request: httpx.Response(
+                    200,
+                    stream=AsyncBytes(),
+                    headers={"content-type": "text/event-stream"},
+                )
+            )
+            client = AsyncPolyforgeClient(api_key="test-key")
+            client._client = httpx.AsyncClient(
+                base_url="https://api.polyforge.io",
+                headers={"Authorization": "Bearer test-key"},
+                transport=transport,
+            )
+            with pytest.raises(PolyforgeError, match="SSE event line exceeded"):
+                await anext(client.watch_strategy("strat-1"))
+            await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_watch_strategy_yields_valid_sse_event(self):
+        """async watch_strategy still parses normal SSE data lines."""
+        import asyncio
+
+        async def _run():
+            body = (
+                b'data: {"type":"CONNECTED","strategyId":"strat-1",'
+                b'"data":{"ok":true},"timestamp":123}\n\n'
+            )
+
+            class AsyncBytes(httpx.AsyncByteStream):
+                async def __aiter__(self):
+                    yield body
+
+            transport = httpx.MockTransport(
+                lambda request: httpx.Response(
+                    200,
+                    stream=AsyncBytes(),
+                    headers={"content-type": "text/event-stream"},
+                )
+            )
+            client = AsyncPolyforgeClient(api_key="test-key")
+            client._client = httpx.AsyncClient(
+                base_url="https://api.polyforge.io",
+                headers={"Authorization": "Bearer test-key"},
+                transport=transport,
+            )
+            event = await anext(client.watch_strategy("strat-1"))
+            assert event.type == "CONNECTED"
+            assert event.strategy_id == "strat-1"
+            assert event.data == {"ok": True}
+            assert event.timestamp == 123
+            await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_watch_strategy_uses_prompt_decoded_byte_chunks(self):
+        """async watch_strategy must not buffer SSE events behind a fixed chunk_size."""
+        import inspect
+
+        source = inspect.getsource(AsyncPolyforgeClient.watch_strategy)
+        assert "aiter_bytes()" in source
+        assert "aiter_bytes(chunk_size" not in source
+
+    def test_async_sse_reader_splits_cr_delimited_events(self):
+        """The async bounded SSE reader must accept CR-only line delimiters."""
+        import asyncio
+
+        async def chunks():
+            yield (
+                b'data: {"type":"CONNECTED","strategyId":"strat-1",'
+                b'"data":{"cr":true},"timestamp":123}\r\r'
+            )
+
+        async def _run():
+            lines = []
+            async for line in _aiter_sse_lines(chunks()):
+                lines.append(line)
+            assert lines == [
+                'data: {"type":"CONNECTED","strategyId":"strat-1","data":{"cr":true},"timestamp":123}',
+                "",
+            ]
+
+        asyncio.run(_run())
+
+    def test_async_sse_reader_keeps_lf_after_mid_chunk_cr(self):
+        """A CR delimiter must not consume a later chunk's real LF delimiter."""
+        import asyncio
+
+        async def chunks():
+            yield b"data: one\rdata: two"
+            yield b"\n\n"
+
+        async def _run():
+            lines = []
+            async for line in _aiter_sse_lines(chunks()):
+                lines.append(line)
+            assert lines == ["data: one", "data: two", ""]
+
+        asyncio.run(_run())
+
+    def test_async_watch_strategy_decodes_compressed_sse_event(self):
+        """async watch_strategy must frame decoded response bytes, not compressed wire bytes."""
+        import asyncio
+
+        async def _run():
+            body = gzip.compress(
+                b'data: {"type":"CONNECTED","strategyId":"strat-1",'
+                b'"data":{"compressed":true},"timestamp":123}\n\n'
+            )
+
+            class AsyncBytes(httpx.AsyncByteStream):
+                async def __aiter__(self):
+                    yield body
+
+            transport = httpx.MockTransport(
+                lambda request: httpx.Response(
+                    200,
+                    stream=AsyncBytes(),
+                    headers={
+                        "content-type": "text/event-stream",
+                        "content-encoding": "gzip",
+                    },
+                )
+            )
+            client = AsyncPolyforgeClient(api_key="test-key")
+            client._client = httpx.AsyncClient(
+                base_url="https://api.polyforge.io",
+                headers={"Authorization": "Bearer test-key"},
+                transport=transport,
+            )
+            event = await anext(client.watch_strategy("strat-1"))
+            assert event.type == "CONNECTED"
+            assert event.strategy_id == "strat-1"
+            assert event.data == {"compressed": True}
+            assert event.timestamp == 123
+            await client.close()
+
+        asyncio.run(_run())
 
 
 # ---------------------------------------------------------------------------
@@ -6034,6 +6954,36 @@ class TestTicketMethods:
             source = inspect.getsource(getattr(AsyncPolyforgeClient, method_name))
             assert "await" in source, f"async {method_name} not using await"
 
+    def test_support_ticket_status_is_plain_str_field(self):
+        from typing import get_type_hints
+        import polyforge.models as models
+        from polyforge.models import SupportTicket
+
+        assert get_type_hints(SupportTicket)["status"] is str
+        assert not hasattr(models, "TicketStatus")
+
+    @pytest.mark.parametrize("status", ["OPEN", "WAITING_ON_VENDOR", "custom-state"])
+    def test_parse_support_ticket_accepts_any_status_string(self, status):
+        from polyforge.models import SupportTicket
+
+        ticket = _parse(
+            SupportTicket,
+            {
+                "id": "t1",
+                "subject": "Help",
+                "category": "GENERAL",
+                "priority": "MEDIUM",
+                "status": status,
+                "body": "content",
+                "messages": [],
+                "createdAt": "2024-01-01",
+                "updatedAt": "2024-01-01",
+            },
+        )
+
+        assert ticket.status == status
+        assert isinstance(ticket.status, str)
+
     def test_sync_list_tickets(self):
         from unittest.mock import MagicMock
         from polyforge.models import SupportTicket
@@ -6046,6 +6996,30 @@ class TestTicketMethods:
         assert len(result.data) == 1
         assert isinstance(result.data[0], SupportTicket)
         assert result.data[0].subject == "Help"
+        client.close()
+
+    def test_sync_list_tickets_emits_unknown_status_string(self):
+        from unittest.mock import MagicMock
+
+        client = PolyforgeClient(api_key="test-key")
+        client._get = MagicMock(return_value={
+            "data": [{
+                "id": "t1",
+                "subject": "Help",
+                "category": "GENERAL",
+                "priority": "MEDIUM",
+                "status": "WAITING_ON_VENDOR",
+                "body": "Need help",
+                "messages": [],
+                "createdAt": "2024-01-01",
+                "updatedAt": "2024-01-01",
+            }],
+            "pagination": {"total": 1, "page": 1, "limit": 20, "totalPages": 1},
+        })
+
+        result = client.list_tickets()
+
+        assert result.data[0].status == "WAITING_ON_VENDOR"
         client.close()
 
     def test_sync_create_ticket(self):
@@ -6232,6 +7206,70 @@ class TestVenuePreferenceMethods:
             json={"defaultVenue": "kalshi", "singlePlatformMode": True},
         )
         assert isinstance(result, VenuePreferences)
+        assert result.single_platform_mode is True
+        client.close()
+
+
+class TestMyPreferenceMethods:
+    """Tests for my_preference endpoints (sync + async) — POLA-4559."""
+
+    MY_PREF_METHODS = [
+        "get_my_preferences",
+        "update_my_preferences",
+    ]
+
+    @pytest.mark.parametrize("method", MY_PREF_METHODS)
+    def test_sync_method_exists(self, method):
+        assert hasattr(PolyforgeClient, method)
+        assert callable(getattr(PolyforgeClient, method))
+
+    @pytest.mark.parametrize("method", MY_PREF_METHODS)
+    def test_async_method_exists(self, method):
+        assert hasattr(AsyncPolyforgeClient, method)
+        assert callable(getattr(AsyncPolyforgeClient, method))
+
+    def test_sync_endpoints_use_correct_paths(self):
+        import inspect
+        for method_name in self.MY_PREF_METHODS:
+            source = inspect.getsource(getattr(PolyforgeClient, method_name))
+            assert "/api/v1/users/me/venue-preferences" in source
+
+    def test_async_endpoints_use_correct_paths(self):
+        import inspect
+        for method_name in self.MY_PREF_METHODS:
+            source = inspect.getsource(getattr(AsyncPolyforgeClient, method_name))
+            assert "/api/v1/users/me/venue-preferences" in source
+
+    def test_sync_get_my_preferences(self):
+        from unittest.mock import MagicMock
+        from polyforge.models import UserPreferences
+        client = PolyforgeClient(api_key="test-key")
+        client._get = MagicMock(return_value={
+            "defaultVenue": "polymarket",
+            "enabledVenues": ["polymarket", "kalshi"],
+            "singlePlatformMode": False,
+        })
+        result = client.get_my_preferences()
+        assert isinstance(result, UserPreferences)
+        assert result.default_venue == "polymarket"
+        assert "kalshi" in result.enabled_venues
+        client.close()
+
+    def test_sync_update_my_preferences(self):
+        from unittest.mock import MagicMock
+        from polyforge.models import UserPreferences
+        client = PolyforgeClient(api_key="test-key")
+        client._patch = MagicMock(return_value={
+            "defaultVenue": "kalshi",
+            "enabledVenues": ["kalshi"],
+            "singlePlatformMode": True,
+        })
+        result = client.update_my_preferences(default_venue="kalshi", single_platform_mode=True)
+        client._patch.assert_called_once_with(
+            "/api/v1/users/me/venue-preferences",
+            json={"defaultVenue": "kalshi", "singlePlatformMode": True},
+        )
+        assert isinstance(result, UserPreferences)
         assert result.single_platform_mode is True
         client.close()
 
@@ -6664,7 +7702,7 @@ class TestTradingCopyNumericValidation:
     def test_update_copy_config_rejects_invalid_numeric_kwargs(self):
         client = PolyforgeClient(api_key="test")
         with pytest.raises(ValueError, match="Infinity"):
-            client.update_copy_config("copy-1", max_exposure="Infinity")
+            client.update_copy_config("copy-1", max_exposure="Infinity")  # type: ignore[arg-type]
         client.close()
 
     def test_update_copy_config_allows_negative_price_offset(self):
@@ -6848,7 +7886,7 @@ class TestTradingCopyNumericValidation:
                     max_daily_loss=0,
                 )
             with pytest.raises(ValueError, match="Infinity"):
-                await client.update_copy_config("copy-1", price_offset="Infinity")
+                await client.update_copy_config("copy-1", price_offset="Infinity")  # type: ignore[arg-type]
             await client.close()
 
         asyncio.run(_run())
@@ -7312,6 +8350,9 @@ class TestMiscUtilityEndpointPaths:
     def test_get_accuracy_overview_path(self):
         assert '"/api/v1/accuracy"' in self._src(PolyforgeClient.get_accuracy_overview)
 
+    def test_get_accuracy_leaderboard_path(self):
+        assert '"/api/v1/accuracy/leaderboard"' in self._src(PolyforgeClient.get_accuracy_leaderboard)
+
     def test_get_feed_path(self):
         assert '"/api/v1/feed"' in self._src(PolyforgeClient.get_feed)
 
@@ -7473,6 +8514,117 @@ class TestMiscUtilityEnumValidation:
                 client.lookup_combo_market("col", [{"ticker": "T1", "outcome": "buy"}])
             with pytest.raises(TypeError, match="dict"):
                 client.lookup_combo_market("col", ["not-a-dict"])  # type: ignore[list-item]
+        finally:
+            client.close()
+
+    def test_vote_market_sentiment_rejects_invalid_direction(self):
+        client = PolyforgeClient(api_key="test")
+        try:
+            with pytest.raises(ValueError, match="direction"):
+                client.vote_market_sentiment(
+                    "m1", direction="BUY", confidence=50,
+                )
+        finally:
+            client.close()
+
+    def test_vote_market_sentiment_rejects_bool_confidence(self):
+        client = PolyforgeClient(api_key="test")
+        try:
+            with pytest.raises(ValueError, match="confidence"):
+                client.vote_market_sentiment(
+                    "m1", direction="YES", confidence=True,
+                )
+        finally:
+            client.close()
+
+    def test_vote_market_sentiment_rejects_float_confidence(self):
+        client = PolyforgeClient(api_key="test")
+        try:
+            with pytest.raises(ValueError, match="confidence"):
+                client.vote_market_sentiment(
+                    "m1", direction="YES", confidence=50.5,  # type: ignore[reportArgumentType]
+                )
+        finally:
+            client.close()
+
+    def test_vote_market_sentiment_rejects_zero_confidence(self):
+        client = PolyforgeClient(api_key="test")
+        try:
+            with pytest.raises(ValueError, match="confidence"):
+                client.vote_market_sentiment(
+                    "m1", direction="YES", confidence=0,
+                )
+        finally:
+            client.close()
+
+    def test_vote_market_sentiment_rejects_confidence_above_100(self):
+        client = PolyforgeClient(api_key="test")
+        try:
+            with pytest.raises(ValueError, match="confidence"):
+                client.vote_market_sentiment(
+                    "m1", direction="NO", confidence=101,
+                )
+        finally:
+            client.close()
+
+    def test_accuracy_leaderboard_invalid_period_rejected(self):
+        client = PolyforgeClient(api_key="test")
+        try:
+            with pytest.raises(ValueError, match="period"):
+                client.get_accuracy_leaderboard(period="1d")
+        finally:
+            client.close()
+
+    def test_accuracy_leaderboard_negative_offset_rejected(self):
+        client = PolyforgeClient(api_key="test")
+        try:
+            with pytest.raises(ValueError, match="offset must be >= 0"):
+                client.get_accuracy_leaderboard(offset=-5)
+        finally:
+            client.close()
+
+    def test_accuracy_leaderboard_non_aligned_offset_rejected(self):
+        client = PolyforgeClient(api_key="test")
+        try:
+            with pytest.raises(ValueError, match="must be a multiple of limit"):
+                client.get_accuracy_leaderboard(offset=7, limit=10)
+        finally:
+            client.close()
+
+    def test_accuracy_leaderboard_non_positive_limit_with_offset_rejected(self):
+        client = PolyforgeClient(api_key="test")
+        try:
+            with pytest.raises(ValueError, match="limit must be >= 1"):
+                client.get_accuracy_leaderboard(offset=0, limit=0)
+        finally:
+            client.close()
+
+    def test_accuracy_leaderboard_non_positive_limit_without_offset_rejected(self):
+        client = PolyforgeClient(api_key="test")
+        try:
+            with pytest.raises(ValueError, match="limit must be >= 1"):
+                client.get_accuracy_leaderboard(limit=0)
+        finally:
+            client.close()
+
+    def test_accuracy_leaderboard_offset_without_limit_uses_default_limit(self):
+        def handler(request):
+            assert request.url.path == "/api/v1/accuracy/leaderboard"
+            assert request.url.params.get("page") == "2"
+            assert request.url.params.get("limit") == "20"
+            return httpx.Response(200, json={"data": [], "total": 0, "page": 2, "limit": 20})
+
+        transport = httpx.MockTransport(handler)
+        client = PolyforgeClient(api_key="test", api_url="http://localhost:9999")
+        client._client = httpx.Client(
+            base_url="http://localhost:9999",
+            headers={"Authorization": "Bearer test"},
+            transport=transport,
+        )
+        try:
+            result = client.get_accuracy_leaderboard(offset=20)
+            assert result.page == 2
+            assert result.limit == 20
         finally:
             client.close()
 
@@ -7737,22 +8889,63 @@ class TestMiscUtilityEndpointRoundtrips:
 
         def handler(request):
             captured["method"] = request.method
+            captured["raw_path"] = request.url.raw_path
+            try:
+                captured["body"] = json.loads(request.content)
+            except Exception:
+                captured["body"] = request.content
             return httpx.Response(200, json={
                 "yesPercent": 60, "noPercent": 40, "totalVotes": 5,
-                "userVote": {"direction": "BUY", "confidence": 0.8},
+                "userVote": {"direction": "YES", "confidence": 85},
             })
         client = self._client_with(handler)
         try:
             report = client.get_market_sentiment_report("m1")
             assert captured["method"] == "GET"
             assert report.user_vote is not None
-            assert report.user_vote.direction == "BUY"
+            assert report.user_vote.direction == "YES"
 
-            voted = client.vote_market_sentiment("m1")
+            voted = client.vote_market_sentiment(
+                "m1", direction="YES", confidence=85,
+            )
             assert captured["method"] == "POST"
+            assert captured["body"] == {"direction": "YES", "confidence": 85}
             assert voted.total_votes == 5
+            assert voted.user_vote is not None
+            assert voted.user_vote.confidence == 85
         finally:
             client.close()
+
+    def test_async_vote_market_sentiment_sends_body(self):
+        """AsyncPolyforgeClient.vote_market_sentiment sends direction/confidence JSON body."""
+        import asyncio
+
+        captured = {}
+
+        class _AsyncCaptureTransport(httpx.AsyncBaseTransport):
+            async def handle_async_request(self, request):
+                captured["method"] = request.method
+                captured["body"] = json.loads(request.content)
+                return httpx.Response(200, json={
+                    "yesPercent": 60, "noPercent": 40, "totalVotes": 5,
+                    "userVote": {"direction": "YES", "confidence": 50},
+                })
+
+        async def _run():
+            async with AsyncPolyforgeClient(api_key="test", api_url="http://localhost:9999") as client:
+                client._client = httpx.AsyncClient(
+                    base_url="http://localhost:9999",
+                    headers={"Authorization": "Bearer test"},
+                    transport=_AsyncCaptureTransport(),
+                )
+                report = await client.vote_market_sentiment(
+                    "m1", direction="NO", confidence=50,
+                )
+                assert captured["method"] == "POST"
+                assert captured["body"] == {"direction": "NO", "confidence": 50}
+                assert report.total_votes == 5
+
+        asyncio.run(_run())
 
     def test_update_order_journal_patches_with_optional_note(self):
         captured = {}
@@ -7863,6 +9056,43 @@ class TestMiscUtilityEndpointRoundtrips:
             assert report.categories == ["Politics", "Sports"]
             assert report.matrix[0][1] == 0.3
             assert report.updated_at == "2026-05-01T00:00:00Z"
+        finally:
+            client.close()
+
+    def test_get_accuracy_leaderboard_parses_payload(self):
+        def handler(request):
+            assert request.url.path == "/api/v1/accuracy/leaderboard"
+            return httpx.Response(200, json={
+                "data": [
+                    {
+                        "rank": 1, "userId": "user-1", "username": "trader1",
+                        "displayName": "Trader One", "avatarUrl": "https://img/1.png",
+                        "pnl": "1500.42", "winRate": "0.85", "tradeCount": 340,
+                    },
+                    {
+                        "rank": 2, "userId": "user-2", "username": "trader2",
+                        "displayName": None, "avatarUrl": None,
+                        "pnl": "890.10", "winRate": "0.72", "tradeCount": 150,
+                    },
+                ],
+                "total": 2, "page": 1, "limit": 20,
+                "totalPages": 1, "hasNext": False,
+            })
+        client = self._client_with(handler)
+        try:
+            result = client.get_accuracy_leaderboard()
+            assert result.total == 2
+            assert len(result.data) == 2
+            assert result.data[0].rank == 1
+            assert result.data[0].user_id == "user-1"
+            assert result.data[0].username == "trader1"
+            assert result.data[0].display_name == "Trader One"
+            assert result.data[0].avatar_url == "https://img/1.png"
+            assert result.data[0].pnl == "1500.42"
+            assert result.data[0].win_rate == "0.85"
+            assert result.data[0].trade_count == 340
+            assert result.data[1].display_name is None
+            assert result.data[1].avatar_url is None
         finally:
             client.close()
 
@@ -7995,6 +9225,148 @@ class TestMiscUtilityEndpointsAsync:
                 assert res.data[0].mood == "DISCIPLINED"
                 assert res.data[0].id == "ord-1"
                 assert res.data[0].note == "plan"
+            finally:
+                await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_vote_market_sentiment_post_body(self):
+        import asyncio
+
+        captured = {}
+
+        def handler(request):
+            captured["method"] = request.method
+            if request.content:
+                captured["body"] = json.loads(request.content)
+            return httpx.Response(200, json={
+                "yesPercent": 60, "noPercent": 40, "totalVotes": 5,
+                "userVote": {"direction": "YES", "confidence": 80},
+            })
+
+        async def _run():
+            client = self._async_client_with(handler)
+            try:
+                voted = await client.vote_market_sentiment(
+                    "m1", direction="YES", confidence=80,
+                )
+                assert captured["method"] == "POST"
+                assert captured["body"] == {"direction": "YES", "confidence": 80}
+                assert voted.total_votes == 5
+            finally:
+                await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_get_accuracy_leaderboard_parses_payload(self):
+        import asyncio
+
+        def handler(request):
+            assert request.url.path == "/api/v1/accuracy/leaderboard"
+            return httpx.Response(200, json={
+                "data": [
+                    {
+                        "rank": 1, "userId": "u1", "username": "t1",
+                        "displayName": "T1", "avatarUrl": None,
+                        "pnl": "500.00", "winRate": "0.75", "tradeCount": 100,
+                    },
+                ],
+                "total": 1, "page": 1, "limit": 20,
+                "totalPages": 1, "hasNext": False,
+            })
+
+        async def _run():
+            client = self._async_client_with(handler)
+            try:
+                result = await client.get_accuracy_leaderboard(period="7d", limit=10)
+                assert result.total == 1
+                assert result.data[0].rank == 1
+                assert result.data[0].pnl == "500.00"
+            finally:
+                await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_accuracy_leaderboard_invalid_period_rejected(self):
+        import asyncio
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test")
+            try:
+                with pytest.raises(ValueError, match="period"):
+                    await client.get_accuracy_leaderboard(period="1d")
+            finally:
+                await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_accuracy_leaderboard_negative_offset_rejected(self):
+        import asyncio
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test")
+            try:
+                with pytest.raises(ValueError, match="offset must be >= 0"):
+                    await client.get_accuracy_leaderboard(offset=-5)
+            finally:
+                await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_accuracy_leaderboard_non_aligned_offset_rejected(self):
+        import asyncio
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test")
+            try:
+                with pytest.raises(ValueError, match="must be a multiple of limit"):
+                    await client.get_accuracy_leaderboard(offset=7, limit=10)
+            finally:
+                await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_accuracy_leaderboard_non_positive_limit_with_offset_rejected(self):
+        import asyncio
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test")
+            try:
+                with pytest.raises(ValueError, match="limit must be >= 1"):
+                    await client.get_accuracy_leaderboard(offset=0, limit=0)
+            finally:
+                await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_accuracy_leaderboard_non_positive_limit_without_offset_rejected(self):
+        import asyncio
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test")
+            try:
+                with pytest.raises(ValueError, match="limit must be >= 1"):
+                    await client.get_accuracy_leaderboard(limit=0)
+            finally:
+                await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_accuracy_leaderboard_offset_without_limit_uses_default_limit(self):
+        import asyncio
+
+        def handler(request):
+            assert request.url.path == "/api/v1/accuracy/leaderboard"
+            assert request.url.params.get("page") == "2"
+            assert request.url.params.get("limit") == "20"
+            return httpx.Response(200, json={"data": [], "total": 0, "page": 2, "limit": 20})
+
+        async def _run():
+            client = self._async_client_with(handler)
+            try:
+                result = await client.get_accuracy_leaderboard(offset=20)
+                assert result.page == 2
+                assert result.limit == 20
             finally:
                 await client.close()
 
@@ -8230,7 +9602,7 @@ class TestIdempotencyKeyHeaders:
             ("_post", {"positionId": "pos-1", "intentId": "int-1", "status": "REDEEMED"}, lambda c: c.redeem_position(position_id="pos-1")),
             ("_post", place_order_payload, lambda c: c.split_position("tok", 1)),
             ("_post", place_order_payload, lambda c: c.merge_positions("tok", 1)),
-            ("_post", smart_payload, lambda c: c.place_smart_order(type="TWAP", token_id="tok", side="BUY", outcome="YES", total_size=1.0)),
+            ("_post", smart_payload, lambda c: c.place_smart_order(type="TWAP", token_id="tok", side="BUY", outcome="YES", total_size=1.0, slices=2, interval_minutes=1)),
             ("_delete", {}, lambda c: c.cancel_smart_order("smart-1")),
             ("_post", conditional_payload, lambda c: c.create_conditional_order("m-1", "tok", "STOP_LOSS", "SELL", "YES", 1.0, 0.4)),
             ("_delete", None, lambda c: c.cancel_conditional_order("co-1")),
@@ -8293,12 +9665,12 @@ class TestIdempotencyKeyHeaders:
                 ("_post", {"results": []}, lambda c: c.batch_orders([{
                     "tokenId": "tok", "side": "BUY", "outcome": "YES", "size": 1.0, "price": 0.5,
                 }])),
-                ("_post_json", {"cancelled": [], "errors": []}, lambda c: c.bulk_cancel_orders(["ord-1"])),
+           ("_post_json", {"cancelled": [], "errors": []}, lambda c: c.bulk_cancel_orders(["ord-1"])),
                 ("_post", place_order_payload, lambda c: c.close_position("tok")),
                 ("_post", {"positionId": "pos-1", "intentId": "int-1", "status": "REDEEMED"}, lambda c: c.redeem_position(position_id="pos-1")),
                 ("_post", place_order_payload, lambda c: c.split_position("tok", 1)),
                 ("_post", place_order_payload, lambda c: c.merge_positions("tok", 1)),
-                ("_post", smart_payload, lambda c: c.place_smart_order(type="TWAP", token_id="tok", side="BUY", outcome="YES", total_size=1.0)),
+                ("_post", smart_payload, lambda c: c.place_smart_order(type="TWAP", token_id="tok", side="BUY", outcome="YES", total_size=1.0, slices=2, interval_minutes=1)),
                 ("_delete", {}, lambda c: c.cancel_smart_order("smart-1")),
                 ("_post", conditional_payload, lambda c: c.create_conditional_order("m-1", "tok", "STOP_LOSS", "SELL", "YES", 1.0, 0.4)),
                 ("_delete", None, lambda c: c.cancel_conditional_order("co-1")),
@@ -8587,13 +9959,15 @@ class TestArbExecutionAsync:
             assert result.arb_position_id == "pos-9"
             assert result.buy_leg is not None and result.buy_leg.price == 0.31
             client._post.assert_awaited_once()
-            assert client._post.await_args.args == ("/api/v1/arbitrage/execute",)
-            assert client._post.await_args.kwargs["json"] == {
+            call_args = client._post.await_args
+            assert call_args is not None
+            assert call_args.args == ("/api/v1/arbitrage/execute",)
+            assert call_args.kwargs["json"] == {
                 "matchId": VALID_ARB_MATCH_ID,
                 "size": 200.0,
                 "maxSlippagePct": 2.0,
             }
-            _assert_valid_idempotency_key(client._post.await_args.kwargs["idempotency_key"])
+            _assert_valid_idempotency_key(call_args.kwargs["idempotency_key"])
             await client.close()
 
         asyncio.run(_run())
@@ -8610,8 +9984,10 @@ class TestArbExecutionAsync:
             assert isinstance(result, ArbCloseResponse)
             assert result.status == "CLOSING"
             client._post.assert_awaited_once()
-            assert client._post.await_args.args == ("/api/v1/arbitrage/positions/pos-9/close",)
-            _assert_valid_idempotency_key(client._post.await_args.kwargs["idempotency_key"])
+            call_args = client._post.await_args
+            assert call_args is not None
+            assert call_args.args == ("/api/v1/arbitrage/positions/pos-9/close",)
+            _assert_valid_idempotency_key(call_args.kwargs["idempotency_key"])
             await client.close()
 
         asyncio.run(_run())
@@ -9445,3 +10821,247 @@ class TestRootExports:
         assert not missing, (
             f"Names in __all__ but not accessible as polyforge.<name>: {', '.join(missing)}"
         )
+
+
+# ---------------------------------------------------------------------------
+# ── vote_market_sentiment: direction, confidence, and request body ──────────
+
+_sentiment_response = {
+    "data": {
+        "marketId": "m1",
+        "direction": "YES",
+        "confidence": 50,
+        "votedAt": "2026-06-11T12:00:00Z",
+    }
+}
+
+
+class TestVoteMarketSentimentValidation:
+    """Direction and confidence validation for vote_market_sentiment."""
+
+    def _client_with(self, handler):
+        transport = httpx.MockTransport(handler)
+        client = PolyforgeClient(api_key="test", api_url="http://localhost:9999")
+        client._client = httpx.Client(
+            base_url="http://localhost:9999",
+            headers={"Authorization": "Bearer test"},
+            transport=transport,
+        )
+        return client
+
+    def test_rejects_invalid_direction(self):
+        client = self._client_with(lambda req: httpx.Response(200, json=_sentiment_response))
+        try:
+            with pytest.raises(ValueError, match="direction"):
+                client.vote_market_sentiment("m1", direction="BUY")
+            with pytest.raises(ValueError, match="direction"):
+                client.vote_market_sentiment("m1", direction="SELL")
+            with pytest.raises(ValueError, match="direction"):
+                client.vote_market_sentiment("m1", direction="BULLISH")
+        finally:
+            client.close()
+
+    def test_accepts_yes_direction(self):
+        captured = {}
+
+        def handler(request):
+            captured["body"] = json.loads(request.content)
+            return httpx.Response(200, json=_sentiment_response)
+
+        client = self._client_with(handler)
+        try:
+            client.vote_market_sentiment("m1", direction="YES")
+            assert captured["body"]["direction"] == "YES"
+        finally:
+            client.close()
+
+    def test_accepts_no_direction(self):
+        captured = {}
+
+        def handler(request):
+            captured["body"] = json.loads(request.content)
+            return httpx.Response(200, json=_sentiment_response)
+
+        client = self._client_with(handler)
+        try:
+            client.vote_market_sentiment("m1", direction="NO")
+            assert captured["body"]["direction"] == "NO"
+        finally:
+            client.close()
+
+    def test_rejects_out_of_range_confidence_low(self):
+        client = self._client_with(lambda req: httpx.Response(200, json=_sentiment_response))
+        try:
+            with pytest.raises(ValueError, match="confidence"):
+                client.vote_market_sentiment("m1", confidence=0)
+        finally:
+            client.close()
+
+    def test_rejects_out_of_range_confidence_high(self):
+        client = self._client_with(lambda req: httpx.Response(200, json=_sentiment_response))
+        try:
+            with pytest.raises(ValueError, match="confidence"):
+                client.vote_market_sentiment("m1", confidence=101)
+        finally:
+            client.close()
+
+    def test_rejects_float_confidence(self):
+        client = self._client_with(lambda req: httpx.Response(200, json=_sentiment_response))
+        try:
+            with pytest.raises(ValueError, match="confidence"):
+                client.vote_market_sentiment("m1", confidence=50.5)  # type: ignore[reportArgumentType]
+        finally:
+            client.close()
+
+    def test_rejects_bool_confidence(self):
+        client = self._client_with(lambda req: httpx.Response(200, json=_sentiment_response))
+        try:
+            with pytest.raises(ValueError, match="confidence"):
+                client.vote_market_sentiment("m1", confidence=True)
+            with pytest.raises(ValueError, match="confidence"):
+                client.vote_market_sentiment("m1", confidence=False)
+        finally:
+            client.close()
+
+    def test_accepts_boundary_confidence_1(self):
+        captured = {}
+
+        def handler(request):
+            captured["body"] = json.loads(request.content)
+            return httpx.Response(200, json=_sentiment_response)
+
+        client = self._client_with(handler)
+        try:
+            client.vote_market_sentiment("m1", confidence=1)
+            assert captured["body"]["confidence"] == 1
+        finally:
+            client.close()
+
+    def test_accepts_boundary_confidence_100(self):
+        captured = {}
+
+        def handler(request):
+            captured["body"] = json.loads(request.content)
+            return httpx.Response(200, json=_sentiment_response)
+
+        client = self._client_with(handler)
+        try:
+            client.vote_market_sentiment("m1", confidence=100)
+            assert captured["body"]["confidence"] == 100
+        finally:
+            client.close()
+
+
+class TestVoteMarketSentimentRequestPayload:
+    """Verify vote_market_sentiment sends direction/confidence JSON body."""
+
+    def _client_with(self, handler):
+        transport = httpx.MockTransport(handler)
+        client = PolyforgeClient(api_key="test", api_url="http://localhost:9999")
+        client._client = httpx.Client(
+            base_url="http://localhost:9999",
+            headers={"Authorization": "Bearer test"},
+            transport=transport,
+        )
+        return client
+
+    @staticmethod
+    def _async_client_with(handler):
+        transport = httpx.MockTransport(handler)
+        client = AsyncPolyforgeClient(api_key="test", api_url="http://localhost:9999")
+        client._client = httpx.AsyncClient(
+            base_url="http://localhost:9999",
+            headers={"Authorization": "Bearer test"},
+            transport=transport,
+        )
+        return client
+
+    def test_default_direction_and_confidence(self):
+        """vote_market_sentiment sends direction=YES, confidence=50 by default."""
+        captured = {}
+
+        def handler(request):
+            captured["method"] = request.method
+            captured["body"] = json.loads(request.content)
+            return httpx.Response(200, json=_sentiment_response)
+
+        client = self._client_with(handler)
+        try:
+            client.vote_market_sentiment("m1")
+            assert captured["method"] == "POST"
+            assert captured["body"] == {"direction": "YES", "confidence": 50}
+        finally:
+            client.close()
+
+    def test_custom_direction_and_confidence(self):
+        """vote_market_sentiment sends the provided direction and confidence."""
+        captured = {}
+
+        def handler(request):
+            captured["body"] = json.loads(request.content)
+            return httpx.Response(200, json=_sentiment_response)
+
+        client = self._client_with(handler)
+        try:
+            client.vote_market_sentiment("m1", direction="NO", confidence=75)
+            assert captured["body"] == {"direction": "NO", "confidence": 75}
+        finally:
+            client.close()
+
+    def test_confidence_boundaries_in_payload(self):
+        """Boundary confidence values are included in the request body."""
+        captured = {}
+
+        def handler(request):
+            captured["body"] = json.loads(request.content)
+            return httpx.Response(200, json=_sentiment_response)
+
+        client = self._client_with(handler)
+        try:
+            client.vote_market_sentiment("m1", confidence=1)
+            assert captured["body"]["confidence"] == 1
+
+            client.vote_market_sentiment("m1", confidence=100)
+            assert captured["body"]["confidence"] == 100
+        finally:
+            client.close()
+
+    def test_async_vote_market_sentiment_sends_body(self):
+        """AsyncPolyforgeClient.vote_market_sentiment sends direction/confidence JSON body."""
+        captured = {}
+
+        async def handler(request):
+            captured["method"] = request.method
+            captured["body"] = json.loads(request.content)
+            return httpx.Response(200, json=_sentiment_response)
+
+        async def _run():
+            client = self._async_client_with(handler)
+            try:
+                await client.vote_market_sentiment("m1")
+                assert captured["method"] == "POST"
+                assert captured["body"] == {"direction": "YES", "confidence": 50}
+            finally:
+                await client.close()
+
+        import asyncio
+        asyncio.run(_run())
+
+    def test_async_vote_market_sentiment_custom_values(self):
+        """AsyncPolyforgeClient.vote_market_sentiment sends custom direction/confidence."""
+        captured = {}
+
+        async def handler(request):
+            captured["body"] = json.loads(request.content)
+            return httpx.Response(200, json=_sentiment_response)
+
+        async def _run():
+            client = self._async_client_with(handler)
+            try:
+                await client.vote_market_sentiment("m1", direction="NO", confidence=80)
+                assert captured["body"] == {"direction": "NO", "confidence": 80}
+            finally:
+                await client.close()
+
+        import asyncio
+        asyncio.run(_run())

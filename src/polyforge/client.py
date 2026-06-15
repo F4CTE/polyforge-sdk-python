@@ -26,6 +26,7 @@ from polyforge.errors import (
     ServerError,
 )
 from polyforge.models import (
+    AccuracyLeaderboardEntry,
     AccuracyScore,
     AiQueryResponse,
     Alert,
@@ -144,6 +145,7 @@ from polyforge.models import (
     EventNotificationPref,
     EventNotificationPreferences,
     VenuePreferences,
+    UserPreferences,
     SupportTicket,
     TicketMessage,
 )
@@ -156,6 +158,7 @@ _FIELD_ALIASES: dict[str, dict[str, str]] = {
 }
 
 _MODEL_REGISTRY: dict[str, type] = {
+    "AccuracyLeaderboardEntry": AccuracyLeaderboardEntry,
     "Market": Market,
     "Token": Token,
     "Strategy": Strategy,
@@ -230,6 +233,7 @@ _MODEL_REGISTRY: dict[str, type] = {
     "EventNotificationPref": EventNotificationPref,
     "EventNotificationPreferences": EventNotificationPreferences,
     "VenuePreferences": VenuePreferences,
+    "UserPreferences": UserPreferences,
     "SupportTicket": SupportTicket,
     "TicketMessage": TicketMessage,
     "CorrelationCategoriesReport": CorrelationCategoriesReport,
@@ -372,30 +376,28 @@ def _raise_for_status(response: httpx.Response) -> None:
         return
 
     try:
-        body = response.json()
+        body: dict[str, Any] = response.json()
     except Exception:
         body = {}
 
-    message = body.get("message") or body.get("error") or response.reason_phrase or "Unknown error"
-    code = body.get("code", "")
-    request_id = body.get("requestId", "")
-    suggestion = body.get("suggestion") or None
-
-    kwargs = dict(status_code=response.status_code, code=code, request_id=request_id, suggestion=suggestion)
+    message: str = body.get("message", "") or body.get("error", "") or response.reason_phrase or "Unknown error"
+    code: str = str(body.get("code") or "")
+    request_id: str = str(body.get("requestId") or "")
+    suggestion: str | None = body.get("suggestion") or None
 
     match response.status_code:
         case 401:
-            raise AuthenticationError(message, **kwargs)
+            raise AuthenticationError(message, status_code=response.status_code, code=code, request_id=request_id, suggestion=suggestion)
         case 403:
-            raise PermissionError(message, **kwargs)
+            raise PermissionError(message, status_code=response.status_code, code=code, request_id=request_id, suggestion=suggestion)
         case 404:
-            raise NotFoundError(message, **kwargs)
+            raise NotFoundError(message, status_code=response.status_code, code=code, request_id=request_id, suggestion=suggestion)
         case 429:
-            raise RateLimitError(message, **kwargs)
+            raise RateLimitError(message, status_code=response.status_code, code=code, request_id=request_id, suggestion=suggestion)
         case sc if sc >= 500:
-            raise ServerError(message, **kwargs)
+            raise ServerError(message, status_code=response.status_code, code=code, request_id=request_id, suggestion=suggestion)
         case _:
-            raise PolyforgeError(message, **kwargs)
+            raise PolyforgeError(message, status_code=response.status_code, code=code, request_id=request_id, suggestion=suggestion)
 
 
 def _strip_none(params: dict[str, Any]) -> dict[str, Any]:
@@ -440,8 +442,10 @@ def _validate_enum(name: str, value: str, allowed: frozenset[str]) -> None:
 
 _VALID_MODES = frozenset({"live", "paper"})
 _VALID_SIDES = frozenset({"BUY", "SELL"})
+_VALID_SENTIMENT_DIRECTIONS = frozenset({"YES", "NO"})
 _VALID_OUTCOMES = frozenset({"YES", "NO"})
 _VALID_ORDER_TYPES = frozenset({"GTC", "GTD", "FOK", "FAK", "POST_ONLY"})
+_VALID_SMART_ORDER_TYPES = frozenset({"TWAP", "DCA", "BRACKET", "OCO"})
 _VALID_SPORTS_SORTS = frozenset({"volume", "closing_soon", "newest"})
 _VALID_SPORTS_EVENT_STATUSES = frozenset(
     {"SCHEDULED", "PREGAME", "LIVE", "HALFTIME", "FINAL"}
@@ -449,6 +453,7 @@ _VALID_SPORTS_EVENT_STATUSES = frozenset(
 _VALID_MARKET_ALERT_OUTCOMES = frozenset({"YES", "NO", "Yes", "No"})
 _VALID_MARKET_ALERT_CONDITIONS = frozenset({"above", "below"})
 _VALID_MARKET_HISTORY_PERIODS = frozenset({"1d", "7d", "30d", "90d"})
+_VALID_ACCURACY_LEADERBOARD_PERIODS = frozenset({"7d", "30d", "allTime"})
 _VALID_ORDER_MOODS = frozenset(
     {"CONFIDENT", "UNCERTAIN", "FOMO", "DISCIPLINED", "REVENGE"}
 )
@@ -470,6 +475,23 @@ def _validate_financial_param(name: str, value: float) -> None:
         raise ValueError(f"{name} must not be Infinity")
     if value <= 0:
         raise ValueError(f"{name} must be positive, got {value}")
+
+
+def _validate_price_param(name: str, value: float) -> None:
+    """Reject NaN, Infinity, and values outside [0.001, 0.999] for price parameters.
+
+    Raises:
+        TypeError: if *value* is not a real number (int or float).
+        ValueError: if *value* is NaN, infinite, or outside the allowed range.
+    """
+    if not isinstance(value, (int, float)):
+        raise TypeError(f"{name} must be a number, got {type(value).__name__}")
+    if math.isnan(value):
+        raise ValueError(f"{name} must not be NaN")
+    if math.isinf(value):
+        raise ValueError(f"{name} must not be Infinity")
+    if value < 0.001 or value > 0.999:
+        raise ValueError(f"{name} must be between 0.001 and 0.999, got {value}")
 
 
 def _numberish_to_float(name: str, value: Any) -> float:
@@ -666,7 +688,7 @@ def _resolve_and_validate_ips(hostname: str) -> list[str]:
 
     validated: list[str] = []
     for _family, _, _, _, sockaddr in addrinfos:
-        ip_str = sockaddr[0]
+        ip_str: str = sockaddr[0]  # type: ignore[assignment]  # sockaddr[0] is str for hostname resolution
         try:
             addr = ipaddress.ip_address(ip_str)
         except ValueError:
@@ -746,12 +768,14 @@ class PolyforgeClient:
         if parsed.scheme != "https" and parsed.hostname not in ("localhost", "127.0.0.1"):
             raise ValueError("Non-localhost API URLs must use HTTPS")
 
+        from polyforge import __version__ as _v
+
         self._client = httpx.Client(
             base_url=self._api_url,
             headers={
                 "Authorization": f"Bearer {api_key}",
                 "Content-Type": "application/json",
-                "User-Agent": "polyforge-python/1.0.0",
+                "User-Agent": f"polyforge-python/{_v}",
             },
             timeout=timeout,
             verify=True,
@@ -797,8 +821,25 @@ class PolyforgeClient:
         _raise_for_status(resp)
         return resp.json()
 
-    def _delete(self, path: str, *, idempotency_key: str | None = None) -> Any:
-        resp = self._client.delete(path, headers=_idempotency_headers(idempotency_key))
+    def _delete(
+        self,
+        path: str,
+        *,
+        json: dict[str, Any] | None = None,
+        idempotency_key: str | None = None,
+    ) -> Any:
+        if json is not None:
+            resp = self._client.request(
+                "DELETE",
+                path,
+                json=json,
+                headers=_idempotency_headers(idempotency_key),
+            )
+        else:
+            resp = self._client.delete(
+                path,
+                headers=_idempotency_headers(idempotency_key),
+            )
         _raise_for_status(resp)
         if resp.status_code == 204:
             return None
@@ -1109,6 +1150,7 @@ class PolyforgeClient:
         safety: list[dict[str, Any]] | None = None,
         logic_blocks: list[dict[str, Any]] | None = None,
         calc_blocks: list[dict[str, Any]] | None = None,
+        kalshi_subaccount: str | None = None,
         tags: list[str] | None = None,
         variables: list[dict[str, Any]] | None = None,
         canvas: dict[str, Any] | None = None,
@@ -1128,6 +1170,7 @@ class PolyforgeClient:
             safety: Safety block definitions.
             logic_blocks: Logic block definitions.
             calc_blocks: Calc block definitions.
+            kalshi_subaccount: Kalshi subaccount identifier for P&L attribution.
             tags: Strategy tags.
             variables: Strategy variable definitions.
             canvas: Canvas layout metadata.
@@ -1155,6 +1198,8 @@ class PolyforgeClient:
             body["logicBlocks"] = logic_blocks
         if calc_blocks is not None:
             body["calcBlocks"] = calc_blocks
+        if kalshi_subaccount is not None:
+            body["kalshiSubaccount"] = kalshi_subaccount
         if tags is not None:
             body["tags"] = tags
         if variables is not None:
@@ -1185,6 +1230,22 @@ class PolyforgeClient:
     def export_strategy(self, strategy_id: str) -> dict:
         return self._get(f"/api/v1/strategies/{_encode_path(strategy_id)}/export")
 
+    def get_strategy_capabilities(self) -> dict[str, Any]:
+        """Fetch the strategy builder capability manifest.
+
+        The manifest describes the strategy blocks, execution modes, and other
+        server-supported features available to strategy generation tooling.
+        """
+        return self._get("/api/v1/strategies/capabilities")
+
+    def get_strategy_design_patterns(self) -> dict[str, Any]:
+        """Fetch server-published strategy design patterns."""
+        return self._get("/api/v1/strategies/design-patterns")
+
+    def get_strategy_examples(self) -> dict[str, Any]:
+        """Fetch example strategy definitions for agents and external tooling."""
+        return self._get("/api/v1/strategies/examples")
+
     def update_strategy(
         self,
         strategy_id: str,
@@ -1205,6 +1266,7 @@ class PolyforgeClient:
         variables: list[dict[str, Any]] | None = None,
         canvas: dict[str, Any] | None = None,
         market_slots: list[dict[str, Any]] | None = None,
+        kalshi_subaccount: str | None = None,
     ) -> Strategy:
         body: dict[str, Any] = {}
         if name is not None:
@@ -1239,6 +1301,8 @@ class PolyforgeClient:
             body["canvas"] = canvas
         if market_slots is not None:
             body["marketSlots"] = market_slots
+        if kalshi_subaccount is not None:
+            body["kalshiSubaccount"] = kalshi_subaccount
         return _parse(Strategy, self._patch(f"/api/v1/strategies/{_encode_path(strategy_id)}", json=body))
 
     def delete_strategy(self, strategy_id: str) -> None:
@@ -1910,6 +1974,21 @@ class PolyforgeClient:
         data = self._post("/api/v1/arbitrage/matches/sync")
         return _parse(MatchSyncResult, data)
 
+    def create_market_match(self, polymarket_id: str, kalshi_id: str) -> MarketMatch:
+        """Manually match two markets across venues."""
+        body: dict[str, Any] = {"polymarketId": polymarket_id, "kalshiId": kalshi_id}
+        data = self._post("/api/v1/arbitrage/matches", json=body)
+        return _parse(MarketMatch, data)
+
+    def verify_market_match(self, match_id: str) -> MarketMatch:
+        """Verify/confirm an auto-matched market pair."""
+        data = self._post(f"/api/v1/arbitrage/matches/{_encode_path(match_id)}/verify")
+        return _parse(MarketMatch, data)
+
+    def delete_market_match(self, match_id: str) -> None:
+        """Remove a market match (unmatch)."""
+        self._delete(f"/api/v1/arbitrage/matches/{_encode_path(match_id)}")
+
     def get_spread_comparison(self) -> list[SpreadSummary]:
         """Get bid/ask spread comparison across all matched venues."""
         data = self._get("/api/v1/arbitrage/spread")
@@ -2160,19 +2239,49 @@ class PolyforgeClient:
         idempotency_key: str | None = None,
     ) -> PlaceSmartOrderResponse:
         """Place an advanced smart order (TWAP, DCA, BRACKET, or OCO)."""
+        _validate_enum("type", type, _VALID_SMART_ORDER_TYPES)
+        _validate_enum("side", side, _VALID_SIDES)
+        _validate_enum("outcome", outcome, _VALID_OUTCOMES)
+        if type in ("TWAP", "DCA"):
+            if slices is None:
+                raise ValueError("slices is required for TWAP/DCA orders")
+            if not isinstance(slices, int) or isinstance(slices, bool):
+                raise TypeError("slices must be an integer")
+            if slices < 2 or slices > 100:
+                raise ValueError(f"slices must be between 2 and 100, got {slices}")
+            if interval_minutes is None:
+                raise ValueError("interval_minutes is required for TWAP/DCA orders")
+            if not isinstance(interval_minutes, int) or isinstance(interval_minutes, bool):
+                raise TypeError("interval_minutes must be an integer")
+            if interval_minutes < 1 or interval_minutes > 10080:
+                raise ValueError(f"interval_minutes must be between 1 and 10080, got {interval_minutes}")
+        elif type == "BRACKET":
+            if entry_price is None:
+                raise ValueError("entry_price is required for BRACKET orders")
+            if take_profit_price is None:
+                raise ValueError("take_profit_price is required for BRACKET orders")
+            if stop_loss_price is None:
+                raise ValueError("stop_loss_price is required for BRACKET orders")
+        elif type == "OCO":
+            if price_a is None:
+                raise ValueError("price_a is required for OCO orders")
+            if price_b is None:
+                raise ValueError("price_b is required for OCO orders")
         _validate_financial_param("total_size", total_size)
+        if total_size < 1:
+            raise ValueError(f"total_size must be at least 1, got {total_size}")
         if limit_price is not None:
-            _validate_financial_param("limit_price", limit_price)
+            _validate_price_param("limit_price", limit_price)
         if entry_price is not None:
-            _validate_financial_param("entry_price", entry_price)
+            _validate_price_param("entry_price", entry_price)
         if take_profit_price is not None:
-            _validate_financial_param("take_profit_price", take_profit_price)
+            _validate_price_param("take_profit_price", take_profit_price)
         if stop_loss_price is not None:
-            _validate_financial_param("stop_loss_price", stop_loss_price)
+            _validate_price_param("stop_loss_price", stop_loss_price)
         if price_a is not None:
-            _validate_financial_param("price_a", price_a)
+            _validate_price_param("price_a", price_a)
         if price_b is not None:
-            _validate_financial_param("price_b", price_b)
+            _validate_price_param("price_b", price_b)
         body: dict[str, Any] = {
             "type": type,
             "tokenId": token_id,
@@ -2363,26 +2472,10 @@ class PolyforgeClient:
             timeout=httpx.Timeout(self._stream_timeout, connect=10.0),
         ) as response:
             _raise_for_status(response)
-            for line in response.iter_lines():
-                if not line.startswith("data: "):
-                    continue
-                raw = line[6:].strip()
-                if not raw:
-                    continue
-                try:
-                    payload = _json.loads(raw)
-                    # Validate expected fields before yielding
-                    if not isinstance(payload.get("type"), str):
-                        continue
-                    yield StrategyEvent(
-                        type=payload["type"],
-                        strategy_id=payload.get("strategyId", ""),
-                        data=payload.get("data"),
-                        timestamp=payload.get("timestamp", 0),
-                    )
-                except _json.JSONDecodeError:
-                    _log.warning("Malformed SSE event: failed to parse JSON")
-                    continue
+            for line in _iter_sse_lines(response.iter_bytes()):
+                event = _parse_strategy_sse_line(line)
+                if event is not None:
+                    yield event
 
     # -- Paper Trading --
 
@@ -2729,8 +2822,8 @@ class PolyforgeClient:
             size: Order size.
             trigger_price: Price at which the order triggers.
             limit_price: Optional limit price for the triggered order.
-            trailing_pct: Optional trailing percentage for trailing-stop orders.
-            expires_at: Optional ISO-8601 expiration timestamp.
+            trailing_pct: Optional trailing percentage for ``"TRAILING_STOP"`` orders.
+            expires_at: Optional ISO 8601 expiry timestamp.
 
         Returns:
             The created :class:`ConditionalOrder`.
@@ -2748,7 +2841,7 @@ class PolyforgeClient:
         }
         if limit_price is not None:
             _validate_financial_param("limit_price", limit_price)
-            body["limitPrice"] = limit_price
+            body["limitPrice"] = str(limit_price)
         if trailing_pct is not None:
             _validate_financial_param("trailing_pct", trailing_pct)
             body["trailingPct"] = str(trailing_pct)
@@ -3108,6 +3201,72 @@ class PolyforgeClient:
             win_rate=data.get("winRate", ""),
             calibration=calibration,
             by_category=by_category,
+        )
+
+    def get_accuracy_leaderboard(
+        self,
+        *,
+        period: str | None = None,
+        limit: int | None = None,
+        page: int | None = None,
+        offset: int | None = None,
+    ) -> PaginatedResponse[AccuracyLeaderboardEntry]:
+        """Fetch the accuracy leaderboard ranked by win-rate.
+
+        ``GET /api/v1/accuracy/leaderboard`` — distinct from
+        :meth:`get_leaderboard` (ranked by P&L) and from the per-user
+        :meth:`get_accuracy` / :meth:`get_accuracy_overview` endpoints.
+
+        Args:
+            period: Time period — ``"7d"``, ``"30d"``, or ``"allTime"``.
+            limit: Page size (1--100). When *offset* is provided without
+                *limit*, the client sends ``limit=20`` to keep the
+                offset-to-page conversion deterministic.
+            page: 1-based page number.
+            offset: Zero-based row offset. When supplied without ``page``
+                the client converts it to the equivalent page. Must be
+                non-negative and a multiple of *limit* (defaults to 20
+                when *limit* is ``None``).
+
+        Raises:
+            ValueError: If *period* is not one of ``"7d"``, ``"30d"``,
+                ``"allTime"``; if *limit* < 1; if *offset* < 0; or if
+                *offset* is not a multiple of the resolved page size.
+
+        Returns:
+            A :class:`PaginatedResponse` of :class:`AccuracyLeaderboardEntry`
+            items sorted by win-rate (descending).
+        """
+        q: dict[str, Any] = {}
+        if period is not None:
+            _validate_enum("period", period, _VALID_ACCURACY_LEADERBOARD_PERIODS)
+            q["period"] = period
+        if limit is not None:
+            if limit < 1:
+                raise ValueError(f"limit must be >= 1, got {limit}")
+            q["limit"] = limit
+        if offset is not None and page is None:
+            if offset < 0:
+                raise ValueError(f"offset must be >= 0, got {offset}")
+            resolved_limit = limit or 20
+            if offset % resolved_limit != 0:
+                raise ValueError(
+                    f"offset ({offset}) must be a multiple of limit ({resolved_limit})"
+                )
+            q["page"] = (offset // resolved_limit) + 1
+            if limit is None:
+                q["limit"] = resolved_limit
+        elif page is not None:
+            q["page"] = page
+        raw = self._get("/api/v1/accuracy/leaderboard", params=_strip_none(q))
+        items = raw if isinstance(raw, list) else raw.get("data", [])
+        return PaginatedResponse(
+            data=[_parse(AccuracyLeaderboardEntry, e) for e in items],
+            total=raw.get("total", 0) if isinstance(raw, dict) else len(items),
+            page=raw.get("page", 1) if isinstance(raw, dict) else 1,
+            limit=raw.get("limit", len(items)) if isinstance(raw, dict) else len(items),
+            has_next=raw.get("hasNext", False) if isinstance(raw, dict) else False,
+            total_pages=raw.get("totalPages", 0) if isinstance(raw, dict) else 0,
         )
 
     def get_portfolio_review(self) -> PortfolioReview:
@@ -3535,6 +3694,33 @@ class PolyforgeClient:
             body["singlePlatformMode"] = single_platform_mode
         return _parse(
             VenuePreferences,
+            self._patch("/api/v1/users/me/venue-preferences", json=body),
+        )
+
+    # -- My Preferences (alias for Venue Preferences) --
+
+    def get_my_preferences(self) -> UserPreferences:
+        return _parse(
+            UserPreferences,
+            self._get("/api/v1/users/me/venue-preferences"),
+        )
+
+    def update_my_preferences(
+        self,
+        *,
+        default_venue: str | None = None,
+        enabled_venues: list[str] | None = None,
+        single_platform_mode: bool | None = None,
+    ) -> UserPreferences:
+        body: dict[str, Any] = {}
+        if default_venue is not None:
+            body["defaultVenue"] = default_venue
+        if enabled_venues is not None:
+            body["enabledVenues"] = enabled_venues
+        if single_platform_mode is not None:
+            body["singlePlatformMode"] = single_platform_mode
+        return _parse(
+            UserPreferences,
             self._patch("/api/v1/users/me/venue-preferences", json=body),
         )
 
@@ -4065,15 +4251,42 @@ class PolyforgeClient:
             self._get(f"/api/v1/markets/{_encode_path(market_id)}/sentiment"),
         )
 
-    def vote_market_sentiment(self, market_id: str) -> MarketSentimentReport:
+    def vote_market_sentiment(
+        self,
+        market_id: str,
+        *,
+        direction: str = "YES",
+        confidence: int = 50,
+    ) -> MarketSentimentReport:
         """Submit (or refresh) the current user's sentiment for a market.
 
         Mirrors ``POST /api/v1/markets/:marketId/sentiment``. The controller
         currently returns the same payload shape as the GET variant.
+
+        Args:
+            market_id: The market id to vote on.
+            direction: ``"YES"`` or ``"NO"``. Defaults to ``"YES"``.
+            confidence: Integer confidence in ``[1, 100]``. Defaults to ``50``.
+
+        Raises:
+            ValueError: if direction is not ``"YES"`` or ``"NO"``, or
+                confidence is not an integer in ``[1, 100]``.
         """
+        _validate_enum("direction", direction, _VALID_SENTIMENT_DIRECTIONS)
+        if not isinstance(confidence, int) or isinstance(confidence, bool):
+            raise ValueError(
+                f"confidence must be an integer in [1, 100], got {confidence!r}"
+            )
+        if confidence < 1 or confidence > 100:
+            raise ValueError(
+                f"confidence must be an integer in [1, 100], got {confidence}"
+            )
         return _parse(
             MarketSentimentReport,
-            self._post(f"/api/v1/markets/{_encode_path(market_id)}/sentiment"),
+            self._post(
+                f"/api/v1/markets/{_encode_path(market_id)}/sentiment",
+                json={"direction": direction, "confidence": confidence},
+            ),
         )
 
     def update_order_journal(
@@ -4239,12 +4452,14 @@ class AsyncPolyforgeClient:
         if parsed.scheme != "https" and parsed.hostname not in ("localhost", "127.0.0.1"):
             raise ValueError("Non-localhost API URLs must use HTTPS")
 
+        from polyforge import __version__ as _v
+
         self._client = httpx.AsyncClient(
             base_url=self._api_url,
             headers={
                 "Authorization": f"Bearer {api_key}",
                 "Content-Type": "application/json",
-                "User-Agent": "polyforge-python/1.0.0",
+                "User-Agent": f"polyforge-python/{_v}",
             },
             timeout=timeout,
             verify=True,
@@ -4290,8 +4505,25 @@ class AsyncPolyforgeClient:
         _raise_for_status(resp)
         return resp.json()
 
-    async def _delete(self, path: str, *, idempotency_key: str | None = None) -> Any:
-        resp = await self._client.delete(path, headers=_idempotency_headers(idempotency_key))
+    async def _delete(
+        self,
+        path: str,
+        *,
+        json: dict[str, Any] | None = None,
+        idempotency_key: str | None = None,
+    ) -> Any:
+        if json is not None:
+            resp = await self._client.request(
+                "DELETE",
+                path,
+                json=json,
+                headers=_idempotency_headers(idempotency_key),
+            )
+        else:
+            resp = await self._client.delete(
+                path,
+                headers=_idempotency_headers(idempotency_key),
+            )
         _raise_for_status(resp)
         if resp.status_code == 204:
             return None
@@ -4602,6 +4834,7 @@ class AsyncPolyforgeClient:
         safety: list[dict[str, Any]] | None = None,
         logic_blocks: list[dict[str, Any]] | None = None,
         calc_blocks: list[dict[str, Any]] | None = None,
+        kalshi_subaccount: str | None = None,
         tags: list[str] | None = None,
         variables: list[dict[str, Any]] | None = None,
         canvas: dict[str, Any] | None = None,
@@ -4630,6 +4863,8 @@ class AsyncPolyforgeClient:
             body["logicBlocks"] = logic_blocks
         if calc_blocks is not None:
             body["calcBlocks"] = calc_blocks
+        if kalshi_subaccount is not None:
+            body["kalshiSubaccount"] = kalshi_subaccount
         if tags is not None:
             body["tags"] = tags
         if variables is not None:
@@ -4660,6 +4895,18 @@ class AsyncPolyforgeClient:
     async def export_strategy(self, strategy_id: str) -> dict:
         return await self._get(f"/api/v1/strategies/{_encode_path(strategy_id)}/export")
 
+    async def get_strategy_capabilities(self) -> dict[str, Any]:
+        """Fetch the strategy builder capability manifest."""
+        return await self._get("/api/v1/strategies/capabilities")
+
+    async def get_strategy_design_patterns(self) -> dict[str, Any]:
+        """Fetch server-published strategy design patterns."""
+        return await self._get("/api/v1/strategies/design-patterns")
+
+    async def get_strategy_examples(self) -> dict[str, Any]:
+        """Fetch example strategy definitions for agents and external tooling."""
+        return await self._get("/api/v1/strategies/examples")
+
     async def update_strategy(
         self,
         strategy_id: str,
@@ -4680,6 +4927,7 @@ class AsyncPolyforgeClient:
         variables: list[dict[str, Any]] | None = None,
         canvas: dict[str, Any] | None = None,
         market_slots: list[dict[str, Any]] | None = None,
+        kalshi_subaccount: str | None = None,
     ) -> Strategy:
         body: dict[str, Any] = {}
         if name is not None:
@@ -4714,6 +4962,8 @@ class AsyncPolyforgeClient:
             body["canvas"] = canvas
         if market_slots is not None:
             body["marketSlots"] = market_slots
+        if kalshi_subaccount is not None:
+            body["kalshiSubaccount"] = kalshi_subaccount
         return _parse(Strategy, await self._patch(f"/api/v1/strategies/{_encode_path(strategy_id)}", json=body))
 
     async def delete_strategy(self, strategy_id: str) -> None:
@@ -5345,6 +5595,21 @@ class AsyncPolyforgeClient:
         data = await self._post("/api/v1/arbitrage/matches/sync")
         return _parse(MatchSyncResult, data)
 
+    async def create_market_match(self, polymarket_id: str, kalshi_id: str) -> MarketMatch:
+        """Manually match two markets across venues."""
+        body: dict[str, Any] = {"polymarketId": polymarket_id, "kalshiId": kalshi_id}
+        data = await self._post("/api/v1/arbitrage/matches", json=body)
+        return _parse(MarketMatch, data)
+
+    async def verify_market_match(self, match_id: str) -> MarketMatch:
+        """Verify/confirm an auto-matched market pair."""
+        data = await self._post(f"/api/v1/arbitrage/matches/{_encode_path(match_id)}/verify")
+        return _parse(MarketMatch, data)
+
+    async def delete_market_match(self, match_id: str) -> None:
+        """Remove a market match (unmatch)."""
+        await self._delete(f"/api/v1/arbitrage/matches/{_encode_path(match_id)}")
+
     async def get_spread_comparison(self) -> list[SpreadSummary]:
         """Get bid/ask spread comparison across all matched venues."""
         data = await self._get("/api/v1/arbitrage/spread")
@@ -5524,19 +5789,49 @@ class AsyncPolyforgeClient:
         idempotency_key: str | None = None,
     ) -> PlaceSmartOrderResponse:
         """Place an advanced smart order (TWAP, DCA, BRACKET, or OCO)."""
+        _validate_enum("type", type, _VALID_SMART_ORDER_TYPES)
+        _validate_enum("side", side, _VALID_SIDES)
+        _validate_enum("outcome", outcome, _VALID_OUTCOMES)
+        if type in ("TWAP", "DCA"):
+            if slices is None:
+                raise ValueError("slices is required for TWAP/DCA orders")
+            if not isinstance(slices, int) or isinstance(slices, bool):
+                raise TypeError("slices must be an integer")
+            if slices < 2 or slices > 100:
+                raise ValueError(f"slices must be between 2 and 100, got {slices}")
+            if interval_minutes is None:
+                raise ValueError("interval_minutes is required for TWAP/DCA orders")
+            if not isinstance(interval_minutes, int) or isinstance(interval_minutes, bool):
+                raise TypeError("interval_minutes must be an integer")
+            if interval_minutes < 1 or interval_minutes > 10080:
+                raise ValueError(f"interval_minutes must be between 1 and 10080, got {interval_minutes}")
+        elif type == "BRACKET":
+            if entry_price is None:
+                raise ValueError("entry_price is required for BRACKET orders")
+            if take_profit_price is None:
+                raise ValueError("take_profit_price is required for BRACKET orders")
+            if stop_loss_price is None:
+                raise ValueError("stop_loss_price is required for BRACKET orders")
+        elif type == "OCO":
+            if price_a is None:
+                raise ValueError("price_a is required for OCO orders")
+            if price_b is None:
+                raise ValueError("price_b is required for OCO orders")
         _validate_financial_param("total_size", total_size)
+        if total_size < 1:
+            raise ValueError(f"total_size must be at least 1, got {total_size}")
         if limit_price is not None:
-            _validate_financial_param("limit_price", limit_price)
+            _validate_price_param("limit_price", limit_price)
         if entry_price is not None:
-            _validate_financial_param("entry_price", entry_price)
+            _validate_price_param("entry_price", entry_price)
         if take_profit_price is not None:
-            _validate_financial_param("take_profit_price", take_profit_price)
+            _validate_price_param("take_profit_price", take_profit_price)
         if stop_loss_price is not None:
-            _validate_financial_param("stop_loss_price", stop_loss_price)
+            _validate_price_param("stop_loss_price", stop_loss_price)
         if price_a is not None:
-            _validate_financial_param("price_a", price_a)
+            _validate_price_param("price_a", price_a)
         if price_b is not None:
-            _validate_financial_param("price_b", price_b)
+            _validate_price_param("price_b", price_b)
         body: dict[str, Any] = {
             "type": type,
             "tokenId": token_id,
@@ -5686,26 +5981,10 @@ class AsyncPolyforgeClient:
             timeout=httpx.Timeout(self._stream_timeout, connect=10.0),
         ) as response:
             _raise_for_status(response)
-            async for line in response.aiter_lines():
-                if not line.startswith("data: "):
-                    continue
-                raw = line[6:].strip()
-                if not raw:
-                    continue
-                try:
-                    payload = _json.loads(raw)
-                    # Validate expected fields before yielding
-                    if not isinstance(payload.get("type"), str):
-                        continue
-                    yield StrategyEvent(
-                        type=payload["type"],
-                        strategy_id=payload.get("strategyId", ""),
-                        data=payload.get("data"),
-                        timestamp=payload.get("timestamp", 0),
-                    )
-                except _json.JSONDecodeError:
-                    _log.warning("Malformed SSE event: failed to parse JSON")
-                    continue
+            async for line in _aiter_sse_lines(response.aiter_bytes()):
+                event = _parse_strategy_sse_line(line)
+                if event is not None:
+                    yield event
 
     # -- Paper Trading --
 
@@ -5970,8 +6249,8 @@ class AsyncPolyforgeClient:
             size: Order size.
             trigger_price: Price at which the order triggers.
             limit_price: Optional limit price for the triggered order.
-            trailing_pct: Optional trailing percentage for trailing-stop orders.
-            expires_at: Optional ISO-8601 expiration timestamp.
+            trailing_pct: Optional trailing percentage for ``"TRAILING_STOP"`` orders.
+            expires_at: Optional ISO 8601 expiry timestamp.
 
         Returns:
             The created :class:`ConditionalOrder`.
@@ -5989,7 +6268,7 @@ class AsyncPolyforgeClient:
         }
         if limit_price is not None:
             _validate_financial_param("limit_price", limit_price)
-            body["limitPrice"] = limit_price
+            body["limitPrice"] = str(limit_price)
         if trailing_pct is not None:
             _validate_financial_param("trailing_pct", trailing_pct)
             body["trailingPct"] = str(trailing_pct)
@@ -6294,6 +6573,51 @@ class AsyncPolyforgeClient:
             win_rate=data.get("winRate", ""),
             calibration=calibration,
             by_category=by_category,
+        )
+
+    async def get_accuracy_leaderboard(
+        self,
+        *,
+        period: str | None = None,
+        limit: int | None = None,
+        page: int | None = None,
+        offset: int | None = None,
+    ) -> PaginatedResponse[AccuracyLeaderboardEntry]:
+        """Fetch the accuracy leaderboard ranked by win-rate (async).
+
+        ``GET /api/v1/accuracy/leaderboard`` — async variant of
+        :meth:`PolyforgeClient.get_accuracy_leaderboard`.
+        """
+        q: dict[str, Any] = {}
+        if period is not None:
+            _validate_enum("period", period, _VALID_ACCURACY_LEADERBOARD_PERIODS)
+            q["period"] = period
+        if limit is not None:
+            if limit < 1:
+                raise ValueError(f"limit must be >= 1, got {limit}")
+            q["limit"] = limit
+        if offset is not None and page is None:
+            if offset < 0:
+                raise ValueError(f"offset must be >= 0, got {offset}")
+            resolved_limit = limit or 20
+            if offset % resolved_limit != 0:
+                raise ValueError(
+                    f"offset ({offset}) must be a multiple of limit ({resolved_limit})"
+                )
+            q["page"] = (offset // resolved_limit) + 1
+            if limit is None:
+                q["limit"] = resolved_limit
+        elif page is not None:
+            q["page"] = page
+        raw = await self._get("/api/v1/accuracy/leaderboard", params=_strip_none(q))
+        items = raw if isinstance(raw, list) else raw.get("data", [])
+        return PaginatedResponse(
+            data=[_parse(AccuracyLeaderboardEntry, e) for e in items],
+            total=raw.get("total", 0) if isinstance(raw, dict) else len(items),
+            page=raw.get("page", 1) if isinstance(raw, dict) else 1,
+            limit=raw.get("limit", len(items)) if isinstance(raw, dict) else len(items),
+            has_next=raw.get("hasNext", False) if isinstance(raw, dict) else False,
+            total_pages=raw.get("totalPages", 0) if isinstance(raw, dict) else 0,
         )
 
     async def get_portfolio_review(self) -> PortfolioReview:
@@ -6720,6 +7044,33 @@ class AsyncPolyforgeClient:
             await self._patch("/api/v1/users/me/venue-preferences", json=body),
         )
 
+    # -- My Preferences (alias for Venue Preferences) --
+
+    async def get_my_preferences(self) -> UserPreferences:
+        return _parse(
+            UserPreferences,
+            await self._get("/api/v1/users/me/venue-preferences"),
+        )
+
+    async def update_my_preferences(
+        self,
+        *,
+        default_venue: str | None = None,
+        enabled_venues: list[str] | None = None,
+        single_platform_mode: bool | None = None,
+    ) -> UserPreferences:
+        body: dict[str, Any] = {}
+        if default_venue is not None:
+            body["defaultVenue"] = default_venue
+        if enabled_venues is not None:
+            body["enabledVenues"] = enabled_venues
+        if single_platform_mode is not None:
+            body["singlePlatformMode"] = single_platform_mode
+        return _parse(
+            UserPreferences,
+            await self._patch("/api/v1/users/me/venue-preferences", json=body),
+        )
+
     # -- Sports Markets --
 
     async def list_sports_categories(self) -> list[dict[str, Any]]:
@@ -7085,13 +7436,37 @@ class AsyncPolyforgeClient:
         )
 
     async def vote_market_sentiment(
-        self, market_id: str
+        self,
+        market_id: str,
+        *,
+        direction: str = "YES",
+        confidence: int = 50,
     ) -> MarketSentimentReport:
-        """Async variant of :meth:`PolyforgeClient.vote_market_sentiment`."""
+        """Async variant of :meth:`PolyforgeClient.vote_market_sentiment`.
+
+        Args:
+            market_id: The market id to vote on.
+            direction: ``"YES"`` or ``"NO"``. Defaults to ``"YES"``.
+            confidence: Integer confidence in ``[1, 100]``. Defaults to ``50``.
+
+        Raises:
+            ValueError: if direction is not ``"YES"`` or ``"NO"``, or
+                confidence is not an integer in ``[1, 100]``.
+        """
+        _validate_enum("direction", direction, _VALID_SENTIMENT_DIRECTIONS)
+        if not isinstance(confidence, int) or isinstance(confidence, bool):
+            raise ValueError(
+                f"confidence must be an integer in [1, 100], got {confidence!r}"
+            )
+        if confidence < 1 or confidence > 100:
+            raise ValueError(
+                f"confidence must be an integer in [1, 100], got {confidence}"
+            )
         return _parse(
             MarketSentimentReport,
             await self._post(
-                f"/api/v1/markets/{_encode_path(market_id)}/sentiment"
+                f"/api/v1/markets/{_encode_path(market_id)}/sentiment",
+                json={"direction": direction, "confidence": confidence},
             ),
         )
 
@@ -7187,3 +7562,113 @@ class AsyncPolyforgeClient:
 
     async def __aexit__(self, *args: Any) -> None:
         await self.close()
+
+
+_MAX_SSE_LINE_BYTES = 64 * 1024
+
+
+def _sse_line_too_long_error() -> PolyforgeError:
+    return PolyforgeError(
+        f"SSE event line exceeded {_MAX_SSE_LINE_BYTES} bytes",
+        code="SSE_LINE_TOO_LONG",
+        suggestion="The server sent an invalid event stream line.",
+    )
+
+
+def _iter_sse_lines(chunks: Iterator[bytes]) -> Iterator[str]:
+    pending = bytearray()
+    skip_next_lf = False
+    for chunk in chunks:
+        if not chunk:
+            continue
+        start = 0
+        if skip_next_lf:
+            if chunk.startswith(b"\n"):
+                start = 1
+            skip_next_lf = False
+        while start < len(chunk):
+            cr_index = chunk.find(b"\r", start)
+            lf_index = chunk.find(b"\n", start)
+            if cr_index == -1:
+                delimiter_index = lf_index
+            elif lf_index == -1:
+                delimiter_index = cr_index
+            else:
+                delimiter_index = min(cr_index, lf_index)
+            end = len(chunk) if delimiter_index == -1 else delimiter_index
+            segment = chunk[start:end]
+            if len(pending) + len(segment) > _MAX_SSE_LINE_BYTES:
+                raise _sse_line_too_long_error()
+            pending.extend(segment)
+            if delimiter_index == -1:
+                break
+            yield pending.decode("utf-8", errors="replace")
+            pending.clear()
+            start = delimiter_index + 1
+            if chunk[delimiter_index] == 13:
+                if start == len(chunk):
+                    skip_next_lf = True
+                elif chunk[start] == 10:
+                    start += 1
+    if pending:
+        yield pending.decode("utf-8", errors="replace")
+
+
+async def _aiter_sse_lines(chunks: AsyncIterator[bytes]) -> AsyncIterator[str]:
+    pending = bytearray()
+    skip_next_lf = False
+    async for chunk in chunks:
+        if not chunk:
+            continue
+        start = 0
+        if skip_next_lf:
+            if chunk.startswith(b"\n"):
+                start = 1
+            skip_next_lf = False
+        while start < len(chunk):
+            cr_index = chunk.find(b"\r", start)
+            lf_index = chunk.find(b"\n", start)
+            if cr_index == -1:
+                delimiter_index = lf_index
+            elif lf_index == -1:
+                delimiter_index = cr_index
+            else:
+                delimiter_index = min(cr_index, lf_index)
+            end = len(chunk) if delimiter_index == -1 else delimiter_index
+            segment = chunk[start:end]
+            if len(pending) + len(segment) > _MAX_SSE_LINE_BYTES:
+                raise _sse_line_too_long_error()
+            pending.extend(segment)
+            if delimiter_index == -1:
+                break
+            yield pending.decode("utf-8", errors="replace")
+            pending.clear()
+            start = delimiter_index + 1
+            if chunk[delimiter_index] == 13:
+                if start == len(chunk):
+                    skip_next_lf = True
+                elif chunk[start] == 10:
+                    start += 1
+    if pending:
+        yield pending.decode("utf-8", errors="replace")
+
+
+def _parse_strategy_sse_line(line: str) -> StrategyEvent | None:
+    if not line.startswith("data: "):
+        return None
+    raw = line[6:].strip()
+    if not raw:
+        return None
+    try:
+        payload = _json.loads(raw)
+    except _json.JSONDecodeError:
+        _log.warning("Malformed SSE event: failed to parse JSON")
+        return None
+    if not isinstance(payload.get("type"), str):
+        return None
+    return StrategyEvent(
+        type=payload["type"],
+        strategy_id=payload.get("strategyId", ""),
+        data=payload.get("data"),
+        timestamp=payload.get("timestamp", 0),
+    )
