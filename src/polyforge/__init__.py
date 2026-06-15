@@ -9,6 +9,13 @@ from polyforge.errors import (
     RateLimitError,
     ServerError,
 )
+from polyforge.websocket import (
+    AsyncPolyforgeWebSocketClient,
+    PolyforgeWebSocketClient,
+    WsEvent,
+    WsPriceUpdate,
+    WsWhaleTrade,
+)
 from polyforge.models import (
     AccuracyLeaderboardEntry,
     ActionDefinition,
@@ -137,6 +144,11 @@ __all__ = [
     # Clients
     "PolyforgeClient",
     "AsyncPolyforgeClient",
+    "PolyforgeWebSocketClient",
+    "AsyncPolyforgeWebSocketClient",
+    "WsEvent",
+    "WsPriceUpdate",
+    "WsWhaleTrade",
     # Errors
     "PolyforgeError",
     "AuthenticationError",
