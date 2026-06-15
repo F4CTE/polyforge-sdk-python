@@ -1230,6 +1230,22 @@ class PolyforgeClient:
     def export_strategy(self, strategy_id: str) -> dict:
         return self._get(f"/api/v1/strategies/{_encode_path(strategy_id)}/export")
 
+    def get_strategy_capabilities(self) -> dict[str, Any]:
+        """Fetch the strategy builder capability manifest.
+
+        The manifest describes the strategy blocks, execution modes, and other
+        server-supported features available to strategy generation tooling.
+        """
+        return self._get("/api/v1/strategies/capabilities")
+
+    def get_strategy_design_patterns(self) -> dict[str, Any]:
+        """Fetch server-published strategy design patterns."""
+        return self._get("/api/v1/strategies/design-patterns")
+
+    def get_strategy_examples(self) -> dict[str, Any]:
+        """Fetch example strategy definitions for agents and external tooling."""
+        return self._get("/api/v1/strategies/examples")
+
     def update_strategy(
         self,
         strategy_id: str,
@@ -4878,6 +4894,18 @@ class AsyncPolyforgeClient:
 
     async def export_strategy(self, strategy_id: str) -> dict:
         return await self._get(f"/api/v1/strategies/{_encode_path(strategy_id)}/export")
+
+    async def get_strategy_capabilities(self) -> dict[str, Any]:
+        """Fetch the strategy builder capability manifest."""
+        return await self._get("/api/v1/strategies/capabilities")
+
+    async def get_strategy_design_patterns(self) -> dict[str, Any]:
+        """Fetch server-published strategy design patterns."""
+        return await self._get("/api/v1/strategies/design-patterns")
+
+    async def get_strategy_examples(self) -> dict[str, Any]:
+        """Fetch example strategy definitions for agents and external tooling."""
+        return await self._get("/api/v1/strategies/examples")
 
     async def update_strategy(
         self,
