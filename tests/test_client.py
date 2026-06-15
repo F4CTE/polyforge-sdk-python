@@ -2762,6 +2762,8 @@ class TestAlertCrud:
         assert order.trailing_pct == "0.05"
         assert order.expires_at == "2026-06-01T12:00:00Z"
         assert order.limit_price is None
+        assert order.trailing_pct == "2.5"
+        assert order.expires_at == "2026-01-02T03:04:05Z"
 
     def test_conditional_order_preserves_positional_field_order(self):
         """Existing positional construction must keep status and timestamps aligned."""
