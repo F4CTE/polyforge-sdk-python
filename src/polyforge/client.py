@@ -1795,7 +1795,7 @@ class PolyforgeClient:
             raise ValueError("bulk_cancel_orders requires at least 1 order ID")
         if len(order_ids) > 3000:
             raise ValueError("bulk_cancel_orders accepts at most 3000 order IDs")
-        data = self._delete(
+        data = self._post_json(
             "/api/v1/orders/bulk",
             json={"orderIds": order_ids},
             idempotency_key=_new_idempotency_key(idempotency_key),
@@ -5523,7 +5523,7 @@ class AsyncPolyforgeClient:
             raise ValueError("bulk_cancel_orders requires at least 1 order ID")
         if len(order_ids) > 3000:
             raise ValueError("bulk_cancel_orders accepts at most 3000 order IDs")
-        data = await self._delete(
+        data = await self._post_json(
             "/api/v1/orders/bulk",
             json={"orderIds": order_ids},
             idempotency_key=_new_idempotency_key(idempotency_key),
