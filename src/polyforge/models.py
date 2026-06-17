@@ -290,23 +290,26 @@ StrategyTemplate = Strategy
 
 @dataclass
 class Position:
-    """An open position within a portfolio.
+    """An open position returned by GET /api/v1/portfolio.
 
     Monetary fields are typed as ``str`` because the platform returns
     decimal strings to preserve precision (#34).
+
+    ``side`` carries the YES/NO outcome label, not a BUY/SELL direction —
+    the platform's naming is historical (see core issue tracker).
     """
 
     id: str = ""
     market_id: str = ""
+    market_title: str = ""
+    market_category: str | None = None
     token_id: str = ""
-    outcome: str = ""
     side: str = ""
     size: str = ""
-    avg_price: str = ""
+    avg_entry_price: str = ""
     current_price: str = ""
     unrealized_pnl: str = ""
-    realized_pnl: str = ""
-    opened_at: str = ""
+    resolution_status: str = ""
 
 
 @dataclass
