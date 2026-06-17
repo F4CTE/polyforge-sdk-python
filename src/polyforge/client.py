@@ -110,6 +110,7 @@ from polyforge.models import (
     Strategy,
     StrategyBlock,
     StrategyEvent,
+    StrategyHealth,
     StrategyStatusResponse,
     StrategyTemplate,
     SystemHealthPublic,
@@ -1135,6 +1136,10 @@ class PolyforgeClient:
     def get_strategy(self, strategy_id: str) -> Strategy:
         return _parse(Strategy, self._get(f"/api/v1/strategies/{_encode_path(strategy_id)}"))
 
+    def get_strategy_health(self, strategy_id: str) -> StrategyHealth:
+        """Return live health metrics for a strategy. Requires READ scope."""
+        return _parse(StrategyHealth, self._get(f"/api/v1/strategies/{_encode_path(strategy_id)}/health"))
+
     def create_strategy(
         self,
         name: str,
@@ -1150,7 +1155,7 @@ class PolyforgeClient:
         safety: list[dict[str, Any]] | None = None,
         logic_blocks: list[dict[str, Any]] | None = None,
         calc_blocks: list[dict[str, Any]] | None = None,
-        kalshi_subaccount: str | None = None,
+        kalshi_subaccount: int | None = None,
         tags: list[str] | None = None,
         variables: list[dict[str, Any]] | None = None,
         canvas: dict[str, Any] | None = None,
@@ -1199,6 +1204,10 @@ class PolyforgeClient:
         if calc_blocks is not None:
             body["calcBlocks"] = calc_blocks
         if kalshi_subaccount is not None:
+            if not isinstance(kalshi_subaccount, int) or not (0 <= kalshi_subaccount <= 32767):
+                raise ValueError(
+                    f"kalshi_subaccount must be an integer in [0, 32767], got {kalshi_subaccount!r}"
+                )
             body["kalshiSubaccount"] = kalshi_subaccount
         if tags is not None:
             body["tags"] = tags
@@ -1266,7 +1275,7 @@ class PolyforgeClient:
         variables: list[dict[str, Any]] | None = None,
         canvas: dict[str, Any] | None = None,
         market_slots: list[dict[str, Any]] | None = None,
-        kalshi_subaccount: str | None = None,
+        kalshi_subaccount: int | None = None,
     ) -> Strategy:
         body: dict[str, Any] = {}
         if name is not None:
@@ -1302,6 +1311,10 @@ class PolyforgeClient:
         if market_slots is not None:
             body["marketSlots"] = market_slots
         if kalshi_subaccount is not None:
+            if not isinstance(kalshi_subaccount, int) or not (0 <= kalshi_subaccount <= 32767):
+                raise ValueError(
+                    f"kalshi_subaccount must be an integer in [0, 32767], got {kalshi_subaccount!r}"
+                )
             body["kalshiSubaccount"] = kalshi_subaccount
         return _parse(Strategy, self._patch(f"/api/v1/strategies/{_encode_path(strategy_id)}", json=body))
 
@@ -2917,15 +2930,27 @@ class PolyforgeClient:
         items = data if isinstance(data, list) else data.get("entries", data.get("data", []))
         return [_parse(PolymarketEarningsEntry, e) for e in items]
 
-    def get_polymarket_activity(self, *, activity_type: str | None = None) -> list[PolymarketActivity]:
+    def get_polymarket_activity(
+        self,
+        *,
+        activity_type: str | None = None,
+        offset: int | None = None,
+        limit: int | None = None,
+    ) -> list[PolymarketActivity]:
         """Fetch on-chain activity for the connected Polymarket wallet.
 
         Args:
             activity_type: Optional activity type filter (e.g. ``"TRADE"``, ``"REDEEM"``).
+            offset: Optional zero-based offset for pagination. Must be >= 0.
+            limit: Optional page size. Must be an integer in ``[1, 100]``.
         """
+        if offset is not None and (not isinstance(offset, int) or isinstance(offset, bool) or offset < 0):
+            raise ValueError(f"offset must be an integer >= 0, got {offset!r}")
+        if limit is not None and (not isinstance(limit, int) or isinstance(limit, bool) or not (1 <= limit <= 100)):
+            raise ValueError(f"limit must be an integer in [1, 100], got {limit!r}")
         data = self._get(
             "/api/v1/portfolio/polymarket/activity",
-            params=_strip_none({"type": activity_type}),
+            params=_strip_none({"type": activity_type, "offset": offset, "limit": limit}),
         )
         items = data if isinstance(data, list) else data.get("activities", data.get("data", []))
         return [_parse(PolymarketActivity, a) for a in items]
@@ -4819,6 +4844,10 @@ class AsyncPolyforgeClient:
     async def get_strategy(self, strategy_id: str) -> Strategy:
         return _parse(Strategy, await self._get(f"/api/v1/strategies/{_encode_path(strategy_id)}"))
 
+    async def get_strategy_health(self, strategy_id: str) -> StrategyHealth:
+        """Return live health metrics for a strategy. Requires READ scope."""
+        return _parse(StrategyHealth, await self._get(f"/api/v1/strategies/{_encode_path(strategy_id)}/health"))
+
     async def create_strategy(
         self,
         name: str,
@@ -4834,7 +4863,7 @@ class AsyncPolyforgeClient:
         safety: list[dict[str, Any]] | None = None,
         logic_blocks: list[dict[str, Any]] | None = None,
         calc_blocks: list[dict[str, Any]] | None = None,
-        kalshi_subaccount: str | None = None,
+        kalshi_subaccount: int | None = None,
         tags: list[str] | None = None,
         variables: list[dict[str, Any]] | None = None,
         canvas: dict[str, Any] | None = None,
@@ -4864,6 +4893,10 @@ class AsyncPolyforgeClient:
         if calc_blocks is not None:
             body["calcBlocks"] = calc_blocks
         if kalshi_subaccount is not None:
+            if not isinstance(kalshi_subaccount, int) or not (0 <= kalshi_subaccount <= 32767):
+                raise ValueError(
+                    f"kalshi_subaccount must be an integer in [0, 32767], got {kalshi_subaccount!r}"
+                )
             body["kalshiSubaccount"] = kalshi_subaccount
         if tags is not None:
             body["tags"] = tags
@@ -4927,7 +4960,7 @@ class AsyncPolyforgeClient:
         variables: list[dict[str, Any]] | None = None,
         canvas: dict[str, Any] | None = None,
         market_slots: list[dict[str, Any]] | None = None,
-        kalshi_subaccount: str | None = None,
+        kalshi_subaccount: int | None = None,
     ) -> Strategy:
         body: dict[str, Any] = {}
         if name is not None:
@@ -4963,6 +4996,10 @@ class AsyncPolyforgeClient:
         if market_slots is not None:
             body["marketSlots"] = market_slots
         if kalshi_subaccount is not None:
+            if not isinstance(kalshi_subaccount, int) or not (0 <= kalshi_subaccount <= 32767):
+                raise ValueError(
+                    f"kalshi_subaccount must be an integer in [0, 32767], got {kalshi_subaccount!r}"
+                )
             body["kalshiSubaccount"] = kalshi_subaccount
         return _parse(Strategy, await self._patch(f"/api/v1/strategies/{_encode_path(strategy_id)}", json=body))
 
@@ -6344,15 +6381,27 @@ class AsyncPolyforgeClient:
         items = data if isinstance(data, list) else data.get("entries", data.get("data", []))
         return [_parse(PolymarketEarningsEntry, e) for e in items]
 
-    async def get_polymarket_activity(self, *, activity_type: str | None = None) -> list[PolymarketActivity]:
+    async def get_polymarket_activity(
+        self,
+        *,
+        activity_type: str | None = None,
+        offset: int | None = None,
+        limit: int | None = None,
+    ) -> list[PolymarketActivity]:
         """Fetch on-chain activity for the connected Polymarket wallet.
 
         Args:
             activity_type: Optional activity type filter (e.g. ``"TRADE"``, ``"REDEEM"``).
+            offset: Optional zero-based offset for pagination. Must be >= 0.
+            limit: Optional page size. Must be an integer in ``[1, 100]``.
         """
+        if offset is not None and (not isinstance(offset, int) or isinstance(offset, bool) or offset < 0):
+            raise ValueError(f"offset must be an integer >= 0, got {offset!r}")
+        if limit is not None and (not isinstance(limit, int) or isinstance(limit, bool) or not (1 <= limit <= 100)):
+            raise ValueError(f"limit must be an integer in [1, 100], got {limit!r}")
         data = await self._get(
             "/api/v1/portfolio/polymarket/activity",
-            params=_strip_none({"type": activity_type}),
+            params=_strip_none({"type": activity_type, "offset": offset, "limit": limit}),
         )
         items = data if isinstance(data, list) else data.get("activities", data.get("data", []))
         return [_parse(PolymarketActivity, a) for a in items]

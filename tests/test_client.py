@@ -1865,13 +1865,12 @@ class TestOrderMonetaryFields:
         """Position monetary fields must be str."""
         pos = Position(
             size="100.00",
-            avg_price="0.55",
+            avg_entry_price="0.55",
             current_price="0.65",
             unrealized_pnl="10.00",
-            realized_pnl="5.00",
         )
         assert isinstance(pos.size, str)
-        assert isinstance(pos.avg_price, str)
+        assert isinstance(pos.avg_entry_price, str)
         assert pos.unrealized_pnl == "10.00"
 
 
@@ -1884,18 +1883,18 @@ class TestPositionOrderFieldAlignment:
         assert pos.token_id == "0xabc123"
 
     def test_position_has_outcome(self):
-        """Position must have outcome field for YES/NO (#143)."""
-        pos_yes = Position(outcome="YES")
-        pos_no = Position(outcome="NO")
-        assert pos_yes.outcome == "YES"
-        assert pos_no.outcome == "NO"
+        """Position must have side field for YES/NO outcome label (#143)."""
+        pos_yes = Position(side="YES")
+        pos_no = Position(side="NO")
+        assert pos_yes.side == "YES"
+        assert pos_no.side == "NO"
 
-    def test_position_uses_avg_price_not_entry_price(self):
-        """Position must use avg_price (platform field), not entry_price (#143)."""
+    def test_position_uses_avg_entry_price_not_avg_price(self):
+        """Position must use avg_entry_price (platform field), not avg_price (#143)."""
         import dataclasses
         field_names = {f.name for f in dataclasses.fields(Position)}
-        assert "avg_price" in field_names
-        assert "entry_price" not in field_names
+        assert "avg_entry_price" in field_names
+        assert "avg_price" not in field_names
 
     def test_position_no_market_name_phantom_field(self):
         """Position must not have phantom market_name field (#143)."""
@@ -1908,20 +1907,20 @@ class TestPositionOrderFieldAlignment:
         api_response = {
             "id": "pos-1",
             "marketId": "mkt-abc",
+            "marketTitle": "Will BTC hit $100K?",
+            "marketCategory": "Crypto",
             "tokenId": "0xtoken",
-            "outcome": "YES",
-            "side": "BUY",
+            "side": "YES",
             "size": "50.00",
-            "avgPrice": "0.60",
+            "avgEntryPrice": "0.60",
             "currentPrice": "0.70",
             "unrealizedPnl": "5.00",
-            "realizedPnl": "0.00",
-            "openedAt": "2026-01-01T00:00:00Z",
+            "resolutionStatus": "UNRESOLVED",
         }
         pos = _parse(Position, api_response)
         assert pos.token_id == "0xtoken"
-        assert pos.outcome == "YES"
-        assert pos.avg_price == "0.60"
+        assert pos.side == "YES"
+        assert pos.avg_entry_price == "0.60"
 
     def test_order_has_token_id(self):
         """Order must have token_id field (#143)."""
@@ -6058,12 +6057,12 @@ class TestPositionPlatformContract:
         assert pos.token_id == "tok-1"
 
     def test_position_has_outcome_field(self):
-        pos = Position(outcome="YES")
-        assert pos.outcome == "YES"
+        pos = Position(side="YES")
+        assert pos.side == "YES"
 
-    def test_position_uses_avg_price_not_entry_price(self):
-        pos = Position(avg_price="0.55")
-        assert pos.avg_price == "0.55"
+    def test_position_uses_avg_entry_price_not_avg_price(self):
+        pos = Position(avg_entry_price="0.55")
+        assert pos.avg_entry_price == "0.55"
 
     def test_position_no_entry_price_field(self):
         assert not hasattr(Position, "entry_price") or "entry_price" not in {
@@ -6081,32 +6080,32 @@ class TestPositionPlatformContract:
 
     def test_position_outcome_defaults_to_empty(self):
         pos = Position()
-        assert pos.outcome == ""
+        assert pos.side == ""
 
-    def test_position_avg_price_defaults_to_empty(self):
+    def test_position_avg_entry_price_defaults_to_empty(self):
         pos = Position()
-        assert pos.avg_price == ""
+        assert pos.avg_entry_price == ""
 
     def test_position_parses_from_platform_response(self):
         api_response = {
             "id": "pos-1",
             "marketId": "mkt-1",
+            "marketTitle": "Will BTC hit $100K?",
+            "marketCategory": "Crypto",
             "tokenId": "tok-1",
-            "outcome": "YES",
-            "side": "BUY",
+            "side": "YES",
             "size": "100.00",
-            "avgPrice": "0.55",
+            "avgEntryPrice": "0.55",
             "currentPrice": "0.65",
             "unrealizedPnl": "10.00",
-            "realizedPnl": "0.00",
-            "openedAt": "2026-01-01T00:00:00Z",
+            "resolutionStatus": "UNRESOLVED",
         }
         pos = _parse(Position, api_response)
         assert pos.id == "pos-1"
         assert pos.market_id == "mkt-1"
         assert pos.token_id == "tok-1"
-        assert pos.outcome == "YES"
-        assert pos.avg_price == "0.55"
+        assert pos.side == "YES"
+        assert pos.avg_entry_price == "0.55"
         assert pos.current_price == "0.65"
 
 
