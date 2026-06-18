@@ -168,8 +168,9 @@ def test_sync_client_receive_event_models_known_gateway_events(monkeypatch):
         token_id="t1",
         price="0.42",
     )
-    assert price.raw is not None
-    assert price.raw["type"] == "PRICE_UPDATE"
+    raw = price.raw
+    assert raw is not None
+    assert raw["type"] == "PRICE_UPDATE"
     assert whale == WsWhaleTrade(data={"walletAddress": "0xabc"}, timestamp=12, raw=whale.raw)
     assert notification == WsEvent(type="NOTIFICATION", data={"title": "Broadcast"}, timestamp=13, raw=notification.raw)
 
