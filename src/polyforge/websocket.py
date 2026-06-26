@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import importlib
 import json
 from collections.abc import AsyncIterator, Iterator
 from dataclasses import dataclass
@@ -66,13 +67,13 @@ def _create_connection(
     origin: str | None = None,
 ) -> Any:
     try:
-        import websocket
+        websocket_client: Any = importlib.import_module("websocket")
     except ImportError as exc:  # pragma: no cover - exercised only without dependency installed
         raise RuntimeError(
             "WebSocket support requires the 'websocket-client' package. "
             "Install polyforge with its runtime dependencies."
         ) from exc
-    return websocket.create_connection(
+    return websocket_client.create_connection(
         url,
         timeout=timeout,
         header=header,

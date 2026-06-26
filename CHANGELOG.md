@@ -54,7 +54,7 @@ controller, available on both `PolyforgeClient` and `AsyncPolyforgeClient`:
 - `list_sports_milestones(*, page, limit, event_ticker, status)` → `dict[str, Any]` shaped `{milestones, cursor}`
 - `get_sports_live_data(milestone_id)` → `dict[str, Any]` shaped `{liveData}`
 - `list_sports_combos(*, page, limit, series_ticker)` → `dict[str, Any]` shaped `{collections, cursor}`
-- `get_sports_combo_collection(collection_ticker)` → `dict[str, Any]` (server currently ignores the ticker — wrapped as-is)
+- `get_sports_combo_collection(collection_ticker)` → `dict[str, Any]`
 - `lookup_sports_combo(collection_ticker, selected_markets)` → `dict[str, Any] | None`
 
 `sort` and event `status` are validated client-side against the controller enums
