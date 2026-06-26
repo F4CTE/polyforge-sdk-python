@@ -3925,11 +3925,11 @@ class PolyforgeClient:
     def get_sports_combo_collection(self, collection_ticker: str) -> dict[str, Any]:
         """Fetch a combo collection by ticker.
 
-        Note:
-            The upstream controller currently ignores ``collectionTicker`` and
-            delegates to ``listComboCollections({page:1, limit:1})``. The SDK
-            wraps the endpoint as-is; tracked for follow-up under
-            `POLA-1841 </POLA/issues/POLA-1841>`_.
+        Args:
+            collection_ticker: Combo collection ticker.
+
+        Returns:
+            Combo collection payload returned by the API.
         """
         return self._get(
             f"/api/v1/sports/combos/{_encode_path(collection_ticker)}",
@@ -7238,8 +7238,7 @@ class AsyncPolyforgeClient:
     async def get_sports_combo_collection(
         self, collection_ticker: str
     ) -> dict[str, Any]:
-        """Fetch a combo collection by ticker. See sync version for the
-        upstream-controller caveat."""
+        """Fetch a combo collection by ticker. See sync version."""
         return await self._get(
             f"/api/v1/sports/combos/{_encode_path(collection_ticker)}",
         )
