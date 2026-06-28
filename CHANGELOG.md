@@ -187,6 +187,11 @@ validation contracts exposed by the TypeScript SDK.
 
 ### Changed
 
+**Strategy `kalshi_subaccount` parity (POLA-9801)** — `create_strategy()` and
+`update_strategy()` now validate `kalshi_subaccount` with platform DTO constraints
+(`@IsInt`, `@Min(0)`, `@Max(32767)`) and send it as `kalshiSubaccount` in
+request bodies on both sync and async clients.
+
 **Arb close-sweep semantics documented (POLA-1957)** — updated docstrings across
 ``ArbCloseResponse``, ``close_arb_position()``, ``execute_arb()``,
 ``get_arb_position()``, and ``list_arb_positions()`` to match the hardened
