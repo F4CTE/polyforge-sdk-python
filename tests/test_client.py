@@ -550,6 +550,7 @@ class TestModelParsing:
         assert strategy.safety == []
         assert strategy.tags == []
         assert strategy.version == 0
+        assert strategy.kalshi_subaccount is None
 
     def test_portfolio_model_instantiation(self):
         """Should instantiate Portfolio model."""
@@ -636,6 +637,7 @@ class TestModelParsing:
         assert strategy.like_count == 0
         assert strategy.tags == []
         assert strategy.version == 0
+        assert strategy.kalshi_subaccount is None
 
 
 class TestTokenModel:
@@ -1652,6 +1654,7 @@ class TestCreateStrategyParams:
         assert "variables" in params
         assert "canvas" in params
         assert "kalshi_subaccount" in params
+        assert sig.parameters["kalshi_subaccount"].annotation == "int | None"
 
     def test_async_create_strategy_accepts_block_params(self):
         """Async create_strategy() must also accept the expanded params."""
@@ -1664,6 +1667,7 @@ class TestCreateStrategyParams:
         assert "actions" in params
         assert "tags" in params
         assert "kalshi_subaccount" in params
+        assert sig.parameters["kalshi_subaccount"].annotation == "int | None"
 
     def test_create_strategy_sends_camel_case_fields(self):
         """create_strategy() must send camelCase field names to the API."""
@@ -1678,6 +1682,85 @@ class TestCreateStrategyParams:
         assert '"safety"' in source
         assert '"tags"' in source
         assert '"kalshiSubaccount"' in source
+
+    def test_create_strategy_sends_kalshi_subaccount_as_int(self):
+        """kalshi_subaccount mirrors platform @IsInt/@Min/@Max DTO bounds."""
+        from unittest.mock import MagicMock
+
+        client = PolyforgeClient(api_key="test")
+        client._post = MagicMock(return_value={"id": "s1", "name": "Strategy"})
+        try:
+            result = client.create_strategy("Strategy", kalshi_subaccount=42)
+            assert result.kalshi_subaccount is None
+            client._post.assert_called_once()
+            assert client._post.call_args.kwargs["json"]["kalshiSubaccount"] == 42
+            assert isinstance(
+                client._post.call_args.kwargs["json"]["kalshiSubaccount"], int
+            )
+        finally:
+            client.close()
+
+    def test_async_create_strategy_sends_kalshi_subaccount_as_int(self):
+        """Async create_strategy() should send kalshiSubaccount as int."""
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test")
+            client._post = AsyncMock(return_value={"id": "s1", "name": "Strategy"})
+            try:
+                result = await client.create_strategy("Strategy", kalshi_subaccount=42)
+                assert result.kalshi_subaccount is None
+                client._post.assert_awaited_once()
+                assert client._post.call_args.kwargs["json"]["kalshiSubaccount"] == 42
+                assert isinstance(
+                    client._post.call_args.kwargs["json"]["kalshiSubaccount"], int
+                )
+            finally:
+                await client.close()
+
+        asyncio.run(_run())
+
+    @pytest.mark.parametrize("bad_value", [-1, 32768, "42", True])
+    def test_create_strategy_rejects_invalid_kalshi_subaccount(self, bad_value):
+        from unittest.mock import MagicMock
+
+        client = PolyforgeClient(api_key="test")
+        client._post = MagicMock()
+        try:
+            with pytest.raises((TypeError, ValueError), match="kalshi_subaccount"):
+                client.create_strategy("Strategy", kalshi_subaccount=bad_value)  # type: ignore[arg-type]
+            client._post.assert_not_called()
+        finally:
+            client.close()
+
+    @pytest.mark.parametrize("bad_value", [-1, 32768, "42", True])
+    def test_async_create_strategy_rejects_invalid_kalshi_subaccount(self, bad_value):
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test")
+            client._post = AsyncMock()
+            try:
+                with pytest.raises((TypeError, ValueError), match="kalshi_subaccount"):
+                    await client.create_strategy(
+                        "Strategy",
+                        kalshi_subaccount=bad_value,  # type: ignore[arg-type]
+                    )
+                client._post.assert_not_awaited()
+            finally:
+                await client.close()
+
+        asyncio.run(_run())
+
+    def test_strategy_parses_kalshi_subaccount_int(self):
+        strategy = _parse(Strategy, {
+            "id": "s1",
+            "name": "Strategy",
+            "kalshiSubaccount": 7,
+        })
+        assert strategy.kalshi_subaccount == 7
 
 
 class TestUpdateStrategyParams:
@@ -1695,6 +1778,7 @@ class TestUpdateStrategyParams:
             "market_slots", "kalshi_subaccount",
         ):
             assert expected in params, f"missing param: {expected}"
+        assert sig.parameters["kalshi_subaccount"].annotation == "int | None"
 
     def test_async_update_strategy_accepts_all_params(self):
         """Async update_strategy() must also accept the expanded params."""
@@ -1708,6 +1792,7 @@ class TestUpdateStrategyParams:
             "market_slots", "kalshi_subaccount",
         ):
             assert expected in params, f"missing async param: {expected}"
+        assert sig.parameters["kalshi_subaccount"].annotation == "int | None"
 
     def test_update_strategy_sends_camel_case_fields(self):
         """update_strategy() must send camelCase field names to the API."""
@@ -1720,6 +1805,73 @@ class TestUpdateStrategyParams:
             '"marketSlots"', '"kalshiSubaccount"',
         ):
             assert camel in source, f"missing camelCase key: {camel}"
+
+    def test_update_strategy_sends_kalshi_subaccount_as_int(self):
+        from unittest.mock import MagicMock
+
+        client = PolyforgeClient(api_key="test")
+        client._patch = MagicMock(return_value={"id": "s1", "name": "Strategy"})
+        try:
+            client.update_strategy("s1", kalshi_subaccount=0)
+            client._patch.assert_called_once()
+            assert client._patch.call_args.kwargs["json"] == {"kalshiSubaccount": 0}
+            assert isinstance(
+                client._patch.call_args.kwargs["json"]["kalshiSubaccount"], int
+            )
+        finally:
+            client.close()
+
+    def test_async_update_strategy_sends_kalshi_subaccount_as_int(self):
+        """Async update_strategy() should send kalshiSubaccount as int."""
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test")
+            client._patch = AsyncMock(return_value={"id": "s1", "name": "Strategy"})
+            try:
+                await client.update_strategy("s1", kalshi_subaccount=0)
+                client._patch.assert_awaited_once()
+                assert client._patch.call_args.kwargs["json"] == {"kalshiSubaccount": 0}
+                assert isinstance(
+                    client._patch.call_args.kwargs["json"]["kalshiSubaccount"], int
+                )
+            finally:
+                await client.close()
+
+        asyncio.run(_run())
+
+    @pytest.mark.parametrize("bad_value", [-1, 32768, "42", False])
+    def test_update_strategy_rejects_invalid_kalshi_subaccount(self, bad_value):
+        from unittest.mock import MagicMock
+
+        client = PolyforgeClient(api_key="test")
+        client._patch = MagicMock()
+        try:
+            with pytest.raises((TypeError, ValueError), match="kalshi_subaccount"):
+                client.update_strategy("s1", kalshi_subaccount=bad_value)  # type: ignore[arg-type]
+            client._patch.assert_not_called()
+        finally:
+            client.close()
+
+    @pytest.mark.parametrize("bad_value", [-1, 32768, "42", False])
+    def test_async_update_strategy_rejects_invalid_kalshi_subaccount(self, bad_value):
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test")
+            client._patch = AsyncMock()
+            try:
+                with pytest.raises((TypeError, ValueError), match="kalshi_subaccount"):
+                    await client.update_strategy(
+                        "s1", kalshi_subaccount=bad_value  # type: ignore[arg-type]
+                    )
+                client._patch.assert_not_awaited()
+            finally:
+                await client.close()
+
+        asyncio.run(_run())
 
     def test_update_strategy_params_are_keyword_only(self):
         """All update params after strategy_id must be keyword-only."""
