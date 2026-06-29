@@ -3902,7 +3902,7 @@ class TestStrategyHealthAndValidationEndpoints:
     def test_validate_strategy_blocks_posts_body_and_parses_nested_issues(self):
         def handler(request: httpx.Request) -> httpx.Response:
             assert request.method == "POST"
-            assert request.url.path == "/api/v1/strategies/validate-blocks"
+            assert request.url.raw_path.decode() == "/api/v1/strategies/strategy%2Fid/validate-blocks"
             assert json.loads(request.content) == {"triggers": []}
             return httpx.Response(200, json={
                 "valid": False,
@@ -3921,7 +3921,7 @@ class TestStrategyHealthAndValidationEndpoints:
 
         client = self._client_with(handler)
         try:
-            result = client.validate_strategy_blocks({"triggers": []})
+            result = client.validate_strategy_blocks("strategy/id", {"triggers": []})
         finally:
             client.close()
 
@@ -3937,15 +3937,16 @@ class TestStrategyHealthAndValidationEndpoints:
         def handler(request: httpx.Request) -> httpx.Response:
             seen_paths.append(request.url.raw_path.decode())
             if request.url.path == "/api/v1/strategies/block-types":
-                return httpx.Response(200, json=[{
+                return httpx.Response(200, json={"data": [{
                     "type": "price-checks",
                     "label": "Price Checks",
                     "category": "validation",
                     "description": "Price validation blocks",
+                    "configSchema": {"type": "object"},
                     "version": "1",
                     "deprecated": False,
                     "tags": ["core"],
-                }])
+                }]})
             return httpx.Response(200, json={
                 "type": "special type/name",
                 "schema": {"type": "object"},
@@ -3963,10 +3964,11 @@ class TestStrategyHealthAndValidationEndpoints:
 
         assert seen_paths == [
             "/api/v1/strategies/block-types",
-            "/api/v1/strategies/block-schema/special%20type%2Fname",
+            "/api/v1/strategies/blocks/special%20type%2Fname/schema",
         ]
         assert isinstance(block_types[0], StrategyBlockType)
         assert block_types[0].type == "price-checks"
+        assert block_types[0].config_schema == {"type": "object"}
         assert isinstance(schema, StrategyBlockSchema)
         assert schema.ui_schema == {"order": ["price"]}
 
@@ -4019,8 +4021,8 @@ class TestStrategyHealthAndValidationEndpoints:
             if request.url.path.endswith("/validate-blocks"):
                 return httpx.Response(200, json={"valid": True, "issues": [], "warnings": [], "normalizedBlocks": {}})
             if request.url.path == "/api/v1/strategies/block-types":
-                return httpx.Response(200, json=[])
-            if request.url.path.startswith("/api/v1/strategies/block-schema/"):
+                return httpx.Response(200, json={"data": []})
+            if request.url.path.startswith("/api/v1/strategies/blocks/"):
                 return httpx.Response(200, json={"type": "price", "schema": {}, "uiSchema": {}, "defaults": {}, "examples": []})
             if request.url.path.endswith("/preview-update"):
                 return httpx.Response(200, json={"strategy": {}, "validation": {}, "diff": {}, "estimatedImpact": {}})
@@ -4030,7 +4032,7 @@ class TestStrategyHealthAndValidationEndpoints:
             client = self._async_client_with(handler)
             try:
                 await client.get_strategy_health("strategy/id")
-                await client.validate_strategy_blocks({"triggers": []})
+                await client.validate_strategy_blocks("strategy/id", {"triggers": []})
                 await client.list_strategy_block_types()
                 await client.get_block_schema("special type/name")
                 await client.preview_strategy_update("strategy/id", {"tickMs": 5000})
@@ -4042,9 +4044,9 @@ class TestStrategyHealthAndValidationEndpoints:
 
         assert seen == [
             ("GET", "/api/v1/strategies/strategy%2Fid/health"),
-            ("POST", "/api/v1/strategies/validate-blocks"),
+            ("POST", "/api/v1/strategies/strategy%2Fid/validate-blocks"),
             ("GET", "/api/v1/strategies/block-types"),
-            ("GET", "/api/v1/strategies/block-schema/special%20type%2Fname"),
+            ("GET", "/api/v1/strategies/blocks/special%20type%2Fname/schema"),
             ("POST", "/api/v1/strategies/strategy%2Fid/preview-update"),
             ("POST", "/api/v1/strategies/strategy%2Fid/explain-decision"),
         ]
@@ -6738,6 +6740,270 @@ class TestEndpointPathRegression:
         assert re.search(r"/strategies/.*?/versions/.*?/rollback", source), (
             "rollback_strategy must use path .../versions/{vid}/rollback, not .../rollback/{vid}"
         )
+
+
+STRATEGY_OPERATOR_METHODS = (
+    "get_strategy_health",
+    "validate_strategy_blocks",
+    "list_strategy_block_types",
+    "get_block_schema",
+    "preview_strategy_update",
+    "explain_strategy_decision",
+)
+
+
+class TestStrategyOperatorEndpoints:
+    """Strategy health, validation, and operator endpoint coverage (#297)."""
+
+    @staticmethod
+    def _client_with(handler):
+        transport = httpx.MockTransport(handler)
+        client = PolyforgeClient(api_key="test", api_url="http://localhost:9999")
+        client._client = httpx.Client(
+            base_url="http://localhost:9999",
+            headers={"Authorization": "Bearer test"},
+            transport=transport,
+        )
+        return client
+
+    def test_methods_present_on_sync_client(self):
+        for name in STRATEGY_OPERATOR_METHODS:
+            assert callable(getattr(PolyforgeClient, name, None)), name
+
+    def test_methods_present_on_async_client(self):
+        for name in STRATEGY_OPERATOR_METHODS:
+            assert callable(getattr(AsyncPolyforgeClient, name, None)), name
+
+    def test_get_strategy_health_encodes_id_and_parses(self):
+        def handler(request):
+            assert request.method == "GET"
+            assert request.url.raw_path == b"/api/v1/strategies/id%2Fwith%20spaces/health"
+            return httpx.Response(200, json={
+                "fillRate": None,
+                "avgLatencyMs": 12.5,
+                "errorCount24h": 1,
+                "slippageBps": 2.5,
+                "winRate": 55.0,
+                "totalPnl": 123.45,
+                "maxDrawdown": -4.0,
+                "totalOrders": 10,
+                "filledOrders": 9,
+                "lastUpdated": "2026-06-29T12:00:00Z",
+            })
+
+        client = self._client_with(handler)
+        try:
+            health = client.get_strategy_health("id/with spaces")
+            assert isinstance(health, StrategyHealth)
+            assert health.avg_latency_ms == 12.5
+            assert health.error_count_24h == 1
+            assert health.last_updated == "2026-06-29T12:00:00Z"
+        finally:
+            client.close()
+
+    def test_validate_strategy_blocks_posts_body_and_parses_issues(self):
+        captured = {}
+
+        def handler(request):
+            captured["method"] = request.method
+            captured["path"] = request.url.path
+            captured["body"] = json.loads(request.content)
+            return httpx.Response(200, json={
+                "valid": False,
+                "issues": [{
+                    "path": "triggers.0.config",
+                    "message": "Missing market",
+                    "code": "REQUIRED",
+                    "severity": "error",
+                    "blockId": "b-1",
+                    "blockType": "price",
+                    "suggestion": "Select a market",
+                }],
+                "warnings": [],
+                "normalizedBlocks": {"triggers": []},
+            })
+
+        client = self._client_with(handler)
+        try:
+            result = client.validate_strategy_blocks("s-1", {"triggers": [{"id": "b-1"}]})
+            assert captured == {
+                "method": "POST",
+                "path": "/api/v1/strategies/s-1/validate-blocks",
+                "body": {"triggers": [{"id": "b-1"}]},
+            }
+            assert isinstance(result, StrategyBlockValidationResult)
+            assert result.valid is False
+            assert isinstance(result.issues[0], StrategyBlockValidationIssue)
+            assert result.issues[0].block_id == "b-1"
+            assert result.normalized_blocks == {"triggers": []}
+        finally:
+            client.close()
+
+    def test_list_strategy_block_types_parses_config_schema(self):
+        def handler(request):
+            assert request.method == "GET"
+            assert request.url.path == "/api/v1/strategies/block-types"
+            return httpx.Response(200, json={"data": [{
+                "type": "price-check",
+                "label": "Price Check",
+                "category": "conditions",
+                "description": "Compare prices",
+                "configSchema": {"type": "object"},
+                "version": "1",
+                "deprecated": False,
+                "tags": ["price"],
+            }]})
+
+        client = self._client_with(handler)
+        try:
+            block_types = client.list_strategy_block_types()
+            assert isinstance(block_types[0], StrategyBlockType)
+            assert block_types[0].config_schema == {"type": "object"}
+        finally:
+            client.close()
+
+    def test_get_block_schema_encodes_type_and_parses(self):
+        def handler(request):
+            assert request.method == "GET"
+            assert request.url.raw_path == b"/api/v1/strategies/blocks/special%20type%2Fname/schema"
+            return httpx.Response(200, json={
+                "type": "special type/name",
+                "schema": {"type": "object"},
+                "uiSchema": {"order": ["marketId"]},
+                "defaults": {"threshold": 0.5},
+                "examples": [{"threshold": 0.6}],
+            })
+
+        client = self._client_with(handler)
+        try:
+            schema = client.get_block_schema("special type/name")
+            assert isinstance(schema, StrategyBlockSchema)
+            assert schema.type == "special type/name"
+            assert schema.ui_schema == {"order": ["marketId"]}
+        finally:
+            client.close()
+
+    def test_preview_strategy_update_posts_body_and_parses(self):
+        captured = {}
+
+        def handler(request):
+            captured["method"] = request.method
+            captured["path"] = request.url.path
+            captured["body"] = json.loads(request.content)
+            return httpx.Response(200, json={
+                "strategyId": "s-1",
+                "preview": {"tickMs": 5000},
+                "warnings": ["restart required"],
+                "estimatedImpact": {"restartRequired": True},
+            })
+
+        client = self._client_with(handler)
+        try:
+            preview = client.preview_strategy_update("s-1", {"tickMs": 5000})
+            assert captured == {
+                "method": "POST",
+                "path": "/api/v1/strategies/s-1/preview-update",
+                "body": {"tickMs": 5000},
+            }
+            assert isinstance(preview, StrategyUpdatePreview)
+            assert preview.strategy_id == "s-1"
+            assert preview.estimated_impact == {"restartRequired": True}
+            assert preview.warnings == ["restart required"]
+        finally:
+            client.close()
+
+    def test_explain_strategy_decision_posts_sparse_body_and_parses(self):
+        captured = {}
+
+        def handler(request):
+            captured["method"] = request.method
+            captured["path"] = request.url.path
+            captured["body"] = json.loads(request.content)
+            return httpx.Response(200, json={
+                "strategyId": "s-1",
+                "explanation": "Signal crossed threshold",
+                "confidence": 0.88,
+                "factors": [{"name": "price", "impact": "positive"}],
+            })
+
+        client = self._client_with(handler)
+        try:
+            explanation = client.explain_strategy_decision("s-1", decision_id="d-1")
+            assert captured == {
+                "method": "POST",
+                "path": "/api/v1/strategies/s-1/explain-decision",
+                "body": {"decisionId": "d-1"},
+            }
+            assert isinstance(explanation, StrategyDecisionExplanation)
+            assert explanation.strategy_id == "s-1"
+            assert explanation.explanation == "Signal crossed threshold"
+            assert explanation.factors == [{"name": "price", "impact": "positive"}]
+        finally:
+            client.close()
+
+    def test_async_strategy_operator_roundtrip(self):
+        import asyncio
+
+        captured = []
+
+        class _AsyncStrategyTransport(httpx.AsyncBaseTransport):
+            async def handle_async_request(self, request):
+                captured.append((request.method, request.url.path))
+                if request.url.path.endswith("/validate-blocks"):
+                    return httpx.Response(200, json={"valid": True, "issues": []})
+                if request.url.path == "/api/v1/strategies/block-types":
+                    return httpx.Response(200, json={"data": [{"type": "price", "label": "Price"}]})
+                return httpx.Response(200, json={"strategyId": "s-1", "preview": {}})
+
+        async def _run():
+            async with AsyncPolyforgeClient(api_key="test", api_url="http://localhost:9999") as client:
+                client._client = httpx.AsyncClient(
+                    base_url="http://localhost:9999",
+                    headers={"Authorization": "Bearer test"},
+                    transport=_AsyncStrategyTransport(),
+                )
+                validation = await client.validate_strategy_blocks("s-1", {"triggers": []})
+                block_types = await client.list_strategy_block_types()
+                preview = await client.preview_strategy_update("s-1", {})
+                assert validation.valid is True
+                assert block_types[0].type == "price"
+                assert preview.strategy_id == "s-1"
+
+        asyncio.run(_run())
+        assert captured == [
+            ("POST", "/api/v1/strategies/s-1/validate-blocks"),
+            ("GET", "/api/v1/strategies/block-types"),
+            ("POST", "/api/v1/strategies/s-1/preview-update"),
+        ]
+
+    def test_strategy_operator_added_fields_are_appended(self):
+        import dataclasses
+
+        block_type_fields = [f.name for f in dataclasses.fields(StrategyBlockType)]
+        preview_fields = [f.name for f in dataclasses.fields(StrategyUpdatePreview)]
+        explanation_fields = [f.name for f in dataclasses.fields(StrategyDecisionExplanation)]
+
+        assert block_type_fields[:7] == [
+            "type",
+            "label",
+            "category",
+            "description",
+            "version",
+            "deprecated",
+            "tags",
+        ]
+        assert block_type_fields[-1] == "config_schema"
+        assert preview_fields[:4] == ["strategy", "validation", "diff", "estimated_impact"]
+        assert preview_fields[-3:] == ["strategy_id", "preview", "warnings"]
+        assert explanation_fields[:6] == [
+            "summary",
+            "rationale",
+            "confidence",
+            "inputs",
+            "decision",
+            "related_events",
+        ]
+        assert explanation_fields[-3:] == ["strategy_id", "explanation", "factors"]
 
 
 class TestSseStreamTimeout:

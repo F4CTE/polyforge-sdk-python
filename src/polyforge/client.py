@@ -1191,29 +1191,29 @@ class PolyforgeClient:
 
     def validate_strategy_blocks(
         self,
+        strategy_id: str,
         blocks: dict[str, Any],
     ) -> StrategyBlockValidationResult:
-        """Validate strategy block configuration before saving or deploying."""
+        """Validate a strategy's block configuration before saving."""
         return _parse(
             StrategyBlockValidationResult,
             self._post(
-                "/api/v1/strategies/validate-blocks",
+                f"/api/v1/strategies/{_encode_path(strategy_id)}/validate-blocks",
                 json=blocks,
             ),
         )
 
     def list_strategy_block_types(self) -> list[StrategyBlockType]:
         """List available strategy builder block types."""
-        return [
-            _parse(StrategyBlockType, item)
-            for item in self._get("/api/v1/strategies/block-types")
-        ]
+        raw = self._get("/api/v1/strategies/block-types")
+        items = raw.get("data", raw) if isinstance(raw, dict) else raw
+        return [_parse(StrategyBlockType, item) for item in items]
 
     def get_block_schema(self, block_type: str) -> StrategyBlockSchema:
         """Fetch the JSON schema for a specific strategy block type."""
         return _parse(
             StrategyBlockSchema,
-            self._get(f"/api/v1/strategies/block-schema/{_encode_path(block_type)}"),
+            self._get(f"/api/v1/strategies/blocks/{_encode_path(block_type)}/schema"),
         )
 
     def preview_strategy_update(
@@ -1233,14 +1233,19 @@ class PolyforgeClient:
     def explain_strategy_decision(
         self,
         strategy_id: str,
-        params: dict[str, Any],
+        params: dict[str, Any] | None = None,
+        *,
+        decision_id: str | None = None,
+        context: dict[str, Any] | None = None,
     ) -> StrategyDecisionExplanation:
         """Explain a strategy decision for transparency and debugging."""
+        body = dict(params or {})
+        body.update(_strip_none({"decisionId": decision_id, "context": context}))
         return _parse(
             StrategyDecisionExplanation,
             self._post(
                 f"/api/v1/strategies/{_encode_path(strategy_id)}/explain-decision",
-                json=params,
+                json=body,
             ),
         )
 
@@ -4949,29 +4954,29 @@ class AsyncPolyforgeClient:
 
     async def validate_strategy_blocks(
         self,
+        strategy_id: str,
         blocks: dict[str, Any],
     ) -> StrategyBlockValidationResult:
-        """Validate strategy block configuration before saving or deploying."""
+        """Validate a strategy's block configuration before saving."""
         return _parse(
             StrategyBlockValidationResult,
             await self._post(
-                "/api/v1/strategies/validate-blocks",
+                f"/api/v1/strategies/{_encode_path(strategy_id)}/validate-blocks",
                 json=blocks,
             ),
         )
 
     async def list_strategy_block_types(self) -> list[StrategyBlockType]:
         """List available strategy builder block types."""
-        return [
-            _parse(StrategyBlockType, item)
-            for item in await self._get("/api/v1/strategies/block-types")
-        ]
+        raw = await self._get("/api/v1/strategies/block-types")
+        items = raw.get("data", raw) if isinstance(raw, dict) else raw
+        return [_parse(StrategyBlockType, item) for item in items]
 
     async def get_block_schema(self, block_type: str) -> StrategyBlockSchema:
         """Fetch the JSON schema for a specific strategy block type."""
         return _parse(
             StrategyBlockSchema,
-            await self._get(f"/api/v1/strategies/block-schema/{_encode_path(block_type)}"),
+            await self._get(f"/api/v1/strategies/blocks/{_encode_path(block_type)}/schema"),
         )
 
     async def preview_strategy_update(
@@ -4991,14 +4996,19 @@ class AsyncPolyforgeClient:
     async def explain_strategy_decision(
         self,
         strategy_id: str,
-        params: dict[str, Any],
+        params: dict[str, Any] | None = None,
+        *,
+        decision_id: str | None = None,
+        context: dict[str, Any] | None = None,
     ) -> StrategyDecisionExplanation:
         """Explain a strategy decision for transparency and debugging."""
+        body = dict(params or {})
+        body.update(_strip_none({"decisionId": decision_id, "context": context}))
         return _parse(
             StrategyDecisionExplanation,
             await self._post(
                 f"/api/v1/strategies/{_encode_path(strategy_id)}/explain-decision",
-                json=params,
+                json=body,
             ),
         )
 
