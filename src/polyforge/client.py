@@ -11,6 +11,7 @@ import socket
 import uuid
 import warnings
 from dataclasses import fields
+from decimal import Decimal, InvalidOperation
 from typing import Any, AsyncIterator, Iterator, TypeVar, get_type_hints
 
 from urllib.parse import quote, urlparse
@@ -506,6 +507,17 @@ def _validate_positive_numberish_param(name: str, value: float | str) -> None:
     _validate_financial_param(name, _numberish_to_float(name, value))
 
 
+def _validate_positive_numberish_decimal_param(name: str, value: Any) -> Decimal:
+    number = _numberish_to_float(name, value)
+    _validate_financial_param(name, number)
+    try:
+        if isinstance(value, str):
+            return Decimal(value)
+        return Decimal(str(number))
+    except InvalidOperation as exc:
+        raise TypeError(f"{name} must be a number, got {type(value).__name__}") from exc
+
+
 def _validate_place_order_bounds(size: float, price: float) -> None:
     if size < 1:
         raise ValueError(f"size must be >= 1, got {size}")
@@ -612,14 +624,12 @@ def _validate_batch_order(order: dict[str, Any]) -> None:
     if "orderType" in order:
         _validate_enum("order_type", order["orderType"], _VALID_ORDER_TYPES)
     if "size" in order:
-        size = _numberish_to_float("size", order["size"])
-        _validate_financial_param("size", size)
-        if size < 1:
+        size = _validate_positive_numberish_decimal_param("size", order["size"])
+        if size < Decimal("1"):
             raise ValueError(f"size must be >= 1, got {size}")
     if "price" in order:
-        price = _numberish_to_float("price", order["price"])
-        _validate_financial_param("price", price)
-        if price < 0.001 or price > 0.999:
+        price = _validate_positive_numberish_decimal_param("price", order["price"])
+        if price < Decimal("0.001") or price > Decimal("0.999"):
             raise ValueError(f"price must be between 0.001 and 0.999, got {price}")
 
 
