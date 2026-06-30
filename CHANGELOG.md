@@ -4,6 +4,19 @@
 
 ### Added
 
+**Strategy health and validation endpoints (POLA-14530 / #297)** — sync and
+async clients now expose the upcoming strategy AI/operator API surface:
+
+- `get_strategy_health(strategy_id)` → `StrategyHealth`
+- `validate_strategy_blocks(blocks)` → `StrategyBlockValidationResult`
+- `list_strategy_block_types()` → `list[StrategyBlockType]`
+- `get_block_schema(block_type)` → `StrategyBlockSchema`
+- `preview_strategy_update(strategy_id, params)` → `StrategyUpdatePreview`
+- `explain_strategy_decision(strategy_id, params)` → `StrategyDecisionExplanation`
+
+Path parameters are URL-encoded and validation/preview/explanation responses
+parse into typed dataclasses, including nested validation issues.
+
 **Misc public utility endpoints (POLA-1857)** — eighteen endpoint methods
 filling gaps surfaced by the weekly SDK + MCP compatibility audit. All are
 available on both `PolyforgeClient` and `AsyncPolyforgeClient`:

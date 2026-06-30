@@ -59,9 +59,16 @@ from polyforge.models import (
     MyReferralsResponse,
     RewardMarket,
     Strategy,
+    StrategyBlockSchema,
+    StrategyBlockType,
+    StrategyBlockValidationIssue,
+    StrategyBlockValidationResult,
+    StrategyDecisionExplanation,
     StrategyEvent,
     StrategyEventType,
     StrategyExecMode,
+    StrategyHealth,
+    StrategyUpdatePreview,
     StrategyVisibility,
     TraderScore,
     UserReward,
@@ -3814,6 +3821,232 @@ class TestStrategyCapabilityDiscovery:
             "/api/v1/strategies/capabilities",
             "/api/v1/strategies/design-patterns",
             "/api/v1/strategies/examples",
+        ]
+
+
+class TestStrategyHealthAndValidationEndpoints:
+    """Tests for strategy health and validation/operator endpoints (#297)."""
+
+    @staticmethod
+    def _client_with(handler):
+        transport = httpx.MockTransport(handler)
+        client = PolyforgeClient(api_key="test", api_url="http://localhost:9999")
+        client._client = httpx.Client(
+            base_url="http://localhost:9999",
+            headers={"Authorization": "Bearer test"},
+            transport=transport,
+        )
+        return client
+
+    @staticmethod
+    def _async_client_with(handler):
+        transport = httpx.MockTransport(handler)
+        client = AsyncPolyforgeClient(api_key="test", api_url="http://localhost:9999")
+        client._client = httpx.AsyncClient(
+            base_url="http://localhost:9999",
+            headers={"Authorization": "Bearer test"},
+            transport=transport,
+        )
+        return client
+
+    def test_sync_strategy_health_and_validation_methods_exist(self):
+        for method in (
+            "get_strategy_health",
+            "validate_strategy_blocks",
+            "list_strategy_block_types",
+            "get_block_schema",
+            "preview_strategy_update",
+            "explain_strategy_decision",
+        ):
+            assert callable(getattr(PolyforgeClient, method, None))
+
+    def test_async_strategy_health_and_validation_methods_exist(self):
+        for method in (
+            "get_strategy_health",
+            "validate_strategy_blocks",
+            "list_strategy_block_types",
+            "get_block_schema",
+            "preview_strategy_update",
+            "explain_strategy_decision",
+        ):
+            assert callable(getattr(AsyncPolyforgeClient, method, None))
+
+    def test_get_strategy_health_parses_typed_response(self):
+        def handler(request: httpx.Request) -> httpx.Response:
+            assert request.method == "GET"
+            assert request.url.raw_path.decode() == "/api/v1/strategies/strategy%2Fid/health"
+            return httpx.Response(200, json={
+                "fillRate": 0.75,
+                "avgLatencyMs": 12.5,
+                "errorCount24h": 1,
+                "slippageBps": 2.4,
+                "winRate": 0.6,
+                "totalPnl": 42.25,
+                "maxDrawdown": 0.1,
+                "totalOrders": 8,
+                "filledOrders": 6,
+                "lastUpdated": "2026-06-30T10:00:00Z",
+            })
+
+        client = self._client_with(handler)
+        try:
+            result = client.get_strategy_health("strategy/id")
+        finally:
+            client.close()
+
+        assert isinstance(result, StrategyHealth)
+        assert result.fill_rate == 0.75
+        assert result.avg_latency_ms == 12.5
+        assert result.error_count_24h == 1
+
+    def test_validate_strategy_blocks_posts_body_and_parses_nested_issues(self):
+        def handler(request: httpx.Request) -> httpx.Response:
+            assert request.method == "POST"
+            assert request.url.path == "/api/v1/strategies/validate-blocks"
+            assert json.loads(request.content) == {"triggers": []}
+            return httpx.Response(200, json={
+                "valid": False,
+                "issues": [{
+                    "path": "triggers[0]",
+                    "message": "Missing trigger",
+                    "code": "MISSING_TRIGGER",
+                    "severity": "error",
+                    "blockId": "b-1",
+                    "blockType": "PRICE_CHECK",
+                    "suggestion": "Add a trigger block.",
+                }],
+                "warnings": [],
+                "normalizedBlocks": {"triggers": []},
+            })
+
+        client = self._client_with(handler)
+        try:
+            result = client.validate_strategy_blocks({"triggers": []})
+        finally:
+            client.close()
+
+        assert isinstance(result, StrategyBlockValidationResult)
+        assert result.valid is False
+        assert isinstance(result.issues[0], StrategyBlockValidationIssue)
+        assert result.issues[0].block_id == "b-1"
+        assert result.normalized_blocks == {"triggers": []}
+
+    def test_list_strategy_block_types_and_schema_are_typed_and_encoded(self):
+        seen_paths = []
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            seen_paths.append(request.url.raw_path.decode())
+            if request.url.path == "/api/v1/strategies/block-types":
+                return httpx.Response(200, json=[{
+                    "type": "price-checks",
+                    "label": "Price Checks",
+                    "category": "validation",
+                    "description": "Price validation blocks",
+                    "version": "1",
+                    "deprecated": False,
+                    "tags": ["core"],
+                }])
+            return httpx.Response(200, json={
+                "type": "special type/name",
+                "schema": {"type": "object"},
+                "uiSchema": {"order": ["price"]},
+                "defaults": {"price": 0.5},
+                "examples": [{"price": 0.6}],
+            })
+
+        client = self._client_with(handler)
+        try:
+            block_types = client.list_strategy_block_types()
+            schema = client.get_block_schema("special type/name")
+        finally:
+            client.close()
+
+        assert seen_paths == [
+            "/api/v1/strategies/block-types",
+            "/api/v1/strategies/block-schema/special%20type%2Fname",
+        ]
+        assert isinstance(block_types[0], StrategyBlockType)
+        assert block_types[0].type == "price-checks"
+        assert isinstance(schema, StrategyBlockSchema)
+        assert schema.ui_schema == {"order": ["price"]}
+
+    def test_preview_update_and_explain_decision_post_payloads(self):
+        seen = []
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            seen.append((request.method, request.url.raw_path.decode(), json.loads(request.content)))
+            if request.url.path.endswith("/preview-update"):
+                return httpx.Response(200, json={
+                    "strategy": {"id": "s-1"},
+                    "validation": {"valid": True},
+                    "diff": {"tickMs": [1000, 5000]},
+                    "estimatedImpact": {"risk": "low"},
+                })
+            return httpx.Response(200, json={
+                "summary": "Order passed threshold checks.",
+                "rationale": ["price above target"],
+                "confidence": 0.9,
+                "inputs": {"price": 0.6},
+                "decision": {"action": "BUY"},
+                "relatedEvents": [{"id": "evt-1"}],
+            })
+
+        client = self._client_with(handler)
+        try:
+            preview = client.preview_strategy_update("strategy/id", {"tickMs": 5000})
+            explanation = client.explain_strategy_decision("strategy/id", {"decisionId": "d-1"})
+        finally:
+            client.close()
+
+        assert seen == [
+            ("POST", "/api/v1/strategies/strategy%2Fid/preview-update", {"tickMs": 5000}),
+            ("POST", "/api/v1/strategies/strategy%2Fid/explain-decision", {"decisionId": "d-1"}),
+        ]
+        assert isinstance(preview, StrategyUpdatePreview)
+        assert preview.estimated_impact == {"risk": "low"}
+        assert isinstance(explanation, StrategyDecisionExplanation)
+        assert explanation.summary == "Order passed threshold checks."
+
+    def test_async_methods_use_matching_paths(self):
+        import asyncio
+
+        seen = []
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            seen.append((request.method, request.url.raw_path.decode()))
+            if request.url.path.endswith("/health"):
+                return httpx.Response(200, json={"avgLatencyMs": 0, "errorCount24h": 0, "slippageBps": 0})
+            if request.url.path.endswith("/validate-blocks"):
+                return httpx.Response(200, json={"valid": True, "issues": [], "warnings": [], "normalizedBlocks": {}})
+            if request.url.path == "/api/v1/strategies/block-types":
+                return httpx.Response(200, json=[])
+            if request.url.path.startswith("/api/v1/strategies/block-schema/"):
+                return httpx.Response(200, json={"type": "price", "schema": {}, "uiSchema": {}, "defaults": {}, "examples": []})
+            if request.url.path.endswith("/preview-update"):
+                return httpx.Response(200, json={"strategy": {}, "validation": {}, "diff": {}, "estimatedImpact": {}})
+            return httpx.Response(200, json={"summary": "ok", "rationale": [], "confidence": 1, "inputs": {}, "decision": {}, "relatedEvents": []})
+
+        async def run():
+            client = self._async_client_with(handler)
+            try:
+                await client.get_strategy_health("strategy/id")
+                await client.validate_strategy_blocks({"triggers": []})
+                await client.list_strategy_block_types()
+                await client.get_block_schema("special type/name")
+                await client.preview_strategy_update("strategy/id", {"tickMs": 5000})
+                await client.explain_strategy_decision("strategy/id", {"decisionId": "d-1"})
+            finally:
+                await client.close()
+
+        asyncio.run(run())
+
+        assert seen == [
+            ("GET", "/api/v1/strategies/strategy%2Fid/health"),
+            ("POST", "/api/v1/strategies/validate-blocks"),
+            ("GET", "/api/v1/strategies/block-types"),
+            ("GET", "/api/v1/strategies/block-schema/special%20type%2Fname"),
+            ("POST", "/api/v1/strategies/strategy%2Fid/preview-update"),
+            ("POST", "/api/v1/strategies/strategy%2Fid/explain-decision"),
         ]
 
 

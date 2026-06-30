@@ -110,10 +110,16 @@ from polyforge.models import (
     SpreadSummary,
     Strategy,
     StrategyBlock,
+    StrategyBlockSchema,
+    StrategyBlockType,
+    StrategyBlockValidationIssue,
+    StrategyBlockValidationResult,
+    StrategyDecisionExplanation,
     StrategyEvent,
     StrategyHealth,
     StrategyStatusResponse,
     StrategyTemplate,
+    StrategyUpdatePreview,
     SystemHealthPublic,
     SystemHealthAuthenticated,
     TickSizeInfo,
@@ -157,6 +163,7 @@ T = TypeVar("T")
 _FIELD_ALIASES: dict[str, dict[str, str]] = {
     "PriceHistoryEntry": {"time": "timestamp"},
     "PersonalDataExport": {"_meta": "meta"},
+    "StrategyHealth": {"errorCount24h": "error_count_24h"},
 }
 
 _MODEL_REGISTRY: dict[str, type] = {
@@ -165,8 +172,15 @@ _MODEL_REGISTRY: dict[str, type] = {
     "Token": Token,
     "Strategy": Strategy,
     "StrategyBlock": StrategyBlock,
+    "StrategyBlockSchema": StrategyBlockSchema,
+    "StrategyBlockType": StrategyBlockType,
+    "StrategyBlockValidationIssue": StrategyBlockValidationIssue,
+    "StrategyBlockValidationResult": StrategyBlockValidationResult,
+    "StrategyDecisionExplanation": StrategyDecisionExplanation,
+    "StrategyHealth": StrategyHealth,
     "StrategyStatusResponse": StrategyStatusResponse,
     "StrategyTemplate": StrategyTemplate,
+    "StrategyUpdatePreview": StrategyUpdatePreview,
     "Portfolio": Portfolio,
     "Position": Position,
     "Order": Order,
@@ -1174,6 +1188,61 @@ class PolyforgeClient:
     def get_strategy_health(self, strategy_id: str) -> StrategyHealth:
         """Return live health metrics for a strategy. Requires READ scope."""
         return _parse(StrategyHealth, self._get(f"/api/v1/strategies/{_encode_path(strategy_id)}/health"))
+
+    def validate_strategy_blocks(
+        self,
+        blocks: dict[str, Any],
+    ) -> StrategyBlockValidationResult:
+        """Validate strategy block configuration before saving or deploying."""
+        return _parse(
+            StrategyBlockValidationResult,
+            self._post(
+                "/api/v1/strategies/validate-blocks",
+                json=blocks,
+            ),
+        )
+
+    def list_strategy_block_types(self) -> list[StrategyBlockType]:
+        """List available strategy builder block types."""
+        return [
+            _parse(StrategyBlockType, item)
+            for item in self._get("/api/v1/strategies/block-types")
+        ]
+
+    def get_block_schema(self, block_type: str) -> StrategyBlockSchema:
+        """Fetch the JSON schema for a specific strategy block type."""
+        return _parse(
+            StrategyBlockSchema,
+            self._get(f"/api/v1/strategies/block-schema/{_encode_path(block_type)}"),
+        )
+
+    def preview_strategy_update(
+        self,
+        strategy_id: str,
+        params: dict[str, Any],
+    ) -> StrategyUpdatePreview:
+        """Preview a strategy update without applying it."""
+        return _parse(
+            StrategyUpdatePreview,
+            self._post(
+                f"/api/v1/strategies/{_encode_path(strategy_id)}/preview-update",
+                json=params,
+            ),
+        )
+
+    def explain_strategy_decision(
+        self,
+        strategy_id: str,
+        params: dict[str, Any],
+    ) -> StrategyDecisionExplanation:
+        """Explain a strategy decision for transparency and debugging."""
+        return _parse(
+            StrategyDecisionExplanation,
+            self._post(
+                f"/api/v1/strategies/{_encode_path(strategy_id)}/explain-decision",
+                json=params,
+            ),
+        )
 
     def create_strategy(
         self,
@@ -4877,6 +4946,61 @@ class AsyncPolyforgeClient:
     async def get_strategy_health(self, strategy_id: str) -> StrategyHealth:
         """Return live health metrics for a strategy. Requires READ scope."""
         return _parse(StrategyHealth, await self._get(f"/api/v1/strategies/{_encode_path(strategy_id)}/health"))
+
+    async def validate_strategy_blocks(
+        self,
+        blocks: dict[str, Any],
+    ) -> StrategyBlockValidationResult:
+        """Validate strategy block configuration before saving or deploying."""
+        return _parse(
+            StrategyBlockValidationResult,
+            await self._post(
+                "/api/v1/strategies/validate-blocks",
+                json=blocks,
+            ),
+        )
+
+    async def list_strategy_block_types(self) -> list[StrategyBlockType]:
+        """List available strategy builder block types."""
+        return [
+            _parse(StrategyBlockType, item)
+            for item in await self._get("/api/v1/strategies/block-types")
+        ]
+
+    async def get_block_schema(self, block_type: str) -> StrategyBlockSchema:
+        """Fetch the JSON schema for a specific strategy block type."""
+        return _parse(
+            StrategyBlockSchema,
+            await self._get(f"/api/v1/strategies/block-schema/{_encode_path(block_type)}"),
+        )
+
+    async def preview_strategy_update(
+        self,
+        strategy_id: str,
+        params: dict[str, Any],
+    ) -> StrategyUpdatePreview:
+        """Preview a strategy update without applying it."""
+        return _parse(
+            StrategyUpdatePreview,
+            await self._post(
+                f"/api/v1/strategies/{_encode_path(strategy_id)}/preview-update",
+                json=params,
+            ),
+        )
+
+    async def explain_strategy_decision(
+        self,
+        strategy_id: str,
+        params: dict[str, Any],
+    ) -> StrategyDecisionExplanation:
+        """Explain a strategy decision for transparency and debugging."""
+        return _parse(
+            StrategyDecisionExplanation,
+            await self._post(
+                f"/api/v1/strategies/{_encode_path(strategy_id)}/explain-decision",
+                json=params,
+            ),
+        )
 
     async def create_strategy(
         self,

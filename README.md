@@ -74,6 +74,12 @@ asyncio.run(main())
 | `create_strategy_from_description(description, market_id)` | AI-generate a strategy from a text description |
 | `start_strategy(strategy_id, mode)` | Start a strategy (`"paper"` or `"live"`) |
 | `stop_strategy(strategy_id)` | Stop a running strategy |
+| `get_strategy_health(strategy_id)` | Get live execution health metrics |
+| `validate_strategy_blocks(blocks)` | Validate strategy block groups before saving |
+| `list_strategy_block_types()` | List available strategy builder block types |
+| `get_block_schema(block_type)` | Fetch the schema for a specific block type |
+| `preview_strategy_update(strategy_id, params)` | Preview a strategy update without applying it |
+| `explain_strategy_decision(strategy_id, params)` | Explain an AI/operator strategy decision |
 | `get_strategy_templates()` | List pre-built strategy templates |
 | `export_strategy(strategy_id)` | Export strategy configuration as a dict |
 | `get_strategy_capabilities()` | Discover server-supported strategy builder capabilities |
