@@ -1191,14 +1191,13 @@ class PolyforgeClient:
 
     def validate_strategy_blocks(
         self,
-        strategy_id: str,
         blocks: dict[str, Any],
     ) -> StrategyBlockValidationResult:
         """Validate strategy block configuration before saving or deploying."""
         return _parse(
             StrategyBlockValidationResult,
             self._post(
-                f"/api/v1/strategies/{_encode_path(strategy_id)}/validate-blocks",
+                "/api/v1/strategies/validate-blocks",
                 json=blocks,
             ),
         )
@@ -1207,14 +1206,14 @@ class PolyforgeClient:
         """List available strategy builder block types."""
         return [
             _parse(StrategyBlockType, item)
-            for item in self._get("/api/v1/strategy-blocks")
+            for item in self._get("/api/v1/strategies/block-types")
         ]
 
     def get_block_schema(self, block_type: str) -> StrategyBlockSchema:
         """Fetch the JSON schema for a specific strategy block type."""
         return _parse(
             StrategyBlockSchema,
-            self._get(f"/api/v1/strategy-blocks/{_encode_path(block_type)}"),
+            self._get(f"/api/v1/strategies/block-schema/{_encode_path(block_type)}"),
         )
 
     def preview_strategy_update(
@@ -1240,7 +1239,7 @@ class PolyforgeClient:
         return _parse(
             StrategyDecisionExplanation,
             self._post(
-                f"/api/v1/strategies/{_encode_path(strategy_id)}/explain",
+                f"/api/v1/strategies/{_encode_path(strategy_id)}/explain-decision",
                 json=params,
             ),
         )
@@ -4950,14 +4949,13 @@ class AsyncPolyforgeClient:
 
     async def validate_strategy_blocks(
         self,
-        strategy_id: str,
         blocks: dict[str, Any],
     ) -> StrategyBlockValidationResult:
         """Validate strategy block configuration before saving or deploying."""
         return _parse(
             StrategyBlockValidationResult,
             await self._post(
-                f"/api/v1/strategies/{_encode_path(strategy_id)}/validate-blocks",
+                "/api/v1/strategies/validate-blocks",
                 json=blocks,
             ),
         )
@@ -4966,14 +4964,14 @@ class AsyncPolyforgeClient:
         """List available strategy builder block types."""
         return [
             _parse(StrategyBlockType, item)
-            for item in await self._get("/api/v1/strategy-blocks")
+            for item in await self._get("/api/v1/strategies/block-types")
         ]
 
     async def get_block_schema(self, block_type: str) -> StrategyBlockSchema:
         """Fetch the JSON schema for a specific strategy block type."""
         return _parse(
             StrategyBlockSchema,
-            await self._get(f"/api/v1/strategy-blocks/{_encode_path(block_type)}"),
+            await self._get(f"/api/v1/strategies/block-schema/{_encode_path(block_type)}"),
         )
 
     async def preview_strategy_update(
@@ -4999,7 +4997,7 @@ class AsyncPolyforgeClient:
         return _parse(
             StrategyDecisionExplanation,
             await self._post(
-                f"/api/v1/strategies/{_encode_path(strategy_id)}/explain",
+                f"/api/v1/strategies/{_encode_path(strategy_id)}/explain-decision",
                 json=params,
             ),
         )

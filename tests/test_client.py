@@ -3902,7 +3902,7 @@ class TestStrategyHealthAndValidationEndpoints:
     def test_validate_strategy_blocks_posts_body_and_parses_nested_issues(self):
         def handler(request: httpx.Request) -> httpx.Response:
             assert request.method == "POST"
-            assert request.url.path == "/api/v1/strategies/s-1/validate-blocks"
+            assert request.url.path == "/api/v1/strategies/validate-blocks"
             assert json.loads(request.content) == {"triggers": []}
             return httpx.Response(200, json={
                 "valid": False,
@@ -3921,7 +3921,7 @@ class TestStrategyHealthAndValidationEndpoints:
 
         client = self._client_with(handler)
         try:
-            result = client.validate_strategy_blocks("s-1", {"triggers": []})
+            result = client.validate_strategy_blocks({"triggers": []})
         finally:
             client.close()
 
@@ -3936,7 +3936,7 @@ class TestStrategyHealthAndValidationEndpoints:
 
         def handler(request: httpx.Request) -> httpx.Response:
             seen_paths.append(request.url.raw_path.decode())
-            if request.url.path == "/api/v1/strategy-blocks":
+            if request.url.path == "/api/v1/strategies/block-types":
                 return httpx.Response(200, json=[{
                     "type": "price-checks",
                     "label": "Price Checks",
@@ -3962,8 +3962,8 @@ class TestStrategyHealthAndValidationEndpoints:
             client.close()
 
         assert seen_paths == [
-            "/api/v1/strategy-blocks",
-            "/api/v1/strategy-blocks/special%20type%2Fname",
+            "/api/v1/strategies/block-types",
+            "/api/v1/strategies/block-schema/special%20type%2Fname",
         ]
         assert isinstance(block_types[0], StrategyBlockType)
         assert block_types[0].type == "price-checks"
@@ -4000,7 +4000,7 @@ class TestStrategyHealthAndValidationEndpoints:
 
         assert seen == [
             ("POST", "/api/v1/strategies/strategy%2Fid/preview-update", {"tickMs": 5000}),
-            ("POST", "/api/v1/strategies/strategy%2Fid/explain", {"decisionId": "d-1"}),
+            ("POST", "/api/v1/strategies/strategy%2Fid/explain-decision", {"decisionId": "d-1"}),
         ]
         assert isinstance(preview, StrategyUpdatePreview)
         assert preview.estimated_impact == {"risk": "low"}
@@ -4018,9 +4018,9 @@ class TestStrategyHealthAndValidationEndpoints:
                 return httpx.Response(200, json={"avgLatencyMs": 0, "errorCount24h": 0, "slippageBps": 0})
             if request.url.path.endswith("/validate-blocks"):
                 return httpx.Response(200, json={"valid": True, "issues": [], "warnings": [], "normalizedBlocks": {}})
-            if request.url.path == "/api/v1/strategy-blocks":
+            if request.url.path == "/api/v1/strategies/block-types":
                 return httpx.Response(200, json=[])
-            if request.url.path.startswith("/api/v1/strategy-blocks/"):
+            if request.url.path.startswith("/api/v1/strategies/block-schema/"):
                 return httpx.Response(200, json={"type": "price", "schema": {}, "uiSchema": {}, "defaults": {}, "examples": []})
             if request.url.path.endswith("/preview-update"):
                 return httpx.Response(200, json={"strategy": {}, "validation": {}, "diff": {}, "estimatedImpact": {}})
@@ -4030,7 +4030,7 @@ class TestStrategyHealthAndValidationEndpoints:
             client = self._async_client_with(handler)
             try:
                 await client.get_strategy_health("strategy/id")
-                await client.validate_strategy_blocks("strategy/id", {"triggers": []})
+                await client.validate_strategy_blocks({"triggers": []})
                 await client.list_strategy_block_types()
                 await client.get_block_schema("special type/name")
                 await client.preview_strategy_update("strategy/id", {"tickMs": 5000})
@@ -4042,11 +4042,11 @@ class TestStrategyHealthAndValidationEndpoints:
 
         assert seen == [
             ("GET", "/api/v1/strategies/strategy%2Fid/health"),
-            ("POST", "/api/v1/strategies/strategy%2Fid/validate-blocks"),
-            ("GET", "/api/v1/strategy-blocks"),
-            ("GET", "/api/v1/strategy-blocks/special%20type%2Fname"),
+            ("POST", "/api/v1/strategies/validate-blocks"),
+            ("GET", "/api/v1/strategies/block-types"),
+            ("GET", "/api/v1/strategies/block-schema/special%20type%2Fname"),
             ("POST", "/api/v1/strategies/strategy%2Fid/preview-update"),
-            ("POST", "/api/v1/strategies/strategy%2Fid/explain"),
+            ("POST", "/api/v1/strategies/strategy%2Fid/explain-decision"),
         ]
 
 

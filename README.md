@@ -75,7 +75,7 @@ asyncio.run(main())
 | `start_strategy(strategy_id, mode)` | Start a strategy (`"paper"` or `"live"`) |
 | `stop_strategy(strategy_id)` | Stop a running strategy |
 | `get_strategy_health(strategy_id)` | Get live execution health metrics |
-| `validate_strategy_blocks(strategy_id, blocks)` | Validate strategy block groups before saving |
+| `validate_strategy_blocks(blocks)` | Validate strategy block groups before saving |
 | `list_strategy_block_types()` | List available strategy builder block types |
 | `get_block_schema(block_type)` | Fetch the schema for a specific block type |
 | `preview_strategy_update(strategy_id, params)` | Preview a strategy update without applying it |

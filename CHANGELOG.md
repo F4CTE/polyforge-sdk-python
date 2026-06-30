@@ -8,7 +8,7 @@
 async clients now expose the upcoming strategy AI/operator API surface:
 
 - `get_strategy_health(strategy_id)` → `StrategyHealth`
-- `validate_strategy_blocks(strategy_id, blocks)` → `StrategyBlockValidationResult`
+- `validate_strategy_blocks(blocks)` → `StrategyBlockValidationResult`
 - `list_strategy_block_types()` → `list[StrategyBlockType]`
 - `get_block_schema(block_type)` → `StrategyBlockSchema`
 - `preview_strategy_update(strategy_id, params)` → `StrategyUpdatePreview`
