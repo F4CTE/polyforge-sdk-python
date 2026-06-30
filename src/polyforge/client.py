@@ -616,6 +616,18 @@ def _validate_arb_offset(value: int) -> None:
         raise ValueError(f"offset must be >= 0, got {value}")
 
 
+def _validate_kalshi_subaccount(value: int) -> None:
+    """Reject Kalshi subaccount ids outside the platform DTO int16 bounds."""
+    if not isinstance(value, int) or isinstance(value, bool):
+        raise TypeError(
+            f"kalshi_subaccount must be an int, got {type(value).__name__}"
+        )
+    if value < 0 or value > 32767:
+        raise ValueError(
+            f"kalshi_subaccount must be between 0 and 32767, got {value}"
+        )
+
+
 def _validate_batch_order(order: dict[str, Any]) -> None:
     if "side" in order:
         _validate_enum("side", order["side"], _VALID_SIDES)
@@ -1178,10 +1190,10 @@ class PolyforgeClient:
         safety: list[dict[str, Any]] | None = None,
         logic_blocks: list[dict[str, Any]] | None = None,
         calc_blocks: list[dict[str, Any]] | None = None,
-        kalshi_subaccount: int | None = None,
         tags: list[str] | None = None,
         variables: list[dict[str, Any]] | None = None,
         canvas: dict[str, Any] | None = None,
+        kalshi_subaccount: int | None = None,
     ) -> Strategy:
         """Create a new strategy.
 
@@ -1198,10 +1210,10 @@ class PolyforgeClient:
             safety: Safety block definitions.
             logic_blocks: Logic block definitions.
             calc_blocks: Calc block definitions.
-            kalshi_subaccount: Kalshi subaccount identifier for P&L attribution.
             tags: Strategy tags.
             variables: Strategy variable definitions.
             canvas: Canvas layout metadata.
+            kalshi_subaccount: Kalshi subaccount id for P&L attribution (0..32767).
         """
         body: dict[str, Any] = {"name": name}
         if description is not None:
@@ -1226,18 +1238,15 @@ class PolyforgeClient:
             body["logicBlocks"] = logic_blocks
         if calc_blocks is not None:
             body["calcBlocks"] = calc_blocks
-        if kalshi_subaccount is not None:
-            if not isinstance(kalshi_subaccount, int) or not (0 <= kalshi_subaccount <= 32767):
-                raise ValueError(
-                    f"kalshi_subaccount must be an integer in [0, 32767], got {kalshi_subaccount!r}"
-                )
-            body["kalshiSubaccount"] = kalshi_subaccount
         if tags is not None:
             body["tags"] = tags
         if variables is not None:
             body["variables"] = variables
         if canvas is not None:
             body["canvas"] = canvas
+        if kalshi_subaccount is not None:
+            _validate_kalshi_subaccount(kalshi_subaccount)
+            body["kalshiSubaccount"] = kalshi_subaccount
         return _parse(Strategy, self._post("/api/v1/strategies", json=body))
 
     def create_strategy_from_description(self, description: str, market_id: str | None = None) -> Strategy:
@@ -1334,10 +1343,7 @@ class PolyforgeClient:
         if market_slots is not None:
             body["marketSlots"] = market_slots
         if kalshi_subaccount is not None:
-            if not isinstance(kalshi_subaccount, int) or not (0 <= kalshi_subaccount <= 32767):
-                raise ValueError(
-                    f"kalshi_subaccount must be an integer in [0, 32767], got {kalshi_subaccount!r}"
-                )
+            _validate_kalshi_subaccount(kalshi_subaccount)
             body["kalshiSubaccount"] = kalshi_subaccount
         return _parse(Strategy, self._patch(f"/api/v1/strategies/{_encode_path(strategy_id)}", json=body))
 
@@ -4887,10 +4893,10 @@ class AsyncPolyforgeClient:
         safety: list[dict[str, Any]] | None = None,
         logic_blocks: list[dict[str, Any]] | None = None,
         calc_blocks: list[dict[str, Any]] | None = None,
-        kalshi_subaccount: int | None = None,
         tags: list[str] | None = None,
         variables: list[dict[str, Any]] | None = None,
         canvas: dict[str, Any] | None = None,
+        kalshi_subaccount: int | None = None,
     ) -> Strategy:
         """Create a new strategy (async version). See sync ``create_strategy`` for details."""
         body: dict[str, Any] = {"name": name}
@@ -4916,18 +4922,15 @@ class AsyncPolyforgeClient:
             body["logicBlocks"] = logic_blocks
         if calc_blocks is not None:
             body["calcBlocks"] = calc_blocks
-        if kalshi_subaccount is not None:
-            if not isinstance(kalshi_subaccount, int) or not (0 <= kalshi_subaccount <= 32767):
-                raise ValueError(
-                    f"kalshi_subaccount must be an integer in [0, 32767], got {kalshi_subaccount!r}"
-                )
-            body["kalshiSubaccount"] = kalshi_subaccount
         if tags is not None:
             body["tags"] = tags
         if variables is not None:
             body["variables"] = variables
         if canvas is not None:
             body["canvas"] = canvas
+        if kalshi_subaccount is not None:
+            _validate_kalshi_subaccount(kalshi_subaccount)
+            body["kalshiSubaccount"] = kalshi_subaccount
         return _parse(Strategy, await self._post("/api/v1/strategies", json=body))
 
     async def create_strategy_from_description(self, description: str, market_id: str | None = None) -> Strategy:
@@ -5020,10 +5023,7 @@ class AsyncPolyforgeClient:
         if market_slots is not None:
             body["marketSlots"] = market_slots
         if kalshi_subaccount is not None:
-            if not isinstance(kalshi_subaccount, int) or not (0 <= kalshi_subaccount <= 32767):
-                raise ValueError(
-                    f"kalshi_subaccount must be an integer in [0, 32767], got {kalshi_subaccount!r}"
-                )
+            _validate_kalshi_subaccount(kalshi_subaccount)
             body["kalshiSubaccount"] = kalshi_subaccount
         return _parse(Strategy, await self._patch(f"/api/v1/strategies/{_encode_path(strategy_id)}", json=body))
 
