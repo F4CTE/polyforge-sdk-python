@@ -1146,6 +1146,24 @@ class TestPlaceOrderValidation:
             client.place_order("tok", "BUY", "YES", 10.0, -0.5)
         client.close()
 
+    def test_place_order_rejects_size_below_platform_minimum(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="size must be >= 1"):
+            client.place_order("tok", "BUY", "YES", 0.5, 0.5)
+        client.close()
+
+    def test_place_order_rejects_price_below_platform_minimum(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="price must be between 0.001 and 0.999"):
+            client.place_order("tok", "BUY", "YES", 1.0, 0.0009)
+        client.close()
+
+    def test_place_order_rejects_price_above_platform_maximum(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="price must be between 0.001 and 0.999"):
+            client.place_order("tok", "BUY", "YES", 1.0, 1.0)
+        client.close()
+
     def test_split_position_sends_amount_as_string(self):
         """split_position must send amount as a NumberString (#26)."""
         import inspect
@@ -1417,6 +1435,21 @@ class TestAsyncPlaceOrderValidation:
         source = inspect.getsource(AsyncPolyforgeClient.place_order)
         assert '_validate_financial_param("size"' in source
         assert '_validate_financial_param("price"' in source
+
+    def test_async_place_order_rejects_platform_bounds(self):
+        import asyncio
+
+        async def _run() -> None:
+            client = AsyncPolyforgeClient(api_key="test-key")
+            try:
+                with pytest.raises(ValueError, match="size must be >= 1"):
+                    await client.place_order("tok", "BUY", "YES", 0.5, 0.5)
+                with pytest.raises(ValueError, match="price must be between 0.001 and 0.999"):
+                    await client.place_order("tok", "BUY", "YES", 1.0, 1.0)
+            finally:
+                await client.close()
+
+        asyncio.run(_run())
 
     def test_async_split_position_sends_amount_string(self):
         """Async split_position must send amount as a NumberString (#26)."""
@@ -4903,6 +4936,78 @@ class TestBulkOrderEndpoints:
             }])
         client.close()
 
+    def test_batch_orders_rejects_size_below_platform_minimum(self):
+        client = PolyforgeClient(api_key="test")
+        with pytest.raises(ValueError, match="size must be >= 1"):
+            client.batch_orders([{
+                "tokenId": "tok",
+                "side": "BUY",
+                "outcome": "YES",
+                "size": 0.5,
+                "price": 0.5,
+            }])
+        client.close()
+
+    def test_batch_orders_rejects_price_below_platform_minimum(self):
+        client = PolyforgeClient(api_key="test")
+        with pytest.raises(ValueError, match="price must be between 0.001 and 0.999"):
+            client.batch_orders([{
+                "tokenId": "tok",
+                "side": "BUY",
+                "outcome": "YES",
+                "size": 1,
+                "price": 0.0009,
+            }])
+        client.close()
+
+    def test_batch_orders_rejects_price_above_platform_maximum(self):
+        client = PolyforgeClient(api_key="test")
+        with pytest.raises(ValueError, match="price must be between 0.001 and 0.999"):
+            client.batch_orders([{
+                "tokenId": "tok",
+                "side": "BUY",
+                "outcome": "YES",
+                "size": 1,
+                "price": 1.0,
+            }])
+        client.close()
+
+    def test_batch_orders_rejects_numberstring_size_below_platform_minimum(self):
+        client = PolyforgeClient(api_key="test")
+        with pytest.raises(ValueError, match="size must be >= 1"):
+            client.batch_orders([{
+                "tokenId": "tok",
+                "side": "BUY",
+                "outcome": "YES",
+                "size": "0.99999999999999999",
+                "price": "0.5",
+            }])
+        client.close()
+
+    def test_batch_orders_rejects_numberstring_price_below_platform_minimum(self):
+        client = PolyforgeClient(api_key="test")
+        with pytest.raises(ValueError, match="price must be between 0.001 and 0.999"):
+            client.batch_orders([{
+                "tokenId": "tok",
+                "side": "BUY",
+                "outcome": "YES",
+                "size": "1",
+                "price": "0.00099999999999999999",
+            }])
+        client.close()
+
+    def test_batch_orders_rejects_numberstring_price_above_platform_maximum(self):
+        client = PolyforgeClient(api_key="test")
+        with pytest.raises(ValueError, match="price must be between 0.001 and 0.999"):
+            client.batch_orders([{
+                "tokenId": "tok",
+                "side": "BUY",
+                "outcome": "YES",
+                "size": "1",
+                "price": "0.99900000000000000001",
+            }])
+        client.close()
+
     def test_batch_orders_rejects_invalid_order_enum(self):
         client = PolyforgeClient(api_key="test")
         with pytest.raises(ValueError, match="must be one of"):
@@ -8022,6 +8127,98 @@ class TestTradingCopyNumericValidation:
                     "price": float("inf"),
                 }])
             await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_batch_orders_rejects_platform_bounds(self):
+        import asyncio
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test")
+            try:
+                with pytest.raises(ValueError, match="size must be >= 1"):
+                    await client.batch_orders([{
+                        "tokenId": "tok",
+                        "side": "BUY",
+                        "outcome": "YES",
+                        "size": 0.5,
+                        "price": 0.5,
+                    }])
+                with pytest.raises(ValueError, match="price must be between 0.001 and 0.999"):
+                    await client.batch_orders([{
+                        "tokenId": "tok",
+                        "side": "BUY",
+                        "outcome": "YES",
+                        "size": 1,
+                        "price": 0.0009,
+                    }])
+                with pytest.raises(ValueError, match="price must be between 0.001 and 0.999"):
+                    await client.batch_orders([{
+                        "tokenId": "tok",
+                        "side": "BUY",
+                        "outcome": "YES",
+                        "size": 1,
+                        "price": 1.0,
+                    }])
+            finally:
+                await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_batch_orders_rejects_numberstring_size_below_platform_minimum(self):
+        import asyncio
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test")
+            try:
+                with pytest.raises(ValueError, match="size must be >= 1"):
+                    await client.batch_orders([{
+                        "tokenId": "tok",
+                        "side": "BUY",
+                        "outcome": "YES",
+                        "size": "0.99999999999999999",
+                        "price": "0.5",
+                    }])
+            finally:
+                await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_batch_orders_rejects_numberstring_price_below_platform_minimum(self):
+        import asyncio
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test")
+            try:
+                with pytest.raises(ValueError, match="price must be between 0.001 and 0.999"):
+                    await client.batch_orders([{
+                        "tokenId": "tok",
+                        "side": "BUY",
+                        "outcome": "YES",
+                        "size": "1",
+                        "price": "0.00099999999999999999",
+                    }])
+            finally:
+                await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_batch_orders_rejects_numberstring_price_above_platform_maximum(self):
+        import asyncio
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test")
+            try:
+                with pytest.raises(ValueError, match="price must be between 0.001 and 0.999"):
+                    await client.batch_orders([{
+                        "tokenId": "tok",
+                        "side": "BUY",
+                        "outcome": "YES",
+                        "size": "1",
+                        "price": "0.99900000000000000001",
+                    }])
+            finally:
+                await client.close()
 
         asyncio.run(_run())
 
