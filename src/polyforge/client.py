@@ -612,9 +612,15 @@ def _validate_batch_order(order: dict[str, Any]) -> None:
     if "orderType" in order:
         _validate_enum("order_type", order["orderType"], _VALID_ORDER_TYPES)
     if "size" in order:
-        _validate_positive_numberish_param("size", order["size"])
+        size = _numberish_to_float("size", order["size"])
+        _validate_financial_param("size", size)
+        if size < 1:
+            raise ValueError(f"size must be >= 1, got {size}")
     if "price" in order:
-        _validate_positive_numberish_param("price", order["price"])
+        price = _numberish_to_float("price", order["price"])
+        _validate_financial_param("price", price)
+        if price < 0.001 or price > 0.999:
+            raise ValueError(f"price must be between 0.001 and 0.999, got {price}")
 
 
 def _validate_copy_config_numeric_fields(fields: dict[str, Any]) -> None:
