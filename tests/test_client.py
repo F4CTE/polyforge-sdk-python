@@ -3921,19 +3921,23 @@ class TestStrategyHealthAndValidationEndpoints:
         client = self._client_with(handler)
         try:
             result = client.validate_strategy_blocks({"triggers": []})
+            keyword_result = client.validate_strategy_blocks(blocks={"triggers": []})
             scoped_result = client.validate_strategy_blocks("strategy/id", {"triggers": []})
         finally:
             client.close()
 
         assert seen_paths == [
             "/api/v1/strategies/validate-blocks",
+            "/api/v1/strategies/validate-blocks",
             "/api/v1/strategies/strategy%2Fid/validate-blocks",
         ]
         assert isinstance(result, StrategyBlockValidationResult)
+        assert isinstance(keyword_result, StrategyBlockValidationResult)
         assert result.valid is False
         assert isinstance(result.issues[0], StrategyBlockValidationIssue)
         assert result.issues[0].block_id == "b-1"
         assert result.normalized_blocks == {"triggers": []}
+        assert keyword_result.valid is False
         assert scoped_result.valid is False
 
     def test_list_strategy_block_types_and_schema_are_typed_and_encoded(self):
@@ -4024,6 +4028,7 @@ class TestStrategyHealthAndValidationEndpoints:
             client = self._async_client_with(handler)
             try:
                 await client.get_strategy_health("strategy/id")
+                await client.validate_strategy_blocks(blocks={"triggers": []})
                 await client.validate_strategy_blocks("strategy/id", {"triggers": []})
                 await client.list_strategy_block_types()
                 await client.get_block_schema("special type/name")
@@ -4035,6 +4040,7 @@ class TestStrategyHealthAndValidationEndpoints:
 
         assert seen == [
             ("GET", "/api/v1/strategies/strategy%2Fid/health"),
+            ("POST", "/api/v1/strategies/validate-blocks"),
             ("POST", "/api/v1/strategies/strategy%2Fid/validate-blocks"),
             ("GET", "/api/v1/strategies/block-types"),
             ("GET", "/api/v1/strategies/blocks/special%20type%2Fname/schema"),
@@ -6813,16 +6819,20 @@ class TestStrategyOperatorEndpoints:
         client = self._client_with(handler)
         try:
             result = client.validate_strategy_blocks({"triggers": [{"id": "b-1"}]})
+            keyword_result = client.validate_strategy_blocks(blocks={"triggers": [{"id": "b-1"}]})
             scoped_result = client.validate_strategy_blocks("s-1", {"triggers": [{"id": "b-1"}]})
             assert captured == [
+                ("POST", "/api/v1/strategies/validate-blocks", {"triggers": [{"id": "b-1"}]}),
                 ("POST", "/api/v1/strategies/validate-blocks", {"triggers": [{"id": "b-1"}]}),
                 ("POST", "/api/v1/strategies/s-1/validate-blocks", {"triggers": [{"id": "b-1"}]}),
             ]
             assert isinstance(result, StrategyBlockValidationResult)
+            assert isinstance(keyword_result, StrategyBlockValidationResult)
             assert result.valid is False
             assert isinstance(result.issues[0], StrategyBlockValidationIssue)
             assert result.issues[0].block_id == "b-1"
             assert result.normalized_blocks == {"triggers": []}
+            assert keyword_result.valid is False
             assert scoped_result.valid is False
         finally:
             client.close()
@@ -6921,7 +6931,7 @@ class TestStrategyOperatorEndpoints:
                     headers={"Authorization": "Bearer test"},
                     transport=_AsyncStrategyTransport(),
                 )
-                validation = await client.validate_strategy_blocks({"triggers": []})
+                validation = await client.validate_strategy_blocks(blocks={"triggers": []})
                 block_types = await client.list_strategy_block_types()
                 preview = await client.preview_strategy_update("s-1", {})
                 assert validation.valid is True

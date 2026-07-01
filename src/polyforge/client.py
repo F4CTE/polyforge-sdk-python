@@ -1189,7 +1189,7 @@ class PolyforgeClient:
 
     def validate_strategy_blocks(
         self,
-        strategy_id_or_blocks: str | dict[str, Any],
+        strategy_id_or_blocks: str | dict[str, Any] | None = None,
         blocks: dict[str, Any] | None = None,
     ) -> StrategyBlockValidationResult:
         """Validate draft blocks or a strategy's block configuration before saving."""
@@ -1198,6 +1198,9 @@ class PolyforgeClient:
                 raise TypeError("validate_strategy_blocks() missing required blocks payload")
             path = "/api/v1/strategies/validate-blocks"
             payload = strategy_id_or_blocks
+        elif strategy_id_or_blocks is None:
+            path = "/api/v1/strategies/validate-blocks"
+            payload = blocks
         else:
             path = f"/api/v1/strategies/{_encode_path(str(strategy_id_or_blocks))}/validate-blocks"
             payload = blocks
@@ -4941,7 +4944,7 @@ class AsyncPolyforgeClient:
 
     async def validate_strategy_blocks(
         self,
-        strategy_id_or_blocks: str | dict[str, Any],
+        strategy_id_or_blocks: str | dict[str, Any] | None = None,
         blocks: dict[str, Any] | None = None,
     ) -> StrategyBlockValidationResult:
         """Validate draft blocks or a strategy's block configuration before saving."""
@@ -4950,6 +4953,9 @@ class AsyncPolyforgeClient:
                 raise TypeError("validate_strategy_blocks() missing required blocks payload")
             path = "/api/v1/strategies/validate-blocks"
             payload = strategy_id_or_blocks
+        elif strategy_id_or_blocks is None:
+            path = "/api/v1/strategies/validate-blocks"
+            payload = blocks
         else:
             path = f"/api/v1/strategies/{_encode_path(str(strategy_id_or_blocks))}/validate-blocks"
             payload = blocks
