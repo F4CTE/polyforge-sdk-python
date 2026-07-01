@@ -3923,12 +3923,14 @@ class TestStrategyHealthAndValidationEndpoints:
             result = client.validate_strategy_blocks({"triggers": []})
             keyword_result = client.validate_strategy_blocks(blocks={"triggers": []})
             scoped_result = client.validate_strategy_blocks("strategy/id", {"triggers": []})
+            scoped_keyword_result = client.validate_strategy_blocks(strategy_id="strategy/id", blocks={"triggers": []})
         finally:
             client.close()
 
         assert seen_paths == [
             "/api/v1/strategies/validate-blocks",
             "/api/v1/strategies/validate-blocks",
+            "/api/v1/strategies/strategy%2Fid/validate-blocks",
             "/api/v1/strategies/strategy%2Fid/validate-blocks",
         ]
         assert isinstance(result, StrategyBlockValidationResult)
@@ -3939,6 +3941,7 @@ class TestStrategyHealthAndValidationEndpoints:
         assert result.normalized_blocks == {"triggers": []}
         assert keyword_result.valid is False
         assert scoped_result.valid is False
+        assert scoped_keyword_result.valid is False
 
     def test_list_strategy_block_types_and_schema_are_typed_and_encoded(self):
         seen_paths = []
@@ -4030,6 +4033,7 @@ class TestStrategyHealthAndValidationEndpoints:
                 await client.get_strategy_health("strategy/id")
                 await client.validate_strategy_blocks(blocks={"triggers": []})
                 await client.validate_strategy_blocks("strategy/id", {"triggers": []})
+                await client.validate_strategy_blocks(strategy_id="strategy/id", blocks={"triggers": []})
                 await client.list_strategy_block_types()
                 await client.get_block_schema("special type/name")
                 await client.preview_strategy_update("strategy/id", {"tickMs": 5000})
@@ -4041,6 +4045,7 @@ class TestStrategyHealthAndValidationEndpoints:
         assert seen == [
             ("GET", "/api/v1/strategies/strategy%2Fid/health"),
             ("POST", "/api/v1/strategies/validate-blocks"),
+            ("POST", "/api/v1/strategies/strategy%2Fid/validate-blocks"),
             ("POST", "/api/v1/strategies/strategy%2Fid/validate-blocks"),
             ("GET", "/api/v1/strategies/block-types"),
             ("GET", "/api/v1/strategies/blocks/special%20type%2Fname/schema"),
@@ -6821,9 +6826,11 @@ class TestStrategyOperatorEndpoints:
             result = client.validate_strategy_blocks({"triggers": [{"id": "b-1"}]})
             keyword_result = client.validate_strategy_blocks(blocks={"triggers": [{"id": "b-1"}]})
             scoped_result = client.validate_strategy_blocks("s-1", {"triggers": [{"id": "b-1"}]})
+            scoped_keyword_result = client.validate_strategy_blocks(strategy_id="s-1", blocks={"triggers": [{"id": "b-1"}]})
             assert captured == [
                 ("POST", "/api/v1/strategies/validate-blocks", {"triggers": [{"id": "b-1"}]}),
                 ("POST", "/api/v1/strategies/validate-blocks", {"triggers": [{"id": "b-1"}]}),
+                ("POST", "/api/v1/strategies/s-1/validate-blocks", {"triggers": [{"id": "b-1"}]}),
                 ("POST", "/api/v1/strategies/s-1/validate-blocks", {"triggers": [{"id": "b-1"}]}),
             ]
             assert isinstance(result, StrategyBlockValidationResult)
@@ -6834,6 +6841,7 @@ class TestStrategyOperatorEndpoints:
             assert result.normalized_blocks == {"triggers": []}
             assert keyword_result.valid is False
             assert scoped_result.valid is False
+            assert scoped_keyword_result.valid is False
         finally:
             client.close()
 
@@ -6932,15 +6940,18 @@ class TestStrategyOperatorEndpoints:
                     transport=_AsyncStrategyTransport(),
                 )
                 validation = await client.validate_strategy_blocks(blocks={"triggers": []})
+                scoped_validation = await client.validate_strategy_blocks(strategy_id="s-1", blocks={"triggers": []})
                 block_types = await client.list_strategy_block_types()
                 preview = await client.preview_strategy_update("s-1", {})
                 assert validation.valid is True
+                assert scoped_validation.valid is True
                 assert block_types[0].type == "price"
                 assert preview.strategy_id == "s-1"
 
         asyncio.run(_run())
         assert captured == [
             ("POST", "/api/v1/strategies/validate-blocks"),
+            ("POST", "/api/v1/strategies/s-1/validate-blocks"),
             ("GET", "/api/v1/strategies/block-types"),
             ("POST", "/api/v1/strategies/s-1/preview-update"),
         ]

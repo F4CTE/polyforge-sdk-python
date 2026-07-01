@@ -1191,9 +1191,21 @@ class PolyforgeClient:
         self,
         strategy_id_or_blocks: str | dict[str, Any] | None = None,
         blocks: dict[str, Any] | None = None,
+        *,
+        strategy_id: str | None = None,
     ) -> StrategyBlockValidationResult:
         """Validate draft blocks or a strategy's block configuration before saving."""
-        if blocks is None:
+        if strategy_id is not None:
+            if blocks is None:
+                if not isinstance(strategy_id_or_blocks, dict):
+                    raise TypeError("validate_strategy_blocks() missing required blocks payload")
+                payload = strategy_id_or_blocks
+            else:
+                if strategy_id_or_blocks is not None:
+                    raise TypeError("validate_strategy_blocks() got multiple blocks payloads")
+                payload = blocks
+            path = f"/api/v1/strategies/{_encode_path(strategy_id)}/validate-blocks"
+        elif blocks is None:
             if not isinstance(strategy_id_or_blocks, dict):
                 raise TypeError("validate_strategy_blocks() missing required blocks payload")
             path = "/api/v1/strategies/validate-blocks"
@@ -4946,9 +4958,21 @@ class AsyncPolyforgeClient:
         self,
         strategy_id_or_blocks: str | dict[str, Any] | None = None,
         blocks: dict[str, Any] | None = None,
+        *,
+        strategy_id: str | None = None,
     ) -> StrategyBlockValidationResult:
         """Validate draft blocks or a strategy's block configuration before saving."""
-        if blocks is None:
+        if strategy_id is not None:
+            if blocks is None:
+                if not isinstance(strategy_id_or_blocks, dict):
+                    raise TypeError("validate_strategy_blocks() missing required blocks payload")
+                payload = strategy_id_or_blocks
+            else:
+                if strategy_id_or_blocks is not None:
+                    raise TypeError("validate_strategy_blocks() got multiple blocks payloads")
+                payload = blocks
+            path = f"/api/v1/strategies/{_encode_path(strategy_id)}/validate-blocks"
+        elif blocks is None:
             if not isinstance(strategy_id_or_blocks, dict):
                 raise TypeError("validate_strategy_blocks() missing required blocks payload")
             path = "/api/v1/strategies/validate-blocks"
