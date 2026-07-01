@@ -5,16 +5,15 @@
 ### Added
 
 **Strategy health and operator endpoints (POLA-13764 / #297)** — strategy
-health, per-strategy validation, block discovery, update preview, and AI
-decision explanation methods are available on both `PolyforgeClient` and
-`AsyncPolyforgeClient`:
+health, draft/per-strategy validation, block discovery, and update preview
+methods are available on both `PolyforgeClient` and `AsyncPolyforgeClient`:
 
 - `get_strategy_health(strategy_id)` → `StrategyHealth`
+- `validate_strategy_blocks(blocks)` → `StrategyBlockValidationResult`
 - `validate_strategy_blocks(strategy_id, blocks)` → `StrategyBlockValidationResult`
 - `list_strategy_block_types()` → `list[StrategyBlockType]`
 - `get_block_schema(block_type)` → `StrategyBlockSchema`
 - `preview_strategy_update(strategy_id, params)` → `StrategyUpdatePreview`
-- `explain_strategy_decision(strategy_id, params=None, decision_id=…, context=…)` → `StrategyDecisionExplanation`
 
 The parser registry now recursively hydrates nested validation issues, and the
 strategy operator dataclasses accept both current and upcoming response shapes

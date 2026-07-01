@@ -114,7 +114,6 @@ from polyforge.models import (
     StrategyBlockType,
     StrategyBlockValidationIssue,
     StrategyBlockValidationResult,
-    StrategyDecisionExplanation,
     StrategyEvent,
     StrategyHealth,
     StrategyStatusResponse,
@@ -176,7 +175,6 @@ _MODEL_REGISTRY: dict[str, type] = {
     "StrategyBlockType": StrategyBlockType,
     "StrategyBlockValidationIssue": StrategyBlockValidationIssue,
     "StrategyBlockValidationResult": StrategyBlockValidationResult,
-    "StrategyDecisionExplanation": StrategyDecisionExplanation,
     "StrategyHealth": StrategyHealth,
     "StrategyStatusResponse": StrategyStatusResponse,
     "StrategyTemplate": StrategyTemplate,
@@ -1191,15 +1189,23 @@ class PolyforgeClient:
 
     def validate_strategy_blocks(
         self,
-        strategy_id: str,
-        blocks: dict[str, Any],
+        strategy_id_or_blocks: str | dict[str, Any],
+        blocks: dict[str, Any] | None = None,
     ) -> StrategyBlockValidationResult:
-        """Validate a strategy's block configuration before saving."""
+        """Validate draft blocks or a strategy's block configuration before saving."""
+        if blocks is None:
+            if not isinstance(strategy_id_or_blocks, dict):
+                raise TypeError("validate_strategy_blocks() missing required blocks payload")
+            path = "/api/v1/strategies/validate-blocks"
+            payload = strategy_id_or_blocks
+        else:
+            path = f"/api/v1/strategies/{_encode_path(str(strategy_id_or_blocks))}/validate-blocks"
+            payload = blocks
         return _parse(
             StrategyBlockValidationResult,
             self._post(
-                f"/api/v1/strategies/{_encode_path(strategy_id)}/validate-blocks",
-                json=blocks,
+                path,
+                json=payload,
             ),
         )
 
@@ -1227,25 +1233,6 @@ class PolyforgeClient:
             self._post(
                 f"/api/v1/strategies/{_encode_path(strategy_id)}/preview-update",
                 json=params,
-            ),
-        )
-
-    def explain_strategy_decision(
-        self,
-        strategy_id: str,
-        params: dict[str, Any] | None = None,
-        *,
-        decision_id: str | None = None,
-        context: dict[str, Any] | None = None,
-    ) -> StrategyDecisionExplanation:
-        """Explain a strategy decision for transparency and debugging."""
-        body = dict(params or {})
-        body.update(_strip_none({"decisionId": decision_id, "context": context}))
-        return _parse(
-            StrategyDecisionExplanation,
-            self._post(
-                f"/api/v1/strategies/{_encode_path(strategy_id)}/explain-decision",
-                json=body,
             ),
         )
 
@@ -4954,15 +4941,23 @@ class AsyncPolyforgeClient:
 
     async def validate_strategy_blocks(
         self,
-        strategy_id: str,
-        blocks: dict[str, Any],
+        strategy_id_or_blocks: str | dict[str, Any],
+        blocks: dict[str, Any] | None = None,
     ) -> StrategyBlockValidationResult:
-        """Validate a strategy's block configuration before saving."""
+        """Validate draft blocks or a strategy's block configuration before saving."""
+        if blocks is None:
+            if not isinstance(strategy_id_or_blocks, dict):
+                raise TypeError("validate_strategy_blocks() missing required blocks payload")
+            path = "/api/v1/strategies/validate-blocks"
+            payload = strategy_id_or_blocks
+        else:
+            path = f"/api/v1/strategies/{_encode_path(str(strategy_id_or_blocks))}/validate-blocks"
+            payload = blocks
         return _parse(
             StrategyBlockValidationResult,
             await self._post(
-                f"/api/v1/strategies/{_encode_path(strategy_id)}/validate-blocks",
-                json=blocks,
+                path,
+                json=payload,
             ),
         )
 
@@ -4990,25 +4985,6 @@ class AsyncPolyforgeClient:
             await self._post(
                 f"/api/v1/strategies/{_encode_path(strategy_id)}/preview-update",
                 json=params,
-            ),
-        )
-
-    async def explain_strategy_decision(
-        self,
-        strategy_id: str,
-        params: dict[str, Any] | None = None,
-        *,
-        decision_id: str | None = None,
-        context: dict[str, Any] | None = None,
-    ) -> StrategyDecisionExplanation:
-        """Explain a strategy decision for transparency and debugging."""
-        body = dict(params or {})
-        body.update(_strip_none({"decisionId": decision_id, "context": context}))
-        return _parse(
-            StrategyDecisionExplanation,
-            await self._post(
-                f"/api/v1/strategies/{_encode_path(strategy_id)}/explain-decision",
-                json=body,
             ),
         )
 
