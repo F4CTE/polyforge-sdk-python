@@ -8156,6 +8156,32 @@ class TestTradingCopyNumericValidation:
         assert json_body["priceOffset"] == "-0.5"
         client.close()
 
+    def test_create_copy_config_normalizes_target_wallet_to_lowercase(self):
+        from unittest.mock import MagicMock
+
+        client = PolyforgeClient(api_key="test")
+        client._post = MagicMock(return_value={
+            "id": "copy-1",
+            "userId": "user-1",
+            "targetWallet": "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
+            "mode": "PERCENTAGE",
+            "sizeValue": "10",
+            "maxExposure": "500",
+            "maxDailyLoss": "100",
+            "priceOffset": "0",
+            "status": "ACTIVE",
+            "totalCopied": 0,
+            "totalPnl": "0",
+            "createdAt": "2026-04-29T00:00:00Z",
+            "updatedAt": "2026-04-29T00:00:00Z",
+        })
+        client.create_copy_config("0xAbCdEfAbCdEfAbCdEfAbCdEfAbCdEfAbCdEfAbCd")
+        assert (
+            client._post.call_args.kwargs["json"]["targetWallet"]
+            == "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd"
+        )
+        client.close()
+
     def test_update_copy_config_sends_numeric_fields_as_strings(self):
         from unittest.mock import MagicMock
 
@@ -8469,6 +8495,36 @@ class TestTradingCopyNumericValidation:
                 )
             with pytest.raises(ValueError, match="Infinity"):
                 await client.update_copy_config("copy-1", price_offset="Infinity")  # type: ignore[arg-type]
+            await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_create_copy_config_normalizes_target_wallet_to_lowercase(self):
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test")
+            client._post = AsyncMock(return_value={
+                "id": "copy-1",
+                "userId": "user-1",
+                "targetWallet": "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
+                "mode": "PERCENTAGE",
+                "sizeValue": "10",
+                "maxExposure": "500",
+                "maxDailyLoss": "100",
+                "priceOffset": "0",
+                "status": "ACTIVE",
+                "totalCopied": 0,
+                "totalPnl": "0",
+                "createdAt": "2026-04-29T00:00:00Z",
+                "updatedAt": "2026-04-29T00:00:00Z",
+            })
+            await client.create_copy_config("0xAbCdEfAbCdEfAbCdEfAbCdEfAbCdEfAbCdEfAbCd")
+            assert (
+                client._post.call_args.kwargs["json"]["targetWallet"]
+                == "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd"
+            )
             await client.close()
 
         asyncio.run(_run())

@@ -3082,7 +3082,7 @@ class PolyforgeClient:
         Returns:
             The created :class:`CopyConfig`.
         """
-        body: dict[str, Any] = {"targetWallet": target_wallet}
+        body: dict[str, Any] = {"targetWallet": target_wallet.lower()}
         if mode is not None:
             body["mode"] = mode
         if size_value is not None:
@@ -6571,7 +6571,7 @@ class AsyncPolyforgeClient:
         price_offset: float | None = None,
     ) -> CopyConfig:
         """Create a new copy-trading configuration."""
-        body: dict[str, Any] = {"targetWallet": target_wallet}
+        body: dict[str, Any] = {"targetWallet": target_wallet.lower()}
         if mode is not None:
             body["mode"] = mode
         if size_value is not None:
