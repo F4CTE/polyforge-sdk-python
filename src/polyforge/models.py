@@ -270,6 +270,18 @@ class StrategyUpdatePreview:
     warnings: list[str] = field(default_factory=list)
 
 
+@dataclass
+class StrategyDecisionExplanation:
+    """Explanation of a strategy decision returned by the decision explanation endpoint."""
+
+    summary: str = ""
+    rationale: list[str] = field(default_factory=list)
+    confidence: float | None = None
+    inputs: dict[str, Any] = field(default_factory=dict)
+    decision: dict[str, Any] = field(default_factory=dict)
+    related_events: list[dict[str, Any]] = field(default_factory=list)
+
+
 # StrategyTemplate is an alias for Strategy — the platform endpoint
 # ``GET /api/v1/strategies/templates`` returns full Strategy objects
 # (rows where ``template = true``).  Kept as an alias for backward compat.

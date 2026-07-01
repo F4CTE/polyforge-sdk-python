@@ -63,6 +63,7 @@ from polyforge.models import (
     StrategyBlockType,
     StrategyBlockValidationIssue,
     StrategyBlockValidationResult,
+    StrategyDecisionExplanation,
     StrategyEvent,
     StrategyEventType,
     StrategyExecMode,
@@ -6749,6 +6750,7 @@ STRATEGY_OPERATOR_METHODS = (
     "list_strategy_block_types",
     "get_block_schema",
     "preview_strategy_update",
+    "explain_strategy_decision",
 )
 
 
@@ -6918,6 +6920,39 @@ class TestStrategyOperatorEndpoints:
         finally:
             client.close()
 
+    def test_explain_strategy_decision_posts_body_and_parses(self):
+        captured = {}
+
+        def handler(request):
+            captured["method"] = request.method
+            captured["path"] = request.url.raw_path
+            captured["body"] = json.loads(request.content)
+            return httpx.Response(200, json={
+                "summary": "Order skipped because risk limit was reached.",
+                "rationale": ["daily loss limit exceeded"],
+                "confidence": 0.91,
+                "inputs": {"decisionId": "d-1"},
+                "decision": {"action": "skip"},
+                "relatedEvents": [{"id": "evt-1"}],
+            })
+
+        client = self._client_with(handler)
+        try:
+            explanation = client.explain_strategy_decision(
+                "id/with spaces",
+                {"decisionId": "d-1"},
+            )
+            assert captured == {
+                "method": "POST",
+                "path": b"/api/v1/strategies/id%2Fwith%20spaces/explain",
+                "body": {"decisionId": "d-1"},
+            }
+            assert isinstance(explanation, StrategyDecisionExplanation)
+            assert explanation.summary == "Order skipped because risk limit was reached."
+            assert explanation.related_events == [{"id": "evt-1"}]
+        finally:
+            client.close()
+
     def test_async_strategy_operator_roundtrip(self):
         import asyncio
 
@@ -6930,6 +6965,8 @@ class TestStrategyOperatorEndpoints:
                     return httpx.Response(200, json={"valid": True, "issues": []})
                 if request.url.path == "/api/v1/strategies/block-types":
                     return httpx.Response(200, json={"data": [{"type": "price", "label": "Price"}]})
+                if request.url.path.endswith("/explain"):
+                    return httpx.Response(200, json={"summary": "ok", "relatedEvents": [{"id": "evt-1"}]})
                 return httpx.Response(200, json={"strategyId": "s-1", "preview": {}})
 
         async def _run():
@@ -6943,10 +6980,12 @@ class TestStrategyOperatorEndpoints:
                 scoped_validation = await client.validate_strategy_blocks(strategy_id="s-1", blocks={"triggers": []})
                 block_types = await client.list_strategy_block_types()
                 preview = await client.preview_strategy_update("s-1", {})
+                explanation = await client.explain_strategy_decision("s-1", {"decisionId": "d-1"})
                 assert validation.valid is True
                 assert scoped_validation.valid is True
                 assert block_types[0].type == "price"
                 assert preview.strategy_id == "s-1"
+                assert explanation.summary == "ok"
 
         asyncio.run(_run())
         assert captured == [
@@ -6954,6 +6993,7 @@ class TestStrategyOperatorEndpoints:
             ("POST", "/api/v1/strategies/s-1/validate-blocks"),
             ("GET", "/api/v1/strategies/block-types"),
             ("POST", "/api/v1/strategies/s-1/preview-update"),
+            ("POST", "/api/v1/strategies/s-1/explain"),
         ]
 
     def test_strategy_operator_added_fields_are_appended(self):
@@ -6961,6 +7001,7 @@ class TestStrategyOperatorEndpoints:
 
         block_type_fields = [f.name for f in dataclasses.fields(StrategyBlockType)]
         preview_fields = [f.name for f in dataclasses.fields(StrategyUpdatePreview)]
+        explanation_fields = [f.name for f in dataclasses.fields(StrategyDecisionExplanation)]
 
         assert block_type_fields[:7] == [
             "type",
@@ -6974,6 +7015,14 @@ class TestStrategyOperatorEndpoints:
         assert block_type_fields[-1] == "config_schema"
         assert preview_fields[:4] == ["strategy", "validation", "diff", "estimated_impact"]
         assert preview_fields[-3:] == ["strategy_id", "preview", "warnings"]
+        assert explanation_fields == [
+            "summary",
+            "rationale",
+            "confidence",
+            "inputs",
+            "decision",
+            "related_events",
+        ]
 
 
 class TestSseStreamTimeout:

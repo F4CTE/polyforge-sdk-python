@@ -14,6 +14,7 @@ methods are available on both `PolyforgeClient` and `AsyncPolyforgeClient`:
 - `list_strategy_block_types()` → `list[StrategyBlockType]`
 - `get_block_schema(block_type)` → `StrategyBlockSchema`
 - `preview_strategy_update(strategy_id, params)` → `StrategyUpdatePreview`
+- `explain_strategy_decision(strategy_id, params)` → `StrategyDecisionExplanation`
 
 The parser registry now recursively hydrates nested validation issues, and the
 strategy operator dataclasses accept both current and upcoming response shapes

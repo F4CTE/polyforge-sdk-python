@@ -114,6 +114,7 @@ from polyforge.models import (
     StrategyBlockType,
     StrategyBlockValidationIssue,
     StrategyBlockValidationResult,
+    StrategyDecisionExplanation,
     StrategyEvent,
     StrategyHealth,
     StrategyStatusResponse,
@@ -175,6 +176,7 @@ _MODEL_REGISTRY: dict[str, type] = {
     "StrategyBlockType": StrategyBlockType,
     "StrategyBlockValidationIssue": StrategyBlockValidationIssue,
     "StrategyBlockValidationResult": StrategyBlockValidationResult,
+    "StrategyDecisionExplanation": StrategyDecisionExplanation,
     "StrategyHealth": StrategyHealth,
     "StrategyStatusResponse": StrategyStatusResponse,
     "StrategyTemplate": StrategyTemplate,
@@ -1247,6 +1249,20 @@ class PolyforgeClient:
             StrategyUpdatePreview,
             self._post(
                 f"/api/v1/strategies/{_encode_path(strategy_id)}/preview-update",
+                json=params,
+            ),
+        )
+
+    def explain_strategy_decision(
+        self,
+        strategy_id: str,
+        params: dict[str, Any],
+    ) -> StrategyDecisionExplanation:
+        """Explain the reasoning behind a strategy decision."""
+        return _parse(
+            StrategyDecisionExplanation,
+            self._post(
+                f"/api/v1/strategies/{_encode_path(strategy_id)}/explain",
                 json=params,
             ),
         )
@@ -5014,6 +5030,20 @@ class AsyncPolyforgeClient:
             StrategyUpdatePreview,
             await self._post(
                 f"/api/v1/strategies/{_encode_path(strategy_id)}/preview-update",
+                json=params,
+            ),
+        )
+
+    async def explain_strategy_decision(
+        self,
+        strategy_id: str,
+        params: dict[str, Any],
+    ) -> StrategyDecisionExplanation:
+        """Async variant of strategy-decision explanation."""
+        return _parse(
+            StrategyDecisionExplanation,
+            await self._post(
+                f"/api/v1/strategies/{_encode_path(strategy_id)}/explain",
                 json=params,
             ),
         )

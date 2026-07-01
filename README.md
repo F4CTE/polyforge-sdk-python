@@ -76,6 +76,7 @@ asyncio.run(main())
 | `list_strategy_block_types()` | Discover supported strategy block types |
 | `get_block_schema(block_type)` | Fetch the schema for one strategy block type |
 | `preview_strategy_update(strategy_id, params)` | Preview an update before applying it |
+| `explain_strategy_decision(strategy_id, params)` | Explain an AI/operator strategy decision |
 | `create_strategy(name, description)` | Create a new strategy |
 | `create_strategy_from_description(description, market_id)` | AI-generate a strategy from a text description |
 | `start_strategy(strategy_id, mode)` | Start a strategy (`"paper"` or `"live"`) |
