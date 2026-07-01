@@ -70,16 +70,17 @@ asyncio.run(main())
 |--------|-------------|
 | `list_strategies(status)` | List strategies, optionally filtered by status |
 | `get_strategy(strategy_id)` | Get strategy details |
+| `get_strategy_health(strategy_id)` | Get execution health metrics |
+| `validate_strategy_blocks(blocks)` | Validate draft strategy block groups before saving |
+| `validate_strategy_blocks(strategy_id, blocks)` | Validate strategy block groups before saving |
+| `list_strategy_block_types()` | Discover supported strategy block types |
+| `get_block_schema(block_type)` | Fetch the schema for one strategy block type |
+| `preview_strategy_update(strategy_id, params)` | Preview an update before applying it |
+| `explain_strategy_decision(strategy_id, params)` | Explain an AI/operator strategy decision |
 | `create_strategy(name, description)` | Create a new strategy |
 | `create_strategy_from_description(description, market_id)` | AI-generate a strategy from a text description |
 | `start_strategy(strategy_id, mode)` | Start a strategy (`"paper"` or `"live"`) |
 | `stop_strategy(strategy_id)` | Stop a running strategy |
-| `get_strategy_health(strategy_id)` | Get live execution health metrics |
-| `validate_strategy_blocks(blocks)` | Validate strategy block groups before saving |
-| `list_strategy_block_types()` | List available strategy builder block types |
-| `get_block_schema(block_type)` | Fetch the schema for a specific block type |
-| `preview_strategy_update(strategy_id, params)` | Preview a strategy update without applying it |
-| `explain_strategy_decision(strategy_id, params)` | Explain an AI/operator strategy decision |
 | `get_strategy_templates()` | List pre-built strategy templates |
 | `export_strategy(strategy_id)` | Export strategy configuration as a dict |
 | `get_strategy_capabilities()` | Discover server-supported strategy builder capabilities |

@@ -224,6 +224,7 @@ class StrategyBlockType:
     version: str = ""
     deprecated: bool = False
     tags: list[str] = field(default_factory=list)
+    config_schema: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -264,6 +265,9 @@ class StrategyUpdatePreview:
     validation: dict[str, Any] = field(default_factory=dict)
     diff: dict[str, Any] = field(default_factory=dict)
     estimated_impact: dict[str, Any] = field(default_factory=dict)
+    strategy_id: str = ""
+    preview: dict[str, Any] = field(default_factory=dict)
+    warnings: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -276,6 +280,9 @@ class StrategyDecisionExplanation:
     inputs: dict[str, Any] = field(default_factory=dict)
     decision: dict[str, Any] = field(default_factory=dict)
     related_events: list[dict[str, Any]] = field(default_factory=list)
+    strategy_id: str = ""
+    explanation: str = ""
+    factors: list[dict[str, Any]] = field(default_factory=list)
 
 
 # StrategyTemplate is an alias for Strategy — the platform endpoint

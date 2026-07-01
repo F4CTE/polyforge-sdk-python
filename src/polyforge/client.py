@@ -1191,29 +1191,52 @@ class PolyforgeClient:
 
     def validate_strategy_blocks(
         self,
-        blocks: dict[str, Any],
+        strategy_id_or_blocks: str | dict[str, Any] | None = None,
+        blocks: dict[str, Any] | None = None,
+        *,
+        strategy_id: str | None = None,
     ) -> StrategyBlockValidationResult:
-        """Validate strategy block configuration before saving or deploying."""
+        """Validate draft blocks or a strategy's block configuration before saving."""
+        if strategy_id is not None:
+            if blocks is None:
+                if not isinstance(strategy_id_or_blocks, dict):
+                    raise TypeError("validate_strategy_blocks() missing required blocks payload")
+                payload = strategy_id_or_blocks
+            else:
+                if strategy_id_or_blocks is not None:
+                    raise TypeError("validate_strategy_blocks() got multiple blocks payloads")
+                payload = blocks
+            path = f"/api/v1/strategies/{_encode_path(strategy_id)}/validate-blocks"
+        elif blocks is None:
+            if not isinstance(strategy_id_or_blocks, dict):
+                raise TypeError("validate_strategy_blocks() missing required blocks payload")
+            path = "/api/v1/strategies/validate-blocks"
+            payload = strategy_id_or_blocks
+        elif strategy_id_or_blocks is None:
+            path = "/api/v1/strategies/validate-blocks"
+            payload = blocks
+        else:
+            path = f"/api/v1/strategies/{_encode_path(str(strategy_id_or_blocks))}/validate-blocks"
+            payload = blocks
         return _parse(
             StrategyBlockValidationResult,
             self._post(
-                "/api/v1/strategies/validate-blocks",
-                json=blocks,
+                path,
+                json=payload,
             ),
         )
 
     def list_strategy_block_types(self) -> list[StrategyBlockType]:
         """List available strategy builder block types."""
-        return [
-            _parse(StrategyBlockType, item)
-            for item in self._get("/api/v1/strategies/block-types")
-        ]
+        raw = self._get("/api/v1/strategies/block-types")
+        items = raw.get("data", raw) if isinstance(raw, dict) else raw
+        return [_parse(StrategyBlockType, item) for item in items]
 
     def get_block_schema(self, block_type: str) -> StrategyBlockSchema:
         """Fetch the JSON schema for a specific strategy block type."""
         return _parse(
             StrategyBlockSchema,
-            self._get(f"/api/v1/strategies/block-schema/{_encode_path(block_type)}"),
+            self._get(f"/api/v1/strategies/blocks/{_encode_path(block_type)}/schema"),
         )
 
     def preview_strategy_update(
@@ -1235,7 +1258,7 @@ class PolyforgeClient:
         strategy_id: str,
         params: dict[str, Any],
     ) -> StrategyDecisionExplanation:
-        """Explain a strategy decision for transparency and debugging."""
+        """Explain the reasoning behind a strategy decision."""
         return _parse(
             StrategyDecisionExplanation,
             self._post(
@@ -4949,29 +4972,52 @@ class AsyncPolyforgeClient:
 
     async def validate_strategy_blocks(
         self,
-        blocks: dict[str, Any],
+        strategy_id_or_blocks: str | dict[str, Any] | None = None,
+        blocks: dict[str, Any] | None = None,
+        *,
+        strategy_id: str | None = None,
     ) -> StrategyBlockValidationResult:
-        """Validate strategy block configuration before saving or deploying."""
+        """Validate draft blocks or a strategy's block configuration before saving."""
+        if strategy_id is not None:
+            if blocks is None:
+                if not isinstance(strategy_id_or_blocks, dict):
+                    raise TypeError("validate_strategy_blocks() missing required blocks payload")
+                payload = strategy_id_or_blocks
+            else:
+                if strategy_id_or_blocks is not None:
+                    raise TypeError("validate_strategy_blocks() got multiple blocks payloads")
+                payload = blocks
+            path = f"/api/v1/strategies/{_encode_path(strategy_id)}/validate-blocks"
+        elif blocks is None:
+            if not isinstance(strategy_id_or_blocks, dict):
+                raise TypeError("validate_strategy_blocks() missing required blocks payload")
+            path = "/api/v1/strategies/validate-blocks"
+            payload = strategy_id_or_blocks
+        elif strategy_id_or_blocks is None:
+            path = "/api/v1/strategies/validate-blocks"
+            payload = blocks
+        else:
+            path = f"/api/v1/strategies/{_encode_path(str(strategy_id_or_blocks))}/validate-blocks"
+            payload = blocks
         return _parse(
             StrategyBlockValidationResult,
             await self._post(
-                "/api/v1/strategies/validate-blocks",
-                json=blocks,
+                path,
+                json=payload,
             ),
         )
 
     async def list_strategy_block_types(self) -> list[StrategyBlockType]:
         """List available strategy builder block types."""
-        return [
-            _parse(StrategyBlockType, item)
-            for item in await self._get("/api/v1/strategies/block-types")
-        ]
+        raw = await self._get("/api/v1/strategies/block-types")
+        items = raw.get("data", raw) if isinstance(raw, dict) else raw
+        return [_parse(StrategyBlockType, item) for item in items]
 
     async def get_block_schema(self, block_type: str) -> StrategyBlockSchema:
         """Fetch the JSON schema for a specific strategy block type."""
         return _parse(
             StrategyBlockSchema,
-            await self._get(f"/api/v1/strategies/block-schema/{_encode_path(block_type)}"),
+            await self._get(f"/api/v1/strategies/blocks/{_encode_path(block_type)}/schema"),
         )
 
     async def preview_strategy_update(
@@ -4993,7 +5039,7 @@ class AsyncPolyforgeClient:
         strategy_id: str,
         params: dict[str, Any],
     ) -> StrategyDecisionExplanation:
-        """Explain a strategy decision for transparency and debugging."""
+        """Async variant of strategy-decision explanation."""
         return _parse(
             StrategyDecisionExplanation,
             await self._post(
