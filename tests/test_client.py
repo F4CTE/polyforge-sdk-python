@@ -6934,6 +6934,9 @@ class TestStrategyOperatorEndpoints:
                 "inputs": {"decisionId": "d-1"},
                 "decision": {"action": "skip"},
                 "relatedEvents": [{"id": "evt-1"}],
+                "strategyId": "id/with spaces",
+                "explanation": "Risk limit reached.",
+                "factors": [{"name": "dailyLoss"}],
             })
 
         client = self._client_with(handler)
@@ -6944,12 +6947,15 @@ class TestStrategyOperatorEndpoints:
             )
             assert captured == {
                 "method": "POST",
-                "path": b"/api/v1/strategies/id%2Fwith%20spaces/explain",
+                "path": b"/api/v1/strategies/id%2Fwith%20spaces/explain-decision",
                 "body": {"decisionId": "d-1"},
             }
             assert isinstance(explanation, StrategyDecisionExplanation)
             assert explanation.summary == "Order skipped because risk limit was reached."
             assert explanation.related_events == [{"id": "evt-1"}]
+            assert explanation.strategy_id == "id/with spaces"
+            assert explanation.explanation == "Risk limit reached."
+            assert explanation.factors == [{"name": "dailyLoss"}]
         finally:
             client.close()
 
@@ -6965,8 +6971,14 @@ class TestStrategyOperatorEndpoints:
                     return httpx.Response(200, json={"valid": True, "issues": []})
                 if request.url.path == "/api/v1/strategies/block-types":
                     return httpx.Response(200, json={"data": [{"type": "price", "label": "Price"}]})
-                if request.url.path.endswith("/explain"):
-                    return httpx.Response(200, json={"summary": "ok", "relatedEvents": [{"id": "evt-1"}]})
+                if request.url.path.endswith("/explain-decision"):
+                    return httpx.Response(200, json={
+                        "summary": "ok",
+                        "relatedEvents": [{"id": "evt-1"}],
+                        "strategyId": "s-1",
+                        "explanation": "ok",
+                        "factors": [{"name": "liquidity"}],
+                    })
                 return httpx.Response(200, json={"strategyId": "s-1", "preview": {}})
 
         async def _run():
@@ -6986,6 +6998,8 @@ class TestStrategyOperatorEndpoints:
                 assert block_types[0].type == "price"
                 assert preview.strategy_id == "s-1"
                 assert explanation.summary == "ok"
+                assert explanation.strategy_id == "s-1"
+                assert explanation.factors == [{"name": "liquidity"}]
 
         asyncio.run(_run())
         assert captured == [
@@ -6993,7 +7007,7 @@ class TestStrategyOperatorEndpoints:
             ("POST", "/api/v1/strategies/s-1/validate-blocks"),
             ("GET", "/api/v1/strategies/block-types"),
             ("POST", "/api/v1/strategies/s-1/preview-update"),
-            ("POST", "/api/v1/strategies/s-1/explain"),
+            ("POST", "/api/v1/strategies/s-1/explain-decision"),
         ]
 
     def test_strategy_operator_added_fields_are_appended(self):
@@ -7022,6 +7036,9 @@ class TestStrategyOperatorEndpoints:
             "inputs",
             "decision",
             "related_events",
+            "strategy_id",
+            "explanation",
+            "factors",
         ]
 
 

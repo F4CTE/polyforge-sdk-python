@@ -272,7 +272,7 @@ class StrategyUpdatePreview:
 
 @dataclass
 class StrategyDecisionExplanation:
-    """Explanation of a strategy decision returned by the decision explanation endpoint."""
+    """Explanation of a strategy decision returned by the ``explain-decision`` endpoint."""
 
     summary: str = ""
     rationale: list[str] = field(default_factory=list)
@@ -280,6 +280,9 @@ class StrategyDecisionExplanation:
     inputs: dict[str, Any] = field(default_factory=dict)
     decision: dict[str, Any] = field(default_factory=dict)
     related_events: list[dict[str, Any]] = field(default_factory=list)
+    strategy_id: str = ""
+    explanation: str = ""
+    factors: list[dict[str, Any]] = field(default_factory=list)
 
 
 # StrategyTemplate is an alias for Strategy — the platform endpoint

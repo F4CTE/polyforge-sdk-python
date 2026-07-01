@@ -1262,7 +1262,7 @@ class PolyforgeClient:
         return _parse(
             StrategyDecisionExplanation,
             self._post(
-                f"/api/v1/strategies/{_encode_path(strategy_id)}/explain",
+                f"/api/v1/strategies/{_encode_path(strategy_id)}/explain-decision",
                 json=params,
             ),
         )
@@ -5043,7 +5043,7 @@ class AsyncPolyforgeClient:
         return _parse(
             StrategyDecisionExplanation,
             await self._post(
-                f"/api/v1/strategies/{_encode_path(strategy_id)}/explain",
+                f"/api/v1/strategies/{_encode_path(strategy_id)}/explain-decision",
                 json=params,
             ),
         )
