@@ -675,6 +675,19 @@ _COPY_CONFIG_KNOWN_KWARGS: frozenset[str] = frozenset({
     "mode", "sizeValue", "maxExposure", "maxDailyLoss", "priceOffset",
 })
 
+_MARKETPLACE_LISTING_KNOWN_KWARGS: frozenset[str] = frozenset({
+    "title", "description", "priceUsdc", "tags", "status",
+})
+
+
+def _reject_unknown_marketplace_listing_fields(fields: dict[str, Any]) -> None:
+    unknown = {key for key in fields if key not in _MARKETPLACE_LISTING_KNOWN_KWARGS}
+    if unknown:
+        raise ValueError(
+            "update_marketplace_listing got unexpected keyword arguments: "
+            f"{', '.join(sorted(unknown))}"
+        )
+
 
 _BLOCKED_HOSTNAMES: set[str] = {
     "localhost",
@@ -2537,6 +2550,7 @@ class PolyforgeClient:
         Returns:
             The updated :class:`MarketplaceListing`.
         """
+        _reject_unknown_marketplace_listing_fields(kwargs)
         return _parse(
             MarketplaceListing,
             self._patch(f"/api/v1/marketplace/{_encode_path(listing_id)}", json=kwargs),
@@ -6163,6 +6177,7 @@ class AsyncPolyforgeClient:
 
     async def update_marketplace_listing(self, listing_id: str, **kwargs: Any) -> MarketplaceListing:
         """Update an existing marketplace listing."""
+        _reject_unknown_marketplace_listing_fields(kwargs)
         return _parse(
             MarketplaceListing,
             await self._patch(f"/api/v1/marketplace/{_encode_path(listing_id)}", json=kwargs),

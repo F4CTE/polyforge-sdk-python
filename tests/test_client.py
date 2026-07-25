@@ -4539,6 +4539,23 @@ class TestMarketplaceSellerCrud:
         assert "_patch" in source
         assert "_encode_path" in source
 
+    def test_sync_update_marketplace_listing_rejects_unknown_kwargs(self):
+        client = PolyforgeClient(api_key="test")
+        with pytest.raises(ValueError, match="unexpected keyword"):
+            client.update_marketplace_listing("listing-1", typoField=5)
+        client.close()
+
+    def test_async_update_marketplace_listing_rejects_unknown_kwargs(self):
+        import asyncio
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test")
+            with pytest.raises(ValueError, match="unexpected keyword"):
+                await client.update_marketplace_listing("listing-1", typoField=5)
+            await client.close()
+
+        asyncio.run(_run())
+
     # -- rate_marketplace_listing --
 
     def test_sync_rate_marketplace_listing_exists(self):
