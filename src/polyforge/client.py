@@ -681,6 +681,11 @@ _MARKETPLACE_LISTING_KNOWN_KWARGS: frozenset[str] = frozenset({
 
 
 def _reject_unknown_marketplace_listing_fields(fields: dict[str, Any]) -> None:
+    if "price" in fields:
+        if "priceUsdc" in fields:
+            raise ValueError("update_marketplace_listing accepts either price or priceUsdc, not both")
+        _validate_financial_param("price", fields["price"])
+        fields["priceUsdc"] = fields.pop("price")
     unknown = {key for key in fields if key not in _MARKETPLACE_LISTING_KNOWN_KWARGS}
     if unknown:
         raise ValueError(

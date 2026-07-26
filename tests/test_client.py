@@ -4545,6 +4545,29 @@ class TestMarketplaceSellerCrud:
             client.update_marketplace_listing("listing-1", typoField=5)
         client.close()
 
+    def test_sync_update_marketplace_listing_accepts_price_alias(self):
+        from unittest.mock import MagicMock
+
+        client = PolyforgeClient(api_key="test")
+        client._patch = MagicMock(return_value={
+            "id": "listing-1",
+            "strategyId": "strategy-1",
+            "sellerId": "seller-1",
+            "title": "Listing",
+            "description": None,
+            "priceUsdc": "9.99",
+            "tags": [],
+            "status": "ACTIVE",
+            "ratingAvg": 0,
+            "ratingCount": 0,
+            "purchaseCount": 0,
+            "createdAt": "2026-04-29T00:00:00Z",
+            "updatedAt": "2026-04-29T00:00:00Z",
+        })
+        client.update_marketplace_listing("listing-1", price=9.99)
+        assert client._patch.call_args.kwargs["json"] == {"priceUsdc": 9.99}
+        client.close()
+
     def test_async_update_marketplace_listing_rejects_unknown_kwargs(self):
         import asyncio
 
@@ -4552,6 +4575,33 @@ class TestMarketplaceSellerCrud:
             client = AsyncPolyforgeClient(api_key="test")
             with pytest.raises(ValueError, match="unexpected keyword"):
                 await client.update_marketplace_listing("listing-1", typoField=5)
+            await client.close()
+
+        asyncio.run(_run())
+
+    def test_async_update_marketplace_listing_accepts_price_alias(self):
+        import asyncio
+        from unittest.mock import AsyncMock
+
+        async def _run():
+            client = AsyncPolyforgeClient(api_key="test")
+            client._patch = AsyncMock(return_value={
+                "id": "listing-1",
+                "strategyId": "strategy-1",
+                "sellerId": "seller-1",
+                "title": "Listing",
+                "description": None,
+                "priceUsdc": "9.99",
+                "tags": [],
+                "status": "ACTIVE",
+                "ratingAvg": 0,
+                "ratingCount": 0,
+                "purchaseCount": 0,
+                "createdAt": "2026-04-29T00:00:00Z",
+                "updatedAt": "2026-04-29T00:00:00Z",
+            })
+            await client.update_marketplace_listing("listing-1", price=9.99)
+            assert client._patch.call_args.kwargs["json"] == {"priceUsdc": 9.99}
             await client.close()
 
         asyncio.run(_run())
