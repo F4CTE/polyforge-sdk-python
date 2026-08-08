@@ -1,6 +1,6 @@
-# Polyforge Python SDK
+# PolyForge Python SDK
 
-Typed Python client for the [Polyforge](https://polyforge.io) trading platform REST API. Provides both synchronous and asynchronous interfaces powered by [httpx](https://www.python-httpx.org/).
+Typed Python client for the [PolyForge](https://polyforge.app) REST API, compatible with self-hosted and PolyForge Platform deployments. Provides both synchronous and asynchronous interfaces powered by [httpx](https://www.python-httpx.org/).
 
 ## Installation
 
@@ -343,4 +343,6 @@ pytest tests/
 
 ## License
 
-Apache 2.0 — see [LICENSE](LICENSE) for details.
+Copyright © 2026 Oryon Technologies.
+
+Licensed under Apache 2.0 — see [LICENSE](LICENSE) and [NOTICE](NOTICE) for details.
