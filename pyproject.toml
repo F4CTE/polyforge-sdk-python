@@ -11,7 +11,7 @@ license = "Apache-2.0"
 requires-python = ">=3.10"
 keywords = ["polyforge", "trading", "api", "sdk", "crypto", "defi"]
 authors = [
-    { name = "Polyforge", email = "dev@polyforge.io" },
+    { name = "Oryon Technologies", email = "dev@polyforge.app" },
 ]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -40,10 +40,10 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/polyforge/polyforge-sdk-python"
-Documentation = "https://docs.polyforge.io/sdk/python"
-Repository = "https://github.com/polyforge/polyforge-sdk-python"
-Issues = "https://github.com/polyforge/polyforge-sdk-python/issues"
+Homepage = "https://polyforge.app"
+Documentation = "https://polyforge.app/docs"
+Repository = "https://github.com/Polyforge-labs/PolyForge-sdk-python"
+Issues = "https://github.com/Polyforge-labs/PolyForge-sdk-python/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/polyforge"]
